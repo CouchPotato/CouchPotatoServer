@@ -9,11 +9,19 @@
 
 from cache_engine import CacheEngine
 
-class NullEngine( CacheEngine ):
+
+class NullEngine(CacheEngine):
     """Non-caching engine for debugging."""
     name = 'null'
-    def configure(self): pass
-    def get(self, date): return []
-    def put(self, key, value, lifetime): return []
-    def expire(self, key): pass
 
+    def configure(self):
+        pass
+
+    def get(self, date):
+        return []
+
+    def put(self, key, value, lifetime):
+        return []
+
+    def expire(self, key):
+        pass

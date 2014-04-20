@@ -1,6 +1,7 @@
 from .main import Searcher
 
-def start():
+
+def autoload():
     return Searcher()
 
 config = [{
@@ -47,7 +48,7 @@ config = [{
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored',
-                    'default': 'german, dutch, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs, vain',
+                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs, vain',
                     'description': 'Ignores releases that match any of these sets. (Works like explained above)'
                 },
             ],

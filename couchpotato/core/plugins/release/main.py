@@ -1,30 +1,32 @@
-from couchpotato import get_session, md5
+from inspect import ismethod, isfunction
+import os
+import time
+import traceback
+
+from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toUnicode
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import File, Release as Relea, Media, \
-    ReleaseInfo
+from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
 from couchpotato.environment import Env
-from inspect import ismethod, isfunction
-from sqlalchemy.exc import InterfaceError
-from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import and_, or_
-import os
-import time
-import traceback
+
 
 log = CPLog(__name__)
 
 
 class Release(Plugin):
 
-    def __init__(self):
-        addEvent('release.add', self.add)
+    _database = {
+        'release': ReleaseIndex,
+        'release_status': ReleaseStatusIndex,
+        'release_identifier': ReleaseIDIndex,
+        'release_download': ReleaseDownloadIndex
+    }
 
+    def __init__(self):
         addApiView('release.manual_download', self.manualDownload, docs = {
             'desc': 'Send a release manually to the downloaders',
             'params': {
@@ -43,119 +45,95 @@ class Release(Plugin):
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
         })
-        addApiView('release.for_movie', self.forMovieView, docs = {
-            'desc': 'Returns all releases for a movie. Ordered by score(desc)',
-            'params': {
-                'id': {'type': 'id', 'desc': 'ID of the movie'}
-            }
-        })
 
+        addEvent('release.add', self.add)
         addEvent('release.download', self.download)
         addEvent('release.try_download_result', self.tryDownloadResult)
         addEvent('release.create_from_search', self.createFromSearch)
-        addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
+        addEvent('release.with_status', self.withStatus)
+        addEvent('release.for_media', self.forMedia)
 
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
         fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
 
     def cleanDone(self):
-
         log.debug('Removing releases from dashboard')
 
         now = time.time()
         week = 262080
 
-        done_status, available_status, snatched_status, downloaded_status, ignored_status = \
-            fireEvent('status.get', ['done', 'available', 'snatched', 'downloaded', 'ignored'], single = True)
-
-        db = get_session()
+        db = get_db()
 
         # get movies last_edit more than a week ago
-        media = db.query(Media) \
-            .filter(Media.status_id == done_status.get('id'), Media.last_edit < (now - week)) \
-            .all()
+        medias = fireEvent('media.with_status', 'done', single = True)
 
-        for item in media:
-            for rel in item.releases:
+        for media in medias:
+            if media.get('last_edit', 0) > (now - week):
+                continue
+
+            for rel in fireEvent('release.for_media', media['_id'], single = True):
+
                 # Remove all available releases
-                if rel.status_id in [available_status.get('id')]:
-                    fireEvent('release.delete', id = rel.id, single = True)
+                if rel['status'] in ['available']:
+                    self.delete(rel['_id'])
+
                 # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
-                elif rel.status_id in [snatched_status.get('id'), downloaded_status.get('id')]:
-                    self.updateStatus(id = rel.id, status = ignored_status)
+                elif rel['status'] in ['snatched', 'downloaded']:
+                    self.updateStatus(rel['_id'], status = 'ignore')
 
-        db.expire_all()
+    def add(self, group, update_info = True):
 
-    def add(self, group):
-
-        db = get_session()
-
-        identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
-
-
-        done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
-
-        # Add movie
-        movie = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
-        if not movie:
-            movie = Media(
-                library_id = group['library'].get('id'),
-                profile_id = 0,
-                status_id = done_status.get('id')
-            )
-            db.add(movie)
-            db.commit()
-
-        # Add Release
-        rel = db.query(Relea).filter(
-            or_(
-                Relea.identifier == identifier,
-                and_(Relea.identifier.startswith(group['library']['identifier']), Relea.status_id == snatched_status.get('id'))
-            )
-        ).first()
-        if not rel:
-            rel = Relea(
-                identifier = identifier,
-                movie = movie,
-                quality_id = group['meta_data']['quality'].get('id'),
-                status_id = done_status.get('id')
-            )
-            db.add(rel)
-            db.commit()
-
-        # Add each file type
-        added_files = []
-        for type in group['files']:
-            for cur_file in group['files'][type]:
-                added_file = self.saveFile(cur_file, type = type, include_media_info = type is 'movie')
-                added_files.append(added_file.get('id'))
-
-        # Add the release files in batch
         try:
-            added_files = db.query(File).filter(or_(*[File.id == x for x in added_files])).all()
-            rel.files.extend(added_files)
-            db.commit()
+            db = get_db()
+
+            release_identifier = '%s.%s.%s' % (group['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
+
+            # Add movie if it doesn't exist
+            try:
+                media = db.get('media', 'imdb-%s' % group['identifier'], with_doc = True)['doc']
+            except:
+                media = fireEvent('movie.add', params = {
+                    'identifier': group['identifier'],
+                    'profile_id': None,
+                }, search_after = False, update_after = update_info, notify_after = False, status = 'done', single = True)
+
+            # Add Release
+            release = {
+                '_t': 'release',
+                'media_id': media['_id'],
+                'identifier': release_identifier,
+                'quality': group['meta_data']['quality'].get('identifier'),
+                'is_3d' : group['meta_data']['quality'].get('is_3d', 0),
+                'last_edit': int(time.time()),
+                'status': 'done'
+            }
+            try:
+                r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
+                r['media_id'] = media['_id']
+            except:
+                r = db.insert(release)
+
+            # Update with ref and _id
+            release.update({
+                '_id': r['_id'],
+                '_rev': r['_rev'],
+            })
+
+            # Empty out empty file groups
+            release['files'] = dict((k, v) for k, v in group['files'].items() if v)
+            db.update(release)
+
+            fireEvent('media.restatus', media['_id'])
+
+            return True
         except:
-            log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
+            log.error('Failed: %s', traceback.format_exc())
 
-        fireEvent('movie.restatus', movie.id)
-
-        return True
-
-    def saveFile(self, filepath, type = 'unknown', include_media_info = False):
-
-        properties = {}
-
-        # Get media info for files
-        if include_media_info:
-            properties = {}
-
-        # Check database and update/insert if necessary
-        return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type_tuple = Scanner.file_types.get(type), properties = properties, single = True)
+        return False
 
     def deleteView(self, id = None, **kwargs):
 
@@ -163,177 +141,187 @@ class Release(Plugin):
             'success': self.delete(id)
         }
 
-    def delete(self, id):
+    def delete(self, release_id):
 
-        db = get_session()
-
-        rel = db.query(Relea).filter_by(id = id).first()
-        if rel:
-            rel.delete()
-            db.commit()
+        try:
+            db = get_db()
+            rel = db.get('id', release_id)
+            db.delete(rel)
             return True
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
         return False
 
-    def clean(self, id):
+    def clean(self, release_id):
 
-        db = get_session()
+        try:
+            db = get_db()
+            rel = db.get('id', release_id)
 
-        rel = db.query(Relea).filter_by(id = id).first()
-        if rel:
-            for release_file in rel.files:
-                if not os.path.isfile(ss(release_file.path)):
-                    db.delete(release_file)
-            db.commit()
+            if len(rel.get('files')) == 0:
+                self.delete(rel['_id'])
+            else:
 
-            if len(rel.files) == 0:
-                self.delete(id)
+                files = []
+                for release_file in rel.get('files'):
+                    if os.path.isfile(ss(release_file['path'])):
+                        files.append(release_file)
+
+                rel['files'] = files
+                db.update(rel)
 
             return True
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
         return False
 
     def ignore(self, id = None, **kwargs):
 
-        db = get_session()
+        db = get_db()
 
-        rel = db.query(Relea).filter_by(id = id).first()
-        if rel:
-            ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
-            self.updateStatus(id, available_status if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status)
+        try:
+            rel = db.get('id', id, with_doc = True)
+            self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
+
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
         return {
-            'success': True
+            'success': False
         }
 
     def manualDownload(self, id = None, **kwargs):
 
-        db = get_session()
+        db = get_db()
 
-        rel = db.query(Relea).filter_by(id = id).first()
-        if rel:
-            item = {}
-            for info in rel.info:
-                item[info.identifier] = info.value
+        try:
+            release = db.get('id', id)
+            item = release['info']
+            movie = db.get('id', release['media_id'])
 
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Snatching "%s"' % item['name'])
 
             # Get matching provider
             provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
 
-            if not item.get('protocol'):
-                item['protocol'] = item['type']
-                item['type'] = 'movie'
-
             if item.get('protocol') != 'torrent_magnet':
                 item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
-            success = self.download(data = item, media = rel.movie.to_dict({
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            }), manual = True)
+            success = self.download(data = item, media = movie, manual = True)
 
             if success:
-                db.expunge_all()
-                rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
-
                 fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
-            return {
-                'success': success
-            }
-        else:
-            log.error('Couldn\'t find release with id: %s', id)
 
-        return {
-            'success': False
-        }
+            return {
+                'success': success == True
+            }
+
+        except:
+            log.error('Couldn\'t find release with id: %s: %s', (id, traceback.format_exc()))
+            return {
+                'success': False
+            }
 
     def download(self, data, media, manual = False):
 
-        if not data.get('protocol'):
-            data['protocol'] = data['type']
-            data['type'] = 'movie'
-
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
+        if not downloader_enabled:
+            log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', data.get('protocol'))
+            return False
 
-        if downloader_enabled:
-            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
-
-            # Download release to temp
-            filedata = None
-            if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
+        # Download NZB or torrent file
+        filedata = None
+        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
+            try:
                 filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-                if filedata == 'try_next':
-                    return filedata
+            except:
+                log.error('Tried to download, but the "%s" provider gave an error: %s', (data.get('protocol'), traceback.format_exc()))
+                return False
 
-            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
-            log.debug('Downloader result: %s', download_result)
+            if filedata == 'try_next':
+                return filedata
+            elif not filedata:
+                return False
 
-            if download_result:
-                try:
-                    # Mark release as snatched
-                    db = get_session()
-                    rls = db.query(Relea).filter_by(identifier = md5(data['url'])).first()
-                    if rls:
-                        renamer_enabled = Env.setting('enabled', 'renamer')
+        # Send NZB or torrent file to downloader
+        download_result = fireEvent('download', data = data, media = media, manual = manual, filedata = filedata, single = True)
+        if not download_result:
+            log.info('Tried to download, but the "%s" downloader gave an error', data.get('protocol'))
+            return False
+        log.debug('Downloader result: %s', download_result)
 
-                        # Save download-id info if returned
-                        if isinstance(download_result, dict):
-                            for key in download_result:
-                                rls_info = ReleaseInfo(
-                                    identifier = 'download_%s' % key,
-                                    value = toUnicode(download_result.get(key))
-                                )
-                                rls.info.append(rls_info)
-                        db.commit()
+        try:
+            db = get_db()
 
-                        log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
-                        snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-                        log.info(snatch_message)
-                        fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls.to_dict())
+            try:
+                rls = db.get('release_identifier', md5(data['url']), with_doc = True)['doc']
+            except:
+                log.error('No release found to store download information in')
+                return False
 
-                        # If renamer isn't used, mark media done
-                        if not renamer_enabled:
-                            try:
-                                if media['status_id'] == active_status.get('id'):
-                                    for profile_type in media['profile']['types']:
-                                        if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking media as finished: %s', log_movie)
+            renamer_enabled = Env.setting('enabled', 'renamer')
 
-                                            # Mark release done
-                                            self.updateStatus(rls.id, status = done_status)
+            # Save download-id info if returned
+            if isinstance(download_result, dict):
+                rls['download_info'] = download_result
+                db.update(rls)
 
-                                            # Mark media done
-                                            mdia = db.query(Media).filter_by(id = media['id']).first()
-                                            mdia.status_id = done_status.get('id')
-                                            mdia.last_edit = int(time.time())
-                                            db.commit()
-                            except:
-                                log.error('Failed marking media finished, renamer disabled: %s', traceback.format_exc())
-                        else:
-                            self.updateStatus(rls.id, status = snatched_status)
+            log_movie = '%s (%s) in %s' % (getTitle(media), media['info']['year'], rls['quality'])
+            snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
+            log.info(snatch_message)
+            fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls)
 
-                except:
-                    log.error('Failed marking media finished: %s', traceback.format_exc())
+            # Mark release as snatched
+            if renamer_enabled:
+                self.updateStatus(rls['_id'], status = 'snatched')
 
-                return True
+            # If renamer isn't used, mark media done if finished or release downloaded
+            else:
 
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
+                if media['status'] == 'active':
+                    profile = db.get('id', media['profile_id'])
+                    finished = False
+                    if rls['quality'] in profile['qualities']:
+                        nr = profile['qualities'].index(rls['quality'])
+                        finished = profile['finish'][nr]
 
-        return False
+                    if finished:
+                        log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
-    def tryDownloadResult(self, results, media, quality_type, manual = False):
-        ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
+                        # Mark release done
+                        self.updateStatus(rls['_id'], status = 'done')
+
+                        # Mark media done
+                        mdia = db.get('id', media['_id'])
+                        mdia['status'] = 'done'
+                        mdia['last_edit'] = int(time.time())
+                        db.update(mdia)
+
+                        return True
+
+                # Assume release downloaded
+                self.updateStatus(rls['_id'], status = 'downloaded')
+
+        except:
+            log.error('Failed storing download status: %s', traceback.format_exc())
+            return False
+
+        return True
+
+    def tryDownloadResult(self, results, media, quality_custom, manual = False):
 
         for rel in results:
-            if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and rel.get('age') <= quality_type.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), rel['name']))
+            if not quality_custom.get('finish', False) and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
+                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for'), rel['name']))
                 continue
 
-            if rel['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
+            if rel['status'] in ['ignored', 'failed']:
                 log.info('Ignored: %s', rel['name'])
                 continue
 
@@ -349,103 +337,124 @@ class Release(Plugin):
 
         return False
 
-    def createFromSearch(self, search_results, media, quality_type):
+    def createFromSearch(self, search_results, media, quality):
 
-        available_status = fireEvent('status.get', ['available'], single = True)
-        db = get_session()
+        try:
+            db = get_db()
 
-        found_releases = []
+            found_releases = []
 
-        for rel in search_results:
+            is_3d = False
+            try: is_3d = quality['custom']['3d']
+            except: pass
 
-            rel_identifier = md5(rel['url'])
-            found_releases.append(rel_identifier)
+            for rel in search_results:
 
-            rls = db.query(Relea).filter_by(identifier = rel_identifier).first()
-            if not rls:
-                rls = Relea(
-                    identifier = rel_identifier,
-                    movie_id = media.get('id'),
-                    #media_id = media.get('id'),
-                    quality_id = quality_type.get('quality_id'),
-                    status_id = available_status.get('id')
-                )
-                db.add(rls)
-            else:
-                [db.delete(old_info) for old_info in rls.info]
-                rls.last_edit = int(time.time())
+                rel_identifier = md5(rel['url'])
+                found_releases.append(rel_identifier)
 
-            db.commit()
+                release = {
+                    '_t': 'release',
+                    'identifier': rel_identifier,
+                    'media_id': media.get('_id'),
+                    'quality': quality.get('identifier'),
+                    'is_3d': is_3d,
+                    'status': rel.get('status', 'available'),
+                    'last_edit': int(time.time()),
+                    'info': {}
+                }
 
-            for info in rel:
+                # Add downloader info if provided
                 try:
-                    if not isinstance(rel[info], (str, unicode, int, long, float)):
-                        continue
+                    release['download_info'] = rel['download_info']
+                    del rel['download_info']
+                except:
+                    pass
 
-                    rls_info = ReleaseInfo(
-                        identifier = info,
-                        value = toUnicode(rel[info])
-                    )
-                    rls.info.append(rls_info)
-                except InterfaceError:
-                    log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
+                try:
+                    rls = db.get('release_identifier', rel_identifier, with_doc = True)['doc']
+                except:
+                    rls = db.insert(release)
+                    rls.update(release)
 
-            db.commit()
+                # Update info, but filter out functions
+                for info in rel:
+                    try:
+                        if not isinstance(rel[info], (str, unicode, int, long, float)):
+                            continue
 
-            rel['status_id'] = rls.status_id
+                        rls['info'][info] = toUnicode(rel[info]) if isinstance(rel[info], (str, unicode)) else rel[info]
+                    except:
+                        log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
-        return found_releases
+                db.update(rls)
 
-    def forMovie(self, id = None):
+                # Update release in search_results
+                rel['status'] = rls.get('status')
 
-        db = get_session()
+            return found_releases
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
-        releases_raw = db.query(Relea) \
-            .options(joinedload_all('info')) \
-            .options(joinedload_all('files')) \
-            .filter(Relea.movie_id == id) \
-            .all()
+        return []
 
-        releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
-        releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
-
-        return releases
-
-    def forMovieView(self, id = None, **kwargs):
-
-        releases = self.forMovie(id)
-
-        return {
-            'releases': releases,
-            'success': True
-        }
-
-    def updateStatus(self, id, status = None):
+    def updateStatus(self, release_id, status = None):
         if not status: return False
 
-        db = get_session()
+        try:
+            db = get_db()
 
-        rel = db.query(Relea).filter_by(id = id).first()
-        if rel and status and rel.status_id != status.get('id'):
+            rel = db.get('id', release_id)
+            if rel and rel.get('status') != status:
 
-            item = {}
-            for info in rel.info:
-                item[info.identifier] = info.value
+                release_name = rel['info'].get('name')
+                if rel.get('files'):
+                    for file_type in rel.get('files', {}):
+                        if file_type == 'movie':
+                            for release_file in rel['files'][file_type]:
+                                release_name = os.path.basename(release_file)
+                                break
 
-            if rel.files:
-                for file_item in rel.files:
-                    if file_item.type.identifier == 'movie':
-                        release_name = os.path.basename(file_item.path)
-                        break
-            else:
-                release_name = item['name']
-            #update status in Db
-            log.debug('Marking release %s as %s', (release_name, status.get("label")))
-            rel.status_id = status.get('id')
-            rel.last_edit = int(time.time())
-            db.commit()
+                #update status in Db
+                log.debug('Marking release %s as %s', (release_name, status))
+                rel['status'] = status
+                rel['last_edit'] = int(time.time())
 
-            #Update all movie info as there is no release update function
-            fireEvent('notify.frontend', type = 'release.update_status', data = rel.to_dict())
+                db.update(rel)
 
-        return True
+                #Update all movie info as there is no release update function
+                fireEvent('notify.frontend', type = 'release.update_status', data = rel)
+
+            return True
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+
+        return False
+
+    def withStatus(self, status, with_doc = True):
+
+        db = get_db()
+
+        status = list(status if isinstance(status, (list, tuple)) else [status])
+
+        for s in status:
+            for ms in db.get_many('release_status', s, with_doc = with_doc):
+                yield ms['doc'] if with_doc else ms
+
+    def forMedia(self, media_id):
+
+        db = get_db()
+        raw_releases = list(db.get_many('release', media_id, with_doc = True))
+
+        releases = []
+        for r in raw_releases:
+            releases.append(r['doc'])
+
+        releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
+
+        # Sort based on preferred search method
+        download_preference = self.conf('preferred_method', section = 'searcher')
+        if download_preference != 'both':
+            releases = sorted(releases, key = lambda k: k.get('info', {}).get('protocol', '')[:3], reverse = (download_preference == 'torrent'))
+
+        return releases

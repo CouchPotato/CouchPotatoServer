@@ -141,6 +141,8 @@
 			var pg = new Page[class_name](self, {});
 			self.pages[class_name] = pg;
 
+			self.fireEvent('load'+class_name);
+
 			$(pg).inject(self.content);
 		});
 
@@ -317,8 +319,8 @@
 
 		return new Element('div.group_userscript').adopt(
 			new Element('a.userscript.button', {
-				'text': 'Install userscript',
-				'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+				'text': 'Install extension',
+				'href': 'https://couchpota.to/extension/',
 				'target': '_blank'
 			}),
 			new Element('span.or[text=or]'),
@@ -364,15 +366,15 @@
 
 		if(!on_complete && typeOf(args) == 'function'){
 			on_complete = args;
-			args = {};
+			args = [];
 		}
 
 		// Create parallel callback
 		var callbacks = [];
-		self.global_events[name].each(function(handle, nr){
+		self.global_events[name].each(function(handle){
 
 			callbacks.push(function(callback){
-				var results = handle(args || {});
+				var results = handle.apply(handle, args || []);
 				callback(null, results || null);
 			});
 

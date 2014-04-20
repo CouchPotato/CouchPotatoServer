@@ -1,24 +1,25 @@
-from StringIO import StringIO
-from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
-    toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
-from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
-from multipartpost import MultipartPostHandler
-from tornado import template
-from tornado.web import StaticFileHandler
 from urlparse import urlparse
-import cookielib
 import glob
-import gzip
 import inspect
-import math
 import os.path
 import re
 import time
 import traceback
 import urllib2
+
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import ss, toSafeString, \
+    toUnicode, sp
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier
+from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
+import requests
+from requests.packages.urllib3 import Timeout
+from requests.packages.urllib3.exceptions import MaxRetryError
+from scandir import scandir
+from tornado import template
+from tornado.web import StaticFileHandler
+
 
 log = CPLog(__name__)
 
@@ -26,6 +27,7 @@ log = CPLog(__name__)
 class Plugin(object):
 
     _class_name = None
+    _database = None
     plugin_path = None
 
     enabled_option = 'enabled'
@@ -39,9 +41,10 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
+    http_opener = requests.Session()
 
-    def __new__(typ, *args, **kwargs):
-        new_plugin = super(Plugin, typ).__new__(typ)
+    def __new__(cls, *args, **kwargs):
+        new_plugin = super(Plugin, cls).__new__(cls)
         new_plugin.registerPlugin()
 
         return new_plugin
@@ -54,9 +57,23 @@ class Plugin(object):
         if self.auto_register_static:
             self.registerStatic(inspect.getfile(self.__class__))
 
+        # Setup database
+        if self._database:
+            addEvent('database.setup', self.databaseSetup)
+
+    def databaseSetup(self):
+
+        for index_name in self._database:
+            klass = self._database[index_name]
+
+            fireEvent('database.setup_index', index_name, klass)
+
     def conf(self, attr, value = None, default = None, section = None):
-        class_name = self.getName().lower().split(':')
-        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
+        class_name = self.getName().lower().split(':')[0].lower()
+        return Env.setting(attr, section = section if section else class_name, value = value, default = default)
+
+    def deleteConf(self, attr):
+        return Env._settings.delete(attr, section = self.getName().lower().split(':')[0].lower())
 
     def getName(self):
         return self._class_name or self.__class__.__name__
@@ -83,7 +100,7 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         # View path
-        path = 'static/plugin/%s/' % (class_name)
+        path = 'static/plugin/%s/' % class_name
 
         # Add handler to Tornado
         Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
@@ -100,13 +117,18 @@ class Plugin(object):
 
         self.makeDir(os.path.dirname(path))
 
+        if os.path.exists(path):
+            log.debug('%s already exists, overwriting file with new version', path)
+
         try:
             f = open(path, 'w+' if not binary else 'w+b')
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
-        except Exception, e:
-            log.error('Unable writing to file "%s": %s', (path, e))
+        except:
+            log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
+            if os.path.isfile(path):
+                os.remove(path)
 
     def makeDir(self, path):
         path = ss(path)
@@ -114,17 +136,37 @@ class Plugin(object):
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
             return True
-        except Exception, e:
+        except Exception as e:
             log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
 
+    def deleteEmptyFolder(self, folder, show_error = True):
+        folder = sp(folder)
+
+        for root, dirs, files in scandir.walk(folder):
+
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        if show_error:
+                            log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+        try:
+            os.rmdir(folder)
+        except:
+            if show_error:
+                log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+
     # http request
-    def urlopen(self, url, timeout = 30, params = None, headers = None, opener = None, multipart = False, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
         url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
-        if not params: params = {}
+        if not data: data = {}
 
         # Fill in some headers
         parsed_url = urlparse(url)
@@ -136,6 +178,8 @@ class Plugin(object):
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
+
+        r = self.http_opener
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -151,51 +195,26 @@ class Plugin(object):
 
         self.wait(host)
         try:
+            kwargs = {
+                'headers': headers,
+                'data': data if len(data) > 0 else None,
+                'timeout': timeout,
+                'files': files,
+            }
+            method = 'post' if len(data) > 0 or files else 'get'
 
-            # Make sure opener has the correct headers
-            if opener:
-                opener.add_headers = headers
+            log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
+            response = r.request(method, url, verify = False, **kwargs)
 
-            if multipart:
-                log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
-                request = urllib2.Request(url, params, headers)
-
-                if opener:
-                    opener.add_handler(MultipartPostHandler())
-                else:
-                    cookies = cookielib.CookieJar()
-                    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
-
-                response = opener.open(request, timeout = timeout)
+            if response.status_code == requests.codes.ok:
+                data = response.content
             else:
-                log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
-
-                if isinstance(params, (str, unicode)) and len(params) > 0:
-                    data = params
-                else:
-                    data = tryUrlencode(params) if len(params) > 0 else None
-
-                request = urllib2.Request(url, data, headers)
-
-                if opener:
-                    response = opener.open(request, timeout = timeout)
-                else:
-                    response = urllib2.urlopen(request, timeout = timeout)
-
-            # unzip if needed
-            if response.info().get('Content-Encoding') == 'gzip':
-                buf = StringIO(response.read())
-                f = gzip.GzipFile(fileobj = buf)
-                data = f.read()
-                f.close()
-            else:
-                data = response.read()
-            response.close()
+                response.raise_for_status()
 
             self.http_failed_request[host] = 0
-        except IOError:
+        except (IOError, MaxRetryError, Timeout):
             if show_error:
-                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(1)))
+                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(0)))
 
             # Save failed requests by hosts
             try:
@@ -218,15 +237,19 @@ class Plugin(object):
         return data
 
     def wait(self, host = ''):
+        if self.http_time_between_calls == 0:
+            return
+
         now = time.time()
 
         last_use = self.http_last_use.get(host, 0)
+        if last_use > 0:
 
-        wait = math.ceil(last_use - now + self.http_time_between_calls)
+            wait = (last_use - now) + self.http_time_between_calls
 
-        if wait > 0:
-            log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
-            time.sleep(last_use - now + self.http_time_between_calls)
+            if wait > 0:
+                log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
+                time.sleep(wait)
 
     def beforeCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
@@ -257,30 +280,34 @@ class Plugin(object):
             except:
                 log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
-
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key_md5 = md5(cache_key)
-        cache = Env.get('cache').get(cache_key_md5)
-        if cache:
-            if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
-            return cache
+
+        use_cache = not len(kwargs.get('data', {})) > 0 and not kwargs.get('files')
+
+        if use_cache:
+            cache_key_md5 = md5(cache_key)
+            cache = Env.get('cache').get(cache_key_md5)
+            if cache:
+                if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
+                return cache
 
         if url:
             try:
 
                 cache_timeout = 300
-                if kwargs.get('cache_timeout'):
+                if 'cache_timeout' in kwargs:
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-                if data:
+                if data and cache_timeout > 0 and use_cache:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
                 if not kwargs.get('show_error', True):
                     raise
 
+                log.debug('Failed getting cache: %s', (traceback.format_exc(0)))
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):
@@ -289,21 +316,71 @@ class Plugin(object):
         Env.get('cache').set(cache_key_md5, value, timeout)
         return value
 
-    def createNzbName(self, data, movie):
-        tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]), tag)
+    def createNzbName(self, data, media):
+        release_name = data.get('name')
+        tag = self.cpTag(media)
 
-    def createFileName(self, data, filedata, movie):
-        name = sp(os.path.join(self.createNzbName(data, movie)))
+        # Check if password is filename
+        name_password = scanForPassword(data.get('name'))
+        if name_password:
+            release_name, password = name_password
+            tag += '{{%s}}' % password
+        elif data.get('password'):
+            tag += '{{%s}}' % data.get('password')
+
+        max_length = 127 - len(tag)  # Some filesystems don't support 128+ long filenames
+        return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
+
+    def createFileName(self, data, filedata, media):
+        name = self.createNzbName(data, media)
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
 
-    def cpTag(self, movie):
+    def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+            identifier = getIdentifier(media)
+            return '.cp(' + identifier + ')' if identifier else ''
 
         return ''
+
+    def checkFilesChanged(self, files, unchanged_for = 60):
+        now = time.time()
+        file_too_new = False
+
+        file_time = []
+        for cur_file in files:
+
+            # File got removed while checking
+            if not os.path.isfile(cur_file):
+                file_too_new = now
+                break
+
+            # File has changed in last 60 seconds
+            file_time = self.getFileTimes(cur_file)
+            for t in file_time:
+                if t > now - unchanged_for:
+                    file_too_new = tryInt(time.time() - t)
+                    break
+
+            if file_too_new:
+                break
+
+        if file_too_new:
+            try:
+                time_string = time.ctime(file_time[0])
+            except:
+                try:
+                    time_string = time.ctime(file_time[1])
+                except:
+                    time_string = 'unknown'
+
+            return file_too_new, time_string
+
+        return False, None
+
+    def getFileTimes(self, file_path):
+        return [os.path.getmtime(file_path), os.path.getctime(file_path) if os.name != 'posix' else 0]
 
     def isDisabled(self):
         return not self.isEnabled()

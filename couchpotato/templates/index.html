@@ -69,10 +69,6 @@
 					'qualities': {{ json_encode(fireEvent('quality.all', single = True)) }}
 				});
 
-				Status.setup({{ json_encode(fireEvent('status.all', single = True)) }});
-
-				File.Type.setup({{ json_encode(fireEvent('file.types', single = True)) }});
-
 				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({

@@ -42,7 +42,7 @@ Page.Log = new Class({
 							}
 						}
 					}).inject(nav);
-				};
+				}
 
 				new Element('li', {
 					'text': 'clear',
@@ -63,7 +63,6 @@ Page.Log = new Class({
 	},
 
 	addColors: function(text){
-		var self = this;
 
 		text = text
 			.replace(/&/g, '&amp;')
@@ -73,10 +72,10 @@ Page.Log = new Class({
 			.replace(/\u001b\[31m/gi, '</span><span class="error">')
 			.replace(/\u001b\[36m/gi, '</span><span class="debug">')
 			.replace(/\u001b\[33m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
-			.replace(/\u001b\[0m/gi, '</span><span>')
+			.replace(/\u001b\[0m\n/gi, '</div><div class="time">')
+			.replace(/\u001b\[0m/gi, '</span><span>');
 
-		return '<span class="time">' + text + '</span>';
+		return '<div class="time">' + text + '</div>';
 	}
 
-})
+});

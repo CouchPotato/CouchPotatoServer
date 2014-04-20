@@ -447,7 +447,11 @@ class RequestHandler(object):
         The name of the argument is provided if known, but may be None
         (e.g. for unnamed groups in the url regex).
         """
-        return _unicode(value)
+        try:
+            return _unicode(value)
+        except UnicodeDecodeError:
+            raise HTTPError(400, "Invalid unicode in %s: %r" %
+                            (name or "url", value[:40]))
 
     @property
     def cookies(self):
@@ -512,6 +516,10 @@ class RequestHandler(object):
 
         See `clear_cookie` for more information on the path and domain
         parameters.
+
+        .. versionchanged:: 3.2
+
+           Added the ``path`` and ``domain`` parameters.
         """
         for name in self.request.cookies:
             self.clear_cookie(name, path=path, domain=domain)
@@ -1846,6 +1854,11 @@ class StaticFileHandler(RequestHandler):
     class method.  Instance methods may use the attributes ``self.path``
     ``self.absolute_path``, and ``self.modified``.
 
+    Subclasses should only override methods discussed in this section;
+    overriding other methods is error-prone.  Overriding
+    ``StaticFileHandler.get`` is particularly problematic due to the
+    tight coupling with ``compute_etag`` and other methods.
+
     To change the way static urls are generated (e.g. to match the behavior
     of another server or CDN), override `make_static_url`, `parse_url_path`,
     `get_cache_time`, and/or `get_version`.
@@ -1908,7 +1921,7 @@ class StaticFileHandler(RequestHandler):
                 # content, or when a suffix with length 0 is specified
                 self.set_status(416)  # Range Not Satisfiable
                 self.set_header("Content-Type", "text/plain")
-                self.set_header("Content-Range", "bytes */%s" %(size, ))
+                self.set_header("Content-Range", "bytes */%s" % (size, ))
                 return
             if start is not None and start < 0:
                 start += size

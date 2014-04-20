@@ -54,10 +54,23 @@ var Profile = new Class({
 			)
 		);
 
-		self.makeSortable()
+		self.makeSortable();
+
+		// Combine qualities and properties into types
+		if(data.qualities){
+			data.types = [];
+			data.qualities.each(function(quality, nr){
+				data.types.include({
+					'quality': quality,
+					'finish': data.finish[nr] || false,
+					'3d': data['3d'] ? data['3d'][nr] || false : false,
+					'wait_for': data.wait_for[nr] || 0
+				})
+			});
+		}
 
 		if(data.types)
-			Object.each(data.types, self.addType.bind(self))
+			data.types.each(self.addType.bind(self));
 		else
 			self.delete_button.hide();
 
@@ -87,7 +100,7 @@ var Profile = new Class({
 				'onComplete': function(json){
 					if(json.success){
 						self.data = json.profile;
-						self.type_container.getElement('li:first-child input[type=checkbox]')
+						self.type_container.getElement('li:first-child input.finish[type=checkbox]')
 							.set('checked', true)
 							.getParent().addClass('checked');
 					}
@@ -102,19 +115,21 @@ var Profile = new Class({
 		var self = this;
 
 		var data = {
-			'id' : self.data.id,
+			'id' : self.data._id,
 			'label' : self.el.getElement('.quality_label input').get('value'),
 			'wait_for' : self.el.getElement('.wait_for input').get('value'),
 			'types': []
-		}
+		};
 
 		Array.each(self.type_container.getElements('.type'), function(type){
-			if(!type.hasClass('deleted') && type.getElement('select').get('value') > 0)
+			if(!type.hasClass('deleted') && type.getElement('select').get('value') != -1)
 				data.types.include({
-					'quality_id': type.getElement('select').get('value'),
-					'finish': +type.getElement('input[type=checkbox]').checked
+					'quality': type.getElement('select').get('value'),
+					'finish': +type.getElement('input.finish[type=checkbox]').checked,
+					'3d': +type.getElement('input.3d[type=checkbox]').checked,
+					'wait_for': 0
 				});
-		})
+		});
 
 		return data
 	},
@@ -145,7 +160,7 @@ var Profile = new Class({
 		var self = this;
 
 		return self.types.filter(function(type){
-			return type.get('quality_id')
+			return type.get('quality')
 		});
 
 	},
@@ -162,7 +177,7 @@ var Profile = new Class({
 					(e).preventDefault();
 					Api.request('profile.delete', {
 						'data': {
-							'id': self.data.id
+							'id': self.data._id
 						},
 						'useSpinner': true,
 						'spinnerOptions': {
@@ -227,6 +242,7 @@ Profile.Type = new Class({
 
 		self.addEvent('change', function(){
 			self.el[self.qualities.get('value') == '-1' ? 'addClass' : 'removeClass']('is_empty');
+			self.el[Quality.getQuality(self.qualities.get('value')).allow_3d ? 'addClass': 'removeClass']('allow_3d');
 			self.deleted = self.qualities.get('value') == '-1';
 		});
 
@@ -237,24 +253,40 @@ Profile.Type = new Class({
 		var data = self.data;
 
 		self.el = new Element('li.type').adopt(
-			new Element('span.quality_type').adopt(
+			new Element('span.quality_type').grab(
 				self.fillQualities()
 			),
-			new Element('span.finish').adopt(
-				self.finish = new Element('input.inlay.finish[type=checkbox]', {
-					'checked': data.finish !== undefined ? data.finish : 1,
-					'events': {
-						'change': function(e){
-							if(self.el == self.el.getParent().getElement(':first-child')){
-								self.finish_class.check();
-								alert('Top quality always finishes the search')
-								return;
-							}
+			self.finish_container = new Element('label.finish').adopt(
+				new Element('span.finish').grab(
+					self.finish = new Element('input.inlay.finish[type=checkbox]', {
+						'checked': data.finish !== undefined ? data.finish : 1,
+						'events': {
+							'change': function(){
+								if(self.el == self.el.getParent().getElement(':first-child')){
+									self.finish_class.check();
+									alert('Top quality always finishes the search');
+									return;
+								}
 
-							self.fireEvent('change');
+								self.fireEvent('change');
+							}
 						}
-					}
-				})
+					})
+				),
+				new Element('span.check_label[text=finish]')
+			),
+			self['3d_container'] = new Element('label.threed').adopt(
+				new Element('span.3d').grab(
+					self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
+						'checked': data['3d'] !== undefined ? data['3d'] : 0,
+						'events': {
+							'change': function(){
+								self.fireEvent('change');
+							}
+						}
+					})
+				),
+				new Element('span.check_label[text=3D]')
 			),
 			new Element('span.delete.icon2', {
 				'events': {
@@ -264,9 +296,13 @@ Profile.Type = new Class({
 			new Element('span.handle')
 		);
 
-		self.el[self.data.quality_id > 0 ? 'removeClass' : 'addClass']('is_empty');
+		self.el[self.data.quality ? 'removeClass' : 'addClass']('is_empty');
+
+		if(self.data.quality && Quality.getQuality(self.data.quality).allow_3d)
+			self.el.addClass('allow_3d');
 
 		self.finish_class = new Form.Check(self.finish);
+		self['3d_class'] = new Form.Check(self['3d']);
 
 	},
 
@@ -277,7 +313,7 @@ Profile.Type = new Class({
 			'events': {
 				'change': self.fireEvent.bind(self, 'change')
 			}
-		}).adopt(
+		}).grab(
 			new Element('option', {
 				'text': '+ Add another quality',
 				'value': -1
@@ -287,11 +323,12 @@ Profile.Type = new Class({
 		Object.each(Quality.qualities, function(q){
 			new Element('option', {
 				'text': q.label,
-				'value': q.id
+				'value': q.identifier,
+				'data-allow_3d': q.allow_3d
 			}).inject(self.qualities)
 		});
 
-		self.qualities.set('value', self.data.quality_id);
+		self.qualities.set('value', self.data.quality);
 
 		return self.qualities;
 
@@ -301,8 +338,10 @@ Profile.Type = new Class({
 		var self = this;
 
 		return {
-			'quality_id': self.qualities.get('value'),
-			'finish': +self.finish.checked
+			'quality': self.qualities.get('value'),
+			'finish': +self.finish.checked,
+			'3d': +self['3d'].checked,
+			'wait_for': 0
 		}
 	},
 
@@ -324,4 +363,4 @@ Profile.Type = new Class({
 		return this.el;
 	}
 
-})
+});

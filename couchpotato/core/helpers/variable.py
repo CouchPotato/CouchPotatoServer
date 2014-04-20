@@ -1,29 +1,40 @@
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
-from couchpotato.core.logger import CPLog
 import collections
 import hashlib
-import os.path
+import os
 import platform
 import random
 import re
 import string
 import sys
 
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
+from couchpotato.core.logger import CPLog
+import six
+from six.moves import map, zip, filter
+
+
 log = CPLog(__name__)
+
+
+def fnEscape(pattern):
+    return pattern.replace('[', '[[').replace(']', '[]]').replace('[[', '[[]')
+
 
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateHardLinkW(unicode(dst), unicode(src), 0) == 0: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateHardLinkW(six.text_type(dst), six.text_type(src), 0) == 0: raise ctypes.WinError()
     else:
         os.link(src, dst)
+
 
 def symlink(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateSymbolicLinkW(unicode(dst), unicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateSymbolicLinkW(six.text_type(dst), six.text_type(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
         os.symlink(src, dst)
+
 
 def getUserDir():
     try:
@@ -33,6 +44,7 @@ def getUserDir():
         pass
 
     return os.path.expanduser('~')
+
 
 def getDownloadDir():
     user_dir = getUserDir()
@@ -45,6 +57,7 @@ def getDownloadDir():
         return os.path.join(user_dir, 'Downloads')
 
     return user_dir
+
 
 def getDataDir():
 
@@ -65,8 +78,10 @@ def getDataDir():
     # Linux
     return os.path.join(user_dir, '.couchpotato')
 
-def isDict(object):
-    return isinstance(object, dict)
+
+def isDict(obj):
+    return isinstance(obj, dict)
+
 
 def mergeDicts(a, b, prepend_list = False):
     assert isDict(a), isDict(b)
@@ -88,6 +103,7 @@ def mergeDicts(a, b, prepend_list = False):
                     current_dst[key] = current_src[key]
     return dst
 
+
 def removeListDuplicates(seq):
     checked = []
     for e in seq:
@@ -95,34 +111,72 @@ def removeListDuplicates(seq):
             checked.append(e)
     return checked
 
+
 def flattenList(l):
     if isinstance(l, list):
         return sum(map(flattenList, l))
     else:
         return l
 
+
 def md5(text):
     return hashlib.md5(ss(text)).hexdigest()
 
+
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
+
 
 def isLocalIP(ip):
     ip = ip.lstrip('htps:/')
     regex = '/(^127\.)|(^192\.168\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^::1)$/'
     return re.search(regex, ip) is not None or 'localhost' in ip or ip[:4] == '127.'
 
+
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
 
-def cleanHost(host):
-    if not host.startswith(('http://', 'https://')):
-        host = 'http://' + host
 
-    host = host.rstrip('/')
-    host += '/'
+def cleanHost(host, protocol = True, ssl = False, username = None, password = None):
+    """Return a cleaned up host with given url options set
+
+    Changes protocol to https if ssl is set to True and http if ssl is set to false.
+    >>> cleanHost("localhost:80", ssl=True)
+    'https://localhost:80/'
+    >>> cleanHost("localhost:80", ssl=False)
+    'http://localhost:80/'
+
+    Username and password is managed with the username and password variables
+    >>> cleanHost("localhost:80", username="user", password="passwd")
+    'http://user:passwd@localhost:80/'
+
+    Output without scheme (protocol) can be forced with protocol=False
+    >>> cleanHost("localhost:80", protocol=False)
+    'localhost:80'
+    """
+
+    if not '://' in host and protocol:
+        host = ('https://' if ssl else 'http://') + host
+
+    if not protocol:
+        host = host.split('://', 1)[-1]
+
+    if protocol and username and password:
+        try:
+            auth = re.findall('^(?:.+?//)(.+?):(.+?)@(?:.+)$', host)
+            if auth:
+                log.error('Cleanhost error: auth already defined in url: %s, please remove BasicAuth from url.', host)
+            else:
+                host = host.replace('://', '://%s:%s@' % (username, password), 1)
+        except:
+            pass
+
+    host = host.rstrip('/ ')
+    if protocol:
+        host += '/'
 
     return host
+
 
 def getImdb(txt, check_inside = False, multiple = False):
 
@@ -140,7 +194,7 @@ def getImdb(txt, check_inside = False, multiple = False):
         ids = re.findall('(tt\d{4,7})', txt)
 
         if multiple:
-            return list(set(['tt%07d' % tryInt(x[2:]) for x in ids])) if len(ids) > 0 else []
+            return removeDuplicate(['tt%07d' % tryInt(x[2:]) for x in ids]) if len(ids) > 0 else []
 
         return 'tt%07d' % tryInt(ids[0][2:])
     except IndexError:
@@ -148,9 +202,11 @@ def getImdb(txt, check_inside = False, multiple = False):
 
     return False
 
+
 def tryInt(s, default = 0):
     try: return int(s)
     except: return default
+
 
 def tryFloat(s):
     try:
@@ -160,38 +216,42 @@ def tryFloat(s):
             return float(s)
     except: return 0
 
-def natsortKey(s):
-    return map(tryInt, re.findall(r'(\d+|\D+)', s))
 
-def natcmp(a, b):
-    return cmp(natsortKey(a), natsortKey(b))
+def natsortKey(string_):
+    """See http://www.codinghorror.com/blog/archives/001018.html"""
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
 
 def toIterable(value):
     if isinstance(value, collections.Iterable):
         return value
     return [value]
 
-def getTitle(library_dict):
+
+def getIdentifier(media):
+    return media.get('identifier') or media.get('identifiers', {}).get('imdb')
+
+
+def getTitle(media_dict):
     try:
         try:
-            return library_dict['titles'][0]['title']
+            return media_dict['title']
         except:
             try:
-                for title in library_dict.titles:
-                    if title.default:
-                        return title.title
+                return media_dict['titles'][0]
             except:
                 try:
-                    return library_dict['info']['titles'][0]
+                    return media_dict['info']['titles'][0]
                 except:
-                    log.error('Could not get title for %s', library_dict.identifier)
-                    return None
-
-        log.error('Could not get title for %s', library_dict['identifier'])
-        return None
+                    try:
+                        return media_dict['media']['info']['titles'][0]
+                    except:
+                        log.error('Could not get title for %s', getIdentifier(media_dict))
+                        return None
     except:
-        log.error('Could not get title for library item: %s', library_dict)
+        log.error('Could not get title for library item: %s', media_dict)
         return None
+
 
 def possibleTitles(raw_title):
 
@@ -205,14 +265,45 @@ def possibleTitles(raw_title):
     new_title = raw_title.replace('&', 'and')
     titles.append(simplifyString(new_title))
 
-    return list(set(titles))
+    return removeDuplicate(titles)
+
 
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
+
 def splitString(str, split_on = ',', clean = True):
-    list = [x.strip() for x in str.split(split_on)] if str else []
-    return filter(None, list) if clean else list
+    l = [x.strip() for x in str.split(split_on)] if str else []
+    return removeEmpty(l) if clean else l
+
+
+def removeEmpty(l):
+    return list(filter(None, l))
+
+
+def removeDuplicate(l):
+    seen = set()
+    return [x for x in l if x not in seen and not seen.add(x)]
+
 
 def dictIsSubset(a, b):
     return all([k in b and b[k] == v for k, v in a.items()])
+
+
+def isSubFolder(sub_folder, base_folder):
+    # Returns True if sub_folder is the same as or inside base_folder
+    return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+
+
+# From SABNZBD
+re_password = [re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+
+
+def scanForPassword(name):
+    m = None
+    for reg in re_password:
+        m = reg.search(name)
+        if m: break
+
+    if m:
+        return m.group(1).strip('. '), m.group(2).strip()

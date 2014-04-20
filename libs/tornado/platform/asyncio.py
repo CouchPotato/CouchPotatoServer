@@ -8,6 +8,8 @@ python3.4 -m tornado.test.runtests --ioloop=tornado.platform.asyncio.AsyncIOMain
 (the tests log a few warnings with AsyncIOMainLoop because they leave some
 unfinished callbacks on the event loop that fail when it resumes)
 """
+
+from __future__ import absolute_import, division, print_function, with_statement
 import asyncio
 import datetime
 import functools
@@ -15,6 +17,7 @@ import os
 
 from tornado.ioloop import IOLoop
 from tornado import stack_context
+
 
 class BaseAsyncIOLoop(IOLoop):
     def initialize(self, asyncio_loop, close_loop=False):
@@ -33,7 +36,10 @@ class BaseAsyncIOLoop(IOLoop):
         for fd in list(self.handlers):
             self.remove_handler(fd)
             if all_fds:
-                os.close(fd)
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
         if self.close_loop:
             self.asyncio_loop.close()
 
@@ -85,6 +91,7 @@ class BaseAsyncIOLoop(IOLoop):
         self.handlers[fd](fd, events)
 
     def start(self):
+        self._setup_logging()
         self.asyncio_loop.run_forever()
 
     def stop(self):
@@ -104,7 +111,7 @@ class BaseAsyncIOLoop(IOLoop):
         else:
             raise TypeError("Unsupported deadline %r", deadline)
         return self.asyncio_loop.call_later(delay, self._run_callback,
-                                          stack_context.wrap(callback))
+                                            stack_context.wrap(callback))
 
     def remove_timeout(self, timeout):
         timeout.cancel()
@@ -114,8 +121,8 @@ class BaseAsyncIOLoop(IOLoop):
             raise RuntimeError("IOLoop is closing")
         if kwargs:
             self.asyncio_loop.call_soon_threadsafe(functools.partial(
-                    self._run_callback, stack_context.wrap(callback),
-                    *args, **kwargs))
+                self._run_callback, stack_context.wrap(callback),
+                *args, **kwargs))
         else:
             self.asyncio_loop.call_soon_threadsafe(
                 self._run_callback, stack_context.wrap(callback), *args)
@@ -127,6 +134,7 @@ class AsyncIOMainLoop(BaseAsyncIOLoop):
     def initialize(self):
         super(AsyncIOMainLoop, self).initialize(asyncio.get_event_loop(),
                                                 close_loop=False)
+
 
 class AsyncIOLoop(BaseAsyncIOLoop):
     def initialize(self):

@@ -1,6 +1,5 @@
 from .main import CoreNotifier
 
-def start():
-    return CoreNotifier()
 
-config = []
+def autoload():
+    return CoreNotifier()

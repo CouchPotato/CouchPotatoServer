@@ -1,15 +1,36 @@
-#So you feel like posting a bug, sending me a pull request or just telling me how awesome I am. No problem! 
+# Contributing to CouchPotatoServer
 
-##Just make sure you think of the following things:
+1. [Contributing](#contributing)
+2. [Submitting an Issue](#issues)
+3. [Submitting a Pull Request](#pull-requests)
 
- * Search through the existing (and closed) issues first. See if you can get your answer there.
- * Double check the result manually, because it could be an external issue. 
- * Post logs! Without seeing what is going on, I can't reproduce the error.
- * What is the movie + quality you are searching for.
- * What are you settings for the specific problem.
- * What providers are you using. (While your logs include these, scanning through hundred of lines of log isn't my hobby).
- * Give me a short step by step of how to reproduce.
- * What hardware / OS are you using and what are the limits? NAS can be slow and maybe have a different python installed then when you use CP on OSX or Windows for example.
- * I will mark issues with the "can't reproduce" tag. Don't go asking me "why closed" if it clearly says the issue in the tag ;)
+## Contributing
+Thank you for your interest in contributing to CouchPotato. There are several ways to help out, even if you've never worked on an open source project before.
+If you've found a bug or want to request a feature, you can report it by [posting an issue](https://github.com/RuudBurger/CouchPotatoServer/issues/new) - be sure to read the [guidelines](#issues) first!
+If you want to contribute your own work, please read the [guidelines](#pull-requests) for submitting a pull request.
+Lastly, for anything related to CouchPotato, feel free to stop by the [forum](http://couchpota.to/forum/) or the [#couchpotato](http://webchat.freenode.net/?channels=couchpotato) IRC channel at irc.freenode.net.
 
-**If I don't get enough info, the chance of the issue getting closed is a lot bigger ;)**
+## Issues
+Issues are intended for reporting bugs and weird behaviour or suggesting improvements to CouchPotatoServer.
+Before you submit an issue, please go through the following checklist:
+ * Search through existing issues (*including closed issues!*) first: you might be able to get your answer there.
+ * Double check your issue manually, because it could be an external issue. 
+ * Post logs with your issue: Without seeing what is going on, the developers can't reproduce the error.
+ * Check the logs yourself before submitting them. Obvious errors like permission or HTTP errors are often not related to CouchPotato.
+ * What movie and quality are you searching for?
+ * What are your settings for the specific problem?
+ * What providers are you using? (While your logs include these, scanning through hundreds of lines of logs isn't our hobby)
+ * Post the logs from the *config* directory, please do not copy paste the UI. Use pastebin to store these logs!
+ * Give a short step by step of how to reproduce the error.
+ * What hardware / OS are you using and what are its limitations? For example: NAS can be slow and maybe have a different version of python installed then when you use CP on OSX or Windows.
+ * Your issue might be marked with the "can't reproduce" tag. Don't ask why your issue was closed if it says so in the tag.
+ * If you're running on a NAS (QNAP, Austor etc..) with pre-made packages, make sure these are set up to use our source repository (RuudBurger/CouchPotatoServer) and nothing else!!
+ 
+The more relevant information you can provide, the more likely it is the issue will be resolved rather than closed.
+
+## Pull Requests
+Pull requests are intended for contributing code or documentation to the project. Before you submit a pull request, consider the following:
+ * Make sure your pull request is made for the *develop* branch (or relevant feature branch).
+ * Have you tested your PR? If not, why?
+ * Does your PR have any limitations we should know of?
+ * Is your PR up-to-date with the branch you're trying to push into?

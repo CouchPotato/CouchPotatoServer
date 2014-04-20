@@ -1,10 +1,12 @@
+import re
+import traceback
+
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-import re
-import traceback
+
 
 log = CPLog(__name__)
 
@@ -50,6 +52,7 @@ def nameScore(name, year, preferred_words):
     score += 100 * len(list(set(nzb_words) & set(preferred_words)))
 
     return score
+
 
 def nameRatioScore(nzb_name, movie_name):
     nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))

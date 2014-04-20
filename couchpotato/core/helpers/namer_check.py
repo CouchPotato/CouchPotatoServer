@@ -12,7 +12,7 @@ from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import getTitle, mergeDicts
-from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
 from guessit import guess_movie_info
 from couchpotato.core.event import fireEvent
@@ -35,7 +35,7 @@ multipart_regex = [
     ]
         
 def correctName(check_name, movie):
-        MovieTitles = movie['library']['info']['titles']
+        MovieTitles = movie['info']['titles']
         result=0
         for movietitle in MovieTitles:
             check_names = [simplifyString(check_name)]

@@ -9,6 +9,7 @@
 	bottom: 0;
 	left: 0;
 	background: #4E5969;
+	z-index: 100;
 }
 
 	.page.log .nav li {
@@ -27,12 +28,12 @@
 			cursor: default;
 			background: rgba(255,255,255,.1);
 		}
-		
+
 		@media all and (max-width: 480px) {
 			.page.log .nav {
 				font-size: 14px;
 			}
-			
+
 				.page.log .nav li {
 					padding: 5px;
 				}
@@ -47,16 +48,9 @@
 .page.log .container {
 	padding: 30px 0 60px;
 	overflow: hidden;
-}
-
-.page.log .container span {
-	float: left;
-	width: 86%;
 	line-height: 150%;
-	padding: 3px 0;
-	border-top: 1px solid rgba(255, 255, 255, 0.2);
 	font-size: 11px;
-	font-family: Lucida Console, Monaco, Nimbus Mono L;
+	font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 }
 
 	.page.log .container .error {
@@ -67,11 +61,17 @@
 
 	.page.log .container .time {
 		clear: both;
-		width: 14%;
 		color: lightgrey;
 		padding: 3px 0;
 		font-size: 10px;
+		border-top: 1px solid rgba(255, 255, 255, 0.2);
+		position: relative;
 	}
 
-	.page.log .container .time:last-child { display: none; }
+		.page.log .container .time:last-child { display: none; }
+
+		.page.log .container .time span {
+			float: right;
+			width: 86%;
+		}
 

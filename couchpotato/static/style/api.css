@@ -93,3 +93,70 @@ pre {
 			float: left;
 			width: 700px;
 		}
+
+.database {
+	padding: 20px;
+	margin: 0;
+}
+
+	.database * {
+		margin: 0;
+		padding: 0;
+	}
+
+	.database .nav {
+	}
+		.database .nav li {
+			display: inline-block;
+		}
+			.database .nav li a {
+				padding: 5px;
+			}
+
+	.database table {
+		font-size: 11px;
+	}
+
+		.database table th {
+			text-align: left;
+		}
+
+		.database table tr:hover {
+			position: relative;
+			z-index: 20;
+		}
+
+			.database table td {
+				vertical-align: top;
+				position: relative;
+			}
+
+			.database table .id {
+				width: 100px;
+			}
+
+			.database table ._rev {
+				width: 60px;
+			}
+
+			.database table ._t {
+				width: 60px;
+			}
+
+			.database table .form {
+				width: 600px;
+			}
+
+			.database table form {
+				width: 600px;
+			}
+
+				.database textarea {
+					font-size: 12px;
+					width: 100%;
+					height: 200px;
+				}
+
+				.database input[type=submit] {
+					display: block;
+				}

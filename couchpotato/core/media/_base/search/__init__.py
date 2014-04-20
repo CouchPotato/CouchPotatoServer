@@ -1,6 +1,5 @@
 from .main import Search
 
-def start():
-    return Search()
 
-config = []
+def autoload():
+    return Search()

@@ -1,23 +1,29 @@
-from couchpotato import get_session
+from operator import itemgetter
+import threading
+import time
+import traceback
+import uuid
+
+from couchpotato import get_db
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from couchpotato.core.settings.model import Notification as Notif
+from .index import NotificationIndex, NotificationUnreadIndex
 from couchpotato.environment import Env
-from operator import itemgetter
-from sqlalchemy.sql.expression import or_
-import threading
-import time
-import traceback
-import uuid
+
 
 log = CPLog(__name__)
 
 
 class CoreNotifier(Notification):
+
+    _database = {
+        'notification': NotificationIndex,
+        'notification_unread': NotificationUnreadIndex
+    }
 
     m_lock = None
 
@@ -66,51 +72,49 @@ class CoreNotifier(Notification):
         self.m_lock = threading.Lock()
 
     def clean(self):
-
-        db = get_session()
-        db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
-        db.commit()
-
+        try:
+            db = get_db()
+            for n in db.all('notification', with_doc = True):
+                if n['doc'].get('time', 0) <= (int(time.time()) - 2419200):
+                    db.delete(n['doc'])
+        except:
+            log.error('Failed cleaning notification: %s', traceback.format_exc())
 
     def markAsRead(self, ids = None, **kwargs):
 
         ids = splitString(ids) if ids else None
 
-        db = get_session()
-
-        if ids:
-            q = db.query(Notif).filter(or_(*[Notif.id == tryInt(s) for s in ids]))
-        else:
-            q = db.query(Notif).filter_by(read = False)
-
-        q.update({Notif.read: True})
-
-        db.commit()
+        try:
+            db = get_db()
+            for x in db.all('notification_unread', with_doc = True):
+                if not ids or x['_id'] in ids:
+                    x['doc']['read'] = True
+                    db.update(x['doc'])
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed mark as read: %s', traceback.format_exc())
 
         return {
-            'success': True
+            'success': False
         }
 
     def listView(self, limit_offset = None, **kwargs):
 
-        db = get_session()
-
-        q = db.query(Notif)
+        db = get_db()
 
         if limit_offset:
             splt = splitString(limit_offset)
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
-            q = q.limit(limit).offset(offset)
+            results = db.get_many('notification', limit = limit, offset = offset, with_doc = True)
         else:
-            q = q.limit(200)
+            results = db.get_many('notification', limit = 200, with_doc = True)
 
-        results = q.all()
         notifications = []
         for n in results:
-            ndict = n.to_dict()
-            ndict['type'] = 'notification'
-            notifications.append(ndict)
+            notifications.append(n['doc'])
 
         return {
             'success': True,
@@ -127,7 +131,7 @@ class CoreNotifier(Notification):
 
         for message in messages:
             if message.get('time') > last_check:
-                message['sticky'] = True # Always sticky core messages
+                message['sticky'] = True  # Always sticky core messages
 
                 message_type = 'core.message.important' if message.get('important') else 'core.message'
                 fireEvent(message_type, message = message.get('message'), data = message)
@@ -140,24 +144,24 @@ class CoreNotifier(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
-        db = get_session()
+        try:
+            db = get_db()
 
-        data['notification_type'] = listener if listener else 'unknown'
+            data['notification_type'] = listener if listener else 'unknown'
 
-        n = Notif(
-            message = toUnicode(message),
-            data = data
-        )
-        db.add(n)
-        db.commit()
+            n = {
+                '_t': 'notification',
+                'time': int(time.time()),
+                'message': toUnicode(message),
+                'data': data
+            }
+            db.insert(n)
 
-        ndict = n.to_dict()
-        ndict['type'] = 'notification'
-        ndict['time'] = time.time()
+            self.frontend(type = listener, data = n)
 
-        self.frontend(type = listener, data = data)
-
-        return True
+            return True
+        except:
+            log.error('Failed notify: %s', traceback.format_exc())
 
     def frontend(self, type = 'notification', data = None, message = None):
         if not data: data = {}
@@ -256,16 +260,13 @@ class CoreNotifier(Notification):
 
         # Get unread
         if init:
-            db = get_session()
+            db = get_db()
 
-            notifications = db.query(Notif) \
-                .filter(or_(Notif.read == False, Notif.added > (time.time() - 259200))) \
-                .all()
+            notifications = db.all('notification_unread', with_doc = True)
 
             for n in notifications:
-                ndict = n.to_dict()
-                ndict['type'] = 'notification'
-                messages.append(ndict)
+                if n['doc'].get('time') > (time.time() - 259200):
+                    messages.append(n['doc'])
 
         return {
             'success': True,

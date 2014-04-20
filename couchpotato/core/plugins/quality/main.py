@@ -1,24 +1,29 @@
-from couchpotato import get_session
+import traceback
+import re
+
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Quality, Profile, ProfileType
-from sqlalchemy.sql.expression import or_
-import re
-import time
+from couchpotato.core.plugins.quality.index import QualityIndex
+
 
 log = CPLog(__name__)
 
 
 class QualityPlugin(Plugin):
 
+    _database = {
+        'quality': QualityIndex
+    }
+
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -29,6 +34,11 @@ class QualityPlugin(Plugin):
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':[]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
+    threed_tags = {
+        'hsbs': [('half', 'sbs')],
+        'fsbs': [('full', 'sbs')],
+        '3d': [('3d'),('sbs'),('3dbd'),('hsbs')],
+    }
 
     cached_qualities = None
     cached_order = None
@@ -38,6 +48,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
         addEvent('quality.pre_releases', self.preReleases)
+        addEvent('quality.order', self.getOrder)
 
         addApiView('quality.size.save', self.saveSize)
         addApiView('quality.list', self.allView, docs = {
@@ -51,6 +62,17 @@ class QualityPlugin(Plugin):
         addEvent('app.initialize', self.fill, priority = 10)
 
         addEvent('app.test', self.doTest)
+
+        self.order = []
+        self.addOrder()
+
+    def addOrder(self):
+        self.order = []
+        for q in self.qualities:
+            self.order.append(q.get('identifier'))
+
+    def getOrder(self):
+        return self.order
 
     def preReleases(self):
         return self.pre_releases
@@ -67,26 +89,28 @@ class QualityPlugin(Plugin):
         if self.cached_qualities:
             return self.cached_qualities
 
-        db = get_session()
+        db = get_db()
 
-        qualities = db.query(Quality).all()
+        qualities = db.all('quality', with_doc = True)
 
         temp = []
         for quality in qualities:
-            q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
+            quality = quality['doc']
+            q = mergeDicts(self.getQuality(quality.get('identifier')), quality)
             temp.append(q)
 
         self.cached_qualities = temp
+
         return temp
 
     def single(self, identifier = ''):
 
-        db = get_session()
+        db = get_db()
         quality_dict = {}
 
-        quality = db.query(Quality).filter(or_(Quality.identifier == identifier, Quality.id == identifier)).first()
+        quality = db.get('quality', identifier, with_doc = True)['doc']
         if quality:
-            quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
+            quality_dict = mergeDicts(self.getQuality(quality['identifier']), quality)
 
         return quality_dict
 
@@ -98,70 +122,60 @@ class QualityPlugin(Plugin):
 
     def saveSize(self, **kwargs):
 
-        db = get_session()
-        quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
+        try:
+            db = get_db()
+            quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
 
-        if quality:
-            setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
-            db.commit()
+            if quality:
+                quality['doc'][kwargs.get('value_type')] = tryInt(kwargs.get('value'))
+                db.update(quality['doc'])
 
-        self.cached_qualities = None
+            self.cached_qualities = None
+
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
         return {
-            'success': True
+            'success': False
         }
 
     def fill(self):
 
-        db = get_session()
+        try:
+            db = get_db()
 
-        order = 0
-        for q in self.qualities:
+            order = 0
+            for q in self.qualities:
 
-            # Create quality
-            qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+                db.insert({
+                    '_t': 'quality',
+                    'order': order,
+                    'identifier': q.get('identifier'),
+                    'size_min': tryInt(q.get('size')[0]),
+                    'size_max': tryInt(q.get('size')[1]),
+                })
 
-            if not qual:
-                log.info('Creating quality: %s', q.get('label'))
-                qual = Quality()
-                qual.order = order
-                qual.identifier = q.get('identifier')
-                qual.label = toUnicode(q.get('label'))
-                qual.size_min, qual.size_max = q.get('size')
-
-                db.add(qual)
-
-            # Create single quality profile
-            prof = db.query(Profile).filter(
-                    Profile.core == True
-                ).filter(
-                    Profile.types.any(quality = qual)
-                ).all()
-
-            if not prof:
                 log.info('Creating profile: %s', q.get('label'))
-                prof = Profile(
-                    core = True,
-                    label = toUnicode(qual.label),
-                    order = order
-                )
-                db.add(prof)
+                db.insert({
+                    '_t': 'profile',
+                    'order': order + 20,  # Make sure it goes behind other profiles
+                    'core': True,
+                    'qualities': [q.get('identifier')],
+                    'label': toUnicode(q.get('label')),
+                    'finish': [True],
+                    'wait_for': [0],
+                })
 
-                profile_type = ProfileType(
-                    quality = qual,
-                    profile = prof,
-                    finish = True,
-                    order = 0
-                )
-                prof.types.append(profile_type)
+                order += 1
 
-            order += 1
+            return True
+        except:
+            log.error('Failed: %s', traceback.format_exc())
 
-        db.commit()
-
-        time.sleep(0.3) # Wait a moment
-
-        return True
+        return False
 
     def guess(self, files, extra = None):
         if not extra: extra = {}
@@ -177,20 +191,24 @@ class QualityPlugin(Plugin):
         # Start with 0
         score = {}
         for quality in qualities:
-            score[quality.get('identifier')] = 0
+            score[quality.get('identifier')] = {
+                'score': 0,
+                '3d': {}
+            }
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
-                self.calcScore(score, quality, contains_score)
+                threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
+
+                self.calcScore(score, quality, contains_score, threedscore)
 
         # Try again with loose testing
         for quality in qualities:
-            loose_score = self.guessLooseScore(quality, files = files, extra = extra)
+            loose_score = self.guessLooseScore(quality, extra = extra)
             self.calcScore(score, quality, loose_score)
-
 
         # Return nothing if all scores are 0
         has_non_zero = 0
@@ -201,10 +219,13 @@ class QualityPlugin(Plugin):
         if not has_non_zero:
             return None
 
-        heighest_quality = max(score, key = score.get)
+        heighest_quality = max(score, key = lambda p: score[p]['score'])
         if heighest_quality:
             for quality in qualities:
                 if quality.get('identifier') == heighest_quality:
+                    quality['is_3d'] = False
+                    if score[heighest_quality].get('3d'):
+                        quality['is_3d'] = True
                     return self.setCache(cache_key, quality)
 
         return None
@@ -227,12 +248,12 @@ class QualityPlugin(Plugin):
             qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
 
             for alt in qualities:
-                if (isinstance(alt, tuple)):
+                if isinstance(alt, tuple):
                     if len(set(words) & set(alt)) == len(alt):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
 
-                if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower():
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     score += points.get(tag_type) / 2
 
@@ -248,7 +269,24 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def guessLooseScore(self, quality, files = None, extra = None):
+    def contains3D(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+
+        for key in self.threed_tags:
+            tags = self.threed_tags.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                    log.debug('Found %s in %s', (tag, cur_file))
+                    return 1, key
+
+            if list(set([key]) & set(words)):
+                log.debug('Found %s in %s', (tag, cur_file))
+                return 1, key
+
+        return 0, None
+
+    def guessLooseScore(self, quality, extra = None):
 
         score = 0
 
@@ -270,9 +308,16 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def calcScore(self, score, quality, add_score):
+    def calcScore(self, score, quality, add_score, threedscore = (0, None)):
 
-        score[quality['identifier']] += add_score
+        score[quality['identifier']]['score'] += add_score
+
+        threedscore, threedtag = threedscore
+        if threedscore and threedtag:
+            if threedscore not in score[quality['identifier']]['3d']:
+                score[quality['identifier']]['3d'][threedtag] = 0
+
+            score[quality['identifier']]['3d'][threedtag] += threedscore
 
         # Set order for allow calculation (and cache)
         if not self.cached_order:
@@ -282,7 +327,7 @@ class QualityPlugin(Plugin):
 
         if add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
 
     def doTest(self):
 
@@ -296,6 +341,9 @@ class QualityPlugin(Plugin):
             'Movie.Name.1999.DVDRip-Group': 'dvdrip',
             'Movie.Name.1999.DVD-Rip-Group': 'dvdrip',
             'Movie.Name.1999.DVD-R-Group': 'dvdr',
+            'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': '720p',
+            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': '1080p',
+            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': '1080p',
         }
 
         correct = 0

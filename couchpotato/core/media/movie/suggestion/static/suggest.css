@@ -1,4 +1,7 @@
 .suggestions {
+    clear: both;
+    padding-top: 10px;
+	margin-bottom: 30px;
 }
 
 	.suggestions > h2 {
@@ -91,7 +94,6 @@
 			padding: 0 3px 10px 0;
 		}
 			.suggestions .media_result .data:before {
-				bottom: 0;
 				content: '';
 				display: block;
 				height: 10px;
@@ -107,7 +109,7 @@
 				z-index: 3;
 				pointer-events: none;
 			}
-		
+
 			.suggestions .media_result .data .info .plot.full {
 				top: 0;
 				overflow: auto;
@@ -123,14 +125,14 @@
 		.suggestions .media_result .options select[name=title] { width: 100%; }
 		.suggestions .media_result .options select[name=profile] { width: 100%; }
 		.suggestions .media_result .options select[name=category] { width: 100%; }
-		
-		.suggestions .media_result .button { 
+
+		.suggestions .media_result .button {
 			position: absolute;
 			margin: 2px 0 0 0;
 			right: 15px;
 			bottom: 15px;
 		}
-		
+
 
 	.suggestions .media_result .thumbnail {
 		width: 100px;

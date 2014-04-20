@@ -118,20 +118,18 @@ Page.Settings = new Class({
 	create: function(json){
 		var self = this;
 
-		self.el.adopt(
-			self.tabs_container = new Element('ul.tabs'),
-			self.containers = new Element('form.uniForm.containers').adopt(
-				new Element('label.advanced_toggle').adopt(
-					new Element('span', {
-						'text': 'Show advanced settings'
-					}),
-					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
-						'checked': +Cookie.read('advanced_toggle_checked'),
-						'events': {
-							'change': self.showAdvanced.bind(self)
-						}
-					})
-				)
+		self.tabs_container = new Element('ul.tabs');
+		self.containers = new Element('form.uniForm.containers').adopt(
+			new Element('label.advanced_toggle').adopt(
+				new Element('span', {
+					'text': 'Show advanced settings'
+				}),
+				self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+					'checked': +Cookie.read('advanced_toggle_checked'),
+					'events': {
+						'change': self.showAdvanced.bind(self)
+					}
+				})
 			)
 		);
 		self.showAdvanced();
@@ -197,8 +195,15 @@ Page.Settings = new Class({
 			});
 		});
 
-		self.fireEvent('create');
-		self.openTab();
+		setTimeout(function(){
+			self.el.adopt(
+				self.tabs_container,
+				self.containers
+			);
+
+			self.fireEvent('create');
+			self.openTab();
+		}, 0);
 
 	},
 
@@ -268,20 +273,10 @@ Page.Settings = new Class({
 
 		if((typeOf(group.description) == 'array')){
 			var hint = new Element('span.hint.more_hint', {
-				'html': group.description[0],
-				'title': group.description[1]
+				'html': group.description[0]
 			});
-			var tip = new Tips(hint, {
-				'fixed': true,
-				'offset': {'x': 0, 'y': 0},
-				'onShow': function(tip, hint){
-		            tip.setStyles({
-		            	'margin-top': hint.getSize().y,
-		                'visibility': 'hidden',
-		                'display': 'block'
-		            }).fade('in');
-				}
-			});
+
+			createTooltip(group.description[1]).inject(hint, 'top');
 		}
 		else {
 			var hint = new Element('span.hint', {
@@ -369,24 +364,13 @@ var OptionBase = new Class({
 
 			if((typeOf(self.options.description) == 'array')){
 				var hint = new Element('p.formHint.more_hint', {
-					'html': self.options.description[0],
-					'title': self.options.description[1]
+					'html': self.options.description[0]
 				}).inject(self.el);
-				var tip = new Tips(hint, {
-					'fixed': true,
-					'offset': {'x': 0, 'y': 0},
-					'onShow': function(tip, hint){
-			            tip.setStyles({
-			            	'margin-left': 13,
-			            	'margin-top': hint.getSize().y+3,
-			                'visibility': 'hidden',
-			                'display': 'block'
-			            }).fade('in');
-					}
-				});
+
+				createTooltip(self.options.description[1]).inject(hint, 'top');
 			}
 			else {
-				var hint = new Element('p.formHint', {
+				new Element('p.formHint', {
 					'html': self.options.description || ''
 				}).inject(self.el)
 			}
@@ -1308,6 +1292,7 @@ Option.Combined = new Class({
 		self.inputs = {};
 		self.items = [];
 		self.labels = {};
+		self.descriptions = {};
 
 		self.options.combine.each(function(name){
 
@@ -1327,10 +1312,14 @@ Option.Combined = new Class({
 		var head = new Element('div.head').inject(self.combined_list);
 
 		Object.each(self.inputs, function(input, name){
+			var _in = input.getNext();
 			self.labels[name] = input.getPrevious().get('text');
+			self.descriptions[name] = _in ? _in.get('text') : '';
+
 			new Element('abbr', {
 				'class': name,
-				'text': self.labels[name]
+				'text': self.labels[name],
+				'title': self.descriptions[name]
 			}).inject(head)
 		});
 
@@ -1457,3 +1446,24 @@ Option.Combined = new Class({
 	}
 
 });
+
+var createTooltip = function(description){
+
+	var tip = new Element('div.tooltip', {
+			'events': {
+				'mouseenter': function(){
+					tip.addClass('shown')
+				},
+				'mouseleave': function(){
+					tip.removeClass('shown')
+				}
+			}
+		}).adopt(
+			new Element('a.icon2.info'),
+			new Element('div.tip', {
+				'html': description
+			})
+		);
+
+	return tip;
+};

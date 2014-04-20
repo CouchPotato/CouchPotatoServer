@@ -1,7 +1,5 @@
-CouchPotato Server VF
+CouchPotato
 =====
-
-Based on Ruudburger work
 
 CouchPotato (CP) is an automatic NZB and torrent downloader. You can keep a "movies I want"-list and it will search for NZBs/torrents of these movies every X hours.
 Once a movie is found, it will send it to SABnzbd or download the torrent to a specified directory.
@@ -9,7 +7,7 @@ Once a movie is found, it will send it to SABnzbd or download the torrent to a s
 
 ## Running from Source
 
-CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed also.
+CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed.
 
 Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for more details:
 
@@ -42,7 +40,7 @@ Linux (ubuntu / debian):
 * Make it executable. `sudo chmod +x /etc/init.d/couchpotato`
 * Add it to defaults. `sudo update-rc.d couchpotato defaults`
 * Open your browser and go to: `http://localhost:5050/`
- 
+
 
 FreeBSD :
 
@@ -58,7 +56,7 @@ FreeBSD :
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then run `sudo python CouchPotatoServer/CouchPotato.py` to start for the first time
 * To run on boot copy the init script. `sudo cp CouchPotatoServer/init/freebsd /etc/rc.d/couchpotato`
-* Change the paths inside the init script. `sudo vim /etc/init.d/couchpotato`
+* Change the paths inside the init script. `sudo vim /etc/rc.d/couchpotato`
 * Make init script executable. `sudo chmod +x /etc/rc.d/couchpotato`
 * Add init to startup. `sudo echo 'couchpotato_enable="YES"' >> /etc/rc.conf`
 * Open your browser and go to: `http://server:5050/`

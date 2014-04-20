@@ -127,6 +127,7 @@
 			margin: 0;
 			padding: 0;
 			vertical-align: top;
+			line-height: 0;
 		}
 
 			@media all and (max-width: 800px) {
@@ -343,6 +344,7 @@
 					top: auto;
 					right: auto;
 					color: #FFF;
+					line-height: 18px;
 				}
 
 				.touch_enabled .movies.list_list .movie .info .year {
@@ -396,7 +398,6 @@
 
 			.movies .data .quality span {
 				padding: 2px 3px;
-				font-weight: bold;
 				opacity: 0.5;
 				font-size: 10px;
 				height: 16px;
@@ -449,7 +450,6 @@
 			right: 20px;
 			line-height: 0;
 			top: 0;
-			display: block;
 			width: auto;
 			opacity: 0;
 			display: none;
@@ -831,7 +831,6 @@
 		}
 
 	.movies .alph_nav .search input {
-		padding: 6px 5px;
 		width: 100%;
 		height: 44px;
 		display: inline-block;
@@ -839,7 +838,6 @@
 		background: none;
 		color: #444;
 		font-size: 14px;
-		padding: 10px;
 		padding: 0 10px 0 30px;
 		border-bottom: 1px solid rgba(0,0,0,.08);
 	}
@@ -1041,7 +1039,6 @@
 			}
 
 			.movies .progress > div .percentage {
-				font-weight: bold;
 				display: inline-block;
 				text-transform: uppercase;
 				font-weight: normal;

@@ -1,14 +1,16 @@
-from couchpotato.core.helpers.request import getParams
-from couchpotato.core.logger import CPLog
 from functools import wraps
 from threading import Thread
-from tornado.gen import coroutine
-from tornado.web import RequestHandler, asynchronous
 import json
 import threading
-import tornado
 import traceback
 import urllib
+
+from couchpotato.core.helpers.request import getParams
+from couchpotato.core.logger import CPLog
+from tornado.gen import coroutine
+from tornado.web import RequestHandler, asynchronous
+import tornado
+
 
 log = CPLog(__name__)
 
@@ -20,6 +22,7 @@ api_nonblock = {}
 api_docs = {}
 api_docs_missing = []
 
+
 def run_async(func):
     @wraps(func)
     def async_func(*args, **kwargs):
@@ -28,6 +31,7 @@ def run_async(func):
         return func_hl
 
     return async_func
+
 
 # NonBlock API handler
 class NonBlockHandler(RequestHandler):
@@ -61,6 +65,7 @@ class NonBlockHandler(RequestHandler):
 
         self.stopper = None
 
+
 def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
     api_nonblock[route] = func_tuple
 
@@ -68,6 +73,7 @@ def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
         api_docs[route[4:] if route[0:4] == 'api.' else route] = docs
     else:
         api_docs_missing.append(route)
+
 
 # Blocking API handler
 class ApiHandler(RequestHandler):
@@ -89,6 +95,7 @@ class ApiHandler(RequestHandler):
 
             # Split array arguments
             kwargs = getParams(kwargs)
+            kwargs['_request'] = self
 
             # Remove t random string
             try: del kwargs['t']
@@ -98,11 +105,12 @@ class ApiHandler(RequestHandler):
             @run_async
             def run_handler(callback):
                 try:
-                    result = api[route](**kwargs)
-                    callback(result)
+                    res = api[route](**kwargs)
+                    callback(res)
                 except:
                     log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
                     callback({'success': False, 'error': 'Failed returning results'})
+
             result = yield tornado.gen.Task(run_handler)
 
             # Check JSONP callback
@@ -121,6 +129,9 @@ class ApiHandler(RequestHandler):
             self.write({'success': False, 'error': 'Failed returning results'})
 
         api_locks[route].release()
+
+    post = get
+
 
 def addApiView(route, func, static = False, docs = None, **kwargs):
 

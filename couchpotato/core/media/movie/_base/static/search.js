@@ -41,7 +41,7 @@ Block.Search.MovieItem = new Class({
 					)
 				)
 			)
-		)
+		);
 
 		if(info.titles)
 			info.titles.each(function(title){
@@ -132,19 +132,19 @@ Block.Search.MovieItem = new Class({
 
 		if(!self.options_el.hasClass('set')){
 
-			if(self.info.in_library){
+			if(info.in_library){
 				var in_library = [];
-				self.info.in_library.releases.each(function(release){
-					in_library.include(release.quality.label)
+				(info.in_library.releases || []).each(function(release){
+					in_library.include(release.quality)
 				});
 			}
 
 			self.options_el.grab(
 				new Element('div', {
-					'class': self.info.in_wanted && self.info.in_wanted.profile_id || in_library ? 'in_library_wanted' : ''
+					'class': info.in_wanted && info.in_wanted.profile_id || in_library ? 'in_library_wanted' : ''
 				}).adopt(
-					self.info.in_wanted && self.info.in_wanted.profile_id ? new Element('span.in_wanted', {
-						'text': 'Already in wanted list: ' + Quality.getProfile(self.info.in_wanted.profile_id).get('label')
+					info.in_wanted && info.in_wanted.profile_id ? new Element('span.in_wanted', {
+						'text': 'Already in wanted list: ' + Quality.getProfile(info.in_wanted.profile_id).get('label')
 					}) : (in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + in_library.join(', ')
 					}) : null),
@@ -172,7 +172,7 @@ Block.Search.MovieItem = new Class({
 				new Element('option', {
 					'text': alt.title
 				}).inject(self.title_select)
-			})
+			});
 
 
 			// Fill categories
@@ -184,7 +184,7 @@ Block.Search.MovieItem = new Class({
 				self.category_select.show();
 				categories.each(function(category){
 					new Element('option', {
-						'value': category.data.id,
+						'value': category.data._id,
 						'text': category.data.label
 					}).inject(self.category_select);
 				});
@@ -197,8 +197,8 @@ Block.Search.MovieItem = new Class({
 
 			profiles.each(function(profile){
 				new Element('option', {
-					'value': profile.id ? profile.id : profile.data.id,
-					'text': profile.label ? profile.label : profile.data.label
+					'value': profile.get('_id'),
+					'text': profile.get('label')
 				}).inject(self.profile_select)
 			});
 
@@ -215,9 +215,9 @@ Block.Search.MovieItem = new Class({
 	loadingMask: function(){
 		var self = this;
 
-		self.mask = new Element('div.mask').inject(self.el).fade('hide')
+		self.mask = new Element('div.mask').inject(self.el).fade('hide');
 
-		createSpinner(self.mask)
+		createSpinner(self.mask);
 		self.mask.fade('in')
 
 	},

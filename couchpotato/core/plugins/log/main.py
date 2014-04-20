@@ -1,11 +1,13 @@
+import os
+import traceback
+
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-import os
-import traceback
+
 
 log = CPLog(__name__)
 
@@ -42,7 +44,7 @@ class Logging(Plugin):
             'desc': 'Log errors',
             'params': {
                 'type': {'desc': 'Type of logging, default "error"'},
-                '**kwargs': {'type':'object', 'desc': 'All other params will be printed in the log string.'},
+                '**kwargs': {'type': 'object', 'desc': 'All other params will be printed in the log string.'},
             }
         })
 
@@ -65,14 +67,14 @@ class Logging(Plugin):
             if x is nr:
                 current_path = path
 
-        log = ''
+        log_content = ''
         if current_path:
             f = open(current_path, 'r')
-            log = f.read()
+            log_content = f.read()
 
         return {
             'success': True,
-            'log': toUnicode(log),
+            'log': toUnicode(log_content),
             'total': total,
         }
 

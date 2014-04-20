@@ -1,6 +1,7 @@
 from .main import Twitter
 
-def start():
+
+def autoload():
     return Twitter()
 
 config = [{

@@ -1,6 +1,5 @@
 from .main import Score
 
-def start():
-    return Score()
 
-config = []
+def autoload():
+    return Score()
