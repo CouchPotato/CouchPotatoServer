@@ -2,7 +2,7 @@ import re
 import traceback
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 
@@ -65,7 +65,7 @@ class Base(NZBProvider):
 
                     results.append({
                         'id': nzb_id,
-                        'name': title.text,
+                        'name': simplifyString(title.text),
                         'age': tryInt(age),
                         'size': self.parseSize(size_match.group('size')),
                         'url': self.urls['download'] % nzb_id,
