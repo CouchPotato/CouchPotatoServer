@@ -443,14 +443,11 @@ class Renamer(Plugin):
                 try:
                     if media.get('status') == 'active' and media.get('profile_id'):
                         profile = db.get('id', media['profile_id'])
-                        if group['meta_data']['quality']['identifier'] in profile.get('qualities', []):
-                            nr = profile['qualities'].index(group['meta_data']['quality']['identifier'])
-                            finish = profile['finish'][nr]
-                            if finish:
-                                mdia = db.get('id', media['_id'])
-                                mdia['status'] = 'done'
-                                mdia['last_edit'] = int(time.time())
-                                db.update(mdia)
+                        if fireEvent('release.isfinish', group['meta_data']['quality'], profile):
+                            mdia = db.get('id', media['_id'])
+                            mdia['status'] = 'done'
+                            mdia['last_edit'] = int(time.time())
+                            db.update(mdia)
 
                 except Exception as e:
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
@@ -461,18 +458,19 @@ class Renamer(Plugin):
                     # When a release already exists
                     if release.get('status') == 'done':
 
-                        release_order = quality_order.index(release['quality'])
-                        group_quality_order = quality_order.index(group['meta_data']['quality']['identifier'])
+                        # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
+                        is_higher = fireEvent('quality.ishigher', \
+                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, profile, single = True)
 
-                        # This is where CP removes older, lesser quality releases
-                        if release_order > group_quality_order:
-                            log.info('Removing lesser quality %s for %s.', (media_title, release.get('quality')))
+                        if is_higher == 'higher':
+                            log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
                                     remove_files.append(release_file)
                             remove_releases.append(release)
+
                         # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
-                        elif release_order == group_quality_order:
+                        elif is_higher == 'equal':
                             log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
