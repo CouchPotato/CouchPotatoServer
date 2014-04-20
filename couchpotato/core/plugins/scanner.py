@@ -60,29 +60,29 @@ class Scanner(Plugin):
     }
 
     codecs = {
-        'audio': ['dts', 'ac3', 'ac3d', 'mp3'],
-        'video': ['x264', 'h264', 'divx', 'xvid']
+        'audio': ['DTS', 'AC3', 'AC3D', 'MP3'],
+        'video': ['x264', 'H264', 'DivX', 'Xvid']
     }
 
     audio_codec_map = {
-        0x2000: 'ac3',
-        0x2001: 'dts',
-        0x0055: 'mp3',
-        0x0050: 'mp2',
-        0x0001: 'pcm',
-        0x003: 'pcm',
-        0x77a1: 'tta1',
-        0x5756: 'wav',
-        0x6750: 'vorbis',
-        0xF1AC: 'flac',
-        0x00ff: 'aac',
+        0x2000: 'AC3',
+        0x2001: 'DTS',
+        0x0055: 'MP3',
+        0x0050: 'MP2',
+        0x0001: 'PCM',
+        0x003: 'WAV',
+        0x77a1: 'TTA1',
+        0x5756: 'WAV',
+        0x6750: 'Vorbis',
+        0xF1AC: 'FLAC',
+        0x00ff: 'AAC',
     }
 
     source_media = {
-        'bluray': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
-        'hddvd': ['hddvd', 'hd-dvd'],
-        'dvd': ['dvd'],
-        'hdtv': ['hdtv']
+        'Blu-ray': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
+        'HD DVD': ['hddvd', 'hd-dvd'],
+        'DVD': ['dvd'],
+        'HDTV': ['hdtv']
     }
 
     clean = '[ _\,\.\(\)\[\]\-]?(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
@@ -471,7 +471,7 @@ class Scanner(Plugin):
             p = enzyme.parse(filename)
 
             # Video codec
-            vc = ('h264' if p.video[0].codec == 'AVC1' else p.video[0].codec).lower()
+            vc = ('H264' if p.video[0].codec == 'AVC1' else p.video[0].codec)
 
             # Audio codec
             ac = p.audio[0].codec
