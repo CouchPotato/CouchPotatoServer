@@ -6,7 +6,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.environment import Env
-
+import tmdb3
 
 log = CPLog(__name__)
 
@@ -108,7 +108,17 @@ class CouchPotatoApi(MovieProvider):
             'ignore': ','.join(ignore),
         }, headers = self.getRequestHeaders())
         log.info('Found suggestions for %s movies, %s ignored', (len(movies), len(ignore)))
-
+        x=0
+        for item in suggestions:
+            movie = tmdb3.Movie(item['imdb'])
+            try:
+                suggestions[x]['plot']=movie.overview
+                suggestions[x]['titles'][0]=movie.title
+                suggestions[x]['images']['poster'][0]=suggestions[x]['images']['poster_original'][0][:suggestions[x]['images']['poster_original'][0].rfind('/')+1]+movie.posters[0].filename
+            except:
+                x+=1
+                continue
+            x+=1
         return suggestions
 
     def getRequestHeaders(self):
