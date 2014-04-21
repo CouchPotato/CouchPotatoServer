@@ -70,8 +70,8 @@ class Base(TorrentMagnetProvider):
                                         new['name'] = link.text
                                         new['url'] = td.find('a', 'imagnet')['href']
                                         new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
-                                        new['verified'] = 1 if td.find('a', 'iverify') else 0
-                                        new['score'] = 100 if td.find('a', 'iverify') else 0
+                                        new['verified'] = True if td.find('a', 'iverify') else False
+                                        new['score'] = 100 if new['verified'] else 0
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)
                                     elif column_name is 'age':
@@ -160,7 +160,7 @@ config = [{
                     'name': 'only_verified',
                     'advanced': True,
                     'type': 'bool',
-                    'default': 1,
+                    'default': False,
                     'description': 'Only search for verified releases.'
                 },
                 {
