@@ -26,7 +26,14 @@ class MovieResultModifier(Plugin):
             'backdrop': [],
             'poster_original': [],
             'backdrop_original': [],
-            'actors': {}
+            'actors': {},
+            'landscape': [],
+            'logo': [],
+            'clearart': [],
+            'discart': [],
+            'banner': [],
+            'extrathumbs': [],
+            'extrafanart': []
         },
         'runtime': 0,
         'plot': '',
