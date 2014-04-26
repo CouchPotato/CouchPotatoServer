@@ -42,41 +42,37 @@ class Base(TorrentProvider):
         results = []
         MovieTitles = movie['info']['titles']
         moviequality = simplifyString(quality['identifier'])
+        moviegenre = movie['info']['genres']
+        if 'Animation' in moviegenre:
+            subcat=455
+        elif 'Documentaire' in moviegenre or 'Documentary' in moviegenre:
+            subcat=634
+        else:    
+            subcat=631
+        if moviequality in ['720p']:
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B1%5D%5B%5D=15&term%5B7%5D%5B%5D=12&term%5B7%5D%5B%5D=1175"
+        elif moviequality in ['1080p']:
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=16&term%5B7%5D%5B%5D=1162&term%5B7%5D%5B%5D=1174"
+        elif moviequality in ['dvd-r']:
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=13&term%5B7%5D%5B%5D=14"
+        elif moviequality in ['br-disk']:
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=1171&term%5B7%5D%5B%5D=17"
+        else:
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=8&term%5B7%5D%5B%5D=9&term%5B7%5D%5B%5D=10&term%5B7%5D%5B%5D=11&term%5B7%5D%5B%5D=18&term%5B7%5D%5B%5D=19"
+        if quality['custom']['3d']==1:
+            qualpar=qualpar+"&term%5B9%5D%5B%5D=24&term%5B9%5D%5B%5D=23"
+            
         for MovieTitle in MovieTitles:
             try:
                 TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
             except:
                 continue
-            if moviequality in ['720p']:
-                try:
-                    results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=15")
-                    results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=15")
-                except:
-                    continue
-            elif moviequality in ['1080p']:
-                try:
-                    results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=16")
-                    results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=16")
-                except:
-                    continue
-            elif moviequality in ['dvd-r']:
-                try:
-                    results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=13&term%5B7%5D%5B%5D=14")
-                    results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=13&term%5B7%5D%5B%5D=14")
-                except:
-                    continue
-            elif moviequality in ['br-disk']:
-                try:
-                    results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=17")
-                    results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=17")
-                except:
-                    continue
-            else:
-                try:
-                    results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=8&term%5B7%5D%5B%5D=9&term%5B7%5D%5B%5D=10")
-                    results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=8&term%5B7%5D%5B%5D=9&term%5B7%5D%5B%5D=10")
-                except:
-                    continue
+            try:
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': subcat } ) + qualpar)
+                results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': subcat } ) + qualpar)
+            except:
+                continue
+        
         return results
     
     def _search(self, movie, quality, results):
@@ -107,6 +103,8 @@ class Base(TorrentProvider):
                             if categorie == ['cat-631']:
                                 insert = 1
                             if categorie == ['cat-455']:
+                                insert = 1
+                            if categorie == ['cat-634']:
                                 insert = 1
                          
                             if insert == 1 :

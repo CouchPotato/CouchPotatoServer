@@ -206,7 +206,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # app.debug = development
     config = {
         'use_reloader': reloader,
-        'port': tryInt(Env.setting('port', default = 5053)),
+        'port': tryInt(Env.setting('port', default = 5050)),
         'host': host if host and len(host) > 0 else '0.0.0.0',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),

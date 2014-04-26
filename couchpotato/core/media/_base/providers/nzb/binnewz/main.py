@@ -49,8 +49,8 @@ class Base(NZBProvider):
         MovieTitles = movie['info']['titles']
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['info']['year']
-        if hasattr(quality, 'allow_3d'):
-            threeD= quality['allow_3d']
+        if quality['custom']['3d']==1:
+            threeD= True
         else:
             threeD=False
         if moviequality in ("720p","1080p","bd50"):
