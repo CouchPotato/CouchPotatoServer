@@ -188,6 +188,7 @@ Block.Search.MovieItem = new Class({
 						'text': category.data.label
 					}).inject(self.category_select);
 				});
+				self.category_select.selectedIndex = 1;
 			}
 
 			// Fill profiles
