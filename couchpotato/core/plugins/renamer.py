@@ -314,8 +314,12 @@ class Renamer(Plugin):
                     'cd': '',
                     'cd_nr': '',
                     'mpaa': media['info'].get('mpaa', ''),
+                    'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
                 }
+                
+                if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
+                    replacements['mpaa_only'] = 'Not Rated'
 
                 for file_type in group['files']:
 
@@ -1207,7 +1211,8 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
-        'mpaa': 'MPAA Rating',
+        'mpaa': 'MPAA or other certification',
+        'mpaa_only': 'MPAA only certification (G|PG|PG-13|R|NC-17|Not Rated)',
         'category': 'Category label',
     },
 }
