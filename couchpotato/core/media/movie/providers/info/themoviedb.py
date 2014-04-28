@@ -70,6 +70,7 @@ class TheMovieDb(MovieProvider):
 
         cache_key = 'tmdb.cache.%s%s' % (identifier, '.ex' if extended else '')
         result = self.getCache(cache_key)
+        tmdb3.set_locale(self.conf('lang'), self.conf('lang'))
 
         if not result:
             try:
@@ -135,6 +136,7 @@ class TheMovieDb(MovieProvider):
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
+                'alternate_titles': [x.title for x in movie.alternate_titles if x.country == self.conf('lang')],
                 'original_title': movie.originaltitle,
                 'images': images,
                 'imdb': movie.imdb,

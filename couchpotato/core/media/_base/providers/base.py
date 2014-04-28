@@ -103,7 +103,7 @@ class Provider(Plugin):
 
 class YarrProvider(Provider):
 
-    protocol = None  # nzb, torrent, torrent_magnet
+    protocol = None  # nzb, torrent, torrent_magnet, och
 
     cat_ids = {}
     cat_backup_id = None

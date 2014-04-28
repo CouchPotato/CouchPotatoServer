@@ -9,6 +9,7 @@ from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
+# TODO: Option einfuegen fuer lokale required words ... Sprachenfilter
 
 class TorrentProvider(YarrProvider):
 
