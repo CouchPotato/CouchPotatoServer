@@ -6,7 +6,7 @@ from datetime import date
 import bs4
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.och.base import OCHProvider
+from core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.helpers.variable import tryInt
 from bs4 import BeautifulSoup, NavigableString
 import json

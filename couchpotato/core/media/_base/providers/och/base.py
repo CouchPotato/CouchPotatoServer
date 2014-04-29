@@ -1,10 +1,5 @@
-import json
-import httplib
-import urllib2
-from couchpotato.core.event import fireEvent
+from core.media._base.providers.base import YarrProvider
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import YarrProvider
-from urllib2 import Request
 
 log = CPLog(__name__)
 

@@ -8,7 +8,7 @@ import time
 import urllib
 import urllib2
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, cleanHost
 from couchpotato.core.logger import CPLog
@@ -25,7 +25,7 @@ autoload = 'pyload'
 # How To Access: http://docs.pyload.org/access_api.html#using-http-json
 # Examples: http://forum.pyload.org/viewtopic.php?f=7&t=2596
 
-class pyload(Downloader):
+class pyload(DownloaderBase):
     time_pending = {}   #saves the time when all files finished downloading in a PID
     protocol = ['och']
     pyload_api = None

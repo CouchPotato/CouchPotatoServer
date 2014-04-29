@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
 
 autoload = 'Filmstarts'

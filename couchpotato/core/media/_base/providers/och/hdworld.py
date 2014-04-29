@@ -6,9 +6,9 @@ from datetime import date
 import urllib
 import time
 import datetime
+from core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.och.base import OCHProvider
 from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
