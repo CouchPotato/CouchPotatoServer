@@ -1,4 +1,4 @@
-from core.media._base.providers.base import YarrProvider
+from couchpotato.core.media._base.providers.base import YarrProvider
 from couchpotato.core.logger import CPLog
 
 log = CPLog(__name__)

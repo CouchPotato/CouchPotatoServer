@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import json
-
 import re
-from datetime import date
 import urllib
 import time
 import datetime
-from core.media._base.providers.och.base import OCHProvider
+
+from couchpotato.core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
 from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
+
 
 class Base(OCHProvider):
     urls = {
@@ -22,12 +22,13 @@ class Base(OCHProvider):
         #Nach Lokalem Titel (abh. vom def. Laendercode) und original Titel suchen
         alt_titles = movie['library']['info'].get('alternate_titles', [])
         titles = []
-        titles.extend(alt_titles); titles.append(title)
+        titles.extend(alt_titles);
+        titles.append(title)
         for title in titles:
             self.do_search(simplifyString(title), results)
         if not results:
             shortenedAltTitles = []
-             # trying to delete original title string from alt title string
+            # trying to delete original title string from alt title string
             for alt_title in alt_titles:
                 if alt_title != title and title in alt_title:
                     shortenedAltTitle = simplifyString(alt_title).replace(simplifyString(title), "")
@@ -63,8 +64,8 @@ class Base(OCHProvider):
 
         try:
             relDateString = parsed.group('date')
-            relDate = time.strptime(relDateString, "%A, %d. %B %Y") #timestruct
-            relDate = datetime.date.fromtimestamp(time.mktime(relDate)) #date object
+            relDate = time.strptime(relDateString, "%A, %d. %B %Y")  #timestruct
+            relDate = datetime.date.fromtimestamp(time.mktime(relDate))  #date object
         except AttributeError, e:
             log.error("error while parsing date.")
 
@@ -74,7 +75,7 @@ class Base(OCHProvider):
         id = captionElem["id"].split("-")[1]
         title = captionElem.text
 
-        entry = post.find(attrs={"class":"entry"}, recursive=False)
+        entry = post.find(attrs={"class": "entry"}, recursive=False)
 
         size_raw = str(entry.find('strong', text=re.compile(u'Größe:\s?', re.UNICODE)).nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
@@ -88,17 +89,17 @@ class Base(OCHProvider):
             if acceptedHoster in hoster.lower():
                 url.append(download["href"])
 
-        for i in xrange(1,5): #support up to 5 mirrors
+        for i in xrange(1, 5):  #support up to 5 mirrors
             for mirrorTxt in entry.findAll('strong', text=re.compile('Mirror #?%i:?\s?' % i)):
                 hoster = mirrorTxt.findNextSibling('a').text
                 for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
                     if acceptedHoster in hoster.lower():
                         url.append(mirrorTxt.findNextSibling('a')["href"])
 
-        return {"id":      id,
-                "name":    title,
-                "size":    size,
-                "url":     json.dumps(url)}
+        return {"id": id,
+                "name": title,
+                "size": size,
+                "url": json.dumps(url)}
 
     def parseMovieDetailPage(self, data):
         dom = BeautifulSoup(data)
@@ -118,7 +119,7 @@ class Base(OCHProvider):
         res = {}
         if postContent is not None:
             res.update(postContent)
-            res["pwd"] = "hd-world.org" # hardcoded, is static on hd-world.org page
+            res["pwd"] = "hd-world.org"  # hardcoded, is static on hd-world.org page
         return res
 
     def parseSearchResult(self, data):
@@ -140,35 +141,35 @@ class Base(OCHProvider):
 
 
 config = [{
-    'name': 'hdworld',
-    'groups': [
-        {
-            'tab': 'searcher',
-            'list': 'och_providers',
-            'name': 'HD-World',
-            'description': 'See <a href="https://www.hd-world.org">HD-World.org</a>. Less accurate!',
-            'wizard': True,
-            'options': [
-                {
-                    'name': 'enabled',
-                    'type': 'enabler',
-                },
-                {
-                    'name': 'extra_score',
-                    'advanced': True,
-                    'label': 'Extra Score',
-                    'type': 'int',
-                    'default': 0,
-                    'description': 'Starting score for each release found via this provider.',
-                },
-                {
-                    'name': 'hosters',
-                    'label': 'accepted Hosters',
-                    'default': '',
-                    'placeholder': 'Example: uploaded,share-online',
-                    'description': 'List of Hosters separated by ",". Should be at least one!'
-                },
-            ],
-        },
-    ],
-}]
+              'name': 'hdworld',
+              'groups': [
+                  {
+                      'tab': 'searcher',
+                      'list': 'och_providers',
+                      'name': 'HD-World',
+                      'description': 'See <a href="https://www.hd-world.org">HD-World.org</a>. Less accurate!',
+                      'wizard': True,
+                      'options': [
+                          {
+                              'name': 'enabled',
+                              'type': 'enabler',
+                          },
+                          {
+                              'name': 'extra_score',
+                              'advanced': True,
+                              'label': 'Extra Score',
+                              'type': 'int',
+                              'default': 0,
+                              'description': 'Starting score for each release found via this provider.',
+                          },
+                          {
+                              'name': 'hosters',
+                              'label': 'accepted Hosters',
+                              'default': '',
+                              'placeholder': 'Example: uploaded,share-online',
+                              'description': 'List of Hosters separated by ",". Should be at least one!'
+                          },
+                      ],
+                  },
+              ],
+          }]
