@@ -14,7 +14,7 @@ import json
 log = CPLog(__name__)
 rarPassword = 'hd-area.org'
 
-class hdarea(OCHProvider):
+class Base(OCHProvider):
     urls = {
         'search': 'http://www.hd-area.org/?s=search&q=%s',
     }

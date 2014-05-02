@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
 
-class funxd(OCHProvider):
+class Base(OCHProvider):
     urls = {
         'search': 'http://funxd.in/?s=%s',
     }

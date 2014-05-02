@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
 
-class hdworld(OCHProvider):
+class Base(OCHProvider):
     urls = {
         'search': 'http://hd-world.org/index.php?s=%s',
     }
