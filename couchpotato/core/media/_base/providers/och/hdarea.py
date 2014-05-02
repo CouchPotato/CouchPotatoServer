@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import re
-import traceback
 from datetime import date
-import bs4
+import json
+
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
-from core.media._base.providers.och.base import OCHProvider
+from couchpotato.core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.helpers.variable import tryInt
 from bs4 import BeautifulSoup, NavigableString
-import json
+
 
 log = CPLog(__name__)
 rarPassword = 'hd-area.org'
+
 
 class Base(OCHProvider):
     urls = {
@@ -23,12 +24,13 @@ class Base(OCHProvider):
         #Nach Lokalem Titel (abh. vom def. Laendercode) und original Titel suchen
         alt_titles = movie['library']['info'].get('alternate_titles', [])
         titles = []
-        titles.extend(alt_titles); titles.append(title)
+        titles.extend(alt_titles);
+        titles.append(title)
         for title in titles:
             self.do_search(title, results)
         if not results:
             shortenedAltTitles = []
-             # trying to delete original title string from alt title string
+            # trying to delete original title string from alt title string
             for alt_title in alt_titles:
                 if alt_title != title and title in alt_title:
                     shortenedAltTitle = simplifyString(alt_title).replace(simplifyString(title), "")
@@ -79,7 +81,7 @@ class Base(OCHProvider):
                     if u"Größe:" in match:
                         try:
                             size_raw = re.search(r"[0-9]+([,.][0-9]+)?\s+\w+", str(match.nextSibling)).group()
-                            size = self.parseSize(str(size_raw,).replace(',','.'))
+                            size = self.parseSize(str(size_raw, ).replace(',', '.'))
                             res["size"] = size
                             log.debug('Found size of release: %s Mb' % size)
                         except (AttributeError, TypeError):
@@ -104,7 +106,7 @@ class Base(OCHProvider):
                             log.debug('Found new DL-Link %s on Hoster %s' % (url, hoster))
                             #return res
                 if res["url"] != []:
-                    res["url"] = json.dumps(res["url"])    #List 2 string for db-compatibility
+                    res["url"] = json.dumps(res["url"])  #List 2 string for db-compatibility
                     return res
                 else:
                     log.debug('No DL-Links on Hoster(s) [%s] found :(' % (self.conf('hosters')))
@@ -140,7 +142,7 @@ class Base(OCHProvider):
                 except AttributeError:
                     log.error("error parsing topbox of release %s" % res['name'])
                 if not isinstance(child, NavigableString) and ("boxrechts" in child["class"]):
-                    res['description'] = child.a["href"].split("/")[-2] #adding imdb-id
+                    res['description'] = child.a["href"].split("/")[-2]  #adding imdb-id
                 elif not isinstance(child, NavigableString) and "title" in child["class"]:
                     res['name'] = child.a["title"]
             except (TypeError, KeyError, IndexError):
@@ -187,35 +189,35 @@ class Base(OCHProvider):
 
 
 config = [{
-    'name': 'hdarea',
-    'groups': [
-        {
-            'tab': 'searcher',
-            'list': 'och_providers',
-            'name': 'HD-Area',
-            'description': 'See <a href="https://www.hd-area.org">HD-Area.org</a>',
-            'wizard': True,
-            'options': [
-                {
-                    'name': 'enabled',
-                    'type': 'enabler',
-                },
-                {
-                    'name': 'extra_score',
-                    'advanced': True,
-                    'label': 'Extra Score',
-                    'type': 'int',
-                    'default': 0,
-                    'description': 'Starting score for each release found via this provider.',
-                },
-                {
-                    'name': 'hosters',
-                    'label': 'accepted Hosters',
-                    'default': '',
-                    'placeholder': 'Example: uploaded,share-online',
-                    'description': 'List of Hosters separated by ",". Should be at least one!'
-                },
-            ],
-        },
-    ],
-}]
+              'name': 'hdarea',
+              'groups': [
+                  {
+                      'tab': 'searcher',
+                      'list': 'och_providers',
+                      'name': 'HD-Area',
+                      'description': 'See <a href="https://www.hd-area.org">HD-Area.org</a>',
+                      'wizard': True,
+                      'options': [
+                          {
+                              'name': 'enabled',
+                              'type': 'enabler',
+                          },
+                          {
+                              'name': 'extra_score',
+                              'advanced': True,
+                              'label': 'Extra Score',
+                              'type': 'int',
+                              'default': 0,
+                              'description': 'Starting score for each release found via this provider.',
+                          },
+                          {
+                              'name': 'hosters',
+                              'label': 'accepted Hosters',
+                              'default': '',
+                              'placeholder': 'Example: uploaded,share-online',
+                              'description': 'List of Hosters separated by ",". Should be at least one!'
+                          },
+                      ],
+                  },
+              ],
+          }]

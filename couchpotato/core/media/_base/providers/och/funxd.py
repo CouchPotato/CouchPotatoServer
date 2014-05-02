@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import json
-
 import re
 from datetime import date
 import urllib
 import time
 import datetime
+
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
-from core.media._base.providers.och.base import OCHProvider
+from couchpotato.core.media._base.providers.och.base import OCHProvider
 from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
+
 
 class Base(OCHProvider):
     urls = {
@@ -22,12 +23,13 @@ class Base(OCHProvider):
         #Nach Lokalem Titel (abh. vom def. Laendercode) und original Titel suchen
         alt_titles = movie['library']['info'].get('alternate_titles', [])
         titles = []
-        titles.extend(alt_titles); titles.append(title)
+        titles.extend(alt_titles);
+        titles.append(title)
         for title in titles:
             self.do_search(simplifyString(title), results)
         if not results:
             shortenedAltTitles = []
-             # trying to delete original title string from alt title string
+            # trying to delete original title string from alt title string
             for alt_title in alt_titles:
                 if alt_title != title and title in alt_title:
                     shortenedAltTitle = simplifyString(alt_title).replace(simplifyString(title), "")
@@ -76,10 +78,11 @@ class Base(OCHProvider):
         relDate = None
         try:
             relDateString = post.find(attrs={"class": "simple_date"}).text.split("on")[1].strip()
-            relDate = time.strptime(relDateString, "%B %d, %Y") #timestruct
-            relDate = datetime.date.fromtimestamp(time.mktime(relDate)) #date object
+            relDate = time.strptime(relDateString, "%B %d, %Y")  #timestruct
+            relDate = datetime.date.fromtimestamp(time.mktime(relDate))  #date object
         except ValueError, e:
-            log.error("error while parsing date. Dateparsing only works if you set english as your local language atm, sorry.")
+            log.error(
+                "error while parsing date. Dateparsing only works if you set english as your local language atm, sorry.")
 
         size_raw = str(post.find('strong', text='Size:').nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
@@ -88,15 +91,15 @@ class Base(OCHProvider):
 
         url = ""
         for p in post.findAll("p"):
-            if re.search(r"(share-online|uploaded)",str(p.a), re.IGNORECASE):
+            if re.search(r"(share-online|uploaded)", str(p.a), re.IGNORECASE):
                 url = p.a.attrs['href']
                 break
 
-        return {"id":      id,
-                "name":    title,
-                "age":     (date.today() - relDate).days if relDate is not None else 0,
-                "size":    size,
-                "url":     json.dumps([url])}
+        return {"id": id,
+                "name": title,
+                "age": (date.today() - relDate).days if relDate is not None else 0,
+                "size": size,
+                "url": json.dumps([url])}
 
     def parseMovieDetailPage(self, data):
         dom = BeautifulSoup(data)
@@ -112,7 +115,7 @@ class Base(OCHProvider):
         if commentContent is not None and postContent is not None:
             res.update(commentContent)
             res.update(postContent)
-            res["pwd"] = "funxd" # hardcoded, is static on funxd page
+            res["pwd"] = "funxd"  # hardcoded, is static on funxd page
         return res
 
     def parseSearchResult(self, data):
@@ -132,29 +135,30 @@ class Base(OCHProvider):
             log.debug('There are no search results to parse!')
             return []
 
+
 config = [{
-    'name': 'funxd',
-    'groups': [
-        {
-            'tab': 'searcher',
-            'list': 'och_providers',
-            'name': 'FunXD.in',
-            'description': 'See <a href="https://www.funxd.in">funXD.in</a>',
-            'wizard': True,
-            'options': [
-                {
-                    'name': 'enabled',
-                    'type': 'enabler',
-                },
-                {
-                    'name': 'extra_score',
-                    'advanced': True,
-                    'label': 'Extra Score',
-                    'type': 'int',
-                    'default': 0,
-                    'description': 'Starting score for each release found via this provider.',
-                },
-            ],
-        },
-    ],
-}]
+              'name': 'funxd',
+              'groups': [
+                  {
+                      'tab': 'searcher',
+                      'list': 'och_providers',
+                      'name': 'FunXD.in',
+                      'description': 'See <a href="https://www.funxd.in">funXD.in</a>',
+                      'wizard': True,
+                      'options': [
+                          {
+                              'name': 'enabled',
+                              'type': 'enabler',
+                          },
+                          {
+                              'name': 'extra_score',
+                              'advanced': True,
+                              'label': 'Extra Score',
+                              'type': 'int',
+                              'default': 0,
+                              'description': 'Starting score for each release found via this provider.',
+                          },
+                      ],
+                  },
+              ],
+          }]

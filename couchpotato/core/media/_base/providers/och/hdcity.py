@@ -3,10 +3,11 @@ import json
 import re
 import urllib
 
-from core.helpers.variable import getIdentifier
-from core.media._base.providers.och.base import OCHProvider
+from couchpotato.core.helpers.variable import getIdentifier
+from couchpotato.core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.logger import CPLog
 from bs4 import BeautifulSoup
+
 
 log = CPLog(__name__)
 
@@ -60,7 +61,7 @@ class Base(OCHProvider):
             size = -1
             try:
                 for strongTag in infoTag.findAll('p')[-1].findAll('strong'):
-                    if not 'download' in strongTag.text.lower() and not 'mirror' in strongTag.text.lower() : continue
+                    if not 'download' in strongTag.text.lower() and not 'mirror' in strongTag.text.lower(): continue
 
                     link = strongTag.findNextSibling()['href']
                     hoster = strongTag.findNextSibling().text
@@ -70,7 +71,7 @@ class Base(OCHProvider):
                             urlList.append(link)
                             log.debug('Found new DL-Link %s on Hoster %s' % (urlList, hoster))
                 if urlList != []:
-                    urlList = json.dumps(urlList)    #List 2 string for db-compatibility
+                    urlList = json.dumps(urlList)  #List 2 string for db-compatibility
                 else:
                     continue
 
