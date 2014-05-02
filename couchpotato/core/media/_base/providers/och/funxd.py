@@ -21,7 +21,7 @@ class Base(OCHProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
         #Nach Lokalem Titel (abh. vom def. Laendercode) und original Titel suchen
-        alt_titles = movie['library']['info'].get('alternate_titles', [])
+        alt_titles = movie['info'].get('alternate_titles', [])
         titles = []
         titles.extend(alt_titles);
         titles.append(title)
