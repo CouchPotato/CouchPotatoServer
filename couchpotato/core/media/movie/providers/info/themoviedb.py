@@ -70,7 +70,7 @@ class TheMovieDb(MovieProvider):
 
         cache_key = 'tmdb.cache.%s%s' % (identifier, '.ex' if extended else '')
         result = self.getCache(cache_key)
-        tmdb3.set_locale(self.conf('lang'), self.conf('lang'))
+        tmdb3.set_locale(self.conf('preferred_language'), self.conf('preferred_language'))
 
         if not result:
             try:
@@ -136,7 +136,7 @@ class TheMovieDb(MovieProvider):
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
-                'alternate_titles': [x.title for x in movie.alternate_titles if x.country == self.conf('lang')],
+                'alternate_titles': [movie.title if  self.conf('preferred_language') in movie._locale.language.ISO639_1 else None],
                 'original_title': movie.originaltitle,
                 'images': images,
                 'imdb': movie.imdb,
@@ -185,6 +185,18 @@ config = [{
     'name': 'themoviedb',
     'groups': [
         {
+            'tab': 'searcher',
+            'name': 'searcher',
+            'options': [
+                {
+                    'name': 'preferred_language',
+                    'label': 'Preferred langauge code',
+                    'description': 'Please provide your language code. It will be used for providers supporting altnerate title searching.',
+                    'default': 'en',
+                    'placeholder': 'en|de|fr...',
+                },
+            ],
+        }, {
             'tab': 'providers',
             'name': 'tmdb',
             'label': 'TheMovieDB',
