@@ -43,8 +43,8 @@ class Base(TorrentProvider):
             try:
                 for result in data.get('MovieList'):
 
-                    if result['quality'] and result['quality'] not in result['MovieTitle']:
-                        title = result['MovieTitle'] + ' ' + result['quality']
+                    if result['Quality'] and result['Quality'] not in result['MovieTitle']:
+                        title = result['MovieTitle'] + ' ' + result['Quality']
                     else: 
                         title = result['MovieTitle']
 
