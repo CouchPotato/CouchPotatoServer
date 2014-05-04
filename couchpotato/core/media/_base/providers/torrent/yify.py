@@ -43,12 +43,10 @@ class Base(TorrentProvider):
             try:
                 for result in data.get('MovieList'):
 
-                    try:
-                        title = result['TorrentUrl'].split('/')[-1][:-8].replace('_', '.').strip('._')
-                        title = title.replace('.-.', '-')
-                        title = title.replace('..', '.')
-                    except:
-                        continue
+                    if result['quality'] and result['quality'] not in result['MovieTitle']:
+                        title = result['MovieTitle'] + ' ' + result['quality']
+                    else: 
+                        title = result['MovieTitle']
 
                     results.append({
                         'id': result['MovieID'],
