@@ -412,8 +412,12 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+                                sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
+
+                                # Don't add language to subtitle file it it's already there
+                                if not sub_name.endswith(sub_suffix):
+                                    sub_name = sub_name.replace(replacements['ext'], sub_suffix)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
