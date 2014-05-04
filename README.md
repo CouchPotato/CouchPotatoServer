@@ -19,7 +19,7 @@ Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for
 * You can now start CP via `CouchPotatoServer\CouchPotato.py` to start
 * Your browser should open up, but if it doesn't go to: `http://localhost:5050/`
 
-OSx:
+OS X:
 
 * If you're on Leopard (10.5) install Python 2.6+: [Python 2.6.5](http://www.python.org/download/releases/2.6.5/)
 * Install [GIT](http://git-scm.com/)
@@ -29,7 +29,7 @@ OSx:
 * Then do `python CouchPotatoServer/CouchPotato.py`
 * Your browser should open up, but if it doesn't go to: `http://localhost:5050/`
 
-Linux (ubuntu / debian):
+Linux (Ubuntu / Debian):
 
 * Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * 'cd' to the folder of your choosing.
