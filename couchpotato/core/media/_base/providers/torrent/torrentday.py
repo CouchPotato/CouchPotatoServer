@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -18,16 +19,16 @@ class Base(TorrentProvider):
 
     http_time_between_calls = 1  # Seconds
 
-    def _search(self, media, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
-        query = self.buildUrl(media)
+        query = '%s %s' % (title, media['info']['year'])
 
         data = {
             '/browse.php?': None,
             'cata': 'yes',
             'jxt': 8,
             'jxw': 'b',
-            'search': query,
+            'search': tryUrlencode(query),
         }
 
         data = self.getJsonData(self.urls['search'], data = data)
