@@ -6,7 +6,7 @@ import traceback
 
 from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp, ss
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString, getIdentifier
 from couchpotato.core.logger import CPLog
@@ -40,6 +40,17 @@ class Scanner(Plugin):
         'trailer': ['mov', 'mp4', 'flv']
     }
 
+    threed_types = {
+        'Half SBS': [('half', 'sbs'), ('h', 'sbs'), 'hsbs'],
+        'Full SBS': [('full', 'sbs'), ('f', 'sbs'), 'fsbs'],
+        'SBS': ['sbs'],
+        'Half OU': [('half', 'ou'), ('h', 'ou'), 'hou'],
+        'Full OU': [('full', 'ou'), ('h', 'ou'), 'fou'],
+        'OU': ['ou'],
+        'Frame Packed': ['mvc', ('complete', 'bluray')],
+        '3D': ['3d']
+    }
+
     file_types = {
         'subtitle': ('subtitle', 'subtitle'),
         'subtitle_extra': ('subtitle', 'subtitle_extra'),
@@ -64,6 +75,16 @@ class Scanner(Plugin):
         'video': ['x264', 'H264', 'DivX', 'Xvid']
     }
 
+    resolutions = {
+        '1080p': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
+        '1080i': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
+        '720p': {'resolution_width': 1280, 'resolution_height': 720, 'aspect': 1.78},
+        '720i': {'resolution_width': 1280, 'resolution_height': 720, 'aspect': 1.78},
+        '480p': {'resolution_width': 640, 'resolution_height': 480, 'aspect': 1.33},
+        '480i': {'resolution_width': 640, 'resolution_height': 480, 'aspect': 1.33},
+        'default': {'resolution_width': 0, 'resolution_height': 0, 'aspect': 1},
+    }
+
     audio_codec_map = {
         0x2000: 'AC3',
         0x2001: 'DTS',
@@ -85,8 +106,8 @@ class Scanner(Plugin):
         'HDTV': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-]?(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
-            '|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
+    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|ou|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+            '|hdtvrip|webdl|web.dl|webrip|web.rip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|hc|\[.*\])(?=[ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
         '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)',  #*dvd1
@@ -164,7 +185,7 @@ class Scanner(Plugin):
                 identifiers = [identifier]
 
                 # Identifier with quality
-                quality = fireEvent('quality.guess', [file_path], single = True) if not is_dvd_file else {'identifier':'dvdr'}
+                quality = fireEvent('quality.guess', files = [file_path], size = self.getFileSize(file_path), single = True) if not is_dvd_file else {'identifier':'dvdr'}
                 if quality:
                     identifier_with_quality = '%s %s' % (identifier, quality.get('identifier', ''))
                     identifiers = [identifier_with_quality, identifier]
@@ -431,28 +452,39 @@ class Scanner(Plugin):
         for cur_file in files:
             if not self.filesizeBetween(cur_file, self.file_sizes['movie']): continue  # Ignore smaller files
 
-            meta = self.getMeta(cur_file)
+            if not data.get('audio'): # Only get metadata from first media file
+                meta = self.getMeta(cur_file)
 
-            try:
-                data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
-                data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
-                data['resolution_width'] = meta.get('resolution_width', 720)
-                data['resolution_height'] = meta.get('resolution_height', 480)
-                data['audio_channels'] = meta.get('audio_channels', 2.0)
-                data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
-            except:
-                log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
-                pass
+                try:
+                    data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
+                    data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
+                    data['audio_channels'] = meta.get('audio_channels', 2.0)
+                    if meta.get('resolution_width'):
+                        data['resolution_width'] = meta.get('resolution_width')
+                        data['resolution_height'] = meta.get('resolution_height')
+                        data['aspect'] = round(float(meta.get('resolution_width')) / meta.get('resolution_height', 1), 2)
+                    else:
+                        data.update(self.getResolution(cur_file))
+                except:
+                    log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
+                    pass
 
-            if data.get('audio'): break
+            data['size'] = data.get('size', 0) + self.getFileSize(cur_file)
 
-        # Use the quality guess first, if that failes use the quality we wanted to download
         data['quality'] = None
+        quality = fireEvent('quality.guess', size = data['size'], files = files, extra = data, single = True)
+
+        # Use the quality that we snatched but check if it matches our guess
         if release_download and release_download.get('quality'):
             data['quality'] = fireEvent('quality.single', release_download.get('quality'), single = True)
+            data['quality']['is_3d'] = release_download.get('is_3d', 0)
+            if data['quality']['identifier'] != quality['identifier']:
+                log.info('Different quality snatched than detected for %s: %s vs. %s. Assuming snatched quality is correct.', (files[0], data['quality']['identifier'], quality['identifier']))
+            if data['quality']['is_3d'] != quality['is_3d']:
+                log.info('Different 3d snatched than detected for %s: %s vs. %s. Assuming snatched 3d is correct.', (files[0], data['quality']['is_3d'], quality['is_3d']))
 
         if not data['quality']:
-            data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
+            data['quality'] = quality
 
             if not data['quality']:
                 data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
@@ -462,8 +494,24 @@ class Scanner(Plugin):
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
-
+        if data['quality'].get('is_3d', 0):
+            data['3d_type'] = self.get3dType(filename)
         return data
+
+    def get3dType(self, filename):
+        filename = ss(filename)
+
+        words = re.split('\W+', filename.lower())
+
+        for key in self.threed_types:
+            tags = self.threed_types.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in words):
+                    log.debug('Found %s in %s', (tag, filename))
+                    return key
+
+        return ''
 
     def getMeta(self, filename):
 
@@ -708,18 +756,25 @@ class Scanner(Plugin):
         if not file_size: file_size = []
 
         try:
-            return (file_size.get('min', 0) * 1048576) < os.path.getsize(file) < (file_size.get('max', 100000) * 1048576)
+            return file_size.get('min', 0) < self.getFileSize(file) < file_size.get('max', 100000)
         except:
             log.error('Couldn\'t get filesize of %s.', file)
 
         return False
 
-    def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
+    def getFileSize(self, file):
+        try:
+            return os.path.getsize(file) / 1024 / 1024
+        except:
+            return None
 
-        year = self.findYear(file_path)
+    def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
         identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
+
+        # Make sure the identifier is lower case as all regex is with lower case tags
+        identifier = identifier.lower()
 
         try:
             path_split = splitString(identifier, os.path.sep)
@@ -735,8 +790,13 @@ class Scanner(Plugin):
         # remove cptag
         identifier = self.removeCPTag(identifier)
 
-        # groups, release tags, scenename cleaner, regex isn't correct
-        identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
+        # simplify the string
+        identifier = simplifyString(identifier)
+
+        year = self.findYear(file_path)
+
+        # groups, release tags, scenename cleaner
+        identifier = re.sub(self.clean, '::', identifier).strip(':')
 
         # Year
         if year and identifier[:4] != year:
@@ -784,6 +844,14 @@ class Scanner(Plugin):
             return (codec and codec.group('codec')) or ''
         except:
             return ''
+
+    def getResolution(self, filename):
+        try:
+            for key in self.resolutions:
+                if key in filename.lower() and key != 'default':
+                    return self.resolutions[key]
+        except:
+            return self.resolutions['default']
 
     def getGroup(self, file):
         try:
