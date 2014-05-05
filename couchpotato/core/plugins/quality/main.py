@@ -21,11 +21,11 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
         {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
         {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
+        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
         {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':[]},
@@ -35,9 +35,9 @@ class QualityPlugin(Plugin):
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
-        'hsbs': [('half', 'sbs')],
-        'fsbs': [('full', 'sbs')],
-        '3d': [],
+        'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
+        'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
+        '3d': ['2d3d', '3d2d'],
     }
 
     cached_qualities = None
@@ -177,7 +177,7 @@ class QualityPlugin(Plugin):
 
         return False
 
-    def guess(self, files, extra = None):
+    def guess(self, files, extra = None, size = None):
         if not extra: extra = {}
 
         # Create hash for cache
@@ -205,15 +205,20 @@ class QualityPlugin(Plugin):
 
                 self.calcScore(score, quality, contains_score, threedscore)
 
+        # Evaluate score based on size
+        for quality in qualities:
+            size_score = self.guessSizeScore(quality, size = size)
+            self.calcScore(score, quality, size_score, penalty = False)
+
         # Try again with loose testing
         for quality in qualities:
             loose_score = self.guessLooseScore(quality, extra = extra)
-            self.calcScore(score, quality, loose_score)
+            self.calcScore(score, quality, loose_score, penalty = False)
 
-        # Return nothing if all scores are 0
+        # Return nothing if all scores are <= 0
         has_non_zero = 0
         for s in score:
-            if score[s] > 0:
+            if score[s]['score'] > 0:
                 has_non_zero += 1
 
         if not has_non_zero:
@@ -281,7 +286,7 @@ class QualityPlugin(Plugin):
                     return 1, key
 
             if list(set([key]) & set(words)):
-                log.debug('Found %s in %s', (tag, cur_file))
+                log.debug('Found %s in %s', (key, cur_file))
                 return 1, key
 
         return 0, None
@@ -308,7 +313,22 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def calcScore(self, score, quality, add_score, threedscore = (0, None)):
+
+    def guessSizeScore(self, quality, size = None):
+
+        score = 0
+
+        if size:
+
+            if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
+                log.info2('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
+                score += 5
+            else:
+                score -= 40
+
+        return score
+
+    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = True):
 
         score[quality['identifier']]['score'] += add_score
 
@@ -325,30 +345,35 @@ class QualityPlugin(Plugin):
             for q in self.qualities:
                 self.cached_order[q.get('identifier')] = self.qualities.index(q)
 
-        if add_score != 0:
+        if penalty and add_score != 0:
             for allow in quality.get('allow', []):
                 score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
 
     def doTest(self):
 
         tests = {
-            'Movie Name (1999)-DVD-Rip.avi': 'dvdrip',
-            'Movie Name 1999 720p Bluray.mkv': '720p',
-            'Movie Name 1999 BR-Rip 720p.avi': 'brrip',
-            'Movie Name 1999 720p Web Rip.avi': 'scr',
-            'Movie Name 1999 Web DL.avi': 'brrip',
-            'Movie.Name.1999.1080p.WEBRip.H264-Group': 'scr',
-            'Movie.Name.1999.DVDRip-Group': 'dvdrip',
-            'Movie.Name.1999.DVD-Rip-Group': 'dvdrip',
-            'Movie.Name.1999.DVD-R-Group': 'dvdr',
-            'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': '720p',
-            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': '1080p',
-            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': '1080p',
+            'Movie Name (1999)-DVD-Rip.avi': {'size': 700, 'quality': 'dvdrip'},
+            'Movie Name 1999 720p Bluray.mkv': {'size': 4200, 'quality': '720p'},
+            'Movie Name 1999 BR-Rip 720p.avi': {'size': 1000, 'quality': 'brrip'},
+            'Movie Name 1999 720p Web Rip.avi': {'size': 1200, 'quality': 'scr'},
+            'Movie Name 1999 Web DL.avi': {'size': 800, 'quality': 'brrip'},
+            'Movie.Name.1999.1080p.WEBRip.H264-Group': {'size': 1500, 'quality': 'scr'},
+            'Movie.Name.1999.DVDRip-Group': {'size': 750, 'quality': 'dvdrip'},
+            'Movie.Name.1999.DVD-Rip-Group': {'size': 700, 'quality': 'dvdrip'},
+            'Movie.Name.1999.DVD-R-Group': {'size': 4500, 'quality': 'dvdr'},
+            'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': {'size': 5500, 'quality': '720p'},
+            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': {'size': 8500, 'extra': {'resolution_width': 1920, 'resolution_height': 1080} , 'quality': '1080p'},
+            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': {'size': 8000, 'quality': '1080p'},
+            'Movie.Name.2013.BR-Disk-Group.iso': {'size': 48000, 'quality': 'bd50'},
+            'Movie.Name.2013.2D+3D.BR-Disk-Group.iso': {'size': 52000, 'quality': 'bd50', 'is_3d': True},
+            'Girl.Rising.2013.NTSC.DVD9-0MNiDVD': {'size': 7200, 'quality': 'dvdr'},
+            'Movie Name (2013) 2D + 3D': {'size': 49000, 'quality': 'bd50', 'is_3d': True}
         }
 
         correct = 0
         for name in tests:
-            success = self.guess([name]).get('identifier') == tests[name]
+            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
+            success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
                 log.error('%s failed check, thinks it\'s %s', (name, self.guess([name]).get('identifier')))
 

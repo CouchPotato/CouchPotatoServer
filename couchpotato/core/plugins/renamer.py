@@ -112,7 +112,7 @@ class Renamer(Plugin):
             return
 
         if not base_folder:
-            base_folder = self.conf('from')
+            base_folder = sp(self.conf('from'))
 
         from_folder = sp(self.conf('from'))
         to_folder = sp(self.conf('to'))
@@ -316,6 +316,8 @@ class Renamer(Plugin):
                     'mpaa': media['info'].get('mpaa', ''),
                     'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
+                    '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
+                    '3d_type': group['meta_data'].get('3d_type'),
                 }
                 
                 if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
@@ -832,7 +834,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def replaceDoubles(self, string):
 
         replaces = [
-            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '),
+            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '), (' \\\\', '\\\\'), (' /', '/'),
             ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
         ]
 
@@ -1064,6 +1066,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             release_download.update({
                 'imdb_id': getIdentifier(media),
                 'quality': rls['quality'],
+                'is_3d': rls['is_3d'],
                 'protocol': rls.get('info', {}).get('protocol') or rls.get('info', {}).get('type'),
                 'release_id': rls['_id'],
             })
@@ -1203,6 +1206,8 @@ rename_options = {
         'first': 'First letter (M)',
         'quality': 'Quality (720p)',
         'quality_type': '(HD) or (SD)',
+        '3d': '3D',
+        '3d_type': '3D Type (Full SBS)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
