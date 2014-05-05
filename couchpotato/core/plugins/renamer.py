@@ -314,8 +314,12 @@ class Renamer(Plugin):
                     'cd': '',
                     'cd_nr': '',
                     'mpaa': media['info'].get('mpaa', ''),
+                    'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
                 }
+                
+                if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
+                    replacements['mpaa_only'] = 'Not Rated'
 
                 for file_type in group['files']:
 
@@ -412,8 +416,12 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+                                sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
+
+                                # Don't add language to subtitle file it it's already there
+                                if not sub_name.endswith(sub_suffix):
+                                    sub_name = sub_name.replace(replacements['ext'], sub_suffix)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
@@ -1207,7 +1215,8 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
-        'mpaa': 'MPAA Rating',
+        'mpaa': 'MPAA or other certification',
+        'mpaa_only': 'MPAA only certification (G|PG|PG-13|R|NC-17|Not Rated)',
         'category': 'Category label',
     },
 }

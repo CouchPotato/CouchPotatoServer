@@ -10,10 +10,14 @@ autoload = 'BiTHDTV'
 
 
 class BiTHDTV(MovieProvider, Base):
+    cat_ids = [
+        ([2], ['bd50']),
+    ]
+    cat_backup_id = 7 # Movies
 
-    def buildUrl(self, media):
+    def buildUrl(self, media, quality):
         query = tryUrlencode({
             'search': fireEvent('library.query', media, single = True),
-            'cat': 7  # Movie cat
+            'cat': self.getCatId(quality)[0]
         })
         return query
