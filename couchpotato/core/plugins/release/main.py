@@ -107,6 +107,7 @@ class Release(Plugin):
                 'media_id': media['_id'],
                 'identifier': release_identifier,
                 'quality': group['meta_data']['quality'].get('identifier'),
+                'is_3d': group['meta_data']['quality'].get('is_3d', 0),
                 'last_edit': int(time.time()),
                 'status': 'done'
             }
@@ -406,7 +407,7 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             if rel and rel.get('status') != status:
 
-                release_name = rel.get('name')
+                release_name = rel['info'].get('name')
                 if rel.get('files'):
                     for file_type in rel.get('files', {}):
                         if file_type == 'movie':
