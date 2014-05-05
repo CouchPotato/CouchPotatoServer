@@ -87,17 +87,17 @@ class Searcher(SearcherBase):
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
         if not preferred_quality: preferred_quality = {}
 
+        found = {}
+
         # Try guessing via quality tags
         guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), single = True)
         if guess:
-            return not guess['identifier'] == preferred_quality.get('identifier')
-
+            found[guess['identifier']] = True
 
         # Hack for older movies that don't contain quality tag
         name = nzb['name']
         size = nzb.get('size', 0)
 
-        found = {}
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 20000:  # Assume bd50
@@ -109,6 +109,11 @@ class Searcher(SearcherBase):
             else:  # Assume dvdrip
                 log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', size)
                 found['dvdrip'] = True
+
+        # Allow other qualities
+        for allowed in preferred_quality.get('allow'):
+            if found.get(allowed):
+                del found[allowed]
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 

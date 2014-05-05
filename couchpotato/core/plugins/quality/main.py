@@ -61,7 +61,7 @@ class QualityPlugin(Plugin):
 
         addEvent('app.initialize', self.fill, priority = 10)
 
-        addEvent('app.load', self.doTest)
+        addEvent('app.test', self.doTest)
 
         self.order = []
         self.addOrder()

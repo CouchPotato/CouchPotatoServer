@@ -78,7 +78,7 @@ MA.IMDB = new Class({
 	create: function(){
 		var self = this;
 
-		self.id = self.movie.get('imdb');
+		self.id = self.movie.getIdentifier();
 
 		self.el = new Element('a.imdb', {
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
@@ -703,7 +703,7 @@ MA.Readd = new Class({
 
 		Api.request('movie.add', {
 			'data': {
-				'identifier': self.movie.get('imdb'),
+				'identifier': self.movie.getIdentifier(),
 				'ignore_previous': 1
 			}
 		});
