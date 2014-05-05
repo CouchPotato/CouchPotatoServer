@@ -2,6 +2,7 @@ Page.Manage = new Class({
 
 	Extends: PageBase,
 
+	order: 20,
 	name: 'manage',
 	title: 'Do stuff to your existing movies!',
 

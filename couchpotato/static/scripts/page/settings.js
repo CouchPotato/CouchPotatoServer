@@ -2,6 +2,7 @@ Page.Settings = new Class({
 
 	Extends: PageBase,
 
+	order: 50,
 	name: 'settings',
 	title: 'Change settings.',
 	wizard_only: false,
@@ -112,7 +113,7 @@ Page.Settings = new Class({
 	},
 
     sortByOrder: function(a, b){
-			return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100)
 	},
 
 	create: function(json){

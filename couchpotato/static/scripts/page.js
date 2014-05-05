@@ -6,6 +6,7 @@ var PageBase = new Class({
 
 	},
 
+	order: 1,
 	has_tab: true,
 	name: '',
 
@@ -16,6 +17,10 @@ var PageBase = new Class({
 
 		// Create main page container
 		self.el = new Element('div.page.'+self.name);
+	},
+
+	load: function(){
+		var self = this;
 
 		// Create tab for page
 		if(self.has_tab){
@@ -26,6 +31,7 @@ var PageBase = new Class({
 				'text': self.name.capitalize()
 			});
 		}
+
 	},
 
 	open: function(action, params){
