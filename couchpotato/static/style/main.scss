@@ -1,19 +1,99 @@
 @import "fonts";
+@import "mixins";
 
 body, html {
-	font-size: 12px;
+	font-size: 14px;
 	line-height: 1.5;
 	font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
 	height: 100%;
 	margin: 0;
 	padding: 0;
-	background: #FFF;
+	background: #111;
 	-webkit-font-smoothing: subpixel-antialiased;
+    overflow: hidden;
+}
 
-    &.noscroll {
-        overflow: hidden;
+body {
+    @include flexbox();
+    flex-flow: row nowrap;
+}
+
+a {
+    text-decoration: none;
+}
+
+.header {
+    width: 130px;
+
+	font-weight: 200;
+
+    a {
+        color: #FFF;
+        letter-spacing: 1px;
+    }
+
+    .navigation {
+
+        .logo {
+            background: #ac0000;
+            display: block;
+            text-align: center;
+
+            font-family: Lobster;
+            color: #FFF;
+            font-size: 38px;
+            line-height: 80px;
+            height: 80px;
+
+            span:nth-child(odd){
+                display: block;
+            }
+            span:nth-child(even){
+                display: none;
+
+            }
+        }
+
+        ul {
+            padding: 0;
+            margin: 0;
+
+            li a {
+                padding: 10px 20px;
+                display: block;
+            }
+        }
+
     }
 }
 
-body { overflow-y: scroll; }
 
+.content {
+    @include flex(1 auto);
+
+    background: #FFF;
+    border-radius: 3px 0 0 3px;
+    overflow: hidden;
+
+    .pages {
+        height: 100%;
+        widows: 100%;
+    }
+
+    .footer {
+        position: fixed;
+        bottom: 0;
+        height: 20px;
+        width: 100%;
+    }
+}
+
+.page {
+
+    display: none;
+
+    &.active {
+        display: block;
+    }
+
+}

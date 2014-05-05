@@ -73,14 +73,14 @@
 
 		self.c.adopt(
 			$(self.block.header).addClass('header').adopt(
-				new Element('div').adopt(
-					self.block.navigation = new BlockNavigation(self, {}),
-					self.block.search = new BlockSearch(self, {}),
-					self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
-				)
+				self.block.navigation = new BlockNavigation(self, {}),
+				self.block.search = new BlockSearch(self, {}),
+				self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
 			),
-			self.content = new Element('div.content'),
-			self.block.footer = new BlockFooter(self, {})
+			self.content = new Element('div.content').adopt(
+				self.pages = new Element('div.pages'),
+				self.block.footer = new BlockFooter(self, {})
+			)
 		);
 
 		var setting_links = [
@@ -143,7 +143,7 @@
 
 			self.fireEvent('load'+class_name);
 
-			$(pg).inject(self.content);
+			$(pg).inject(self.pages);
 		});
 
 		self.fireEvent('load');

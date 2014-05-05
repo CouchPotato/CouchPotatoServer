@@ -1,4 +1,4 @@
-Page.Manage = new Class({
+Page.Movies.Manage = new Class({
 
 	Extends: PageBase,
 

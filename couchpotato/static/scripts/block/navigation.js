@@ -12,7 +12,7 @@ var BlockNavigation = new Class({
 				}
 			}).grab(new Element('span.overlay')),
 			self.logo = new Element('a.logo', {
-				'text': 'CouchPotato',
+				'html': '<span>Couch</span><span>Potato</span>',
 				'href': App.createUrl('')
 			}),
 			self.nav = new Element('ul'),
