@@ -31,6 +31,6 @@ class TorrentShack(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         query = (tryUrlencode(fireEvent('library.query', media, single = True)),
-                 self.getCatId(quality)[0],
-                 self.getSceneOnly())
+                 self.getSceneOnly(),
+                 self.getCatId(quality)[0])
         return query

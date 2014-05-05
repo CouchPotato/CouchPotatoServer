@@ -290,8 +290,10 @@ class Renamer(Plugin):
 
                 # Put 'The' at the end
                 name_the = movie_name
-                if movie_name[:4].lower() == 'the ':
-                    name_the = movie_name[4:] + ', The'
+                for prefix in ['the ', 'an ', 'a ']:
+                    if prefix == movie_name[:len(prefix)].lower():
+                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize()
+                        break
 
                 replacements = {
                     'ext': 'mkv',
@@ -312,8 +314,12 @@ class Renamer(Plugin):
                     'cd': '',
                     'cd_nr': '',
                     'mpaa': media['info'].get('mpaa', ''),
+                    'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
                 }
+                
+                if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
+                    replacements['mpaa_only'] = 'Not Rated'
 
                 for file_type in group['files']:
 
@@ -410,8 +416,12 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+                                sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
+
+                                # Don't add language to subtitle file it it's already there
+                                if not sub_name.endswith(sub_suffix):
+                                    sub_name = sub_name.replace(replacements['ext'], sub_suffix)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
@@ -652,7 +662,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download.get('files', []):
-                tag_files = release_download.get('files', [])
+                tag_files = [filename for filename in release_download.get('files', []) if os.path.exists(filename)]
 
             # Tag all files in release folder
             elif release_download['folder']:
@@ -1205,7 +1215,8 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
-        'mpaa': 'MPAA Rating',
+        'mpaa': 'MPAA or other certification',
+        'mpaa_only': 'MPAA only certification (G|PG|PG-13|R|NC-17|Not Rated)',
         'category': 'Category label',
     },
 }
