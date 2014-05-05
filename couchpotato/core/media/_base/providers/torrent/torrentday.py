@@ -21,7 +21,7 @@ class Base(TorrentProvider):
 
     def _searchOnTitle(self, title, media, quality, results):
 
-        query = '%s %s' % (title, media['info']['year'])
+        query = '"%s" %s' % (title, media['info']['year'])
 
         data = {
             '/browse.php?': None,
