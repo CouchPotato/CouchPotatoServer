@@ -78,7 +78,7 @@ MA.IMDB = new Class({
 	create: function(){
 		var self = this;
 
-		self.id = self.movie.getIdentifier();
+		self.id = self.movie.getIdentifier ? self.movie.getIdentifier() : self.get('imdb');
 
 		self.el = new Element('a.imdb', {
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
