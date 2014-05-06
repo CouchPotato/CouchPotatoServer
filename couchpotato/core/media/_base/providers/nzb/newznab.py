@@ -45,7 +45,7 @@ class Base(NZBProvider, RSS):
 
         query = self.buildUrl(media, host['api_key'])
 
-        url = '%s&%s' % (self.getUrl(host['host']), query)
+        url = '%s&%s' % (self.getUrl(host['host']), query)+(host['custom_tag'] if host.get('custom_tag') else '')
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
