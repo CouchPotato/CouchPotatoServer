@@ -50,7 +50,7 @@ class Base(TorrentProvider):
         else:    
             subcat=631
         if moviequality in ['720p']:
-            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B1%5D%5B%5D=15&term%5B7%5D%5B%5D=12&term%5B7%5D%5B%5D=1175"
+            qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=15&term%5B7%5D%5B%5D=12&term%5B7%5D%5B%5D=1175"
         elif moviequality in ['1080p']:
             qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B7%5D%5B%5D=16&term%5B7%5D%5B%5D=1162&term%5B7%5D%5B%5D=1174"
         elif moviequality in ['dvd-r']:
