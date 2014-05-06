@@ -138,11 +138,11 @@ class IMDBAutomation(IMDBBase):
                 data = self.getHTMLData(url)
 
                 if data:
-
                     try:
+                        html = BeautifulSoup(data)
 
                         if chart.get('type', 'html') == 'html':
-                            result_div = html.find('table')
+                            result_div = html.find('div', attrs = {'id': 'main'})
 
                             try:
                                 if url in self.first_table:
@@ -177,26 +177,31 @@ class IMDBAutomation(IMDBBase):
 
         for name in self.charts:
             chart = self.charts[name].copy()
+            url = chart.get('url')
 
             if self.conf('chart_display_%s' % name):
 
                 chart['list'] = []
 
-                data = self.getHTMLData(chart.get('url'))
+                data = self.getHTMLData(url)
                 if data:
                     html = BeautifulSoup(data)
 
                     try:
-                        result_div = html.find('div', attrs = {'id': 'main'})
 
-                        try:
-                            if chart.get('url') in self.first_table:
-                                table = result_div.find('table')
-                                result_div = table if table else result_div
-                        except:
-                            pass
+                        if chart.get('type', 'html') == 'html':
+                            result_div = html.find('div', attrs = {'id': 'main'})
 
-                        imdb_ids = getImdb(str(result_div), multiple = True)
+                            try:
+                                if url in self.first_table:
+                                    table = result_div.find('table')
+                                    result_div = table if table else result_div
+                            except:
+                                pass
+
+                            imdb_ids = getImdb(str(result_div), multiple = True)
+                        else:
+                            imdb_ids = getImdb(str(data), multiple = True)
 
                         for imdb_id in imdb_ids[0:max_items]:
                             info = self.getInfo(imdb_id)
@@ -205,7 +210,7 @@ class IMDBAutomation(IMDBBase):
                             if self.shuttingDown():
                                 break
                     except:
-                        log.error('Failed loading IMDB chart results from %s: %s', (chart.get('url'), traceback.format_exc()))
+                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
                     if chart['list']:
                         movie_lists.append(chart)
