@@ -277,7 +277,7 @@ config = [{
                     'type': 'bool',
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
-                    'default': True,
+                    'default': False,
                 },
                 {
                     'name': 'automation_charts_boxoffice',
