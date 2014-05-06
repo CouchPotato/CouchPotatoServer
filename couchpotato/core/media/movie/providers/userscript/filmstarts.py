@@ -3,6 +3,7 @@ from couchpotato.core.media._base.providers.userscript.base import UserscriptBas
 
 autoload = 'Filmstarts'
 
+
 class Filmstarts(UserscriptBase):
 
 	includes = ['*://www.filmstarts.de/kritiken/*']
