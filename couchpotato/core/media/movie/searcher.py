@@ -139,8 +139,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         db = get_db()
 
         profile = db.get('id', movie['profile_id'])
-        quality_order = fireEvent('quality.order', single = True)
-
         ret = False
 
         index = 0
@@ -162,42 +160,45 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             # See if better quality is available
             for release in movie.get('releases', []):
-                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
-                    has_better_quality += 1
+                if release['status'] not in ['available', 'ignored', 'failed']:
+                    is_higher = fireEvent('quality.ishigher', \
+                            {'identifier': q_identifier, 'is_3d': quality_custom.get('3d', 0)}, \
+                            {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, \
+                            profile, single = True)
+                    if is_higher != 'higher':
+                        has_better_quality += 1
 
             # Don't search for quality lower then already available.
-            if has_better_quality is 0:
-
-                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
-                log.info('Search for %s in %s', (default_title, quality['label']))
-
-                # Extend quality with profile customs
-                quality['custom'] = quality_custom
-
-                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
-                if len(results) == 0:
-                    log.debug('Nothing found for %s in %s', (default_title, quality['label']))
-
-                # Check if movie isn't deleted while searching
-                if not fireEvent('media.get', movie.get('_id'), single = True):
-                    break
-
-                # Add them to this movie releases list
-                found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
-
-                # Try find a valid result and download it
-                if fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
-                    ret = True
-
-                # Remove releases that aren't found anymore
-                for release in movie.get('releases', []):
-                    if release.get('status') == 'available' and release.get('identifier') not in found_releases:
-                        fireEvent('release.delete', release.get('_id'), single = True)
-
-            else:
+            if has_better_quality > 0:
                 log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
                 fireEvent('media.restatus', movie['_id'])
                 break
+
+            quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+            log.info('Search for %s in %s', (default_title, quality['label']))
+
+            # Extend quality with profile customs
+            quality['custom'] = quality_custom
+
+            results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
+            if len(results) == 0:
+                log.debug('Nothing found for %s in %s', (default_title, quality['label']))
+
+            # Check if movie isn't deleted while searching
+            if not fireEvent('media.get', movie.get('_id'), single = True):
+                break
+
+            # Add them to this movie releases list
+            found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
+
+            # Try find a valid result and download it
+            if fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
+                ret = True
+
+            # Remove releases that aren't found anymore
+            for release in movie.get('releases', []):
+                if release.get('status') == 'available' and release.get('identifier') not in found_releases:
+                    fireEvent('release.delete', release.get('_id'), single = True)
 
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:
