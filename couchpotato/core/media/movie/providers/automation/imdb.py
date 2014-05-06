@@ -104,16 +104,19 @@ class IMDBAutomation(IMDBBase):
         'theater': 'http://www.imdb.com/movies-in-theaters/',
         'top250': 'http://www.imdb.com/chart/top',
         'boxoffice': 'http://www.imdb.com/chart/',
+        'rentals': 'http://www.imdb.com/boxoffice/rentals',
     }
     chart_names = {
         'theater': 'IMDB - Movies in Theaters',
         'top250': 'IMDB - Top 250 Movies',
         'boxoffice': 'IMDB - Box Office',
+        'rentals': 'IMDB - Top DVD rentals',
     }
     chart_order = {
         'theater': 2,
-        'top250': 4,
+        'top250': 5,
         'boxoffice': 3,
+        'rentals': 4,
     }
 
     first_table = ['boxoffice']
@@ -241,6 +244,13 @@ config = [{
                     'default': True,
                 },
                 {
+                    'name': 'automation_charts_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
+                },
+                {
                     'name': 'automation_charts_top250',
                     'type': 'bool',
                     'label': 'TOP 250',
@@ -281,6 +291,13 @@ config = [{
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
                     'default': False,
+                },
+                {
+                    'name': 'chart_display_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
                 },
                 {
                     'name': 'chart_display_boxoffice',
