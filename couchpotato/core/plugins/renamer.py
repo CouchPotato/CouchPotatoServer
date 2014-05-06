@@ -453,7 +453,7 @@ class Renamer(Plugin):
                 try:
                     if media.get('status') == 'active' and media.get('profile_id'):
                         profile = db.get('id', media['profile_id'])
-                        if fireEvent('release.isfinish', group['meta_data']['quality'], profile):
+                        if fireEvent('quality.isfinish', group['meta_data']['quality'], profile, single = True):
                             mdia = db.get('id', media['_id'])
                             mdia['status'] = 'done'
                             mdia['last_edit'] = int(time.time())
