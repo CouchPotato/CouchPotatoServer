@@ -289,11 +289,24 @@ class Base(NZBProvider):
                                     
                                     def extra_check(item):
                                         return True
+                                    qualitytag=''
+                                    if qualityStr.lower() in ['720p','1080p']:
+                                        qualitytag=' hd x264 h264 '
+                                    elif qualityStr.lower() in ['dvdrip']:
+                                        qualitytag=' dvd xvid '
+                                    elif qualityStr.lower() in ['brrip']:
+                                        qualitytag=' hdrip '
+                                    elif qualityStr.lower() in ['ts']:
+                                        qualitytag=' webrip '
+                                    elif qualityStr.lower() in ['scr']:
+                                        qualitytag=''
+                                    elif qualityStr.lower() in ['dvdr']:
+                                        qualitytag=' pal video_ts '
                                     new['id'] =  binsearch_result.nzbid
-                                    new['name'] = name + ' french ' +  qualityStr + ' '+ searchItem +' '+ name +' ' + downloader.__class__.__name__ 
+                                    new['name'] = name + ' french ' +  qualityStr + qualitytag + downloader.__class__.__name__ 
                                     new['url'] = binsearch_result.nzburl
                                     new['detail_url'] = binsearch_result.refererURL
-                                    new['size'] = binsearch_result.sizeInMegs
+                                    new['size'] = int(str(binsearch_result.sizeInMegs).replace('L',''))
                                     new['age'] = binsearch_result.age
                                     new['extra_check'] = extra_check
         
