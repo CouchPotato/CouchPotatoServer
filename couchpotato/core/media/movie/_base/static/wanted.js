@@ -2,6 +2,7 @@ Page.Wanted = new Class({
 
 	Extends: PageBase,
 
+	order: 10,
 	name: 'wanted',
 	title: 'Gimmy gimmy gimmy!',
 	folder_browser: null,

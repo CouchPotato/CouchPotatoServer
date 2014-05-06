@@ -1,7 +1,6 @@
 import traceback
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -24,13 +23,7 @@ class Base(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s" %s' % (simplifyString(title), movie['info']['year'])
-        arguments = tryUrlencode({
-            'search': q,
-        })
-        url = "%s&%s" % (self.urls['search'], arguments)
-
-        url = self.urls['search'] % self.buildUrl(movie, quality)
+        url = self.urls['search'] % self.buildUrl(title, movie, quality)
         data = self.getHTMLData(url)
 
         if data:

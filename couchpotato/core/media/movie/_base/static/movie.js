@@ -300,6 +300,17 @@ var Movie = new Class({
 		self.el.removeClass(self.view+'_view')
 	},
 
+	getIdentifier: function(){
+		var self = this;
+
+		try {
+			return self.get('identifiers').imdb;
+		}
+		catch (e){ }
+
+		return self.get('imdb');
+	},
+
 	get: function(attr){
 		return this.data[attr] || this.data.info[attr]
 	},
