@@ -36,7 +36,6 @@ class Charts(Plugin):
             'charts': charts
         }
 
-
     def updateViewCache(self):
 
         if self.update_in_progress:

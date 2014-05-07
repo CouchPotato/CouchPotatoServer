@@ -34,7 +34,7 @@ class ProfilePlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 90)
-        addEvent('app.load', self.forceDefaults)
+        addEvent('app.load', self.forceDefaults, priority = 110)
 
     def forceDefaults(self):
 

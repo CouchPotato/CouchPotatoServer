@@ -88,10 +88,14 @@ class Provider(Plugin):
 
         if data and len(data) > 0:
             try:
-                data = XMLTree.fromstring(ss(data))
+                data = XMLTree.fromstring(data)
                 return self.getElements(data, item_path)
             except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+                try:
+                    data = XMLTree.fromstring(ss(data))
+                    return self.getElements(data, item_path)
+                except:
+                    log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
         return []
 

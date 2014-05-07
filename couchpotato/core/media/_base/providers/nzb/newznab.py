@@ -244,7 +244,7 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'api.nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
+                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
                     'description': 'The hostname of your newznab provider',
                 },
                 {

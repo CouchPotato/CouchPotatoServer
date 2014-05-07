@@ -168,7 +168,6 @@ class IMDBAutomation(IMDBBase):
 
         return movies
 
-
     def getChartList(self):
 
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
@@ -204,6 +203,11 @@ class IMDBAutomation(IMDBBase):
                             imdb_ids = getImdb(str(data), multiple = True)
 
                         for imdb_id in imdb_ids[0:max_items]:
+
+                            is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
+                            if not is_movie:
+                                continue
+
                             info = self.getInfo(imdb_id)
                             chart['list'].append(info)
 
@@ -277,7 +281,7 @@ config = [{
                     'type': 'bool',
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
-                    'default': True,
+                    'default': False,
                 },
                 {
                     'name': 'automation_charts_boxoffice',
