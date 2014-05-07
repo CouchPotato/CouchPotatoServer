@@ -843,6 +843,7 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
+        year = None
         for year_str in [file_name, release_name, cleaned]:
             if not year_str: continue
             year = self.findYear(year_str)
