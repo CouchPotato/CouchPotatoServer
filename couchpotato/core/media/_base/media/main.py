@@ -107,8 +107,7 @@ class MediaPlugin(MediaBase):
             def handler():
                 fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
 
-            if handler:
-                return handler
+            return handler
 
         except:
             log.error('Refresh handler for non existing media: %s', traceback.format_exc())
