@@ -23,7 +23,11 @@ class Logging(Plugin):
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'log': string, //Log file
+    'log': [{
+        'time': '03-12 09:12:59',
+        'type': 'INFO',
+        'message': 'Log message'
+    }, ..], //Log file
     'total': int, //Total log files available
 }"""}
         })
@@ -35,7 +39,11 @@ class Logging(Plugin):
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'log': string, //Log file
+    'log': [{
+        'time': '03-12 09:12:59',
+        'type': 'INFO',
+        'message': 'Log message'
+    }, ..]
 }"""}
         })
         addApiView('logging.clear', self.clear, docs = {
