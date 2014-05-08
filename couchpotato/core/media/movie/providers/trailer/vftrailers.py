@@ -113,7 +113,7 @@ class vftrailers(VFTrailerProvider):
         uploadtoignore=['UniversalMoviesFR']
         time.sleep(30)
         searchstring=searchstringori[:-5].replace(' ','+')
-        
+        urldic={}
         regexurl ="url(?!.*url).*?&amp"
         patternurl = re.compile(regexurl)
     
@@ -129,12 +129,16 @@ class vftrailers(VFTrailerProvider):
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
         soup=BeautifulSoup(htmltext)
+        print soup
         search=soup.findAll('div',attrs={'id':'search'})
-        searchtext = str(search[0])
+        try:
+            searchtext = str(search[0])
+        except:
+            return urldic
     
         soup1=BeautifulSoup(searchtext)
         list_items=soup1.findAll('li')
-        urldic={}
+        
         for li in list_items:
             try:
                 doweignore=0
