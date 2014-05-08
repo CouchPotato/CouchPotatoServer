@@ -122,7 +122,7 @@ class pyload(DownloaderBase):
             package = self.pyload_api.get_package_data(pid)
             match_dl_ID = re.search(r'dlID\((?P<id>[0-9]+)\)',package['name'])
             if match_dl_ID:
-                dl_id = tryInt(match_dl_ID.group('id'), None)
+                dl_id = match_dl_ID.group('id')
                 if dl_id in ids:
                     dict_id2pids[dl_id].append(pid)
                     log.debug('Found snatched release ID %s in PyLoad with Packet-ID %s.' % (dl_id, pid))
