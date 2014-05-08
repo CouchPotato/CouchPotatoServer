@@ -28,6 +28,7 @@ class Database(object):
 
         addEvent('database.setup_index', self.setupIndex)
         addEvent('app.migrate', self.migrate)
+        addEvent('app.after_shutdown', self.close)
 
     def getDB(self):
 
@@ -36,6 +37,9 @@ class Database(object):
             self.db = get_db()
 
         return self.db
+
+    def close(self, **kwargs):
+        self.getDB().close()
 
     def setupIndex(self, index_name, klass):
 
