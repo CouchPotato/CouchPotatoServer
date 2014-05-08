@@ -128,11 +128,8 @@ class vftrailers(VFTrailerProvider):
         self.logg('En train de rechercher sur google : ' +searchstring)
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
-        self.logg(str(htmltext))
         soup=BeautifulSoup(htmltext)
-        self.logg(str(soup))
         search=soup.findAll('div',attrs={'id':'search'})
-        self.logg(str(search))
         searchtext = str(search[0])
     
         soup1=BeautifulSoup(searchtext)
