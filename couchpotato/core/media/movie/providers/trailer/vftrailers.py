@@ -133,8 +133,9 @@ class vftrailers(VFTrailerProvider):
         searchtext = str(search[0])
         
         soup1=BeautifulSoup(searchtext,"html.parser")
+        self.logg(str(soup1))
         list_items=soup1.findAll('li',"html.parser")
-        
+        self.logg(str(list_items))
         for li in list_items:
             try:
                 doweignore=0
