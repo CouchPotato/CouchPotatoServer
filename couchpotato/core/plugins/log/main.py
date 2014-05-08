@@ -88,9 +88,10 @@ class Logging(Plugin):
             'total': total,
         }
 
-    def partial(self, type = 'all', lines = 30, **kwargs):
+    def partial(self, type = 'all', lines = 30, offset = 0, **kwargs):
 
         total_lines = tryInt(lines)
+        offset = tryInt(offset)
 
         log_lines = []
 
@@ -113,14 +114,16 @@ class Logging(Plugin):
                 if type == 'all' or line.get('type') == type.upper():
                     log_lines.append(line)
 
-                if len(log_lines) >= total_lines:
+                if len(log_lines) >= (total_lines + offset):
                     brk = True
                     break
 
             if brk:
                 break
 
+        log_lines = log_lines[offset:]
         log_lines.reverse()
+
         return {
             'success': True,
             'log': log_lines,
