@@ -450,6 +450,7 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Mark movie "done" once it's found the quality with the finish check
+                profile = None
                 try:
                     if media.get('status') == 'active' and media.get('profile_id'):
                         profile = db.get('id', media['profile_id'])
