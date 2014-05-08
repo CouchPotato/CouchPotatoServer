@@ -137,7 +137,6 @@ class vftrailers(VFTrailerProvider):
         for li in list_items:
             try:
                 doweignore=0
-                self.logg('1'+str(li))
                 soup2 = BeautifulSoup(str(li),"html.parser")
                 for toignore in uploadtoignore:
                     if toignore in str(soup2):
@@ -146,9 +145,7 @@ class vftrailers(VFTrailerProvider):
                     continue
                 links= soup2.findAll('a')
                 if not 'webcache' in str(links): 
-                    self.logg('2'+str(links))
                     source_link=links[0]
-                    self.logg('3'+str(source_link))
                     source_url = str(re.findall(patternurl,str(source_link))[0]).replace('url?q=','').replace('&amp','').replace('%3F','?').replace('%3D','=')
                     source_title= str(re.findall(patterntitle,str(source_link))[0]).replace('">','').replace('</a','').replace('<b>','').replace('</b>','').decode("utf-8")
                     urldic.update({source_title:source_url})
