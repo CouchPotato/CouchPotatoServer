@@ -129,7 +129,7 @@ class vftrailers(VFTrailerProvider):
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
         soup=BeautifulSoup(htmltext)
-        self.logg(unicodedata.normalize('NFKD', soup).encode('ascii','ignore'))
+        self.logg(unicodedata.normalize('NFKD', htmltext).encode('ascii','ignore'))
         search=soup.findAll('div',attrs={'id':'search'})
         try:
             searchtext = str(search[0])
