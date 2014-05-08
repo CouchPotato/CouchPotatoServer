@@ -107,8 +107,7 @@ class MediaPlugin(MediaBase):
             def handler():
                 fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
 
-            if handler:
-                return handler
+            return handler
 
         except:
             log.error('Refresh handler for non existing media: %s', traceback.format_exc())
@@ -361,12 +360,17 @@ class MediaPlugin(MediaBase):
             media = db.get('id', media_id)
             if media:
                 deleted = False
+
+                media_releases = fireEvent('release.for_media', media['_id'], single = True)
+
                 if delete_from == 'all':
+                    # Delete connected releases
+                    for release in media_releases:
+                        db.delete(release)
+
                     db.delete(media)
                     deleted = True
                 else:
-
-                    media_releases = fireEvent('release.for_media', media['_id'], single = True)
 
                     total_releases = len(media_releases)
                     total_deleted = 0

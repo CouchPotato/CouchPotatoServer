@@ -25,7 +25,7 @@ class Base(TorrentProvider):
 
     def _search(self, media, quality, results):
 
-        query = self.buildUrl(media)
+        query = self.buildUrl(media, quality)
 
         url = "%s&%s" % (self.urls['search'], query)
 

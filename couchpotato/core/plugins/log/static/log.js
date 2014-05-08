@@ -2,6 +2,7 @@ Page.Log = new Class({
 
 	Extends: PageBase,
 
+	order: 60,
 	name: 'log',
 	title: 'Show recent logs.',
 	has_tab: false,
@@ -26,7 +27,7 @@ Page.Log = new Class({
 				'nr': nr
 			},
 			'onComplete': function(json){
-				self.log.set('html', self.addColors(json.log));
+				self.log.adopt(self.createLogElements(json.log));
 				self.log.removeClass('loading');
 
 				new Fx.Scroll(window, {'duration': 0}).toBottom();
@@ -62,20 +63,22 @@ Page.Log = new Class({
 
 	},
 
-	addColors: function(text){
+	createLogElements: function(logs){
 
-		text = text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/\u001b\[31m/gi, '</span><span class="error">')
-			.replace(/\u001b\[36m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[33m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[0m\n/gi, '</div><div class="time">')
-			.replace(/\u001b\[0m/gi, '</span><span>');
+        var elements = [];
 
-		return '<div class="time">' + text + '</div>';
+        logs.each(function(log){
+            elements.include(new Element('div.time', {
+                'text': log.time
+            }).grab(
+                new Element('span', {
+                    'class': log.type.toLowerCase(),
+                    'text': log.message
+                })
+            ))
+        });
+
+		return elements;
 	}
 
 });

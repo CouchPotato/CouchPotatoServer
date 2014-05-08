@@ -2,6 +2,7 @@ Page.Userscript = new Class({
 
 	Extends: PageBase,
 
+	order: 80,
 	name: 'userscript',
 	has_tab: false,
 

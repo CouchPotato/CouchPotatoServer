@@ -3,6 +3,7 @@ import os
 import time
 import traceback
 
+from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
@@ -58,7 +59,7 @@ class Release(Plugin):
 
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
-        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 12)
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
@@ -67,6 +68,27 @@ class Release(Plugin):
         week = 262080
 
         db = get_db()
+
+        # Get (and remove) parentless releases
+        releases = db.all('release', with_doc = True)
+        media_exist = []
+        for release in releases:
+            if release.get('key') in media_exist:
+                continue
+
+            try:
+                db.get('id', release.get('key'))
+                media_exist.append(release.get('key'))
+            except RecordDeleted:
+                db.delete(release['doc'])
+                log.debug('Deleted orphaned release: %s', release['doc'])
+            except:
+                log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        del media_exist
+
+        # Reindex statuses
+        db.reindex_index('media_status')
 
         # get movies last_edit more than a week ago
         medias = fireEvent('media.with_status', 'done', single = True)
@@ -107,7 +129,7 @@ class Release(Plugin):
                 'media_id': media['_id'],
                 'identifier': release_identifier,
                 'quality': group['meta_data']['quality'].get('identifier'),
-                'is_3d' : group['meta_data']['quality'].get('is_3d', 0),
+                'is_3d': group['meta_data']['quality'].get('is_3d', 0),
                 'last_edit': int(time.time()),
                 'status': 'done'
             }

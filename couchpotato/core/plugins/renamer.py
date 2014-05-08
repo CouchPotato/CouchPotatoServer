@@ -309,8 +309,10 @@ class Renamer(Plugin):
 
                 # Put 'The' at the end
                 name_the = movie_name
-                if movie_name[:4].lower() == 'the ':
-                    name_the = movie_name[4:] + ', The'
+                for prefix in ['the ', 'an ', 'a ']:
+                    if prefix == movie_name[:len(prefix)].lower():
+                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize()
+                        break
 
                 replacements = {
                     'ext': 'mkv',
@@ -331,9 +333,14 @@ class Renamer(Plugin):
                     'cd': '',
                     'cd_nr': '',
                     'mpaa': media['info'].get('mpaa', ''),
+                    'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
                     '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
+                    '3d_type': group['meta_data'].get('3d_type'),
                 }
+                
+                if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
+                    replacements['mpaa_only'] = 'Not Rated'
 
                 for file_type in group['files']:
 
@@ -430,8 +437,12 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+                                sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
+
+                                # Don't add language to subtitle file it it's already there
+                                if not sub_name.endswith(sub_suffix):
+                                    sub_name = sub_name.replace(replacements['ext'], sub_suffix)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
@@ -458,17 +469,15 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Mark movie "done" once it's found the quality with the finish check
+                profile = None
                 try:
                     if media.get('status') == 'active' and media.get('profile_id'):
                         profile = db.get('id', media['profile_id'])
-                        if group['meta_data']['quality']['identifier'] in profile.get('qualities', []):
-                            nr = profile['qualities'].index(group['meta_data']['quality']['identifier'])
-                            finish = profile['finish'][nr]
-                            if finish:
-                                mdia = db.get('id', media['_id'])
-                                mdia['status'] = 'done'
-                                mdia['last_edit'] = int(time.time())
-                                db.update(mdia)
+                        if fireEvent('quality.isfinish', group['meta_data']['quality'], profile, single = True):
+                            mdia = db.get('id', media['_id'])
+                            mdia['status'] = 'done'
+                            mdia['last_edit'] = int(time.time())
+                            db.update(mdia)
 
                 except Exception as e:
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
@@ -479,18 +488,19 @@ class Renamer(Plugin):
                     # When a release already exists
                     if release.get('status') == 'done':
 
-                        release_order = quality_order.index(release['quality'])
-                        group_quality_order = quality_order.index(group['meta_data']['quality']['identifier'])
+                        # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
+                        is_higher = fireEvent('quality.ishigher', \
+                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, profile, single = True)
 
-                        # This is where CP removes older, lesser quality releases
-                        if release_order > group_quality_order:
-                            log.info('Removing lesser quality %s for %s.', (media_title, release.get('quality')))
+                        if is_higher == 'higher':
+                            log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
                                     remove_files.append(release_file)
                             remove_releases.append(release)
+
                         # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
-                        elif release_order == group_quality_order:
+                        elif is_higher == 'equal':
                             log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
@@ -672,7 +682,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download.get('files', []):
-                tag_files = release_download.get('files', [])
+                tag_files = [filename for filename in release_download.get('files', []) if os.path.exists(filename)]
 
             # Tag all files in release folder
             elif release_download['folder']:
@@ -1215,6 +1225,7 @@ rename_options = {
         'quality': 'Quality (720p)',
         'quality_type': '(HD) or (SD)',
         '3d': '3D',
+        '3d_type': '3D Type (Full SBS)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
@@ -1227,7 +1238,8 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
-        'mpaa': 'MPAA Rating',
+        'mpaa': 'MPAA or other certification',
+        'mpaa_only': 'MPAA only certification (G|PG|PG-13|R|NC-17|Not Rated)',
         'category': 'Category label',
     },
 }

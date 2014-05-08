@@ -195,6 +195,7 @@ class Plugin(object):
 
         self.wait(host)
         try:
+
             kwargs = {
                 'headers': headers,
                 'data': data if len(data) > 0 else None,

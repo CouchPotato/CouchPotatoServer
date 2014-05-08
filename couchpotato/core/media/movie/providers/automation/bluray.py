@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from couchpotato import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -96,8 +97,14 @@ class Bluray(Automation, RSS):
             movie = self.search(name, year)
 
             if movie:
+
                 if movie.get('imdb') in movie_ids:
                     continue
+
+                is_movie = fireEvent('movie.is_movie', identifier = movie.get('imdb'), single = True)
+                if not is_movie:
+                    continue
+
                 movie_ids.append(movie.get('imdb'))
                 movie_list['list'].append( movie )
                 if len(movie_list['list']) >= max_items:

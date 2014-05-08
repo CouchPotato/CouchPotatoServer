@@ -89,7 +89,7 @@ var Charts = new Class({
 						}
 					});
 
-					var in_database_class = movie.in_wanted ? 'chart_in_wanted' : (movie.in_library ? 'chart_in_library' : ''),
+					var in_database_class = (chart.hide_wanted && movie.in_wanted) ? 'hidden' : (movie.in_wanted ? 'chart_in_wanted' : ((chart.hide_library && movie.in_library) ? 'hidden': (movie.in_library ? 'chart_in_library' : ''))),
 						in_database_title = movie.in_wanted ? 'Movie in wanted list' : (movie.in_library ? 'Movie in library' : '');
 
 					m.el
