@@ -416,7 +416,10 @@ class Database(object):
                         empty_info = True
                         rel['info'] = {}
 
-                    quality = quality_link[rel.get('quality_id')]
+                    quality = quality_link.get(rel.get('quality_id'))
+                    if not quality:
+                        continue
+
                     release_status = statuses.get(rel.get('status_id')).get('identifier')
 
                     if rel['info'].get('download_id'):
