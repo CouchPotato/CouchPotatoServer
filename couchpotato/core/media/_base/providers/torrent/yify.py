@@ -35,7 +35,11 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        search_url = self.urls['search'] % (self.getDomain(), getIdentifier(movie), quality['identifier'])
+        domain = self.getDomain()
+        if not domain:
+            return
+
+        search_url = self.urls['search'] % (domain, getIdentifier(movie), quality['identifier'])
 
         data = self.getJsonData(search_url)
 
@@ -44,18 +48,18 @@ class Base(TorrentProvider):
                 for result in data.get('MovieList'):
 
                     if result['Quality'] and result['Quality'] not in result['MovieTitle']:
-                        title = result['MovieTitle'] + ' ' + result['Quality']
+                        title = result['MovieTitle'] + ' BrRip ' + result['Quality']
                     else: 
-                        title = result['MovieTitle']
+                        title = result['MovieTitle'] + ' BrRip'
 
                     results.append({
                         'id': result['MovieID'],
                         'name': title,
                         'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % (self.getDomain(), result['MovieID']),
+                        'detail_url': self.urls['detail'] % (domain, result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
-                        'leechers': tryInt(result['TorrentPeers'])
+                        'leechers': tryInt(result['TorrentPeers']),
                     })
 
             except:

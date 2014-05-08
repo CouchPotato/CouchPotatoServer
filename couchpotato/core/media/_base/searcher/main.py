@@ -115,7 +115,10 @@ class Searcher(SearcherBase):
             if found.get(allowed):
                 del found[allowed]
 
-        return not (found.get(preferred_quality['identifier']) and len(found) == 1)
+        if found.get(preferred_quality['identifier']) and len(found) == 1:
+            return False
+
+        return found
 
     def correct3D(self, nzb, preferred_quality = None):
         if not preferred_quality: preferred_quality = {}

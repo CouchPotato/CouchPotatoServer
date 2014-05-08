@@ -25,7 +25,6 @@ class MediaBase(Plugin):
 
         def onComplete():
             try:
-                db = get_db()
                 media = fireEvent('media.get', media_id, single = True)
                 event_name = '%s.searcher.single' % media.get('type')
 
