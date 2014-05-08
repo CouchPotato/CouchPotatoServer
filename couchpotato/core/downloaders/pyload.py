@@ -252,11 +252,6 @@ class pyload(DownloaderBase):
         queue = self.pyload_api.get_Queue()
         return [p['pid'] for p in (coll + queue)]
 
-    def pause(self, release_download, pause = True):
-        if not self.connect():
-            return False
-        return self.pyload_api.pause_torrent(release_download['id'], pause)
-
     def removeFailed(self, release_download):
         log.info('%s failed downloading, deleting...', release_download['name'])
         return self.processComplete(release_download, delete_files = True)
@@ -430,78 +425,6 @@ class pyloadAPI(object):
         except TypeError, err:
             log.debug("Packages with PID%s could not be removed." % (data, pids))
 
-    ######################################### COPIED CONTENT #########################################
-
-    def add_torrent_file(self, filename, filedata, add_folder = False):
-        action = 'action=add-file'
-        if add_folder:
-            action += '&path=%s' % urllib.quote(filename)
-        return self._request(action, {'torrent_file': (ss(filename), filedata)})
-
-    def set_torrent(self, hash, params):
-        action = 'action=setprops&hash=%s' % hash
-        for k, v in params.items():
-            action += '&s=%s&v=%s' % (k, v)
-        return self._request(action)
-
-    def pause_torrent(self, hash, pause = True):
-        if pause:
-            action = 'action=pause&hash=%s' % hash
-        else:
-            action = 'action=unpause&hash=%s' % hash
-        return self._request(action)
-
-    def stop_torrent(self, hash):
-        action = 'action=stop&hash=%s' % hash
-        return self._request(action)
-
-    def remove_torrent(self, hash, remove_data = False):
-        if remove_data:
-            action = 'action=removedata&hash=%s' % hash
-        else:
-            action = 'action=remove&hash=%s' % hash
-        return self._request(action)
-
-
-
-
-
-    def get_settings(self):
-        action = 'action=getsettings'
-        settings_dict = {}
-        try:
-            utorrent_settings = json.loads(self._request(action))
-
-            # Create settings dict
-            for setting in utorrent_settings['settings']:
-                if setting[1] == 0: # int
-                    settings_dict[setting[0]] = int(setting[2] if not setting[2].strip() == '' else '0')
-                elif setting[1] == 1: # bool
-                    settings_dict[setting[0]] = True if setting[2] == 'true' else False
-                elif setting[1] == 2: # string
-                    settings_dict[setting[0]] = setting[2]
-
-            #log.debug('uTorrent settings: %s', settings_dict)
-
-        except Exception as err:
-            log.error('Failed to get settings from uTorrent: %s', err)
-
-        return settings_dict
-
-    def set_settings(self, settings_dict = None):
-        if not settings_dict: settings_dict = {}
-
-        for key in settings_dict:
-            if isinstance(settings_dict[key], bool):
-                settings_dict[key] = 1 if settings_dict[key] else 0
-
-        action = 'action=setsetting' + ''.join(['&s=%s&v=%s' % (key, value) for (key, value) in settings_dict.items()])
-        return self._request(action)
-
-    def get_files(self, hash):
-        action = 'action=getfiles&hash=%s' % hash
-        return self._request(action)
-
     def get_build(self):
         data = self._request('getServerVersion')
         if not data:
@@ -538,10 +461,6 @@ config = [{
                     'type': 'password',
                 },
                 {
-                    'name': 'label',
-                    'description': 'Label to add download as.',
-                },
-                {
                     'name': 'wait_time',
                     'advanced': True,
                     'label': 'Wait Time',
@@ -550,47 +469,19 @@ config = [{
                     'description': 'Wait x seconds for post processing after files have finished downloading.',
                 },
                 {
-                    'name': 'remove_complete',
-                    'label': 'Remove torrent',
-                    'default': True,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Remove the download link from pyload after it has finished downloading.',
-                },
-                {
                     'name': 'delete_files',
                     'label': 'Remove files',
                     'default': True,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Also remove the leftover files.',
-                },
-                {
-                    'name': 'paused',
-                    'type': 'bool',
-                    'advanced': True,
-                    'default': False,
-                    'description': 'Add the download paused.',
-                },
-                {
-                    'name': 'manual',
-                    'default': 0,
-                    'type': 'bool',
-                    'advanced': True,
-                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
-                },
-                {
-                    'name': 'delete_failed',
-                    'default': True,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Delete a release after the download has failed.',
+                    'description': 'Remove files when download has finished.',
                 },
                 {
                     'name': 'download_collect',
                     'default': 1,
                     'advanced': True,
                     'type': 'dropdown',
+                    'description': 'Add snatched links to collector (manual approval necessary) or skip collector and just start downloading.',
                     'values': [('start downloading', 1), ('add to linkcollector', 0)],
                 },
             ],

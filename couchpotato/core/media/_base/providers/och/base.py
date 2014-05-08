@@ -7,7 +7,7 @@ class OCHProvider(YarrProvider):
 
     protocol = 'och'
 
-    # TODO: Option einfuegen fuer Sprachwahl
+    # TODO: set an attribute to specify the main language of this provider. So in a multi-language environment this provider will only be used if the user is searching for this movie language.
 
     def download(self, url = '', nzb_id = ''):
         return url
