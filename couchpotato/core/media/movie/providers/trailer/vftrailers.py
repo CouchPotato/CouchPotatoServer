@@ -129,16 +129,10 @@ class vftrailers(VFTrailerProvider):
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
         soup=BeautifulSoup(htmltext,"html.parser")
-        self.logg('1'+soup.prettify())
-        self.logg('2'+unicode(soup))
-        self.logg('3'+str(soup))
         search=soup.findAll('div',attrs={'id':'search'})
-        try:
-            searchtext = str(search[0])
-        except:
-            return urldic
-    
-        soup1=BeautifulSoup(searchtext)
+        searchtext = str(search[0])
+        
+        soup1=BeautifulSoup(searchtext,"html.parser")
         list_items=soup1.findAll('li',"html.parser")
         
         for li in list_items:
