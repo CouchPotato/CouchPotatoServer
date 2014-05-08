@@ -128,7 +128,7 @@ class vftrailers(VFTrailerProvider):
         self.logg('En train de rechercher sur google : ' +searchstring)
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
-        soup=BeautifulSoup(htmltext)
+        soup=BeautifulSoup(htmltext,"html.parser")
         self.logg('1'+soup.prettify())
         self.logg('2'+unicode(soup))
         self.logg('3'+str(soup))
@@ -139,12 +139,12 @@ class vftrailers(VFTrailerProvider):
             return urldic
     
         soup1=BeautifulSoup(searchtext)
-        list_items=soup1.findAll('li')
+        list_items=soup1.findAll('li',"html.parser")
         
         for li in list_items:
             try:
                 doweignore=0
-                soup2 = BeautifulSoup(str(li))
+                soup2 = BeautifulSoup(str(li),"html.parser")
                 for toignore in uploadtoignore:
                     if toignore in str(soup2):
                         doweignore+=1
