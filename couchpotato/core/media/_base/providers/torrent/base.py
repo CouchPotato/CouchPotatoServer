@@ -44,7 +44,8 @@ class TorrentProvider(YarrProvider):
 
                 prop_name = 'proxy.%s' % proxy
                 last_check = float(Env.prop(prop_name, default = 0))
-                if last_check > time.time() - 1209600:
+
+                if last_check > time.time() - 86400:
                     continue
 
                 data = ''
