@@ -12,8 +12,12 @@
 	width: 50%;
 	vertical-align: top;
     max-height: 510px;
-    overflow-y: auto;
+	overflow: hidden;
     scrollbar-base-color: #4e5969;
+}
+
+.charts .chart:hover {
+    overflow-y: auto;
 }
 
 .charts .chart .media_result.hidden {
