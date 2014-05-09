@@ -339,8 +339,8 @@ class Release(Plugin):
     def tryDownloadResult(self, results, media, quality_custom, manual = False):
 
         for rel in results:
-            if not quality_custom.get('finish', False) and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for'), rel['name']))
+            if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
+                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for') - rel.get('age'), rel['name']))
                 continue
 
             if rel['status'] in ['ignored', 'failed']:

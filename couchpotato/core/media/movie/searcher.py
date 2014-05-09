@@ -145,9 +145,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         index = 0
         for q_identifier in profile.get('qualities'):
             quality_custom = {
+                'index': index,
                 'quality': q_identifier,
                 'finish': profile['finish'][index],
-                'wait_for': profile['wait_for'][index],
+                'wait_for': tryInt(profile['wait_for'][index]),
                 '3d': profile['3d'][index] if profile.get('3d') else False
             }
 
