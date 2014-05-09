@@ -2,6 +2,7 @@ Page.Log = new Class({
 
 	Extends: PageBase,
 
+	order: 60,
 	name: 'log',
 	title: 'Show recent logs.',
 	has_tab: false,
@@ -26,25 +27,46 @@ Page.Log = new Class({
 				'nr': nr
 			},
 			'onComplete': function(json){
-				self.log.set('html', self.addColors(json.log));
+				self.log.set('text', '');
+				self.log.adopt(self.createLogElements(json.log));
 				self.log.removeClass('loading');
 
-				new Fx.Scroll(window, {'duration': 0}).toBottom();
+				var nav = new Element('ul.nav', {
+					'events': {
+						'click:relay(li.select)': function(e, el){
+							self.getLogs(parseInt(el.get('text'))-1);
+						}
+					}
+				});
 
-				var nav = new Element('ul.nav').inject(self.log, 'top');
+				// Type selection
+				new Element('li.filter').grab(
+					new Element('select', {
+						'events': {
+							'change': function(){
+								var type_filter = this.getSelected()[0].get('value');
+								self.log.set('data-filter', type_filter);
+								self.scrollToBottom();
+							}
+						}
+					}).adopt(
+						new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
+						new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
+						new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
+						new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
+					)
+				).inject(nav);
+
+				// Selections
 				for (var i = 0; i <= json.total; i++) {
 					new Element('li', {
 						'text': i+1,
-						'class': nr == i ? 'active': '',
-						'events': {
-							'click': function(e){
-								self.getLogs(e.target.get('text')-1);
-							}
-						}
+						'class': 'select ' + (nr == i ? 'active': '')
 					}).inject(nav);
 				}
 
-				new Element('li', {
+				// Clear button
+				new Element('li.clear', {
 					'text': 'clear',
 					'events': {
 						'click': function(){
@@ -56,26 +78,40 @@ Page.Log = new Class({
 
 						}
 					}
-				}).inject(nav)
+				}).inject(nav);
+
+				// Add to page
+				nav.inject(self.log, 'top');
+
+				self.scrollToBottom();
 			}
 		});
 
 	},
 
-	addColors: function(text){
+	createLogElements: function(logs){
 
-		text = text
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/\u001b\[31m/gi, '</span><span class="error">')
-			.replace(/\u001b\[36m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[33m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[0m\n/gi, '</div><div class="time">')
-			.replace(/\u001b\[0m/gi, '</span><span>');
+        var elements = [];
 
-		return '<div class="time">' + text + '</div>';
+        logs.each(function(log){
+            elements.include(new Element('div', {
+				'class': 'time ' + log.type.toLowerCase(),
+                'text': log.time
+            }).adopt(
+                new Element('span.type', {
+                    'text': log.type
+                }),
+                new Element('span.message', {
+                    'text': log.message
+                })
+            ))
+        });
+
+		return elements;
+	},
+
+	scrollToBottom: function(){
+		new Fx.Scroll(window, {'duration': 0}).toBottom();
 	}
 
 });

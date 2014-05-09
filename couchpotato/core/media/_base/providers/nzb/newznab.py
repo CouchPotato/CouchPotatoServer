@@ -45,7 +45,7 @@ class Base(NZBProvider, RSS):
 
     def _searchOnHost(self, host, media, quality, results):
 
-        query = self.buildUrl(media, host['api_key'])
+        query = self.buildUrl(media, host)
         url = '%s&%s' % (self.getUrl(host['host']), query)
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
@@ -244,7 +244,7 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'api.nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
+                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
                     'description': 'The hostname of your newznab provider',
                 },
                 {

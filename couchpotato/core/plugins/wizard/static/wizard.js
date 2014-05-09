@@ -2,6 +2,7 @@ Page.Wizard = new Class({
 
 	Extends: Page.Settings,
 
+	order: 70,
 	name: 'wizard',
 	has_tab: false,
 	wizard_only: true,

@@ -11,11 +11,16 @@ autoload = 'Newznab'
 
 class Newznab(MovieProvider, Base):
 
-    def buildUrl(self, media, api_key):
+    def buildUrl(self, media, host):
+
         query = tryUrlencode({
             't': 'movie',
             'imdbid': getIdentifier(media).replace('tt', ''),
-            'apikey': api_key,
+            'apikey': host['api_key'],
             'extended': 1
         })
+
+        if len(host.get('custom_tag', '')) > 0:
+            query = '%s&%s' % (query, host.get('custom_tag'))
+
         return query
