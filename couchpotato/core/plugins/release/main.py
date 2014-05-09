@@ -339,11 +339,11 @@ class Release(Plugin):
     def tryDownloadResult(self, results, media, quality_custom, manual = False):
 
         wait_for = False
+        let_through = False
+        filtered_results = []
+
+        # If a single release comes through the "wait for", let through all
         for rel in results:
-            if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for') - rel.get('age'), rel['name']))
-                wait_for = True
-                continue
 
             if rel['status'] in ['ignored', 'failed']:
                 log.info('Ignored: %s', rel['name'])
@@ -351,6 +351,23 @@ class Release(Plugin):
 
             if rel['score'] <= 0:
                 log.info('Ignored, score to low: %s', rel['name'])
+                continue
+
+            rel['wait_for'] = False
+            if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
+                rel['wait_for'] = True
+            else:
+                let_through = True
+
+            filtered_results.append(rel)
+
+        # Loop through filtered results
+        for rel in filtered_results:
+
+            # Only wait if not a single release is old enough
+            if rel.get('wait_for') and not let_through:
+                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for') - rel.get('age'), rel['name']))
+                wait_for = True
                 continue
 
             downloaded = fireEvent('release.download', data = rel, media = media, manual = manual, single = True)
