@@ -27,25 +27,46 @@ Page.Log = new Class({
 				'nr': nr
 			},
 			'onComplete': function(json){
+				self.log.set('text', '');
 				self.log.adopt(self.createLogElements(json.log));
 				self.log.removeClass('loading');
 
-				new Fx.Scroll(window, {'duration': 0}).toBottom();
+				var nav = new Element('ul.nav', {
+					'events': {
+						'click:relay(li.select)': function(e, el){
+							self.getLogs(parseInt(el.get('text'))-1);
+						}
+					}
+				});
 
-				var nav = new Element('ul.nav').inject(self.log, 'top');
+				// Type selection
+				new Element('li.filter').grab(
+					new Element('select', {
+						'events': {
+							'change': function(){
+								var type_filter = this.getSelected()[0].get('value');
+								self.log.set('data-filter', type_filter);
+								self.scrollToBottom();
+							}
+						}
+					}).adopt(
+						new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
+						new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
+						new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
+						new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
+					)
+				).inject(nav);
+
+				// Selections
 				for (var i = 0; i <= json.total; i++) {
 					new Element('li', {
 						'text': i+1,
-						'class': nr == i ? 'active': '',
-						'events': {
-							'click': function(e){
-								self.getLogs(e.target.get('text')-1);
-							}
-						}
+						'class': 'select ' + (nr == i ? 'active': '')
 					}).inject(nav);
 				}
 
-				new Element('li', {
+				// Clear button
+				new Element('li.clear', {
 					'text': 'clear',
 					'events': {
 						'click': function(){
@@ -57,7 +78,12 @@ Page.Log = new Class({
 
 						}
 					}
-				}).inject(nav)
+				}).inject(nav);
+
+				// Add to page
+				nav.inject(self.log, 'top');
+
+				self.scrollToBottom();
 			}
 		});
 
@@ -68,17 +94,24 @@ Page.Log = new Class({
         var elements = [];
 
         logs.each(function(log){
-            elements.include(new Element('div.time', {
+            elements.include(new Element('div', {
+				'class': 'time ' + log.type.toLowerCase(),
                 'text': log.time
-            }).grab(
-                new Element('span', {
-                    'class': log.type.toLowerCase(),
+            }).adopt(
+                new Element('span.type', {
+                    'text': log.type
+                }),
+                new Element('span.message', {
                     'text': log.message
                 })
             ))
         });
 
 		return elements;
+	},
+
+	scrollToBottom: function(){
+		new Fx.Scroll(window, {'duration': 0}).toBottom();
 	}
 
 });

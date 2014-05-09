@@ -16,10 +16,14 @@
 		display: inline-block;
 		padding: 5px 10px;
 		margin: 0;
+	}
+
+	.page.log .nav li.select,
+	.page.log .nav li.clear {
 		cursor: pointer;
 	}
 
-		.page.log .nav li:hover:not(.active) {
+		.page.log .nav li:hover:not(.active, .filter) {
 			background: rgba(255, 255, 255, 0.1);
 		}
 
@@ -51,13 +55,12 @@
 	line-height: 150%;
 	font-size: 11px;
 	font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
+	color: #FFF;
 }
 
-	.page.log .container .error {
-		color: #FFA4A4;
-		white-space: pre-wrap;
+	.page.log .container select {
+		vertical-align: top;
 	}
-	.page.log .container .debug { color: lightgrey; }
 
 	.page.log .container .time {
 		clear: both;
@@ -68,10 +71,25 @@
 		position: relative;
 	}
 
-		.page.log .container .time:last-child { display: none; }
-
-		.page.log .container .time span {
-			float: right;
-			width: 86%;
+		.page.log [data-filter=INFO] .error,
+		.page.log [data-filter=INFO] .debug,
+		.page.log [data-filter=ERROR] .debug,
+		.page.log [data-filter=ERROR] .info,
+		.page.log [data-filter=DEBUG] .info,
+		.page.log [data-filter=DEBUG] .error {
+			display: none;
 		}
+
+	.page.log .container .type {
+		margin-left: 10px;
+	}
+
+	.page.log .container .message {
+		float: right;
+		width: 86%;
+		white-space: pre-wrap;
+	}
+
+	.page.log .container .error { color: #FFA4A4; }
+	.page.log .container .debug { opacity: .4; }
 
