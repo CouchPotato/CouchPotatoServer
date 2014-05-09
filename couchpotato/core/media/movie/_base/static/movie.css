@@ -123,6 +123,7 @@
 		.movies.thumbs_list .movie {
 			width: 16.66667%;
 			height: auto;
+			min-height: 200px;
 			display: inline-block;
 			margin: 0;
 			padding: 0;
@@ -133,6 +134,7 @@
 			@media all and (max-width: 800px) {
 				.movies.thumbs_list .movie {
 					width: 25%;
+					min-height: 100px;
 				}
 			}
 
