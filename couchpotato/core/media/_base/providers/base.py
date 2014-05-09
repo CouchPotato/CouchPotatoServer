@@ -302,7 +302,7 @@ class ResultList(list):
             old_score = new_result['score']
             new_result['score'] = int(old_score * is_correct_weight)
 
-            log.info('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
+            log.info2('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
                 is_correct_weight,
                 old_score,
                 new_result['score']
