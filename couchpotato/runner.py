@@ -10,7 +10,7 @@ import warnings
 import re
 import tarfile
 
-from CodernityDB.database_thread_safe import ThreadSafeDatabase
+from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
 from cache import FileSystemCache
 from couchpotato import KeyHandler, LoginHandler, LogoutHandler
@@ -89,7 +89,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db_path = toUnicode(os.path.join(data_dir, 'database'))
 
     # Check if database exists
-    db = ThreadSafeDatabase(db_path)
+    db = SuperThreadSafeDatabase(db_path)
     db_exists = db.exists()
     if db_exists:
 
