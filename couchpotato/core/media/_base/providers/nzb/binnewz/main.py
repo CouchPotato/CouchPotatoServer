@@ -80,6 +80,13 @@ class Base(NZBProvider):
     
                     if not "_fr" in language and not "_frq" in language:
                         continue
+                    
+                    detectedlang=''
+                    
+                    if "_fr" in language:
+                        detectedlang=' truefrench '
+                    else:
+                        detectedlang=' french '
                                                     
       
                     # blacklist_groups = [ "alt.binaries.multimedia" ]
@@ -285,7 +292,7 @@ class Base(NZBProvider):
                                     elif qualityStr.lower() in ['dvdr']:
                                         qualitytag=' pal video_ts '
                                     new['id'] =  binsearch_result.nzbid
-                                    new['name'] = name + ' french ' +  qualityStr + qualitytag + downloader.__class__.__name__ 
+                                    new['name'] = name + detectedlang +  qualityStr + qualitytag + downloader.__class__.__name__ 
                                     new['url'] = binsearch_result.nzburl
                                     new['detail_url'] = binsearch_result.refererURL
                                     new['size'] = int(str(binsearch_result.sizeInMegs).replace('L',''))
