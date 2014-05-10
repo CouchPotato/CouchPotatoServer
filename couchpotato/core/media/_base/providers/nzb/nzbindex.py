@@ -17,8 +17,8 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
-        'download': 'https://www.nzbindex.com/download/',
-        'search': 'https://www.nzbindex.com/rss/?%s',
+        'download': 'https://www.nzbindex.nl/download/',
+        'search': 'https://www.nzbindex.nl/rss/?%s',
     }
 
     http_time_between_calls = 1  # Seconds
