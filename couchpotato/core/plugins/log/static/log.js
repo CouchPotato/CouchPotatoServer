@@ -65,7 +65,7 @@ Running on: ...\n\
 						'events': {
 							'change': function () {
 								var type_filter = this.getSelected()[0].get('value');
-								self.log.set('data-filter', type_filter);
+								self.el.set('data-filter', type_filter);
 								self.scrollToBottom();
 							}
 						}
@@ -197,7 +197,8 @@ Running on: ...\n\
 	},
 
 	showReport: function(text){
-		var self = this;
+		var self = this,
+			body = self.report_text.replace('{issue}', text);
 
 		var overlay = new Element('div.report', {
 			'method': 'post',
@@ -231,7 +232,7 @@ Running on: ...\n\
 					})
 				),
 				new Element('textarea', {
-					'text': self.report_text.replace('{issue}', text),
+					'text': body,
 					'events': {
 						'click': function(){
 							this.select();
@@ -241,7 +242,7 @@ Running on: ...\n\
 				new Element('a.button', {
 					'target': '_blank',
 					'text': 'Create a new issue on GitHub with the text above',
-					'href': 'https://github.com/RuudBurger/CouchPotatoServer/issues/new?body=Paste the text here'
+					'href': 'https://github.com/RuudBurger/CouchPotatoServer/issues/new?body=' + (body.length < 2000 ? encodeURIComponent(body) : 'Paste the text here')
 				})
 			)
 		);
