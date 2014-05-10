@@ -67,7 +67,6 @@
 	overflow: hidden;
 	line-height: 150%;
 	font-size: 11px;
-	font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 	color: #FFF;
 }
 
@@ -83,6 +82,7 @@
 		position: relative;
 		overflow: hidden;
 		padding: 0 3px;
+		font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 	}
 		.page.log .container .time.highlight {
 			background: rgba(255, 255, 255, 0.1);
@@ -129,7 +129,6 @@
 	top: 0;
 	z-index: 99999;
 	font-size: 14px;
-	font-family: OpenSans,"Helvetica Neue",Helvetica,Arial,Geneva,sans-serif;
 }
 
 	.page.log .report .button {
@@ -156,21 +155,20 @@
 			overflow: auto;
 			color: #666;
 			height: 70%;
-			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 			font-size: 12px;
 		}
 
-.page.log .container .time:not(.highlight) ::-webkit-selection {
+.page.log .container .time ::-webkit-selection {
 	background-color: #000;
 	color: #FFF;
 }
 
-.page.log .container .time:not(.highlight) ::-moz-selection {
+.page.log .container .time ::-moz-selection {
 	background-color: #000;
 	color: #FFF;
 }
 
-.page.log .container .time:not(.highlight) ::-ms-selection {
+.page.log .container .time ::-ms-selection {
 	background-color: #000;
 	color: #FFF;
 }
