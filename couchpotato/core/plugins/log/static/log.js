@@ -7,6 +7,7 @@ Page.Log = new Class({
 	title: 'Show recent logs.',
 	has_tab: false,
 
+	log_items: [],
 	report_text: '\
 ### Steps to reproduce:\n\
 1. ..\n\
@@ -48,7 +49,8 @@ Running on: ...\n\
 			},
 			'onComplete': function (json) {
 				self.log.set('text', '');
-				self.log.adopt(self.createLogElements(json.log));
+				self.log_items = self.createLogElements(json.log);
+				self.log.adopt(self.log_items);
 				self.log.removeClass('loading');
 
 				var nav = new Element('ul.nav', {
@@ -160,13 +162,20 @@ Running on: ...\n\
 		if(parent_start)
 			start_node = parent_start;
 
-		var nodes = [start_node],
-			current_node = start_node;
+		var index = {
+				'start': self.log_items.indexOf(start_node),
+				'end': self.log_items.indexOf(end_node)
+			};
 
-		while(current_node != end_node){
-			current_node = current_node.getNext('.time');
-			nodes.include(current_node);
+		if(index.start > index.end){
+			index = {
+				'start': index.end,
+				'end': index.start
+			};
 		}
+
+		var nodes = self.log_items.slice(index.start, index.end + 1);
+
 		nodes.each(function(node, nr){
 			node.addClass('highlight');
 			node.getElements('span').each(function(span){
