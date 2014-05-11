@@ -79,7 +79,20 @@ class Dashboard(Plugin):
                     # Don't list older movies
                     if ((not late and (media['info']['year'] >= now_year - 1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
                             (late and (media['info']['year'] < now_year - 1 or (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200)))):
-                        medias.append(media)
+
+                        add = True
+
+                        # Check if it doesn't have any releases
+                        if late:
+                            media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
+                            
+                            for release in media.get('releases'):
+                                if release.get('status') in ['snatched', 'available', 'seeding', 'downloaded']:
+                                    add = False
+                                    break
+
+                        if add:
+                            medias.append(media)
 
                         if len(medias) >= limit:
                             break
