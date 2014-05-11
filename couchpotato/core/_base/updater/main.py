@@ -10,7 +10,7 @@ from threading import RLock
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.encoding import ss, sp
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -182,7 +182,7 @@ class BaseUpdater(Plugin):
 
     def deletePyc(self, only_excess = True, show_logs = True):
 
-        for root, dirs, files in scandir.walk(ss(Env.get('app_dir'))):
+        for root, dirs, files in scandir.walk(Env.get('app_dir')):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -322,6 +322,7 @@ class SourceUpdater(BaseUpdater):
         return False
 
     def replaceWith(self, path):
+        path = sp(path)
         app_dir = ss(Env.get('app_dir'))
         data_dir = ss(Env.get('data_dir'))
 

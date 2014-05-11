@@ -118,10 +118,7 @@ class Renamer(Plugin):
         to_folder = sp(self.conf('to'))
 
         # Get media folder to process
-        media_folder = release_download.get('folder')
-
-        # Quality order for calculation quality priority
-        quality_order = fireEvent('quality.order', single = True)
+        media_folder = sp(release_download.get('folder'))
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -149,9 +146,9 @@ class Renamer(Plugin):
 
             # Update to the from folder
             if len(release_download.get('files', [])) == 1:
-                new_media_folder = from_folder
+                new_media_folder = sp(from_folder)
             else:
-                new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
+                new_media_folder = sp(os.path.join(from_folder, os.path.basename(media_folder)))
 
             if not os.path.isdir(new_media_folder):
                 log.error('The provided media folder %s does not exist and could also not be found in the \'from\' folder.', media_folder)
@@ -319,7 +316,7 @@ class Renamer(Plugin):
                     '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
                     '3d_type': group['meta_data'].get('3d_type'),
                 }
-                
+
                 if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
                     replacements['mpaa_only'] = 'Not Rated'
 
@@ -667,7 +664,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Tag all files in release folder
             elif release_download['folder']:
-                for root, folders, names in scandir.walk(release_download['folder']):
+                for root, folders, names in scandir.walk(sp(release_download['folder'])):
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
@@ -691,13 +688,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if isinstance(group, dict):
             tag_files = [sorted(list(group['files']['movie']))[0]]
 
-            folder = group['parentdir']
+            folder = sp(group['parentdir'])
             if not group.get('dirname') or not os.path.isdir(folder):
                 return False
 
         elif isinstance(release_download, dict):
 
-            folder = release_download['folder']
+            folder = sp(release_download['folder'])
             if not os.path.isdir(folder):
                 return False
 
@@ -731,7 +728,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if not release_download:
             return False
 
-        folder = release_download['folder']
+        folder = sp(release_download['folder'])
         if not os.path.isdir(folder):
             return False
 
