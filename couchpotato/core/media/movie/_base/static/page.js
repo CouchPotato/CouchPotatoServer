@@ -1,6 +1,6 @@
 Page.Movies = new Class({
 
-	extend: PageBase,
+	Extends: PageBase,
 
 	subPages: []
 
