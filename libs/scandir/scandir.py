@@ -365,7 +365,7 @@ elif sys.platform.startswith(('linux', 'darwin')) or 'bsd' in sys.platform:
         """Like os.listdir(), but yield DirEntry objects instead of returning
         a list of names.
         """
-        dir_p = opendir(path.encode(file_system_encoding))
+        dir_p = opendir(path)
         if not dir_p:
             raise posix_error(path)
         try:
@@ -376,7 +376,7 @@ elif sys.platform.startswith(('linux', 'darwin')) or 'bsd' in sys.platform:
                     raise posix_error(path)
                 if not result:
                     break
-                name = entry.d_name.decode(file_system_encoding)
+                name = entry.d_name
                 if name not in ('.', '..'):
                     yield PosixDirEntry(path, name, entry.d_type)
         finally:
