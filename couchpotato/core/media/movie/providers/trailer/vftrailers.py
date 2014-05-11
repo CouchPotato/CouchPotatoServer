@@ -195,9 +195,6 @@ class vftrailers(VFTrailerProvider):
                 if self.cleantitle(moviename[:-5].decode('unicode-escape')) in ficheresulttitle and countseries==0 and int(moviename[len(moviename)-4:])+2>yearresult and int(moviename[len(moviename)-4:])-2<yearresult:
                     goodresult=result
                     break
-            self.logg("Resultat : Nombre [{0}] Code [{1}] Titre original [{2}]".format(search['feed']['totalResults'],
-                                                                        goodresult['code'],
-                                                                        goodresult['originalTitle'].encode("latin-1")))
             self.logg('Recherche de la fiche du film avec le code : ' + str(goodresult['code']))
             movieallo = ficheresult
             for x in movieallo['movie']['link']:
