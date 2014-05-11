@@ -323,7 +323,7 @@ class QualityPlugin(Plugin):
         if size:
 
             if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
-                log.info2('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
+                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
                 score += 5
 
         return score
