@@ -120,7 +120,7 @@ class Manage(Plugin):
             if self.conf('cleanup') and full and not self.shuttingDown():
 
                 # Get movies with done status
-                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
+                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', release_status = 'done', status_or = True, single = True)
 
                 for done_movie in done_movies:
                     if getIdentifier(done_movie) not in added_identifiers:
@@ -131,12 +131,16 @@ class Manage(Plugin):
 
                         for release in releases:
                             if release.get('files'):
+                                brk = False
                                 for file_type in release.get('files', {}):
                                     for release_file in release['files'][file_type]:
                                         # Remove release not available anymore
                                         if not os.path.isfile(sp(release_file)):
                                             fireEvent('release.clean', release['_id'])
+                                            brk = True
                                             break
+                                    if brk:
+                                        break
 
                         # Check if there are duplicate releases (different quality) use the last one, delete the rest
                         if len(releases) > 1:
@@ -147,10 +151,12 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
+                                            # delete current one
                                             if already_used.get('last_edit', 0) < release.get('last_edit', 0):
-                                                fireEvent('release.delete', release['_id'], single = True)  # delete current one
+                                                fireEvent('release.delete', release['_id'], single = True)
+                                            # delete previous one
                                             else:
-                                                fireEvent('release.delete', already_used['_id'], single = True)  # delete previous one
+                                                fireEvent('release.delete', already_used['_id'], single = True)
                                             break
                                         else:
                                             used_files[release_file] = release
