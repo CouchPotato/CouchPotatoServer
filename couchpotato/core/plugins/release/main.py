@@ -180,15 +180,20 @@ class Release(Plugin):
         try:
             db = get_db()
             rel = db.get('id', release_id)
+            raw_files = rel.get('files')
 
-            if len(rel.get('files')) == 0:
+            if len(raw_files) == 0:
                 self.delete(rel['_id'])
             else:
 
-                files = []
-                for release_file in rel.get('files'):
-                    if os.path.isfile(ss(release_file['path'])):
-                        files.append(release_file)
+                files = {}
+                for file_type in raw_files:
+
+                    for release_file in raw_files.get(file_type, []):
+                        if os.path.isfile(ss(release_file)):
+                            if file_type not in files:
+                                files[file_type] = []
+                            files[file_type].append(release_file)
 
                 rel['files'] = files
                 db.update(rel)
