@@ -139,7 +139,7 @@ class MovieBase(MovieTypeBase):
 
                 # Clean snatched history
                 for release in fireEvent('release.for_media', m['_id'], single = True):
-                    if release.get('status') in ['downloaded', 'snatched', 'done']:
+                    if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
                             release['status'] = 'ignored'
                             db.update(release)

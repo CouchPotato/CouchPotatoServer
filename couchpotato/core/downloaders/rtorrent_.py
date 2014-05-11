@@ -154,19 +154,13 @@ class rTorrent(DownloaderBase):
             return False
 
     def getTorrentStatus(self, torrent):
-        if torrent.hashing or torrent.hash_checking or torrent.message:
-            return 'busy'
-
         if not torrent.complete:
             return 'busy'
 
-        if not torrent.open:
-            return 'completed'
-
-        if torrent.state and torrent.active:
+        if torrent.open:
             return 'seeding'
 
-        return 'busy'
+        return 'completed'
 
     def getAllDownloadStatus(self, ids):
         log.debug('Checking rTorrent download status.')
@@ -244,7 +238,7 @@ class rTorrent(DownloaderBase):
             if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
                 # Remove empty directories bottom up
                 try:
-                    for path, _, _ in scandir.walk(torrent.directory, topdown = False):
+                    for path, _, _ in scandir.walk(sp(torrent.directory), topdown = False):
                         os.rmdir(path)
                 except OSError:
                     log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)

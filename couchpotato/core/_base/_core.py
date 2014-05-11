@@ -90,7 +90,11 @@ class Core(Plugin):
 
         def shutdown():
             self.initShutdown()
-        IOLoop.current().add_callback(shutdown)
+
+        if IOLoop.current()._closing:
+            shutdown()
+        else:
+            IOLoop.current().add_callback(shutdown)
 
         return 'shutdown'
 
@@ -139,7 +143,8 @@ class Core(Plugin):
         log.debug('Safe to shutdown/restart')
 
         try:
-            IOLoop.current().stop()
+            if not IOLoop.current()._closing:
+                IOLoop.current().stop()
         except RuntimeError:
             pass
         except:

@@ -104,7 +104,7 @@ Page.Home = new Class({
 
 		// Make all thumbnails the same size
 		self.soon_list.addEvent('loaded', function(){
-			var images = $(self.soon_list).getElements('.poster'),
+			var images = $(self.soon_list).getElements('.poster, .no_thumbnail'),
 				timer,
 				highest = 100;
 

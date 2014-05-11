@@ -11,6 +11,17 @@
 	display: inline-block;
 	width: 50%;
 	vertical-align: top;
+    max-height: 510px;
+	overflow: hidden;
+    scrollbar-base-color: #4e5969;
+}
+
+.charts .chart:hover {
+    overflow-y: auto;
+}
+
+.charts .chart .media_result.hidden {
+    display: none;
 }
 
 .charts .refresh {

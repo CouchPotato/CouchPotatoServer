@@ -65,7 +65,7 @@ class Base(TorrentMagnetProvider):
                         pass
 
                     entries = results_table.find_all('tr')
-                    for result in entries[2:]:
+                    for result in entries[1:]:
                         link = result.find(href = re.compile('torrent\/\d+\/'))
                         download = result.find(href = re.compile('magnet:'))
 
@@ -109,7 +109,11 @@ class Base(TorrentMagnetProvider):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
         nfo_pre = html.find('div', attrs = {'class': 'nfo'})
-        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+        description = ''
+        try: 
+            description = toUnicode(nfo_pre.text)
+        except:
+            pass
 
         item['description'] = description
         return item

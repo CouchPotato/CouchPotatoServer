@@ -1,9 +1,10 @@
 import os
+import re
 import traceback
 
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -22,7 +23,11 @@ class Logging(Plugin):
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'log': string, //Log file
+    'log': [{
+        'time': '03-12 09:12:59',
+        'type': 'INFO',
+        'message': 'Log message'
+    }, ..], //Log file
     'total': int, //Total log files available
 }"""}
         })
@@ -34,7 +39,11 @@ class Logging(Plugin):
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'log': string, //Log file
+    'log': [{
+        'time': '03-12 09:12:59',
+        'type': 'INFO',
+        'message': 'Log message'
+    }, ..]
 }"""}
         })
         addApiView('logging.clear', self.clear, docs = {
@@ -71,16 +80,18 @@ class Logging(Plugin):
         if current_path:
             f = open(current_path, 'r')
             log_content = f.read()
+        logs = self.toList(log_content)
 
         return {
             'success': True,
-            'log': toUnicode(log_content),
+            'log': logs,
             'total': total,
         }
 
-    def partial(self, type = 'all', lines = 30, **kwargs):
+    def partial(self, type = 'all', lines = 30, offset = 0, **kwargs):
 
         total_lines = tryInt(lines)
+        offset = tryInt(offset)
 
         log_lines = []
 
@@ -93,27 +104,56 @@ class Logging(Plugin):
                 break
 
             f = open(path, 'r')
-            reversed_lines = toUnicode(f.read()).split('[0m\n')
-            reversed_lines.reverse()
+            log_content = toUnicode(f.read())
+            raw_lines = self.toList(log_content)
+            raw_lines.reverse()
 
             brk = False
-            for line in reversed_lines:
+            for line in raw_lines:
 
-                if type == 'all' or '%s ' % type.upper() in line:
+                if type == 'all' or line.get('type') == type.upper():
                     log_lines.append(line)
 
-                if len(log_lines) >= total_lines:
+                if len(log_lines) >= (total_lines + offset):
                     brk = True
                     break
 
             if brk:
                 break
 
+        log_lines = log_lines[offset:]
         log_lines.reverse()
+
         return {
             'success': True,
-            'log': '[0m\n'.join(log_lines),
+            'log': log_lines,
         }
+
+    def toList(self, log_content = ''):
+
+        logs_raw = toUnicode(log_content).split('[0m\n')
+
+        logs = []
+        for log in logs_raw:
+            split = splitString(log, '\x1b')
+            if split:
+                try:
+                    date, time, log_type = splitString(split[0], ' ')
+                    timestamp = '%s %s' % (date, time)
+                except:
+                    timestamp = 'UNKNOWN'
+                    log_type = 'UNKNOWN'
+
+                message = ''.join(split[1]) if len(split) > 1 else split[0]
+                message = re.sub('\[\d+m\[', '[', message)
+
+                logs.append({
+                    'time': timestamp,
+                    'type': log_type,
+                    'message': message
+                })
+
+        return logs
 
     def clear(self, **kwargs):
 

@@ -1,4 +1,4 @@
-﻿var CouchPotato = new Class({
+var CouchPotato = new Class({
 
 	Implements: [Events, Options],
 
@@ -137,17 +137,32 @@
 	createPages: function(){
 		var self = this;
 
+		var pages = [];
 		Object.each(Page, function(page_class, class_name){
 			var pg = new Page[class_name](self, {});
 			self.pages[class_name] = pg;
 
-			self.fireEvent('load'+class_name);
-
-			$(pg).inject(self.pages);
+			pages.include({
+				'order': pg.order,
+				'name': class_name,
+				'class': pg
+			});
 		});
+
+		pages.stableSort(self.sortPageByOrder).each(function(page){
+			page['class'].load();
+			self.fireEvent('load'+page.name);
+			$(page['class']).inject(self.content);
+		});
+
+		delete pages;
 
 		self.fireEvent('load');
 
+	},
+
+	sortPageByOrder: function(a, b){
+		return (a.order || 100) - (b.order || 100)
 	},
 
 	openPage: function(url) {

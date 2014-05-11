@@ -3,10 +3,11 @@ import os
 import time
 import traceback
 
+from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toUnicode
+from couchpotato.core.helpers.encoding import ss, toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -58,7 +59,7 @@ class Release(Plugin):
 
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
-        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 12)
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
@@ -67,6 +68,27 @@ class Release(Plugin):
         week = 262080
 
         db = get_db()
+
+        # Get (and remove) parentless releases
+        releases = db.all('release', with_doc = True)
+        media_exist = []
+        for release in releases:
+            if release.get('key') in media_exist:
+                continue
+
+            try:
+                db.get('id', release.get('key'))
+                media_exist.append(release.get('key'))
+            except RecordDeleted:
+                db.delete(release['doc'])
+                log.debug('Deleted orphaned release: %s', release['doc'])
+            except:
+                log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        del media_exist
+
+        # Reindex statuses
+        db.reindex_index('media_status')
 
         # get movies last_edit more than a week ago
         medias = fireEvent('media.with_status', 'done', single = True)
@@ -107,6 +129,7 @@ class Release(Plugin):
                 'media_id': media['_id'],
                 'identifier': release_identifier,
                 'quality': group['meta_data']['quality'].get('identifier'),
+                'is_3d': group['meta_data']['quality'].get('is_3d', 0),
                 'last_edit': int(time.time()),
                 'status': 'done'
             }
@@ -157,15 +180,20 @@ class Release(Plugin):
         try:
             db = get_db()
             rel = db.get('id', release_id)
+            raw_files = rel.get('files')
 
-            if len(rel.get('files')) == 0:
+            if len(raw_files) == 0:
                 self.delete(rel['_id'])
             else:
 
-                files = []
-                for release_file in rel.get('files'):
-                    if os.path.isfile(ss(release_file['path'])):
-                        files.append(release_file)
+                files = {}
+                for file_type in raw_files:
+
+                    for release_file in raw_files.get(file_type, []):
+                        if os.path.isfile(sp(release_file)):
+                            if file_type not in files:
+                                files[file_type] = []
+                            files[file_type].append(release_file)
 
                 rel['files'] = files
                 db.update(rel)
@@ -315,10 +343,12 @@ class Release(Plugin):
 
     def tryDownloadResult(self, results, media, quality_custom, manual = False):
 
+        wait_for = False
+        let_through = False
+        filtered_results = []
+
+        # If a single release comes through the "wait for", let through all
         for rel in results:
-            if not quality_custom.get('finish', False) and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for'), rel['name']))
-                continue
 
             if rel['status'] in ['ignored', 'failed']:
                 log.info('Ignored: %s', rel['name'])
@@ -328,13 +358,30 @@ class Release(Plugin):
                 log.info('Ignored, score to low: %s', rel['name'])
                 continue
 
+            rel['wait_for'] = False
+            if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
+                rel['wait_for'] = True
+            else:
+                let_through = True
+
+            filtered_results.append(rel)
+
+        # Loop through filtered results
+        for rel in filtered_results:
+
+            # Only wait if not a single release is old enough
+            if rel.get('wait_for') and not let_through:
+                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for') - rel.get('age'), rel['name']))
+                wait_for = True
+                continue
+
             downloaded = fireEvent('release.download', data = rel, media = media, manual = manual, single = True)
             if downloaded is True:
                 return True
             elif downloaded != 'try_next':
                 break
 
-        return False
+        return wait_for
 
     def createFromSearch(self, search_results, media, quality):
 
@@ -406,7 +453,7 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             if rel and rel.get('status') != status:
 
-                release_name = rel.get('name')
+                release_name = rel['info'].get('name')
                 if rel.get('files'):
                     for file_type in rel.get('files', {}):
                         if file_type == 'movie':

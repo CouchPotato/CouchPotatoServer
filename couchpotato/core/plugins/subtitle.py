@@ -32,7 +32,7 @@ class Subtitle(Plugin):
 
             for lang in self.getLanguages():
                 if lang not in available_languages:
-                    download = subliminal.download_subtitles(files, multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
+                    download = subliminal.download_subtitles(files, multi = True, force = self.conf('force'), languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
                     for subtitle in download:
                         downloaded.extend(download[subtitle])
 
@@ -71,6 +71,14 @@ config = [{
                 {
                     'name': 'languages',
                     'description': ('Comma separated, 2 letter country code.', 'Example: en, nl. See the codes at <a href="http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">on Wikipedia</a>'),
+                },
+                {
+                    'advanced': True,
+                    'name': 'force',
+                    'label': 'Force',
+                    'description': ('Force download all languages (including embedded).', 'This will also <strong>overwrite</strong> all existing subtitles.'),
+                    'default': False,
+                    'type': 'bool',
                 },
             ],
         },

@@ -100,20 +100,28 @@ class IMDBAutomation(IMDBBase):
 
     enabled_option = 'automation_providers_enabled'
 
-    chart_urls = {
-        'theater': 'http://www.imdb.com/movies-in-theaters/',
-        'top250': 'http://www.imdb.com/chart/top',
-        'boxoffice': 'http://www.imdb.com/chart/',
-    }
-    chart_names = {
-        'theater': 'IMDB - Movies in Theaters',
-        'top250': 'IMDB - Top 250 Movies',
-        'boxoffice': 'IMDB - Box Office',
-    }
-    chart_order = {
-        'theater': 2,
-        'top250': 4,
-        'boxoffice': 3,
+    charts = {
+        'theater': {
+            'order': 1,
+            'name': 'IMDB - Movies in Theaters',
+            'url': 'http://www.imdb.com/movies-in-theaters/',
+        },
+        'boxoffice': {
+            'order': 2,
+            'name': 'IMDB - Box Office',
+            'url': 'http://www.imdb.com/chart/',
+        },
+        'rentals': {
+            'order': 3,
+            'name': 'IMDB - Top DVD rentals',
+            'url': 'http://m.imdb.com/boxoffice_json',
+            'type': 'json',
+        },
+        'top250': {
+            'order': 4,
+            'name': 'IMDB - Top 250 Movies',
+            'url': 'http://www.imdb.com/chart/top',
+        },
     }
 
     first_table = ['boxoffice']
@@ -122,23 +130,30 @@ class IMDBAutomation(IMDBBase):
 
         movies = []
 
-        for url in self.chart_urls:
-            if self.conf('automation_charts_%s' % url):
-                data = self.getHTMLData(self.chart_urls[url])
+        for name in self.charts:
+            chart = self.charts[name]
+            url = chart.get('url')
+
+            if self.conf('automation_charts_%s' % name):
+                data = self.getHTMLData(url)
+
                 if data:
-                    html = BeautifulSoup(data)
-
                     try:
-                        result_div = html.find('div', attrs = {'id': 'main'})
+                        html = BeautifulSoup(data)
 
-                        try:
-                            if url in self.first_table:
-                                table = result_div.find('table')
-                                result_div = table if table else result_div
-                        except:
-                            pass
+                        if chart.get('type', 'html') == 'html':
+                            result_div = html.find('div', attrs = {'id': 'main'})
 
-                        imdb_ids = getImdb(str(result_div), multiple = True)
+                            try:
+                                if url in self.first_table:
+                                    table = result_div.find('table')
+                                    result_div = table if table else result_div
+                            except:
+                                pass
+
+                            imdb_ids = getImdb(str(result_div), multiple = True)
+                        else:
+                            imdb_ids = getImdb(str(data), multiple = True)
 
                         for imdb_id in imdb_ids:
                             info = self.getInfo(imdb_id)
@@ -153,42 +168,56 @@ class IMDBAutomation(IMDBBase):
 
         return movies
 
-
     def getChartList(self):
+
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
         movie_lists = []
-        max_items = int(self.conf('max_items', section='charts', default=5))
+        max_items = int(self.conf('max_items', section = 'charts', default=5))
 
-        for url in self.chart_urls:
-            if self.conf('chart_display_%s' % url):
-                movie_list = {'name': self.chart_names[url], 'url': self.chart_urls[url], 'order': self.chart_order[url], 'list': []}
-                data = self.getHTMLData(self.chart_urls[url])
+        for name in self.charts:
+            chart = self.charts[name].copy()
+            url = chart.get('url')
+
+            if self.conf('chart_display_%s' % name):
+
+                chart['list'] = []
+
+                data = self.getHTMLData(url)
                 if data:
                     html = BeautifulSoup(data)
 
                     try:
-                        result_div = html.find('div', attrs = {'id': 'main'})
 
-                        try:
-                            if url in self.first_table:
-                                table = result_div.find('table')
-                                result_div = table if table else result_div
-                        except:
-                            pass
+                        if chart.get('type', 'html') == 'html':
+                            result_div = html.find('div', attrs = {'id': 'main'})
 
-                        imdb_ids = getImdb(str(result_div), multiple = True)
+                            try:
+                                if url in self.first_table:
+                                    table = result_div.find('table')
+                                    result_div = table if table else result_div
+                            except:
+                                pass
+
+                            imdb_ids = getImdb(str(result_div), multiple = True)
+                        else:
+                            imdb_ids = getImdb(str(data), multiple = True)
 
                         for imdb_id in imdb_ids[0:max_items]:
+
+                            is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
+                            if not is_movie:
+                                continue
+
                             info = self.getInfo(imdb_id)
-                            movie_list['list'].append(info)
+                            chart['list'].append(info)
 
                             if self.shuttingDown():
                                 break
                     except:
                         log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
-                    if movie_list['list']:
-                        movie_lists.append(movie_list)
+                    if chart['list']:
+                        movie_lists.append(chart)
 
 
         return movie_lists
@@ -241,11 +270,18 @@ config = [{
                     'default': True,
                 },
                 {
+                    'name': 'automation_charts_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
+                },
+                {
                     'name': 'automation_charts_top250',
                     'type': 'bool',
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
-                    'default': True,
+                    'default': False,
                 },
                 {
                     'name': 'automation_charts_boxoffice',
@@ -281,6 +317,13 @@ config = [{
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
                     'default': False,
+                },
+                {
+                    'name': 'chart_display_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
                 },
                 {
                     'name': 'chart_display_boxoffice',

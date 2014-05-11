@@ -78,7 +78,7 @@ MA.IMDB = new Class({
 	create: function(){
 		var self = this;
 
-		self.id = self.movie.get('imdb') || self.movie.get('identifier');
+		self.id = self.movie.getIdentifier ? self.movie.getIdentifier() : self.get('imdb');
 
 		self.el = new Element('a.imdb', {
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
@@ -684,7 +684,7 @@ MA.Readd = new Class({
 		var movie_done = self.movie.data.status == 'done';
 		if(self.movie.data.releases && !movie_done)
 			var snatched = self.movie.data.releases.filter(function(release){
-				return release.status && (release.status == 'snatched' || release.status == 'downloaded' || release.status == 'done');
+				return release.status && (release.status == 'snatched' || release.status == 'seeding' || release.status == 'downloaded' || release.status == 'done');
 			}).length;
 
 		if(movie_done || snatched && snatched > 0)
@@ -703,7 +703,7 @@ MA.Readd = new Class({
 
 		Api.request('movie.add', {
 			'data': {
-				'identifier': self.movie.get('identifier'),
+				'identifier': self.movie.getIdentifier(),
 				'ignore_previous': 1
 			}
 		});

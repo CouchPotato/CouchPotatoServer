@@ -65,12 +65,13 @@ class Base(TorrentMagnetProvider):
                                 if column_name:
 
                                     if column_name == 'name':
-                                        link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
-                                        new['id'] = temp.get('id')[-8:]
+                                        link = td.find('div', {'class': 'torrentname'}).find_all('a')[2]
+                                        new['id'] = temp.get('id')[-7:]
                                         new['name'] = link.text
                                         new['url'] = td.find('a', 'imagnet')['href']
                                         new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
-                                        new['score'] = 20 if td.find('a', 'iverif') else 0
+                                        new['verified'] = True if td.find('a', 'iverify') else False
+                                        new['score'] = 100 if new['verified'] else 0
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)
                                     elif column_name is 'age':
@@ -81,6 +82,10 @@ class Base(TorrentMagnetProvider):
                                         new['leechers'] = tryInt(td.text)
 
                                 nr += 1
+
+                            # Only store verified torrents
+                            if self.conf('only_verified') and not new['verified']:
+                                continue
 
                             results.append(new)
                     except:
@@ -150,6 +155,13 @@ config = [{
                     'type': 'int',
                     'default': 40,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
+                },
+                {
+                    'name': 'only_verified',
+                    'advanced': True,
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Only search for verified releases.'
                 },
                 {
                     'name': 'extra_score',
