@@ -757,7 +757,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return False
 
     def moveFile(self, old, dest, forcemove = False):
-        dest = ss(dest)
+        dest = sp(dest)
         try:
             if forcemove or self.conf('file_action') not in ['copy', 'link']:
                 try:

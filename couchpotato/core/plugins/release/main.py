@@ -7,7 +7,7 @@ from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toUnicode
+from couchpotato.core.helpers.encoding import ss, toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -190,7 +190,7 @@ class Release(Plugin):
                 for file_type in raw_files:
 
                     for release_file in raw_files.get(file_type, []):
-                        if os.path.isfile(ss(release_file)):
+                        if os.path.isfile(sp(release_file)):
                             if file_type not in files:
                                 files[file_type] = []
                             files[file_type].append(release_file)

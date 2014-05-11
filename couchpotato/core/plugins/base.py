@@ -113,7 +113,7 @@ class Plugin(object):
                     fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
 
     def createFile(self, path, content, binary = False):
-        path = ss(path)
+        path = sp(path)
 
         self.makeDir(os.path.dirname(path))
 
@@ -131,7 +131,7 @@ class Plugin(object):
                 os.remove(path)
 
     def makeDir(self, path):
-        path = ss(path)
+        path = sp(path)
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))

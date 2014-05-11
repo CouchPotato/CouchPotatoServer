@@ -323,8 +323,8 @@ class SourceUpdater(BaseUpdater):
 
     def replaceWith(self, path):
         path = sp(path)
-        app_dir = ss(Env.get('app_dir'))
-        data_dir = ss(Env.get('data_dir'))
+        app_dir = Env.get('app_dir')
+        data_dir = Env.get('data_dir')
 
         # Get list of files we want to overwrite
         self.deletePyc()

@@ -78,7 +78,7 @@ def sp(path, *args):
     # Replace *NIX ambiguous '//' at the beginning of a path with '/' (crashes guessit)
     path = re.sub('^//', '/', path)
 
-    return toUnicode(path)
+    return path
 
 
 def ek(original, *args):

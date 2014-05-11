@@ -151,7 +151,7 @@ class Scanner(Plugin):
             try:
                 files = []
                 for root, dirs, walk_files in scandir.walk(folder, followlinks=True):
-                    files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
+                    files.extend([sp(os.path.join(sp(root), ss(filename))) for filename in walk_files])
 
                     # Break if CP wants to shut down
                     if self.shuttingDown():
