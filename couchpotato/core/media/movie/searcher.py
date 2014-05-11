@@ -126,6 +126,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         release_dates = fireEvent('movie.update_release_dates', movie['_id'], merge = True)
 
         found_releases = []
+        previous_releases = movie.get('releases', [])
         too_early_to_search = []
 
         default_title = getTitle(movie)
@@ -144,9 +145,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         index = 0
         for q_identifier in profile.get('qualities'):
             quality_custom = {
+                'index': index,
                 'quality': q_identifier,
                 'finish': profile['finish'][index],
-                'wait_for': profile['wait_for'][index],
+                'wait_for': tryInt(profile['wait_for'][index]),
                 '3d': profile['3d'][index] if profile.get('3d') else False
             }
 
@@ -196,9 +198,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 ret = True
 
             # Remove releases that aren't found anymore
-            for release in movie.get('releases', []):
+            temp_previous_releases = []
+            for release in previous_releases:
                 if release.get('status') == 'available' and release.get('identifier') not in found_releases:
                     fireEvent('release.delete', release.get('_id'), single = True)
+                else:
+                    temp_previous_releases.append(release)
+            previous_releases = temp_previous_releases
+            del temp_previous_releases
 
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:

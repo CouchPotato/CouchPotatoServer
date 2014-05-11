@@ -10,7 +10,7 @@ import warnings
 import re
 import tarfile
 
-from CodernityDB.database_thread_safe import ThreadSafeDatabase
+from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
 from cache import FileSystemCache
 from couchpotato import KeyHandler, LoginHandler, LogoutHandler
@@ -89,7 +89,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db_path = toUnicode(os.path.join(data_dir, 'database'))
 
     # Check if database exists
-    db = ThreadSafeDatabase(db_path)
+    db = SuperThreadSafeDatabase(db_path)
     db_exists = db.exists()
     if db_exists:
 
@@ -262,7 +262,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Go go go!
     from tornado.ioloop import IOLoop
+    from tornado.autoreload import add_reload_hook
     loop = IOLoop.current()
+
+    # Reload hook
+    def test():
+        fireEvent('app.shutdown')
+    add_reload_hook(test)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)

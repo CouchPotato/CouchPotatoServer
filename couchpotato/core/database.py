@@ -28,6 +28,7 @@ class Database(object):
 
         addEvent('database.setup_index', self.setupIndex)
         addEvent('app.migrate', self.migrate)
+        addEvent('app.after_shutdown', self.close)
 
     def getDB(self):
 
@@ -36,6 +37,9 @@ class Database(object):
             self.db = get_db()
 
         return self.db
+
+    def close(self, **kwargs):
+        self.getDB().close()
 
     def setupIndex(self, index_name, klass):
 
@@ -412,7 +416,10 @@ class Database(object):
                         empty_info = True
                         rel['info'] = {}
 
-                    quality = quality_link[rel.get('quality_id')]
+                    quality = quality_link.get(rel.get('quality_id'))
+                    if not quality:
+                        continue
+
                     release_status = statuses.get(rel.get('status_id')).get('identifier')
 
                     if rel['info'].get('download_id'):

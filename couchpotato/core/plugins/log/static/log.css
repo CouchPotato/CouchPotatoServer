@@ -16,10 +16,14 @@
 		display: inline-block;
 		padding: 5px 10px;
 		margin: 0;
+	}
+
+	.page.log .nav li.select,
+	.page.log .nav li.clear {
 		cursor: pointer;
 	}
 
-		.page.log .nav li:hover:not(.active) {
+		.page.log .nav li:hover:not(.active, .filter) {
 			background: rgba(255, 255, 255, 0.1);
 		}
 
@@ -39,6 +43,19 @@
 				}
 		}
 
+	.page.log .nav li.hint {
+		text-align: center;
+		width: 400px;
+		left: 50%;
+		margin-left: -200px;
+		font-style: italic;
+		font-size: 11px;
+		position: absolute;
+		right: 20px;
+		opacity: .5;
+		bottom: 5px;
+	}
+
 .page.log .loading {
 	text-align: center;
 	font-size: 20px;
@@ -50,28 +67,133 @@
 	overflow: hidden;
 	line-height: 150%;
 	font-size: 11px;
-	font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
+	color: #FFF;
 }
 
-	.page.log .container .error {
-		color: #FFA4A4;
-		white-space: pre-wrap;
+	.page.log .container select {
+		vertical-align: top;
 	}
-	.page.log .container .debug { color: lightgrey; }
 
 	.page.log .container .time {
 		clear: both;
 		color: lightgrey;
-		padding: 3px 0;
 		font-size: 10px;
-		border-top: 1px solid rgba(255, 255, 255, 0.2);
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
 		position: relative;
+		overflow: hidden;
+		padding: 0 3px;
+		font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 	}
-
-		.page.log .container .time:last-child { display: none; }
-
+		.page.log .container .time.highlight {
+			background: rgba(255, 255, 255, 0.1);
+		}
 		.page.log .container .time span {
-			float: right;
-			width: 86%;
+			padding: 5px 0 3px;
+			display: inline-block;
+			vertical-align: middle;
 		}
 
+		.page.log[data-filter=INFO] .error,
+		.page.log[data-filter=INFO] .debug,
+		.page.log[data-filter=ERROR] .debug,
+		.page.log[data-filter=ERROR] .info,
+		.page.log[data-filter=DEBUG] .info,
+		.page.log[data-filter=DEBUG] .error {
+			display: none;
+		}
+
+	.page.log .container .type {
+		margin-left: 10px;
+	}
+
+	.page.log .container .message {
+		float: right;
+		width: 86%;
+		white-space: pre-wrap;
+	}
+
+	.page.log .container .error { color: #FFA4A4; }
+	.page.log .container .debug span { opacity: .6; }
+
+.do_report {
+	position: absolute;
+	padding: 10px;
+}
+
+.page.log .report {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,.7);
+	left: 0;
+	top: 0;
+	z-index: 99999;
+	font-size: 14px;
+}
+
+	.page.log .report .button {
+		display: inline-block;
+		margin: 10px 0;
+		padding: 10px;
+	}
+
+	.page.log .report .bug {
+		width: 800px;
+		height: 80%;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		margin: 0 0 0 -400px;
+		transform: translate(0, -50%);
+	}
+
+		.page.log .report .bug textarea {
+			display: block;
+			width: 100%;
+			background: #FFF;
+			padding: 20px;
+			overflow: auto;
+			color: #666;
+			height: 70%;
+			font-size: 12px;
+		}
+
+.page.log .container .time ::-webkit-selection {
+	background-color: #000;
+	color: #FFF;
+}
+
+.page.log .container .time ::-moz-selection {
+	background-color: #000;
+	color: #FFF;
+}
+
+.page.log .container .time ::-ms-selection {
+	background-color: #000;
+	color: #FFF;
+}
+
+.page.log .container .time.highlight ::selection {
+	background-color: transparent;
+	color: inherit;
+}
+
+.page.log .container .time.highlight ::-webkit-selection {
+	background-color: transparent;
+	color: inherit;
+}
+
+.page.log .container .time.highlight ::-moz-selection {
+	background-color: transparent;
+	color: inherit;
+}
+
+.page.log .container .time.highlight ::-ms-selection {
+	background-color: transparent;
+	color: inherit;
+}
+
+.page.log .container .time.highlight ::selection {
+	background-color: transparent;
+	color: inherit;
+}
