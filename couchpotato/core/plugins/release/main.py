@@ -331,12 +331,7 @@ class Release(Plugin):
 
                 if media['status'] == 'active':
                     profile = db.get('id', media['profile_id'])
-                    finished = False
-                    if rls['quality'] in profile['qualities']:
-                        nr = profile['qualities'].index(rls['quality'])
-                        finished = profile['finish'][nr]
-
-                    if finished:
+                    if fireEvent('quality.isfinish', {'identifier': rls['quality'], 'is_3d': rls.get('is_3d', False)}, profile, single = True):
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                         # Mark release done

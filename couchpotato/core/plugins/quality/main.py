@@ -379,13 +379,17 @@ class QualityPlugin(Plugin):
                 if score.get(q.get('identifier')):
                     score[q.get('identifier')]['score'] -= 1
 
-    def isFinish(self, quality, profile):
+    def isFinish(self, quality, profile, release_age = 0):
         if not isinstance(profile, dict) or not profile.get('qualities'):
             return False
 
         try:
-            quality_order = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else 0) == bool(quality.get('is_3d', 0))][0]
-            return profile['finish'][quality_order]
+            index = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else False) == bool(quality.get('is_3d', False))][0]
+
+            if index == 0 or profile['finish'][index] and int(release_age) >= int(profile['stop_after'][0]):
+                return True 
+
+            return False
         except:
             return False
 

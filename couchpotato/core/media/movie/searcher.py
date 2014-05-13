@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+from operator import itemgetter
 import random
 import re
 import time
@@ -139,6 +140,27 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.delete', movie['_id'], single = True)
             return
 
+        db = get_db()
+        profile = db.get('id', movie['profile_id'])
+
+        # Find out if we need to stop searching because 'stop_after' is met. Compare with the newest release found.
+        done_releases = [release for release in previous_releases if release.get('status') == 'done']
+
+        if done_releases:
+            done_release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
+            if fireEvent('quality.isfinish', {'identifier': done_release['quality'], 'is_3d': done_release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - done_release['last_edit']).days, single = True):
+
+                log.debug('No better quality than %s%s found for %s days, marking movie %s as done.', \
+                          (done_release['quality'], ' 3D' if done_release.get('is_3d', False) else '', profile['stop_after'][0], default_title))
+
+                # Mark media done
+                mdia = db.get('id', movie['_id'])
+                mdia['status'] = 'done'
+                mdia['last_edit'] = int(time.time())
+                db.update(mdia)
+
+                return
+
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
         # Ignore eta once every 7 days
@@ -149,13 +171,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 ignore_eta = True
                 Env.prop(prop_name, value = time.time())
 
-        db = get_db()
-
-        profile = db.get('id', movie['profile_id'])
         ret = False
 
-        index = 0
-        for q_identifier in profile.get('qualities'):
+        for index, q_identifier in enumerate(profile.get('qualities', [])):
             quality_custom = {
                 'index': index,
                 'quality': q_identifier,
@@ -163,8 +181,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'wait_for': tryInt(profile['wait_for'][index]),
                 '3d': profile['3d'][index] if profile.get('3d') else False
             }
-
-            index += 1
 
             could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
             if not alway_search and could_not_be_released:
