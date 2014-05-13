@@ -10,6 +10,8 @@ var PageBase = new Class({
 	has_tab: true,
 	name: '',
 
+	sub_pages: null,
+
 	initialize: function(options) {
 		var self = this;
 
@@ -31,6 +33,38 @@ var PageBase = new Class({
 				'text': self.name.capitalize()
 			});
 		}
+
+		if(self.sub_pages){
+			self.loadSubPages();
+		}
+
+	},
+
+	loadSubPages: function(){
+		var self = this;
+
+		var sub_pages = self.sub_pages;
+
+		self.pages = new Element('div.pages').inject(self.el);
+
+		self.sub_pages = [];
+		sub_pages.each(function(class_name){
+			var pg = new window[self.name.capitalize()+class_name](self, {});
+			self.sub_pages[class_name] = pg;
+
+			self.sub_pages.include({
+				'order': pg.order,
+				'name': class_name,
+				'class': pg
+			});
+		});
+
+		self.sub_pages.stableSort(self.sortPageByOrder).each(function(page){
+			page['class'].load();
+			self.fireEvent('load'+page.name);
+
+			$(page['class']).inject(self.pages);
+		});
 
 	},
 

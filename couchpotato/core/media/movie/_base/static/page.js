@@ -2,6 +2,11 @@ Page.Movies = new Class({
 
 	Extends: PageBase,
 
-	subPages: []
+	name: 'movies',
+	sub_pages: ['Wanted', 'Manage'],
 
-})
+	indexAction: function(){
+		p('test');
+	}
+
+});

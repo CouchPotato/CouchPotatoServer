@@ -1,4 +1,4 @@
-Page.Movies.Wanted = new Class({
+var MoviesWanted = new Class({
 
 	Extends: PageBase,
 

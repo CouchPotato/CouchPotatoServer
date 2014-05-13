@@ -1,4 +1,4 @@
-var CouchPotato = new Class({
+﻿var CouchPotato = new Class({
 
 	Implements: [Events, Options],
 
@@ -152,7 +152,7 @@ var CouchPotato = new Class({
 		pages.stableSort(self.sortPageByOrder).each(function(page){
 			page['class'].load();
 			self.fireEvent('load'+page.name);
-			$(page['class']).inject(self.content);
+			$(page['class']).inject(self.pages);
 		});
 
 		delete pages;
@@ -169,11 +169,11 @@ var CouchPotato = new Class({
 		var self = this;
 
 		self.route.parse();
-		var page_name = self.route.getPage().capitalize();
-		var action = self.route.getAction();
-		var params = self.route.getParams();
+		var page_name = self.route.getPage().capitalize(),
+			action = self.route.getAction(),
+			params = self.route.getParams(),
+			current_url = self.route.getCurrentUrl();
 
-		var current_url = self.route.getCurrentUrl();
 		if(current_url == self.current_url)
 			return;
 
