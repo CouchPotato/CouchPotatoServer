@@ -609,7 +609,7 @@ class Renamer(Plugin):
                     log.error('Failed removing %s: %s', (group_folder, traceback.format_exc()))
 
             # Notify on download, search for trailers etc
-            download_message = 'Downloaded %s (%s)' % (media_title, replacements['quality'])
+            download_message = 'Downloaded %s (%s%s)' % (media_title, replacements['quality'], (' ' + replacements['3d']) if replacements['3d'] else '')
             try:
                 fireEvent('renamer.after', message = download_message, group = group, in_order = True)
             except:
