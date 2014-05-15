@@ -7,7 +7,7 @@ from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toUnicode
+from couchpotato.core.helpers.encoding import ss, toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -180,15 +180,20 @@ class Release(Plugin):
         try:
             db = get_db()
             rel = db.get('id', release_id)
+            raw_files = rel.get('files')
 
-            if len(rel.get('files')) == 0:
+            if len(raw_files) == 0:
                 self.delete(rel['_id'])
             else:
 
-                files = []
-                for release_file in rel.get('files'):
-                    if os.path.isfile(ss(release_file['path'])):
-                        files.append(release_file)
+                files = {}
+                for file_type in raw_files:
+
+                    for release_file in raw_files.get(file_type, []):
+                        if os.path.isfile(sp(release_file)):
+                            if file_type not in files:
+                                files[file_type] = []
+                            files[file_type].append(release_file)
 
                 rel['files'] = files
                 db.update(rel)

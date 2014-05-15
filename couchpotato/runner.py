@@ -10,20 +10,20 @@ import warnings
 import re
 import tarfile
 
-from CodernityDB.database_thread_safe import ThreadSafeDatabase
+from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
 from cache import FileSystemCache
 from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from scandir import scandir
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
 
-def getOptions(base_path, args):
+def getOptions(args):
 
     # Options
     parser = ArgumentParser(prog = 'CouchPotato.py')
@@ -86,15 +86,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('encoding', encoding)
 
     # Do db stuff
-    db_path = toUnicode(os.path.join(data_dir, 'database'))
+    db_path = sp(os.path.join(data_dir, 'database'))
 
     # Check if database exists
-    db = ThreadSafeDatabase(db_path)
+    db = SuperThreadSafeDatabase(db_path)
     db_exists = db.exists()
     if db_exists:
 
         # Backup before start and cleanup old backups
-        backup_path = toUnicode(os.path.join(data_dir, 'db_backup'))
+        backup_path = sp(os.path.join(data_dir, 'db_backup'))
         backup_count = 5
         existing_backups = []
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
@@ -114,7 +114,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             os.remove(os.path.join(backup_path, eb[1]))
 
         # Create new backup
-        new_backup = toUnicode(os.path.join(backup_path, '%s.tar.gz' % int(time.time())))
+        new_backup = sp(os.path.join(backup_path, '%s.tar.gz' % int(time.time())))
         zipf = tarfile.open(new_backup, 'w:gz')
         for root, dirs, files in scandir.walk(db_path):
             for zfilename in files:
@@ -128,12 +128,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         db.create()
 
     # Register environment settings
-    Env.set('app_dir', toUnicode(base_path))
-    Env.set('data_dir', toUnicode(data_dir))
-    Env.set('log_path', toUnicode(os.path.join(log_dir, 'CouchPotato.log')))
+    Env.set('app_dir', sp(base_path))
+    Env.set('data_dir', sp(data_dir))
+    Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('cache_dir', toUnicode(os.path.join(data_dir, 'cache')))
-    Env.set('cache', FileSystemCache(toUnicode(os.path.join(Env.get('cache_dir'), 'python'))))
+    Env.set('cache_dir', sp(os.path.join(data_dir, 'cache')))
+    Env.set('cache', FileSystemCache(sp(os.path.join(Env.get('cache_dir'), 'python'))))
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
     Env.set('desktop', desktop)
@@ -245,13 +245,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     static_path = '%sstatic/' % web_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
-            ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
+            ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': sp(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
     Env.set('static_path', static_path)
 
     # Load configs & plugins
     loader = Env.get('loader')
-    loader.preload(root = toUnicode(base_path))
+    loader.preload(root = sp(base_path))
     loader.run()
 
     # Fill database with needed stuff

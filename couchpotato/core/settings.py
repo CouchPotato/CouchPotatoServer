@@ -234,7 +234,7 @@ class Settings(object):
             propert = db.get('property', identifier, with_doc = True)
             prop = propert['doc']['value']
         except:
-            self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
+            pass  # self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
 
         return prop
 

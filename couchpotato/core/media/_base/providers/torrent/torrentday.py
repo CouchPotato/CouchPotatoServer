@@ -28,7 +28,7 @@ class Base(TorrentProvider):
             'cata': 'yes',
             'jxt': 8,
             'jxw': 'b',
-            'search': tryUrlencode(query),
+            'search': query,
         }
 
         data = self.getJsonData(self.urls['search'], data = data)

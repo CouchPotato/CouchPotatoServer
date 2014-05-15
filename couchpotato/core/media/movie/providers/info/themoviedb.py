@@ -16,15 +16,15 @@ class TheMovieDb(MovieProvider):
 
     def __init__(self):
         addEvent('movie.info', self.getInfo, priority = 1)
+        addEvent('movie.info_by_tmdb', self.getInfo)
         addEvent('info.search', self.search, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
-        addEvent('movie.info_by_tmdb', self.getInfo)
 
         # Configure TMDB settings
         tmdb3.set_key(self.conf('api_key'))
         tmdb3.set_cache('null')
 
-    def search(self, q, limit = 12):
+    def search(self, q, limit = 5):
         """ Find movie by name """
 
         if self.isDisabled():
@@ -49,6 +49,8 @@ class TheMovieDb(MovieProvider):
                     nr = 0
 
                     for movie in raw:
+                        result=self.parseMovie(movie, extended = False)
+                        
                         results.append(self.parseMovie(movie, extended = False))
 
                         nr += 1
@@ -99,7 +101,7 @@ class TheMovieDb(MovieProvider):
         if not movie_data:
 
             # Images
-            poster = self.getImage(movie, type = 'poster', size = 'poster')
+            poster = self.getImage(movie, type = 'poster', size = 'original')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
@@ -152,12 +154,12 @@ class TheMovieDb(MovieProvider):
             movie_data = dict((k, v) for k, v in movie_data.items() if v)
 
             # Add alternative names
-            if extended:
-                movie_data['titles'].append(movie.originaltitle)
-                for alt in movie.alternate_titles:
-                    alt_name = alt.title
-                    if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
-                        movie_data['titles'].append(alt_name)
+            #if extended:
+            movie_data['titles'].append(movie.originaltitle)
+            for alt in movie.alternate_titles:
+                alt_name = alt.title
+                if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None and alt.country in ['FR','US']:
+                    movie_data['titles'].append(alt_name)
 
             # Cache movie parsed
             self.setCache(cache_key, movie_data)
@@ -168,7 +170,7 @@ class TheMovieDb(MovieProvider):
 
         image_url = ''
         try:
-            image_url = getattr(movie, type).geturl(size = 'original')
+            image_url = getattr(movie, type).geturl(size = size)
         except:
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 

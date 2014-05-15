@@ -7,7 +7,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.environment import Env
 import tmdb3
-
 log = CPLog(__name__)
 
 autoload = 'CouchPotatoApi'
@@ -59,7 +58,12 @@ class CouchPotatoApi(MovieProvider):
         }), headers = self.getRequestHeaders())
 
     def search(self, q, limit = 5):
-        return self.getJsonData(self.urls['search'] % tryUrlencode(q) + ('?limit=%s' % limit), headers = self.getRequestHeaders())
+        results=self.getJsonData(self.urls['search'] % tryUrlencode(q) + ('?limit=%s' % limit), headers = self.getRequestHeaders())
+        x=0
+        for result in results:
+            results[x]['titles']=[results[x]['original_title']]
+            x+=1
+        return results
 
     def validate(self, name = None):
 

@@ -12,6 +12,7 @@ import urllib2
 import urllib
 from StringIO import StringIO
 import gzip
+import time
 log = CPLog(__name__)
 
 
@@ -81,7 +82,12 @@ class Base(TorrentProvider):
         if not self.last_login_check and not self.login():
             return
         searchStrings= self.getSearchParams(movie,quality)
+        lastsearch=0
         for searchString in searchStrings:
+            actualtime=int(time.time())
+            if actualtime-lastsearch<10:
+                timetosleep= 10-(actualtime-lastsearch)
+                time.sleep(timetosleep)
             URL = self.urls['search']+searchString
                 
             data = self.getHTMLData(URL)

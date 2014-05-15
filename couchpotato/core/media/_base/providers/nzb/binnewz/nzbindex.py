@@ -15,10 +15,10 @@ class NZBIndex(NZBDownloader,NZBProvider, RSS):
     
     urls = {
         'download': 'https://www.nzbindex.nl/download/',
-        'search': 'https://www.nzbindex.nl/rss/?%s',
+        'search': 'http://www.nzbindex.com/rss/?%s',
     }
 
-    http_time_between_calls = 1 # Seconds
+    http_time_between_calls = 5 # Seconds
     
     def search(self, filename, minSize, newsgroup=None):
         
@@ -33,7 +33,6 @@ class NZBIndex(NZBDownloader,NZBProvider, RSS):
             'more': 1,
             'complete': 1,
         })
-
         nzbs = self.getRSSData(self.urls['search'] % arguments)
         nzbid = None
         for nzb in nzbs:

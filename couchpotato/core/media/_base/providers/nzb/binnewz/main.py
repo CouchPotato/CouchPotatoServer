@@ -295,7 +295,7 @@ class Base(NZBProvider):
                                     new['name'] = name + detectedlang +  qualityStr + qualitytag + downloader.__class__.__name__ 
                                     new['url'] = binsearch_result.nzburl
                                     new['detail_url'] = binsearch_result.refererURL
-                                    new['size'] = int(str(binsearch_result.sizeInMegs).replace('L',''))
+                                    new['size'] = int(str(binsearch_result.sizeInMegs)[:str(binsearch_result.sizeInMegs).find('.')].replace('L',''))
                                     new['age'] = binsearch_result.age
                                     new['extra_check'] = extra_check
         

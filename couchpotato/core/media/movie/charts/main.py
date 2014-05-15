@@ -29,28 +29,20 @@ class Charts(Plugin):
             charts = self.getCache('charts_cached')
             if not charts:
                 charts = self.updateViewCache()
-        x=0
-        for item in charts[0]['list']:
-            movie = tmdb3.Movie(item['imdb'])
-            try:
-                charts[0]['list'][x]['plot']=movie.overview
-                charts[0]['list'][x]['titles'][0]=movie.title
-                charts[0]['list'][x]['images']['poster'][0]=charts[0]['list'][x]['images']['poster_original'][0][:charts[0]['list'][x]['images']['poster_original'][0].rfind('/')+1]+movie.posters[0].filename
-            except:
+        y=0
+        for chart in charts:
+            x=0
+            for item in chart['list']:
+                movie = tmdb3.Movie(item['imdb'])
+                try:
+                    charts[y]['list'][x]['plot']=movie.overview
+                    charts[y]['list'][x]['titles'][0]=movie.title
+                    charts[y]['list'][x]['images']['poster'][0]=charts[y]['list'][x]['images']['poster_original'][y][:charts[y]['list'][x]['images']['poster_original'][0].rfind('/')+1]+movie.posters[0].filename
+                except:
+                    x+=1
+                    continue
                 x+=1
-                continue
-            x+=1
-        x=0
-        for item in charts[1]['list']:
-            movie = tmdb3.Movie(item['imdb'])
-            try:
-                charts[1]['list'][x]['plot']=movie.overview
-                charts[1]['list'][x]['titles'][0]=movie.title
-                charts[1]['list'][x]['images']['poster'][0]=charts[0]['list'][x]['images']['poster_original'][1][:charts[1]['list'][x]['images']['poster_original'][1].rfind('/')+1]+movie.posters[0].filename
-            except:
-                x+=1
-                continue
-            x+=1
+            y+=1  
         return {
             'success': True,
             'count': len(charts),

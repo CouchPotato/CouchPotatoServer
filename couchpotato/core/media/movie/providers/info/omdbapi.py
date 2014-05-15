@@ -28,7 +28,7 @@ class OMDBAPI(MovieProvider):
         addEvent('movie.search', self.search)
         addEvent('movie.info', self.getInfo)
 
-    def search(self, q, limit = 12):
+    def search(self, q, limit = 5):
 
         name_year = fireEvent('scanner.name_year', q, single = True)
 

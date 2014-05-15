@@ -29,7 +29,7 @@ class Loader(object):
 
         # Get options via arg
         from couchpotato.runner import getOptions
-        self.options = getOptions(base_path, sys.argv[1:])
+        self.options = getOptions(sys.argv[1:])
 
         # Load settings
         settings = Env.get('settings')
