@@ -29,11 +29,11 @@ class MovieResultModifier(Plugin):
             'actors': {},
             'landscape': [],
             'logo': [],
-            'clearart': [],
-            'discart': [],
+            'clear_art': [],
+            'disc_art': [],
             'banner': [],
-            'extrathumbs': [],
-            'extrafanart': []
+            'extra_thumbs': [],
+            'extra_fanart': []
         },
         'runtime': 0,
         'plot': '',

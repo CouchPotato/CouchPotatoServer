@@ -30,28 +30,28 @@ class XBMC(MovieMetaData):
         return self.createMetaName(self.conf('meta_banner_name'), name, root)
 
     def getClearartName(self, name, root, i):
-        return self.createMetaName(self.conf('meta_clearart_name'), name, root)
+        return self.createMetaName(self.conf('meta_clear_art_name'), name, root)
 
     def getLogoName(self, name, root, i):
         return self.createMetaName(self.conf('meta_logo_name'), name, root)
 
     def getDiscartName(self, name, root, i):
-        return self.createMetaName(self.conf('meta_discart_name'), name, root)
+        return self.createMetaName(self.conf('meta_disc_art_name'), name, root)
 
     def getLandscapeName(self, name, root, i):
         return self.createMetaName(self.conf('meta_landscape_name'), name, root)
 
     def getExtrathumbsName(self, name, root, i):
-        return self.createMetaNameMult(self.conf('meta_extrathumbs_name'), name, root, i)
+        return self.createMetaNameMult(self.conf('meta_extra_thumbs_name'), name, root, i)
 
     def getExtrafanartName(self, name, root, i):
-        return self.createMetaNameMult(self.conf('meta_extrafanart_name'), name, root, i)
+        return self.createMetaNameMult(self.conf('meta_extra_fanart_name'), name, root, i)
 
     def createMetaName(self, basename, name, root):
         return os.path.join(root, basename.replace('%s', name))
 
     def createMetaNameMult(self, basename, name, root, i):
-        return os.path.join(root, basename.replace('%s', name).replace('%i', str(i + 1)))
+        return os.path.join(root, basename.replace('%s', name).replace('<i>', str(i + 1)))
 
     def getNfo(self, movie_info=None, data=None, i=0):
         if not data: data = {}
@@ -153,39 +153,25 @@ class XBMC(MovieMetaData):
         for image_url in movie_info['images']['poster_original']:
             image = SubElement(nfoxml, 'thumb')
             image.text = toUnicode(image_url)
-        fanart = SubElement(nfoxml, 'fanart')
-        for image_url in movie_info['images']['backdrop_original']:
-            image = SubElement(fanart, 'thumb')
-            image.text = toUnicode(image_url)
-        banner = SubElement(nfoxml, 'banner')
-        for image_url in movie_info['images']['banner']:
-            image = SubElement(banner, 'thumb')
-            image.text = toUnicode(image_url)
-        discart = SubElement(nfoxml, 'discart')
-        for image_url in movie_info['images']['discart']:
-            image = SubElement(discart, 'thumb')
-            image.text = toUnicode(image_url)
-        logo = SubElement(nfoxml, 'logo')
-        for image_url in movie_info['images']['logo']:
-            image = SubElement(logo, 'thumb')
-            image.text = toUnicode(image_url)
-        clearart = SubElement(nfoxml, 'clearart')
-        for image_url in movie_info['images']['clearart']:
-            image = SubElement(clearart, 'thumb')
-            image.text = toUnicode(image_url)
-        landscape = SubElement(nfoxml, 'landscape')
-        for image_url in movie_info['images']['landscape']:
-            image = SubElement(landscape, 'thumb')
-            image.text = toUnicode(image_url)
-        extrathumb = SubElement(nfoxml, 'extrathumb')
-        for image_url in movie_info['images']['extrathumbs']:
-            image = SubElement(extrathumb, 'thumb')
-            image.text = toUnicode(image_url)
-        extrafanart = SubElement(nfoxml, 'extrafanart')
-        for image_url in movie_info['images']['extrafanart']:
-            image = SubElement(extrafanart, 'thumb')
-            image.text = toUnicode(image_url)
 
+        image_types = [
+            ('fanart', 'backdrop_original'),
+            ('banner', 'banner'),
+            ('discart', 'disc_art'),
+            ('logo', 'logo'),
+            ('clearart', 'clear_art'),
+            ('landscape', 'landscape'),
+            ('extrathumb', 'extra_thumbs'),
+            ('extrafanart', 'extra_fanart'),
+        ]
+
+        for image_type in image_types:
+            sub, type = image_type
+
+            sub_element = SubElement(nfoxml, sub)
+            for image_url in movie_info['images'][type]:
+                image = SubElement(sub_element, 'thumb')
+                image.text = toUnicode(image_url)
 
         # Add trailer if found
         trailer_found = False
@@ -295,7 +281,7 @@ config = [{
                 {
                     'name': 'meta_banner',
                     'label': 'Banner',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
@@ -305,13 +291,13 @@ config = [{
                     'advanced': True,
                 },
                 {
-                    'name': 'meta_clearart',
+                    'name': 'meta_clear_art',
                     'label': 'ClearArt',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
-                    'name': 'meta_clearart_name',
+                    'name': 'meta_clear_art_name',
                     'label': 'ClearArt filename',
                     'default': 'clearart.png',
                     'advanced': True,
@@ -319,11 +305,11 @@ config = [{
                 {
                     'name': 'meta_disc',
                     'label': 'DiscArt',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
-                    'name': 'meta_discart_name',
+                    'name': 'meta_disc_art_name',
                     'label': 'DiscArt filename',
                     'default': 'disc.png',
                     'advanced': True,
@@ -331,7 +317,7 @@ config = [{
                 {
                     'name': 'meta_landscape',
                     'label': 'Landscape',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
@@ -343,7 +329,7 @@ config = [{
                 {
                     'name': 'meta_logo',
                     'label': 'ClearLogo',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
@@ -353,27 +339,29 @@ config = [{
                     'advanced': True,
                 },
                 {
-                    'name': 'meta_extrathumbs',
+                    'name': 'meta_extra_thumbs',
                     'label': 'Extrathumbs',
-                    'default': True,
+                    'default': False,
                     'type': 'bool'
                 },
                 {
-                    'name': 'meta_extrathumbs_name',
-                    'label': 'Extrathumbs filename (%i is the image number, and must be included to have multiple images).',
-                    'default': 'extrathumbs/thumb%i.jpg',
+                    'name': 'meta_extra_thumbs_name',
+                    'label': 'Extrathumbs filename',
+                    'description': '&lt;i&gt; is the image number, and must be included to have multiple images',
+                    'default': 'extrathumbs/thumb<i>.jpg',
                     'advanced': True
                 },
                 {
-                    'name': 'meta_extrafanart',
-                    'lavel': 'Extrafanart',
-                    'default': True,
+                    'name': 'meta_extra_fanart',
+                    'label': 'Extrafanart',
+                    'default': False,
                     'type': 'bool'
                 },
                 {
-                    'name': 'meta_extrafanart_name',
-                    'label': 'Extrafanart filename (%i is the image number, and must be included to have multiple images).',
-                    'default': 'extrafanart/extrafanart%i.jpg',
+                    'name': 'meta_extra_fanart_name',
+                    'label': 'Extrafanart filename',
+                    'default': 'extrafanart/extrafanart<i>.jpg',
+                    'description': '&lt;i&gt; is the image number, and must be included to have multiple images',
                     'advanced': True
                 }
             ],

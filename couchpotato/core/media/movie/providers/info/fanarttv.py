@@ -5,9 +5,8 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.core.plugins.quality import QualityPlugin
-
-from libs.fanarttv.movie import Movie
-import libs.fanarttv.errors as fanarttv_errors
+from fanarttv.movie import Movie
+import fanarttv.errors as fanarttv_errors
 
 
 log = CPLog(__name__)
@@ -16,10 +15,11 @@ autoload = 'FanartTV'
 
 
 class FanartTV(MovieProvider):
+
     MAX_EXTRAFANART = 20
 
     def __init__(self):
-        addEvent('movie.extraart', self.getArt, priority=2)
+        addEvent('movie.extra_art', self.getArt, priority=2)
 
         # Configure fanarttv API settings
         os.environ.setdefault('FANART_APIKEY', self.conf('api_key'))
@@ -35,7 +35,7 @@ class FanartTV(MovieProvider):
         try:
             try:
                 exists = True
-                movie = Movie.get(id=identifier)
+                movie = Movie.get(id = identifier)
             except (fanarttv_errors.FanartError, IOError):
                 exists = False
 
@@ -49,23 +49,23 @@ class FanartTV(MovieProvider):
 
         return images
 
-    def _parseMovie(self, movie, isHD):
+    def _parseMovie(self, movie, is_hd):
         images = {
-                  'landscape': [],
-                  'logo': [],
-                  'discart': [],
-                  'clearart': [],
-                  'banner': [],
-                  'extrafanart': []
-                  }
+            'landscape': [],
+            'logo': [],
+            'disc_art': [],
+            'clear_art': [],
+            'banner': [],
+            'extra_fanart': [],
+        }
 
         images['landscape'] = self._getMultImages(movie.thumbs, 1)
         images['banner'] = self._getMultImages(movie.banners, 1)
-        images['discart'] = self._getMultImages(self._trimDiscs(movie.discs, isHD), 1)
+        images['disc_art'] = self._getMultImages(self._trimDiscs(movie.discs, is_hd), 1)
 
-        images['clearart'] = self._getMultImages(movie.hdarts, 1)
-        if len(images['clearart']) is 0:
-            images['clearart'] = self._getMultImages(movie.arts, 1)
+        images['clear_art'] = self._getMultImages(movie.hdarts, 1)
+        if len(images['clear_art']) is 0:
+            images['clear_art'] = self._getMultImages(movie.arts, 1)
 
         images['logo'] = self._getMultImages(movie.hdlogos, 1)
         if len(images['logo']) is 0:
@@ -75,29 +75,30 @@ class FanartTV(MovieProvider):
 
         if fanarts:
             images['backdrop_original'] = fanarts[0]
-            images['extrafanart'] = fanarts[1:]
+            images['extra_fanart'] = fanarts[1:]
 
         # TODO: Add support for extra backgrounds
-        #extraFanart = self._getMultImages(movie.backgrounds, -1)
+        #extra_fanart = self._getMultImages(movie.backgrounds, -1)
 
         return images
 
-    def _trimDiscs(self, discImages, isHD):
-        '''
+    def _trimDiscs(self, disc_images, is_hd):
+        """
         Return a subset of discImages based on isHD.  If isHD is true, only 
         bluray disc images will be returned.  If isHD is false, only dvd disc 
         images will be returned.  If the resulting list would be an empty list,
         then the original list is returned instead.
-        '''
+        """
+
         trimmed = []
-        for disc in discImages:
-            if isHD and disc.disc_type == u'bluray':
+        for disc in disc_images:
+            if is_hd and disc.disc_type == u'bluray':
                 trimmed.append(disc)
-            elif not isHD and disc.disc_type == u'dvd':
+            elif not is_hd and disc.disc_type == u'dvd':
                 trimmed.append(disc)
 
         if len(trimmed) is 0:
-            return discImages
+            return disc_images
         else:
             return trimmed
 
@@ -121,9 +122,9 @@ class FanartTV(MovieProvider):
         for image in images:
             if image.lang == u'en':
                 pool.append(image)
-        origPoolSize = len(pool)
+        orig_pool_size = len(pool)
 
-        while len(pool) > 0 and (n < 0 or origPoolSize - len(pool) < n):
+        while len(pool) > 0 and (n < 0 or orig_pool_size - len(pool) < n):
             best = None
             highscore = -1
             for image in pool:
@@ -146,6 +147,7 @@ class FanartTV(MovieProvider):
             if quality == qualityDef.get('identifier'):
                 return bool(qualityDef.get('hd'))
         return False
+
 
 config = [{
     'name': 'fanarttv',

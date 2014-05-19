@@ -90,8 +90,8 @@ class TheMovieDb(MovieProvider):
 
         # Get extra artwork via Fanart.TV and merge into images dict
         try:
-            extraArt = fireEvent('movie.extraart', identifier)[0]
-            result['images'] = dict(result['images'].items() + extraArt.items())
+            extra_art = fireEvent('movie.extra_art', identifier)[0]
+            result['images'] = dict(result['images'].items() + extra_art.items())
         except IndexError:
             pass
 
@@ -108,7 +108,7 @@ class TheMovieDb(MovieProvider):
             poster = self.getImage(movie, type = 'poster', size = 'poster')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
-            extrathumbs = self.getMultImages(movie, type='backdrops', size='original', n=self.MAX_EXTRATHUMBS, skipfirst=True)
+            extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original', n = self.MAX_EXTRATHUMBS, skipfirst = True)
 
             images = {
                 'poster': [poster] if poster else [],
@@ -116,7 +116,7 @@ class TheMovieDb(MovieProvider):
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
                 'actors': {},
-                'extrathumbs': extrathumbs
+                'extra_thumbs': extra_thumbs
             }
 
             # Genres
@@ -182,22 +182,24 @@ class TheMovieDb(MovieProvider):
 
         return image_url
     
-    def getMultImages(self, movie, type='backdrops', size='original', n=-1, skipfirst=False):
-        '''
+    def getMultImages(self, movie, type = 'backdrops', size = 'original', n = -1, skipfirst = False):
+        """
         If n < 0, return all images.  Otherwise return n images.  
         If n > len(getattr(movie, type)), then return all images.
         If skipfirst is True, then it will skip getattr(movie, type)[0].  This 
         is because backdrops[0] is typically backdrop.
-        '''
+        """
+
         image_urls = []
         try:
             images = getattr(movie, type)
             if n < 0 or n > len(images):
-                numImages = len(images)
+                num_images = len(images)
             else:
-                numImages = n
-            for i in range(int(skipfirst), numImages + int(skipfirst)):
-                image_urls.append(images[i].geturl(size=size))
+                num_images = n
+
+            for i in range(int(skipfirst), num_images + int(skipfirst)):
+                image_urls.append(images[i].geturl(size = size))
             
         except:
             log.debug('Failed getting %i %s.%s for "%s"', (n, type, size, ss(str(movie))))
