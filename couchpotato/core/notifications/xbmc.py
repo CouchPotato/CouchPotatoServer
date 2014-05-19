@@ -3,6 +3,8 @@ import json
 import socket
 import traceback
 import urllib
+import time
+import os
 
 from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
@@ -36,7 +38,7 @@ class XBMC(Notification):
 
             if self.use_json_notifications.get(host):
                 calls = [
-                    ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+                    ('GUI.ShowNotification', None, {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
                 ]
 
                 if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
@@ -44,7 +46,7 @@ class XBMC(Notification):
                     if not self.conf('force_full_scan') and (self.conf('remote_dir_scan') or socket.getfqdn('localhost') == socket.getfqdn(host.split(':')[0])):
                         param = {'directory': data['destination_dir']}
 
-                    calls.append(('VideoLibrary.Scan', param))
+                    calls.append(('VideoLibrary.Scan', None, param))
 
                 max_successful += len(calls)
                 response = self.request(host, calls)
@@ -66,6 +68,50 @@ class XBMC(Notification):
 
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
+                
+            if self.conf('run_artwork_downloader') and data and self.use_json_notifications.get(host):
+                time.sleep(self.conf('run_artwork_downloader_delay'))
+
+                if self.conf('force_full_scan'):
+                    calls = [('Addons.ExecuteAddon', None, {'addonid': 'script.artwork.downloader'})]
+                    max_successful += len(calls)
+                    response = self.request(host, calls)
+                    
+                    try:
+                        if response[0].get('result') and result['result'] == 'OK':
+                            successful += 1
+                        elif response[0].get('error'):
+                            log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                    except:
+                        log.error('Failed parsing results: %s', traceback.format_exc())
+                else:
+                    calls = [('VideoLibrary.GetMovies', 'libMovies', {"filter":{"field": "title", "operator": "is", "value": data['media']['title'], "year": data['media']['info']['year']}})]
+                    max_successful += len(calls)
+                    response = self.request(host, calls)
+                    
+                    dbid = None
+                    try:
+                        if response[0].get('result'):
+                            successful += 1
+                            dbid = response[0]['result']['movies'][-1]['movieid']
+                        elif response[0].get('error'):
+                            log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                    except:
+                        log.error('Failed parsing results: %s', traceback.format_exc())
+
+                    if dbid is not None:
+                        calls = [('Addons.ExecuteAddon', None, {'addonid': 'script.artwork.downloader', 'params':{'media_type': 'movie', 'dbid': str(dbid)}})]
+
+                        max_successful += len(calls)
+                        response = self.request(host, calls)
+
+                        try:
+                            if response[0].get('result') and result['result'] == 'OK':
+                                successful += 1
+                            elif response[0].get('error'):
+                                log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                        except:
+                            log.error('Failed parsing results: %s', traceback.format_exc())
 
         return successful == max_successful
 
@@ -75,7 +121,7 @@ class XBMC(Notification):
 
         # XBMC JSON-RPC version request
         response = self.request(host, [
-            ('JSONRPC.Version', {})
+            ('JSONRPC.Version', None, {})
         ])
         for result in response:
             if result.get('result') and type(result['result']['version']).__name__ == 'int':
@@ -112,7 +158,7 @@ class XBMC(Notification):
                 self.use_json_notifications[host] = True
 
                 # send the text message
-                resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
+                resp = self.request(host, [('GUI.ShowNotification', None, {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
                 for r in resp:
                     if r.get('result') and r['result'] == 'OK':
                         log.debug('Message delivered successfully!')
@@ -184,12 +230,16 @@ class XBMC(Notification):
 
         data = []
         for req in do_requests:
-            method, kwargs = req
+            method, id, kwargs = req
+
+            if id is None:
+                id = method
+
             data.append({
                 'method': method,
                 'params': kwargs,
                 'jsonrpc': '2.0',
-                'id': method,
+                'id': id,
             })
         data = json.dumps(data)
 
@@ -272,6 +322,22 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',
+                },
+                {
+                    'name': 'run_artwork_downloader',
+                    'label': 'Run the Artwork Downloader',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Runs the Artwork Downloader script to initialize/download artwork. (Requires the Artwork Downloader addon and XBMC Frodo or later)'
+                },
+                {
+                    'name': 'run_artwork_downloader_delay',
+                    'label': 'Artwork Downloader delay',
+                    'default': 5,
+                    'type': 'int',
+                    'advanced': True,
+                    'description': 'Number of seconds to wait to start the Artwork Downloader script after notifying XBMC.',
                 },
             ],
         }
