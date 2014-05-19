@@ -3,7 +3,7 @@ import traceback
 
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
@@ -15,7 +15,7 @@ class Base(TorrentProvider):
 
     urls = {
         'download': 'https://www.ilovetorrents.me/%s',
-        'detail': 'https//www.ilovetorrents.me/%s',
+        'detail': 'https://www.ilovetorrents.me/%s',
         'search': 'https://www.ilovetorrents.me/browse.php?search=%s&page=%s&cat=%s',
         'test': 'https://www.ilovetorrents.me/',
         'login': 'https://www.ilovetorrents.me/takelogin.php',
@@ -47,17 +47,23 @@ class Base(TorrentProvider):
             data = self.getHTMLData(search_url)
             if data:
                 try:
-                    soup = BeautifulSoup(data)
 
-                    results_table = soup.find('table', attrs = {'class': 'koptekst'})
+                    results_table = None
+
+                    data_split = splitString(data, '<table')
+                    for x in data_split:
+                        soup = BeautifulSoup(x)
+                        results_table = soup.find('table', attrs = {'class': 'koptekst'})
+                        if results_table:
+                            break
+
                     if not results_table:
                         return
 
                     try:
                         pagelinks = soup.findAll(href = re.compile('page'))
-                        pageNumbers = [int(re.search('page=(?P<pageNumber>.+'')', i['href']).group('pageNumber')) for i in pagelinks]
-                        total_pages = max(pageNumbers)
-
+                        page_numbers = [int(re.search('page=(?P<page_number>.+'')', i['href']).group('page_number')) for i in pagelinks]
+                        total_pages = max(page_numbers)
                     except:
                         pass
 
