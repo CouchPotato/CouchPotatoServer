@@ -1,6 +1,6 @@
 import traceback
 
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -13,6 +13,7 @@ autoload = 'TheMovieDb'
 
 
 class TheMovieDb(MovieProvider):
+    MAX_EXTRATHUMBS = 4
 
     def __init__(self):
         addEvent('movie.info', self.getInfo, priority = 2)
@@ -87,6 +88,13 @@ class TheMovieDb(MovieProvider):
             except:
                 log.error('Failed getting info for %s: %s', (identifier, traceback.format_exc()))
 
+        # Get extra artwork via Fanart.TV and merge into images dict
+        try:
+            extra_art = fireEvent('movie.extra_art', identifier)[0]
+            result['images'] = dict(result['images'].items() + extra_art.items())
+        except IndexError:
+            pass
+
         return result
 
     def parseMovie(self, movie, extended = True):
@@ -100,13 +108,15 @@ class TheMovieDb(MovieProvider):
             poster = self.getImage(movie, type = 'poster', size = 'poster')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
+            extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original', n = self.MAX_EXTRATHUMBS, skipfirst = True)
 
             images = {
                 'poster': [poster] if poster else [],
                 #'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
-                'actors': {}
+                'actors': {},
+                'extra_thumbs': extra_thumbs
             }
 
             # Genres
@@ -171,6 +181,30 @@ class TheMovieDb(MovieProvider):
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_url
+    
+    def getMultImages(self, movie, type = 'backdrops', size = 'original', n = -1, skipfirst = False):
+        """
+        If n < 0, return all images.  Otherwise return n images.  
+        If n > len(getattr(movie, type)), then return all images.
+        If skipfirst is True, then it will skip getattr(movie, type)[0].  This 
+        is because backdrops[0] is typically backdrop.
+        """
+
+        image_urls = []
+        try:
+            images = getattr(movie, type)
+            if n < 0 or n > len(images):
+                num_images = len(images)
+            else:
+                num_images = n
+
+            for i in range(int(skipfirst), num_images + int(skipfirst)):
+                image_urls.append(images[i].geturl(size = size))
+            
+        except:
+            log.debug('Failed getting %i %s.%s for "%s"', (n, type, size, ss(str(movie))))
+
+        return image_urls
 
     def isDisabled(self):
         if self.conf('api_key') == '':
