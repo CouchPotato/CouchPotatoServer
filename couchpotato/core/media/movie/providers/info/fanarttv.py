@@ -5,8 +5,8 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.core.plugins.quality import QualityPlugin
-from fanarttv.movie import Movie
-import fanarttv.errors as fanarttv_errors
+import libs.fanarttv.errors as fanarttv_errors
+from libs.fanarttv.movie import Movie
 
 
 log = CPLog(__name__)
