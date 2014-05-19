@@ -69,10 +69,16 @@ class IMDBWatchlist(IMDBBase):
                     html = self.getHTMLData(w_url)
 
                     try:
-                        split = splitString(html, split_on="<div class=\"list compact\">")[1]
-                        html = splitString(split, split_on="<div class=\"pages\">")[0]
+                        split = splitString(html, split_on="<div id=\"main\">")
+                        html2 = BeautifulSoup(split[1])
+                        html = html2.find('div', attrs = {'class': 'list compact'}).contents
+                        html = ''.join([str(x) for x in html])
                     except:
-                        pass
+                        try:
+                            split = splitString(html, split_on="<div class=\"list compact\">")[1]
+                            html = splitString(split, split_on="<div class=\"pages\">")[0]
+                        except:
+                            pass
 
                     imdbs = getImdb(html, multiple = True) if html else []
 
