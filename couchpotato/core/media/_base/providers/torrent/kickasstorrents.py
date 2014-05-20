@@ -30,10 +30,10 @@ class Base(TorrentMagnetProvider):
     cat_backup_id = None
 
     proxy_list = [
-        'https://kickass.to',
-        'http://kickass.pw',
-        'http://www.kickassunblock.info',
-        'http://www.kickassproxy.info',
+        'http://kickassto.come.in',
+        'http://katproxy.ws',
+        'http://katph.eu',
+        'http://kickassto.come.in',
     ]
 
     def _search(self, media, quality, results):
