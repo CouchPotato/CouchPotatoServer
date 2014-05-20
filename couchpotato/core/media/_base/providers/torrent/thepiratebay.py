@@ -35,6 +35,7 @@ class Base(TorrentMagnetProvider):
         'http://www.getpirate.com',
         'http://piratebay.io',
         'http://bayproxy.li',
+        'http://proxybay.pw',
     ]
 
     def _search(self, media, quality, results):
