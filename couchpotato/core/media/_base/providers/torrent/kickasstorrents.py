@@ -32,6 +32,8 @@ class Base(TorrentMagnetProvider):
     proxy_list = [
         'http://kickassto.come.in',
         'http://katproxy.ws',
+        'http://www.kickassunblock.info',
+        'http://www.kickassproxy.info',
         'http://katph.eu',
         'http://kickassto.come.in',
     ]
