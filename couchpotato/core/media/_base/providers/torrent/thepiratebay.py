@@ -25,6 +25,7 @@ class Base(TorrentMagnetProvider):
 
     proxy_list = [
         'https://nobay.net',
+        'https://thebay.al',
         'https://thepiratebay.se',
         'http://thepiratebay.cd',
         'http://thebootlegbay.com',
