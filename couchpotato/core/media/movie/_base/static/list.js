@@ -373,6 +373,7 @@ var MovieList = new Class({
 					(e).preventDefault();
 					this.set('text', 'Deleting..');
 					Api.request('media.delete', {
+						'method': 'post',
 						'data': {
 							'id': ids.join(','),
 							'delete_from': self.options.identifier
@@ -413,6 +414,7 @@ var MovieList = new Class({
 		var ids = self.getSelectedMovies();
 
 		Api.request('movie.edit', {
+			'method': 'post',
 			'data': {
 				'id': ids.join(','),
 				'profile_id': self.mass_edit_quality.get('value')
@@ -426,6 +428,7 @@ var MovieList = new Class({
 		var ids = self.getSelectedMovies();
 
 		Api.request('media.refresh', {
+			'method': 'post',
 			'data': {
 				'id': ids.join(',')
 			}
