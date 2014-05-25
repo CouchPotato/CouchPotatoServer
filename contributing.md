@@ -22,11 +22,11 @@ Before you submit an issue, please go through the following checklist:
  * What providers are you using? (While your logs include these, scanning through hundreds of lines of logs isn't our hobby)
  * Post the logs from the *config* directory, please do not copy paste the UI. Use pastebin to store these logs!
  * Give a short step by step of how to reproduce the error.
- * What hardware / OS are you using and what are its limitations? For example: NAS can be slow and maybe have a different version of python installed then when you use CP on OSX or Windows.
+ * What hardware / OS are you using and what are its limitations? For example: NAS can be slow and maybe have a different version of python installed than when you use CP on OS X or Windows.
  * Your issue might be marked with the "can't reproduce" tag. Don't ask why your issue was closed if it says so in the tag.
- * If you're running on a NAS (QNAP, Austor etc..) with pre-made packages, make sure these are set up to use our source repository (RuudBurger/CouchPotatoServer) and nothing else!!
- 
-The more relevant information you can provide, the more likely it is the issue will be resolved rather than closed.
+ * If you're running on a NAS (QNAP, Austor, Synology etc.) with pre-made packages, make sure these are set up to use our source repository (RuudBurger/CouchPotatoServer) and nothing else!
+
+The more relevant information you provide, the more likely that your issue will be resolved.
 
 ## Pull Requests
 Pull requests are intended for contributing code or documentation to the project. Before you submit a pull request, consider the following:
