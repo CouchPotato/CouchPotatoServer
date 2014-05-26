@@ -548,7 +548,7 @@ class Renamer(Plugin):
                         self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
-                        log.error('Failed ranaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                        log.error('Failed renaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         failed_rename = True
                         break
 
