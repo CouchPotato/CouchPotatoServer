@@ -205,7 +205,7 @@ class Plugin(object):
             method = 'post' if len(data) > 0 or files else 'get'
 
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
-            response = r.request(method, url, verify = False, **kwargs)
+            response = r.request(method, url, **kwargs)
 
             if response.status_code == requests.codes.ok:
                 data = response.content
