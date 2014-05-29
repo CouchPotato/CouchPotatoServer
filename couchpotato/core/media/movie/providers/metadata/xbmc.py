@@ -29,22 +29,22 @@ class XBMC(MovieMetaData):
     def getBannerName(self, name, root, i):
         return self.createMetaName(self.conf('meta_banner_name'), name, root)
 
-    def getClearartName(self, name, root, i):
+    def getClearArtName(self, name, root, i):
         return self.createMetaName(self.conf('meta_clear_art_name'), name, root)
 
     def getLogoName(self, name, root, i):
         return self.createMetaName(self.conf('meta_logo_name'), name, root)
 
-    def getDiscartName(self, name, root, i):
+    def getDiscArtName(self, name, root, i):
         return self.createMetaName(self.conf('meta_disc_art_name'), name, root)
 
     def getLandscapeName(self, name, root, i):
         return self.createMetaName(self.conf('meta_landscape_name'), name, root)
 
-    def getExtrathumbsName(self, name, root, i):
+    def getExtraThumbsName(self, name, root, i):
         return self.createMetaNameMult(self.conf('meta_extra_thumbs_name'), name, root, i)
 
-    def getExtrafanartName(self, name, root, i):
+    def getExtraFanartName(self, name, root, i):
         return self.createMetaNameMult(self.conf('meta_extra_fanart_name'), name, root, i)
 
     def createMetaName(self, basename, name, root):

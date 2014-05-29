@@ -103,22 +103,22 @@ class MovieMetaData(MetaDataBase):
     def getBannerName(self, name, root, i):
         return
 
-    def getClearartName(self, name, root, i):
+    def getClearArtName(self, name, root, i):
         return
 
     def getLogoName(self, name, root, i):
         return
 
-    def getDiscartName(self, name, root, i):
+    def getDiscArtName(self, name, root, i):
         return
 
     def getLandscapeName(self, name, root, i):
         return
 
-    def getExtrathumbsName(self, name, root, i):
+    def getExtraThumbsName(self, name, root, i):
         return
 
-    def getExtrafanartName(self, name, root, i):
+    def getExtraFanartName(self, name, root, i):
         return
 
     def getNfoName(self, name, root, i):
@@ -156,7 +156,7 @@ class MovieMetaData(MetaDataBase):
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'banner', i = i)
 
-    def getClearart(self, movie_info = None, data = None, i = 0):
+    def getClearArt(self, movie_info = None, data = None, i = 0):
         if not data: data = {}
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'clear_art', i = i)
@@ -166,7 +166,7 @@ class MovieMetaData(MetaDataBase):
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'logo', i = i)
 
-    def getDiscart(self, movie_info = None, data = None, i = 0):
+    def getDiscArt(self, movie_info = None, data = None, i = 0):
         if not data: data = {}
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'disc_art', i = i)
@@ -176,12 +176,12 @@ class MovieMetaData(MetaDataBase):
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data=  data, wanted_file_type = 'landscape', i = i)
 
-    def getExtrathumbs(self, movie_info = None, data = None, i = 0):
+    def getExtraThumbs(self, movie_info = None, data = None, i = 0):
         if not data: data = {}
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'extra_thumbs', i = i)
 
-    def getExtrafanart(self, movie_info = None, data = None, i = 0):
+    def getExtraFanart(self, movie_info = None, data = None, i = 0):
         if not data: data = {}
         if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'extra_fanart', i = i)
