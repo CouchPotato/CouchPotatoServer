@@ -16,7 +16,6 @@ from couchpotato.environment import Env
 import requests
 from requests.packages.urllib3 import Timeout
 from requests.packages.urllib3.exceptions import MaxRetryError
-from scandir import scandir
 from tornado import template
 from tornado.web import StaticFileHandler
 
@@ -144,7 +143,7 @@ class Plugin(object):
     def deleteEmptyFolder(self, folder, show_error = True):
         folder = sp(folder)
 
-        for root, dirs, files in scandir.walk(folder):
+        for root, dirs, files in os.walk(folder):
 
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
