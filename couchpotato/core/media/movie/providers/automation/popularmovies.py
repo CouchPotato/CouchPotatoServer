@@ -27,12 +27,12 @@ class PopularMovies(Automation):
 
 
 config = [{
-    'name': 'popular_movies',
+    'name': 'popularmovies',
     'groups': [
         {
             'tab': 'automation',
             'list': 'automation_providers',
-            'name': 'popular_movies_automation',
+            'name': 'popularmovies_automation',
             'label': 'Popular Movies',
             'description': 'Imports the <a href="http://movies.stevenlu.com/">top titles of movies that have been in theaters</a>. Script provided by <a href="https://github.com/sjlu/popular-movies">Steven Lu</a>',
             'options': [
