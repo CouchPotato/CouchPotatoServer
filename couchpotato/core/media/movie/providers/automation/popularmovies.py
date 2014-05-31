@@ -1,3 +1,4 @@
+from couchpotato import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
 
@@ -18,7 +19,9 @@ class PopularMovies(Automation):
 
         for movie in retrieved_movies.get('movies'):
             imdb_id = movie.get('imdb_id')
-            movies.append(imdb_id)
+            info = fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
+            if self.isMinimalMovie(info):
+                movies.append(imdb_id)
 
         return movies
 
