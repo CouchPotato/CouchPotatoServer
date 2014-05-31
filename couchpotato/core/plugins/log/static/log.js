@@ -17,7 +17,7 @@ Page.Log = new Class({
 Movie(s) I have this with: ...\n\
 Quality of the movie being searched: ...\n\
 Providers I use: ...\n\
-Version of CouchPotato: ...\n\
+Version of CouchPotato: {version}\n\
 Running on: ...\n\
 \n\
 ### Logs:\n\
@@ -207,7 +207,10 @@ Running on: ...\n\
 
 	showReport: function(text){
 		var self = this,
-			body = self.report_text.replace('{issue}', text);
+			version = Updater.getInfo(),
+			body = self.report_text
+				.replace('{issue}', text)
+				.replace('{version}', version ? version.version.repr : '...');
 
 		var overlay = new Element('div.report', {
 			'method': 'post',
