@@ -22,7 +22,7 @@
 		.category > .delete:hover {
 			opacity: 1;
 		}
-		
+
 	.category .ctrlHolder:hover {
 		background: none;
 	}
@@ -69,7 +69,7 @@
 			}
 
 			#category_ordering li .handle {
-				background: url('../../static/profile_plugin/handle.png') center;
+				background: url('../../images/handle.png') center;
 				width: 20px;
 				float: right;
 			}

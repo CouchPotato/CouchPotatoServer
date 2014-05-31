@@ -2,6 +2,7 @@ Page.Settings = new Class({
 
 	Extends: PageBase,
 
+	order: 50,
 	name: 'settings',
 	title: 'Change settings.',
 	wizard_only: false,
@@ -112,7 +113,7 @@ Page.Settings = new Class({
 	},
 
     sortByOrder: function(a, b){
-			return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100)
 	},
 
 	create: function(json){
@@ -370,7 +371,7 @@ var OptionBase = new Class({
 				createTooltip(self.options.description[1]).inject(hint, 'top');
 			}
 			else {
-				var hint = new Element('p.formHint', {
+				new Element('p.formHint', {
 					'html': self.options.description || ''
 				}).inject(self.el)
 			}
@@ -1312,8 +1313,9 @@ Option.Combined = new Class({
 		var head = new Element('div.head').inject(self.combined_list);
 
 		Object.each(self.inputs, function(input, name){
+			var _in = input.getNext();
 			self.labels[name] = input.getPrevious().get('text');
-			self.descriptions[name] = (_in = input.getNext()) ? _in.get('text') : '';
+			self.descriptions[name] = _in ? _in.get('text') : '';
 
 			new Element('abbr', {
 				'class': name,
@@ -1465,4 +1467,4 @@ var createTooltip = function(description){
 		);
 
 	return tip;
-}
+};

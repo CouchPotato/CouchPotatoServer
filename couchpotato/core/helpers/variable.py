@@ -1,5 +1,3 @@
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
-from couchpotato.core.logger import CPLog
 import collections
 import hashlib
 import os
@@ -8,8 +6,12 @@ import random
 import re
 import string
 import sys
+
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
+from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
+
 
 log = CPLog(__name__)
 
@@ -214,6 +216,7 @@ def tryFloat(s):
             return float(s)
     except: return 0
 
+
 def natsortKey(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
@@ -225,26 +228,28 @@ def toIterable(value):
     return [value]
 
 
-def getTitle(library_dict):
+def getIdentifier(media):
+    return media.get('identifier') or media.get('identifiers', {}).get('imdb')
+
+
+def getTitle(media_dict):
     try:
         try:
-            return library_dict['titles'][0]['title']
+            return media_dict['title']
         except:
             try:
-                for title in library_dict.titles:
-                    if title.default:
-                        return title.title
+                return media_dict['titles'][0]
             except:
                 try:
-                    return library_dict['info']['titles'][0]
+                    return media_dict['info']['titles'][0]
                 except:
-                    log.error('Could not get title for %s', library_dict.identifier)
-                    return None
-
-        log.error('Could not get title for %s', library_dict['identifier'])
-        return None
+                    try:
+                        return media_dict['media']['info']['titles'][0]
+                    except:
+                        log.error('Could not get title for %s', getIdentifier(media_dict))
+                        return None
     except:
-        log.error('Could not get title for library item: %s', library_dict)
+        log.error('Could not get title for library item: %s', media_dict)
         return None
 
 
@@ -289,8 +294,11 @@ def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
 
+
 # From SABNZBD
 re_password = [re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+
+
 def scanForPassword(name):
     m = None
     for reg in re_password:
@@ -299,3 +307,9 @@ def scanForPassword(name):
 
     if m:
         return m.group(1).strip('. '), m.group(2).strip()
+
+
+under_pat = re.compile(r'_([a-z])')
+
+def underscoreToCamel(name):
+    return under_pat.sub(lambda x: x.group(1).upper(), name)

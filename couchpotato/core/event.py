@@ -1,8 +1,10 @@
+import threading
+import traceback
+
 from axl.axel import Event
 from couchpotato.core.helpers.variable import mergeDicts, natsortKey
 from couchpotato.core.logger import CPLog
-import threading
-import traceback
+
 
 log = CPLog(__name__)
 events = {}

@@ -1,7 +1,5 @@
 from .main import CategoryPlugin
 
 
-def start():
+def autoload():
     return CategoryPlugin()
-
-config = []

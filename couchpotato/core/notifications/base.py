@@ -1,7 +1,7 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import Provider
+from couchpotato.core.media._base.providers.base import Provider
 from couchpotato.environment import Env
 
 log = CPLog(__name__)

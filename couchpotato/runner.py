@@ -1,25 +1,28 @@
+from logging import handlers
+from uuid import uuid4
+import locale
+import logging
+import os.path
+import sys
+import time
+import traceback
+import warnings
+import re
+import tarfile
+
+from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
 from cache import FileSystemCache
 from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt
-from logging import handlers
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
-from uuid import uuid4
-import locale
-import logging
-import os.path
-import shutil
-import sys
-import time
-import traceback
-import warnings
 
 
-def getOptions(base_path, args):
+def getOptions(args):
 
     # Options
     parser = ArgumentParser(prog = 'CouchPotato.py')
@@ -82,54 +85,54 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('encoding', encoding)
 
     # Do db stuff
-    db_path = toUnicode(os.path.join(data_dir, 'couchpotato.db'))
+    db_path = sp(os.path.join(data_dir, 'database'))
 
-    # Backup before start and cleanup old databases
-    new_backup = toUnicode(os.path.join(data_dir, 'db_backup', str(int(time.time()))))
-    if not os.path.isdir(new_backup): os.makedirs(new_backup)
+    # Check if database exists
+    db = SuperThreadSafeDatabase(db_path)
+    db_exists = db.exists()
+    if db_exists:
 
-    # Remove older backups, keep backups 3 days or at least 3
-    backups = []
-    for directory in os.listdir(os.path.dirname(new_backup)):
-        backup = toUnicode(os.path.join(os.path.dirname(new_backup), directory))
-        if os.path.isdir(backup):
-            backups.append(backup)
+        # Backup before start and cleanup old backups
+        backup_path = sp(os.path.join(data_dir, 'db_backup'))
+        backup_count = 5
+        existing_backups = []
+        if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
-    latest_backup = tryInt(os.path.basename(sorted(backups)[-1])) if len(backups) > 0 else 0
-    if latest_backup < time.time() - 3600:
-        # Create path and copy
-        src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
-        for src_file in src_files:
-            if os.path.isfile(src_file):
-                dst_file = toUnicode(os.path.join(new_backup, os.path.basename(src_file)))
-                shutil.copyfile(src_file, dst_file)
+        for root, dirs, files in os.walk(backup_path):
+            for backup_file in files:
+                ints = re.findall('\d+', backup_file)
 
-                # Try and copy stats seperately
-                try: shutil.copystat(src_file, dst_file)
-                except: pass
+                # Delete non zip files
+                if len(ints) != 1:
+                    os.remove(os.path.join(backup_path, backup_file))
+                else:
+                    existing_backups.append((int(ints[0]), backup_file))
 
-    total_backups = len(backups)
-    for backup in backups:
-        if total_backups > 3:
-            if tryInt(os.path.basename(backup)) < time.time() - 259200:
-                for the_file in os.listdir(backup):
-                    file_path = os.path.join(backup, the_file)
-                    try:
-                        if os.path.isfile(file_path):
-                            os.remove(file_path)
-                    except:
-                        raise
+        # Remove all but the last 5
+        for eb in existing_backups[:-backup_count]:
+            os.remove(os.path.join(backup_path, eb[1]))
 
-                os.rmdir(backup)
-                total_backups -= 1
+        # Create new backup
+        new_backup = sp(os.path.join(backup_path, '%s.tar.gz' % int(time.time())))
+        zipf = tarfile.open(new_backup, 'w:gz')
+        for root, dirs, files in os.walk(db_path):
+            for zfilename in files:
+                zipf.add(os.path.join(root, zfilename), arcname = 'database/%s' % os.path.join(root[len(db_path) + 1:], zfilename))
+        zipf.close()
+
+        # Open last
+        db.open()
+
+    else:
+        db.create()
 
     # Register environment settings
-    Env.set('app_dir', toUnicode(base_path))
-    Env.set('data_dir', toUnicode(data_dir))
-    Env.set('log_path', toUnicode(os.path.join(log_dir, 'CouchPotato.log')))
-    Env.set('db_path', toUnicode('sqlite:///' + db_path))
-    Env.set('cache_dir', toUnicode(os.path.join(data_dir, 'cache')))
-    Env.set('cache', FileSystemCache(toUnicode(os.path.join(Env.get('cache_dir'), 'python'))))
+    Env.set('app_dir', sp(base_path))
+    Env.set('data_dir', sp(data_dir))
+    Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
+    Env.set('db', db)
+    Env.set('cache_dir', sp(os.path.join(data_dir, 'cache')))
+    Env.set('cache', FileSystemCache(sp(os.path.join(Env.get('cache_dir'), 'python'))))
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
     Env.set('desktop', desktop)
@@ -149,7 +152,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado', 'requests']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
-    for logger_name in ['gntp', 'migrate']:
+    for logger_name in ['gntp']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     # Use reloader
@@ -174,6 +177,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     logger.addHandler(hdlr2)
 
     # Start logging & enable colors
+    # noinspection PyUnresolvedReferences
     import color_logs
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
@@ -182,34 +186,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     def customwarn(message, category, filename, lineno, file = None, line = None):
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
-
-    # Check if database exists
-    db = Env.get('db_path')
-    db_exists = os.path.isfile(toUnicode(db_path))
-
-    # Load migrations
-    if db_exists:
-
-        from migrate.versioning.api import version_control, db_version, version, upgrade
-        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
-
-        latest_db_version = version(repo)
-        try:
-            current_db_version = db_version(db, repo)
-        except:
-            version_control(db, repo, version = latest_db_version)
-            current_db_version = db_version(db, repo)
-
-        if current_db_version < latest_db_version:
-            if development:
-                log.error('There is a database migration ready, but you are running development mode, so it won\'t be used. If you see this, you are stupid. Please disable development mode.')
-            else:
-                log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
-                upgrade(db, repo)
-
-    # Configure Database
-    from couchpotato.core.settings.model import setup
-    setup()
 
     # Create app
     from couchpotato import WebHandler
@@ -236,7 +212,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     }
 
     # Load the app
-    application = Application([],
+    application = Application(
+        [],
         log_function = lambda x: None,
         debug = config['use_reloader'],
         gzip = True,
@@ -267,22 +244,30 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     static_path = '%sstatic/' % web_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
-            ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
+            ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': sp(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
     Env.set('static_path', static_path)
 
     # Load configs & plugins
     loader = Env.get('loader')
-    loader.preload(root = toUnicode(base_path))
+    loader.preload(root = sp(base_path))
     loader.run()
 
     # Fill database with needed stuff
+    fireEvent('database.setup')
     if not db_exists:
         fireEvent('app.initialize', in_order = True)
+    fireEvent('app.migrate')
 
     # Go go go!
     from tornado.ioloop import IOLoop
+    from tornado.autoreload import add_reload_hook
     loop = IOLoop.current()
+
+    # Reload hook
+    def test():
+        fireEvent('app.shutdown')
+    add_reload_hook(test)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)

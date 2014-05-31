@@ -10,21 +10,31 @@ unfinished callbacks on the event loop that fail when it resumes)
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
-import asyncio
 import datetime
 import functools
-import os
 
-from tornado.ioloop import IOLoop
+# _Timeout is used for its timedelta_to_seconds method for py26 compatibility.
+from tornado.ioloop import IOLoop, _Timeout
 from tornado import stack_context
 
+try:
+    # Import the real asyncio module for py33+ first.  Older versions of the
+    # trollius backport also use this name.
+    import asyncio
+except ImportError as e:
+    # Asyncio itself isn't available; see if trollius is (backport to py26+).
+    try:
+        import trollius as asyncio
+    except ImportError:
+        # Re-raise the original asyncio error, not the trollius one.
+        raise e
 
 class BaseAsyncIOLoop(IOLoop):
     def initialize(self, asyncio_loop, close_loop=False):
         self.asyncio_loop = asyncio_loop
         self.close_loop = close_loop
         self.asyncio_loop.call_soon(self.make_current)
-        # Maps fd to handler function (as in IOLoop.add_handler)
+        # Maps fd to (fileobj, handler function) pair (as in IOLoop.add_handler)
         self.handlers = {}
         # Set of fds listening for reads/writes
         self.readers = set()
@@ -34,19 +44,18 @@ class BaseAsyncIOLoop(IOLoop):
     def close(self, all_fds=False):
         self.closing = True
         for fd in list(self.handlers):
+            fileobj, handler_func = self.handlers[fd]
             self.remove_handler(fd)
             if all_fds:
-                try:
-                    os.close(fd)
-                except OSError:
-                    pass
+                self.close_fd(fileobj)
         if self.close_loop:
             self.asyncio_loop.close()
 
     def add_handler(self, fd, handler, events):
+        fd, fileobj = self.split_fd(fd)
         if fd in self.handlers:
-            raise ValueError("fd %d added twice" % fd)
-        self.handlers[fd] = stack_context.wrap(handler)
+            raise ValueError("fd %s added twice" % fd)
+        self.handlers[fd] = (fileobj, stack_context.wrap(handler))
         if events & IOLoop.READ:
             self.asyncio_loop.add_reader(
                 fd, self._handle_events, fd, IOLoop.READ)
@@ -57,6 +66,7 @@ class BaseAsyncIOLoop(IOLoop):
             self.writers.add(fd)
 
     def update_handler(self, fd, events):
+        fd, fileobj = self.split_fd(fd)
         if events & IOLoop.READ:
             if fd not in self.readers:
                 self.asyncio_loop.add_reader(
@@ -77,6 +87,7 @@ class BaseAsyncIOLoop(IOLoop):
                 self.writers.remove(fd)
 
     def remove_handler(self, fd):
+        fd, fileobj = self.split_fd(fd)
         if fd not in self.handlers:
             return
         if fd in self.readers:
@@ -88,7 +99,8 @@ class BaseAsyncIOLoop(IOLoop):
         del self.handlers[fd]
 
     def _handle_events(self, fd, events):
-        self.handlers[fd](fd, events)
+        fileobj, handler_func = self.handlers[fd]
+        handler_func(fileobj, events)
 
     def start(self):
         self._setup_logging()
@@ -107,7 +119,7 @@ class BaseAsyncIOLoop(IOLoop):
         if isinstance(deadline, (int, float)):
             delay = max(deadline - self.time(), 0)
         elif isinstance(deadline, datetime.timedelta):
-            delay = deadline.total_seconds()
+            delay = _Timeout.timedelta_to_seconds(deadline)
         else:
             raise TypeError("Unsupported deadline %r", deadline)
         return self.asyncio_loop.call_later(delay, self._run_callback,

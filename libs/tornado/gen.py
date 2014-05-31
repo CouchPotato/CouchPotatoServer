@@ -87,9 +87,9 @@ import itertools
 import sys
 import types
 
-from tornado.concurrent import Future, TracebackFuture
+from tornado.concurrent import Future, TracebackFuture, is_future, chain_future
 from tornado.ioloop import IOLoop
-from tornado.stack_context import ExceptionStackContext, wrap
+from tornado import stack_context
 
 
 class KeyReuseError(Exception):
@@ -112,6 +112,10 @@ class ReturnValueIgnoredError(Exception):
     pass
 
 
+class TimeoutError(Exception):
+    """Exception raised by ``with_timeout``."""
+
+
 def engine(func):
     """Callback-oriented decorator for asynchronous generators.
 
@@ -129,45 +133,20 @@ def engine(func):
     `~tornado.web.RequestHandler` :ref:`HTTP verb methods <verbs>`,
     which use ``self.finish()`` in place of a callback argument.
     """
+    func = _make_coroutine_wrapper(func, replace_callback=False)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        runner = None
-
-        def handle_exception(typ, value, tb):
-            # if the function throws an exception before its first "yield"
-            # (or is not a generator at all), the Runner won't exist yet.
-            # However, in that case we haven't reached anything asynchronous
-            # yet, so we can just let the exception propagate.
-            if runner is not None:
-                return runner.handle_exception(typ, value, tb)
-            return False
-        with ExceptionStackContext(handle_exception) as deactivate:
-            try:
-                result = func(*args, **kwargs)
-            except (Return, StopIteration) as e:
-                result = getattr(e, 'value', None)
-            else:
-                if isinstance(result, types.GeneratorType):
-                    def final_callback(value):
-                        if value is not None:
-                            raise ReturnValueIgnoredError(
-                                "@gen.engine functions cannot return values: "
-                                "%r" % (value,))
-                        assert value is None
-                        deactivate()
-                    runner = Runner(result, final_callback)
-                    runner.run()
-                    return
-            if result is not None:
+        future = func(*args, **kwargs)
+        def final_callback(future):
+            if future.result() is not None:
                 raise ReturnValueIgnoredError(
                     "@gen.engine functions cannot return values: %r" %
-                    (result,))
-            deactivate()
-            # no yield, so we're done
+                    (future.result(),))
+        future.add_done_callback(final_callback)
     return wrapper
 
 
-def coroutine(func):
+def coroutine(func, replace_callback=True):
     """Decorator for asynchronous generators.
 
     Any generator that yields objects from this module must be wrapped
@@ -191,43 +170,56 @@ def coroutine(func):
     From the caller's perspective, ``@gen.coroutine`` is similar to
     the combination of ``@return_future`` and ``@gen.engine``.
     """
+    return _make_coroutine_wrapper(func, replace_callback=True)
+
+
+def _make_coroutine_wrapper(func, replace_callback):
+    """The inner workings of ``@gen.coroutine`` and ``@gen.engine``.
+
+    The two decorators differ in their treatment of the ``callback``
+    argument, so we cannot simply implement ``@engine`` in terms of
+    ``@coroutine``.
+    """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        runner = None
         future = TracebackFuture()
 
-        if 'callback' in kwargs:
+        if replace_callback and 'callback' in kwargs:
             callback = kwargs.pop('callback')
             IOLoop.current().add_future(
                 future, lambda future: callback(future.result()))
 
-        def handle_exception(typ, value, tb):
-            try:
-                if runner is not None and runner.handle_exception(typ, value, tb):
-                    return True
-            except Exception:
-                typ, value, tb = sys.exc_info()
-            future.set_exc_info((typ, value, tb))
-            return True
-        with ExceptionStackContext(handle_exception) as deactivate:
-            try:
-                result = func(*args, **kwargs)
-            except (Return, StopIteration) as e:
-                result = getattr(e, 'value', None)
-            except Exception:
-                deactivate()
-                future.set_exc_info(sys.exc_info())
+        try:
+            result = func(*args, **kwargs)
+        except (Return, StopIteration) as e:
+            result = getattr(e, 'value', None)
+        except Exception:
+            future.set_exc_info(sys.exc_info())
+            return future
+        else:
+            if isinstance(result, types.GeneratorType):
+                # Inline the first iteration of Runner.run.  This lets us
+                # avoid the cost of creating a Runner when the coroutine
+                # never actually yields, which in turn allows us to
+                # use "optional" coroutines in critical path code without
+                # performance penalty for the synchronous case.
+                try:
+                    orig_stack_contexts = stack_context._state.contexts
+                    yielded = next(result)
+                    if stack_context._state.contexts is not orig_stack_contexts:
+                        yielded = TracebackFuture()
+                        yielded.set_exception(
+                            stack_context.StackContextInconsistentError(
+                                'stack_context inconsistency (probably caused '
+                                'by yield within a "with StackContext" block)'))
+                except (StopIteration, Return) as e:
+                    future.set_result(getattr(e, 'value', None))
+                except Exception:
+                    future.set_exc_info(sys.exc_info())
+                else:
+                    Runner(result, future, yielded)
                 return future
-            else:
-                if isinstance(result, types.GeneratorType):
-                    def final_callback(value):
-                        deactivate()
-                        future.set_result(value)
-                    runner = Runner(result, final_callback)
-                    runner.run()
-                    return future
-            deactivate()
-            future.set_result(result)
+        future.set_result(result)
         return future
     return wrapper
 
@@ -348,7 +340,7 @@ class WaitAll(YieldPoint):
         return [self.runner.pop_result(key) for key in self.keys]
 
 
-class Task(YieldPoint):
+def Task(func, *args, **kwargs):
     """Runs a single asynchronous operation.
 
     Takes a function (and optional additional arguments) and runs it with
@@ -362,25 +354,25 @@ class Task(YieldPoint):
 
         func(args, callback=(yield gen.Callback(key)))
         result = yield gen.Wait(key)
+
+    .. versionchanged:: 3.3
+       ``gen.Task`` is now a function that returns a `.Future`, instead of
+       a subclass of `YieldPoint`.  It still behaves the same way when
+       yielded.
     """
-    def __init__(self, func, *args, **kwargs):
-        assert "callback" not in kwargs
-        self.args = args
-        self.kwargs = kwargs
-        self.func = func
-
-    def start(self, runner):
-        self.runner = runner
-        self.key = object()
-        runner.register_callback(self.key)
-        self.kwargs["callback"] = runner.result_callback(self.key)
-        self.func(*self.args, **self.kwargs)
-
-    def is_ready(self):
-        return self.runner.is_ready(self.key)
-
-    def get_result(self):
-        return self.runner.pop_result(self.key)
+    future = Future()
+    def handle_exception(typ, value, tb):
+        if future.done():
+            return False
+        future.set_exc_info((typ, value, tb))
+        return True
+    def set_result(result):
+        if future.done():
+            return
+        future.set_result(result)
+    with stack_context.ExceptionStackContext(handle_exception):
+        func(*args, callback=_argument_adapter(set_result), **kwargs)
+    return future
 
 
 class YieldFuture(YieldPoint):
@@ -414,10 +406,14 @@ class YieldFuture(YieldPoint):
 class Multi(YieldPoint):
     """Runs multiple asynchronous operations in parallel.
 
-    Takes a list of ``Tasks`` or other ``YieldPoints`` and returns a list of
+    Takes a list of ``YieldPoints`` or ``Futures`` and returns a list of
     their responses.  It is not necessary to call `Multi` explicitly,
     since the engine will do so automatically when the generator yields
-    a list of ``YieldPoints``.
+    a list of ``YieldPoints`` or a mixture of ``YieldPoints`` and ``Futures``.
+
+    Instead of a list, the argument may also be a dictionary whose values are
+    Futures, in which case a parallel dictionary is returned mapping the same
+    keys to their results.
     """
     def __init__(self, children):
         self.keys = None
@@ -426,7 +422,7 @@ class Multi(YieldPoint):
             children = children.values()
         self.children = []
         for i in children:
-            if isinstance(i, Future):
+            if is_future(i):
                 i = YieldFuture(i)
             self.children.append(i)
         assert all(isinstance(i, YieldPoint) for i in self.children)
@@ -450,18 +446,127 @@ class Multi(YieldPoint):
             return list(result)
 
 
-class _NullYieldPoint(YieldPoint):
-    def start(self, runner):
-        pass
+def multi_future(children):
+    """Wait for multiple asynchronous futures in parallel.
 
-    def is_ready(self):
-        return True
+    Takes a list of ``Futures`` (but *not* other ``YieldPoints``) and returns
+    a new Future that resolves when all the other Futures are done.
+    If all the ``Futures`` succeeded, the returned Future's result is a list
+    of their results.  If any failed, the returned Future raises the exception
+    of the first one to fail.
 
-    def get_result(self):
-        return None
+    Instead of a list, the argument may also be a dictionary whose values are
+    Futures, in which case a parallel dictionary is returned mapping the same
+    keys to their results.
+
+    It is not necessary to call `multi_future` explcitly, since the engine will
+    do so automatically when the generator yields a list of `Futures`.
+    This function is faster than the `Multi` `YieldPoint` because it does not
+    require the creation of a stack context.
+
+    .. versionadded:: 3.3
+    """
+    if isinstance(children, dict):
+        keys = list(children.keys())
+        children = children.values()
+    else:
+        keys = None
+    assert all(is_future(i) for i in children)
+    unfinished_children = set(children)
+
+    future = Future()
+    if not children:
+        future.set_result({} if keys is not None else [])
+    def callback(f):
+        unfinished_children.remove(f)
+        if not unfinished_children:
+            try:
+                result_list = [i.result() for i in children]
+            except Exception:
+                future.set_exc_info(sys.exc_info())
+            else:
+                if keys is not None:
+                    future.set_result(dict(zip(keys, result_list)))
+                else:
+                    future.set_result(result_list)
+    for f in children:
+        f.add_done_callback(callback)
+    return future
 
 
-_null_yield_point = _NullYieldPoint()
+def maybe_future(x):
+    """Converts ``x`` into a `.Future`.
+
+    If ``x`` is already a `.Future`, it is simply returned; otherwise
+    it is wrapped in a new `.Future`.  This is suitable for use as
+    ``result = yield gen.maybe_future(f())`` when you don't know whether
+    ``f()`` returns a `.Future` or not.
+    """
+    if is_future(x):
+        return x
+    else:
+        fut = Future()
+        fut.set_result(x)
+        return fut
+
+
+def with_timeout(timeout, future, io_loop=None):
+    """Wraps a `.Future` in a timeout.
+
+    Raises `TimeoutError` if the input future does not complete before
+    ``timeout``, which may be specified in any form allowed by
+    `.IOLoop.add_timeout` (i.e. a `datetime.timedelta` or an absolute time
+    relative to `.IOLoop.time`)
+
+    Currently only supports Futures, not other `YieldPoint` classes.
+
+    .. versionadded:: 3.3
+    """
+    # TODO: allow yield points in addition to futures?
+    # Tricky to do with stack_context semantics.
+    #
+    # It's tempting to optimize this by cancelling the input future on timeout
+    # instead of creating a new one, but A) we can't know if we are the only
+    # one waiting on the input future, so cancelling it might disrupt other
+    # callers and B) concurrent futures can only be cancelled while they are
+    # in the queue, so cancellation cannot reliably bound our waiting time.
+    result = Future()
+    chain_future(future, result)
+    if io_loop is None:
+        io_loop = IOLoop.current()
+    timeout_handle = io_loop.add_timeout(
+        timeout,
+        lambda: result.set_exception(TimeoutError("Timeout")))
+    if isinstance(future, Future):
+        # We know this future will resolve on the IOLoop, so we don't
+        # need the extra thread-safety of IOLoop.add_future (and we also
+        # don't care about StackContext here.
+        future.add_done_callback(
+            lambda future: io_loop.remove_timeout(timeout_handle))
+    else:
+        # concurrent.futures.Futures may resolve on any thread, so we
+        # need to route them back to the IOLoop.
+        io_loop.add_future(
+            future, lambda future: io_loop.remove_timeout(timeout_handle))
+    return result
+
+
+_null_future = Future()
+_null_future.set_result(None)
+
+moment = Future()
+moment.__doc__ = \
+    """A special object which may be yielded to allow the IOLoop to run for
+one iteration.
+
+This is not needed in normal use but it can be helpful in long-running
+coroutines that are likely to yield Futures that are ready instantly.
+
+Usage: ``yield gen.moment``
+
+.. versionadded:: 3.3
+"""
+moment.set_result(None)
 
 
 class Runner(object):
@@ -469,35 +574,55 @@ class Runner(object):
 
     Maintains information about pending callbacks and their results.
 
-    ``final_callback`` is run after the generator exits.
+    The results of the generator are stored in ``result_future`` (a
+    `.TracebackFuture`)
     """
-    def __init__(self, gen, final_callback):
+    def __init__(self, gen, result_future, first_yielded):
         self.gen = gen
-        self.final_callback = final_callback
-        self.yield_point = _null_yield_point
-        self.pending_callbacks = set()
-        self.results = {}
+        self.result_future = result_future
+        self.future = _null_future
+        self.yield_point = None
+        self.pending_callbacks = None
+        self.results = None
         self.running = False
         self.finished = False
-        self.exc_info = None
         self.had_exception = False
+        self.io_loop = IOLoop.current()
+        # For efficiency, we do not create a stack context until we
+        # reach a YieldPoint (stack contexts are required for the historical
+        # semantics of YieldPoints, but not for Futures).  When we have
+        # done so, this field will be set and must be called at the end
+        # of the coroutine.
+        self.stack_context_deactivate = None
+        if self.handle_yield(first_yielded):
+            self.run()
 
     def register_callback(self, key):
         """Adds ``key`` to the list of callbacks."""
+        if self.pending_callbacks is None:
+            # Lazily initialize the old-style YieldPoint data structures.
+            self.pending_callbacks = set()
+            self.results = {}
         if key in self.pending_callbacks:
             raise KeyReuseError("key %r is already pending" % (key,))
         self.pending_callbacks.add(key)
 
     def is_ready(self, key):
         """Returns true if a result is available for ``key``."""
-        if key not in self.pending_callbacks:
+        if self.pending_callbacks is None or key not in self.pending_callbacks:
             raise UnknownKeyError("key %r is not pending" % (key,))
         return key in self.results
 
     def set_result(self, key, result):
         """Sets the result for ``key`` and attempts to resume the generator."""
         self.results[key] = result
-        self.run()
+        if self.yield_point is not None and self.yield_point.is_ready():
+            try:
+                self.future.set_result(self.yield_point.get_result())
+            except:
+                self.future.set_exc_info(sys.exc_info())
+            self.yield_point = None
+            self.run()
 
     def pop_result(self, key):
         """Returns the result for ``key`` and unregisters it."""
@@ -513,25 +638,27 @@ class Runner(object):
         try:
             self.running = True
             while True:
-                if self.exc_info is None:
-                    try:
-                        if not self.yield_point.is_ready():
-                            return
-                        next = self.yield_point.get_result()
-                        self.yield_point = None
-                    except Exception:
-                        self.exc_info = sys.exc_info()
+                future = self.future
+                if not future.done():
+                    return
+                self.future = None
                 try:
-                    if self.exc_info is not None:
+                    orig_stack_contexts = stack_context._state.contexts
+                    try:
+                        value = future.result()
+                    except Exception:
                         self.had_exception = True
-                        exc_info = self.exc_info
-                        self.exc_info = None
-                        yielded = self.gen.throw(*exc_info)
+                        yielded = self.gen.throw(*sys.exc_info())
                     else:
-                        yielded = self.gen.send(next)
+                        yielded = self.gen.send(value)
+                    if stack_context._state.contexts is not orig_stack_contexts:
+                        self.gen.throw(
+                            stack_context.StackContextInconsistentError(
+                                'stack_context inconsistency (probably caused '
+                                'by yield within a "with StackContext" block)'))
                 except (StopIteration, Return) as e:
                     self.finished = True
-                    self.yield_point = _null_yield_point
+                    self.future = _null_future
                     if self.pending_callbacks and not self.had_exception:
                         # If we ran cleanly without waiting on all callbacks
                         # raise an error (really more of a warning).  If we
@@ -540,46 +667,105 @@ class Runner(object):
                         raise LeakedCallbackError(
                             "finished without waiting for callbacks %r" %
                             self.pending_callbacks)
-                    self.final_callback(getattr(e, 'value', None))
-                    self.final_callback = None
+                    self.result_future.set_result(getattr(e, 'value', None))
+                    self.result_future = None
+                    self._deactivate_stack_context()
                     return
                 except Exception:
                     self.finished = True
-                    self.yield_point = _null_yield_point
-                    raise
-                if isinstance(yielded, (list, dict)):
-                    yielded = Multi(yielded)
-                elif isinstance(yielded, Future):
-                    yielded = YieldFuture(yielded)
-                if isinstance(yielded, YieldPoint):
-                    self.yield_point = yielded
-                    try:
-                        self.yield_point.start(self)
-                    except Exception:
-                        self.exc_info = sys.exc_info()
-                else:
-                    self.exc_info = (BadYieldError(
-                        "yielded unknown object %r" % (yielded,)),)
+                    self.future = _null_future
+                    self.result_future.set_exc_info(sys.exc_info())
+                    self.result_future = None
+                    self._deactivate_stack_context()
+                    return
+                if not self.handle_yield(yielded):
+                    return
         finally:
             self.running = False
 
-    def result_callback(self, key):
-        def inner(*args, **kwargs):
-            if kwargs or len(args) > 1:
-                result = Arguments(args, kwargs)
-            elif args:
-                result = args[0]
+    def handle_yield(self, yielded):
+        if isinstance(yielded, list):
+            if all(is_future(f) for f in yielded):
+                yielded = multi_future(yielded)
             else:
-                result = None
-            self.set_result(key, result)
-        return wrap(inner)
+                yielded = Multi(yielded)
+        elif isinstance(yielded, dict):
+            if all(is_future(f) for f in yielded.values()):
+                yielded = multi_future(yielded)
+            else:
+                yielded = Multi(yielded)
+
+        if isinstance(yielded, YieldPoint):
+            self.future = TracebackFuture()
+            def start_yield_point():
+                try:
+                    yielded.start(self)
+                    if yielded.is_ready():
+                        self.future.set_result(
+                            yielded.get_result())
+                    else:
+                        self.yield_point = yielded
+                except Exception:
+                    self.future = TracebackFuture()
+                    self.future.set_exc_info(sys.exc_info())
+            if self.stack_context_deactivate is None:
+                # Start a stack context if this is the first
+                # YieldPoint we've seen.
+                with stack_context.ExceptionStackContext(
+                        self.handle_exception) as deactivate:
+                    self.stack_context_deactivate = deactivate
+                    def cb():
+                        start_yield_point()
+                        self.run()
+                    self.io_loop.add_callback(cb)
+                    return False
+            else:
+                start_yield_point()
+        elif is_future(yielded):
+            self.future = yielded
+            if not self.future.done() or self.future is moment:
+                self.io_loop.add_future(
+                    self.future, lambda f: self.run())
+                return False
+        else:
+            self.future = TracebackFuture()
+            self.future.set_exception(BadYieldError(
+                "yielded unknown object %r" % (yielded,)))
+        return True
+
+    def result_callback(self, key):
+        return stack_context.wrap(_argument_adapter(
+            functools.partial(self.set_result, key)))
 
     def handle_exception(self, typ, value, tb):
         if not self.running and not self.finished:
-            self.exc_info = (typ, value, tb)
+            self.future = TracebackFuture()
+            self.future.set_exc_info((typ, value, tb))
             self.run()
             return True
         else:
             return False
 
+    def _deactivate_stack_context(self):
+        if self.stack_context_deactivate is not None:
+            self.stack_context_deactivate()
+            self.stack_context_deactivate = None
+
 Arguments = collections.namedtuple('Arguments', ['args', 'kwargs'])
+
+
+def _argument_adapter(callback):
+    """Returns a function that when invoked runs ``callback`` with one arg.
+
+    If the function returned by this function is called with exactly
+    one argument, that argument is passed to ``callback``.  Otherwise
+    the args tuple and kwargs dict are wrapped in an `Arguments` object.
+    """
+    def wrapper(*args, **kwargs):
+        if kwargs or len(args) > 1:
+            callback(Arguments(args, kwargs))
+        elif args:
+            callback(args[0])
+        else:
+            callback(None)
+    return wrapper

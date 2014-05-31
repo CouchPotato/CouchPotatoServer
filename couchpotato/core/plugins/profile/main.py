@@ -1,19 +1,22 @@
 import traceback
-from couchpotato import get_session
+
+from couchpotato import get_db, tryInt
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Profile, ProfileType, Media
-from sqlalchemy.orm import joinedload_all
+from .index import ProfileIndex
+
 
 log = CPLog(__name__)
 
 
 class ProfilePlugin(Plugin):
 
-    to_dict = {'types': {}}
+    _database = {
+        'profile': ProfileIndex
+    }
 
     def __init__(self):
         addEvent('profile.all', self.all)
@@ -31,27 +34,24 @@ class ProfilePlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 90)
-        addEvent('app.load', self.forceDefaults)
+        addEvent('app.load', self.forceDefaults, priority = 110)
 
     def forceDefaults(self):
 
         # Get all active movies without profile
-        active_status = fireEvent('status.get', 'active', single = True)
-
         try:
-            db = get_session()
-            movies = db.query(Media).filter(Media.status_id == active_status.get('id'), Media.profile == None).all()
+            db = get_db()
+            medias = fireEvent('media.with_status', 'active', single = True)
 
-            if len(movies) > 0:
-                default_profile = self.default()
-                for movie in movies:
-                    movie.profile_id = default_profile.get('id')
-                    db.commit()
+            profile_ids = [x.get('_id') for x in self.all()]
+            default_id = profile_ids[0]
+
+            for media in medias:
+                if media.get('profile_id') not in profile_ids:
+                    media['profile_id'] = default_id
+                    db.update(media)
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
     def allView(self, **kwargs):
 
@@ -62,97 +62,81 @@ class ProfilePlugin(Plugin):
 
     def all(self):
 
-        db = get_session()
-        profiles = db.query(Profile) \
-            .options(joinedload_all('types')) \
-            .all()
+        db = get_db()
+        profiles = db.all('profile', with_doc = True)
 
-        temp = []
-        for profile in profiles:
-            temp.append(profile.to_dict(self.to_dict))
-
-        return temp
+        return [x['doc'] for x in profiles]
 
     def save(self, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
-            p = db.query(Profile).filter_by(id = kwargs.get('id')).first()
-            if not p:
-                p = Profile()
-                db.add(p)
+            profile = {
+                '_t': 'profile',
+                'label': toUnicode(kwargs.get('label')),
+                'order': tryInt(kwargs.get('order', 999)),
+                'core': kwargs.get('core', False),
+                'qualities': [],
+                'wait_for': [],
+                'finish': [],
+                '3d': []
+            }
 
-            p.label = toUnicode(kwargs.get('label'))
-            p.order = kwargs.get('order', p.order if p.order else 0)
-            p.core = kwargs.get('core', False)
-
-            #delete old types
-            [db.delete(t) for t in p.types]
-
+            # Update types
             order = 0
             for type in kwargs.get('types', []):
-                t = ProfileType(
-                    order = order,
-                    finish = type.get('finish') if order > 0 else 1,
-                    wait_for = kwargs.get('wait_for'),
-                    quality_id = type.get('quality_id')
-                )
-                p.types.append(t)
-
+                profile['qualities'].append(type.get('quality'))
+                profile['wait_for'].append(tryInt(kwargs.get('wait_for', 0)))
+                profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
+                profile['3d'].append(tryInt(type.get('3d')))
                 order += 1
 
-            db.commit()
+            id = kwargs.get('id')
+            try:
+                p = db.get('id', id)
+                profile['order'] = tryInt(kwargs.get('order', p.get('order', 999)))
+            except:
+                p = db.insert(profile)
 
-            profile_dict = p.to_dict(self.to_dict)
+            p.update(profile)
+            db.update(p)
 
             return {
                 'success': True,
-                'profile': profile_dict
+                'profile': p
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {
             'success': False
         }
 
     def default(self):
-
-        db = get_session()
-        default = db.query(Profile) \
-            .options(joinedload_all('types')) \
-            .first()
-        default_dict = default.to_dict(self.to_dict)
-
-        return default_dict
+        db = get_db()
+        return list(db.all('profile', limit = 1, with_doc = True))[0]['doc']
 
     def saveOrder(self, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
             order = 0
-            for profile in kwargs.get('ids', []):
-                p = db.query(Profile).filter_by(id = profile).first()
-                p.hide = kwargs.get('hidden')[order]
-                p.order = order
+
+            for profile_id in kwargs.get('ids', []):
+                p = db.get('id', profile_id)
+                p['hide'] = tryInt(kwargs.get('hidden')[order]) == 1
+                p['order'] = order
+                db.update(p)
 
                 order += 1
-
-            db.commit()
 
             return {
                 'success': True
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {
             'success': False
@@ -161,15 +145,14 @@ class ProfilePlugin(Plugin):
     def delete(self, id = None, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
             success = False
             message = ''
-            try:
-                p = db.query(Profile).filter_by(id = id).first()
 
+            try:
+                p = db.get('id', id)
                 db.delete(p)
-                db.commit()
 
                 # Force defaults on all empty profile movies
                 self.forceDefaults()
@@ -184,9 +167,6 @@ class ProfilePlugin(Plugin):
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {
             'success': False
@@ -195,7 +175,7 @@ class ProfilePlugin(Plugin):
     def fill(self):
 
         try:
-            db = get_session()
+            db = get_db()
 
             profiles = [{
                 'label': 'Best',
@@ -206,41 +186,42 @@ class ProfilePlugin(Plugin):
             }, {
                 'label': 'SD',
                 'qualities': ['dvdrip', 'dvdr']
+            }, {
+                'label': 'Prefer 3D HD',
+                'qualities': ['1080p', '720p', '720p', '1080p'],
+                '3d': [True, True]
+            }, {
+                'label': '3D HD',
+                'qualities': ['1080p', '720p'],
+                '3d': [True, True]
             }]
 
             # Create default quality profile
-            order = -2
+            order = 0
             for profile in profiles:
                 log.info('Creating default profile: %s', profile.get('label'))
-                p = Profile(
-                    label = toUnicode(profile.get('label')),
-                    order = order
-                )
-                db.add(p)
 
-                quality_order = 0
-                for quality in profile.get('qualities'):
-                    quality = fireEvent('quality.single', identifier = quality, single = True)
-                    profile_type = ProfileType(
-                        quality_id = quality.get('id'),
-                        profile = p,
-                        finish = True,
-                        wait_for = 0,
-                        order = quality_order
-                    )
-                    p.types.append(profile_type)
+                pro = {
+                    '_t': 'profile',
+                    'label': toUnicode(profile.get('label')),
+                    'order': order,
+                    'qualities': profile.get('qualities'),
+                    'finish': [],
+                    'wait_for': [],
+                    '3d': []
+                }
 
-                    quality_order += 1
+                threed = profile.get('3d', [])
+                for q in profile.get('qualities'):
+                    pro['finish'].append(True)
+                    pro['wait_for'].append(0)
+                    pro['3d'].append(threed.pop() if threed else False)
 
+                db.insert(pro)
                 order += 1
-
-            db.commit()
 
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return False

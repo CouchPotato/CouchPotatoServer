@@ -1,0 +1,144 @@
+{% autoescape None %}
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" href="{{ Env.get('static_path') }}style/api.css" type="text/css">
+
+        <script type="text/javascript" src="{{ Env.get('static_path') }}scripts/library/mootools.js"></script>
+
+        <script>
+
+            var api_base = '{{ Env.get('api_base') }}';
+
+            var createList = function(name, documents){
+                var list;
+
+                var el = new Element('div').adopt(
+                    new Element('h2', {'text': name}),
+                    list = new Element('table.documents').grab(
+                        new Element('tr').adopt(
+                            new Element('th.id', {'text': 'id'}),
+                            new Element('th._rev', {'text': 'rev'}),
+                            new Element('th._t', {'text': 'type'}),
+                            new Element('th.form', {'text': 'document'}),
+                            new Element('th.actions', {'text': ''})
+                        )
+                    )
+                );
+
+                documents.each(function(doc){
+                    new Element('tr.document').adopt(
+                         new Element('td.id', {'text': doc['_id']}),
+                         new Element('td._rev', {'text': doc['_rev']}),
+                         new Element('td._t', {'text': doc['_t']}),
+                         new Element('td.form').grab(
+                             new Element('form', {'action': '', 'method': 'post'}).adopt(
+                                 new Element('textarea.document', {'text': JSON.stringify(doc, null, 4)}),
+                                 new Element('input.submit', {'text': 'save', 'type': 'submit', 'value': 'save'})
+                             )
+                         ),
+                         new Element('td.actions').grab(
+                            new Element('a.delete[href=#]', {'text': 'delete', 'data-id': doc['_id']})
+                         )
+                    ).inject(list)
+                });
+
+                if(documents.length > 0)
+                    return el;
+            }
+
+            $(window).addEvent('domready', function(){
+                var c = $('container');
+
+                // Delete
+                c.addEvents({
+
+                    // Delete delegate
+                   'click:relay(.delete)': function(e){
+                        (e).stop();
+
+                        if(!document.location.href.contains('no_confirm') && confirm('Are you sure?')){
+                            var a = this;
+
+                            new Request.JSON({
+                                'url': api_base + 'database.document.delete',
+                                'data': {
+                                    'id': a.get('data-id')
+                                },
+                                'onSuccess': function(){
+                                    a.getParent('tr').destroy();
+                                }
+                            }).send();
+                        }
+                    },
+
+                    // Form submit
+                    'submit:relay(form)': function(e){
+                        (e).stop();
+
+                        var form = this;
+
+                        new Request.JSON({
+                            'url': api_base + 'database.document.update',
+                            'data': {
+                                'document': form.getElement('textarea').get('value')
+                            },
+                            'onSuccess': function(response){
+                                form.getElement('textarea').set('value', JSON.stringify(response.document, null, 4));
+                                form.getParent('tr').getElement('._rev').set('text', response.document['_rev']);
+                            }
+                        }).send();
+                    }
+                });
+
+                var show_split = document.location.search.split('show='),
+                    show = show_split.length > 1 ? show_split[1] : null;
+
+                new Request.JSON({
+                    'url': api_base + 'database.list_documents',
+                    'data': show ? 'show='+show : null,
+                    'method': 'get',
+                    'onSuccess': function(data){
+
+                        var nav = new Element('ul.nav').grab(
+                            new Element('li').grab(
+                                new Element('a', {
+                                    'href': './',
+                                    'text': 'All'
+                                })
+                            )
+                        ).inject(c, 'before');
+
+                        Object.each(data, function(documents, name){
+
+                            if(documents.length > 0)
+                                new Element('li').grab(
+                                    new Element('a', {
+                                        'href': './?show=' + name,
+                                        'text': name
+                                    })
+                                ).inject(nav)
+
+                            var list = createList(name, documents);
+                            if(list)
+                                list.inject(c);
+                        })
+                    },
+                    'onFailure': function(){
+                        alert('Something went wrong retrieving all documents')
+                    }
+                }).send();
+
+            })
+
+        </script>
+
+		<title>Document Manager</title>
+	</head>
+	<body class="database">
+
+		<h1>Documents</h1>
+        <div id="container"></div>
+
+	</body>
+</html>

@@ -1,21 +1,24 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-from datetime import datetime
-from dateutil.parser import parse
-from git.repository import LocalRepository
 import json
 import os
 import shutil
 import tarfile
 import time
 import traceback
-import version
 import zipfile
+from datetime import datetime
+from threading import RLock
+
+from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import ss, sp
+from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
+from dateutil.parser import parse
+from git.repository import LocalRepository
+import version
 from six.moves import filter
+
 
 log = CPLog(__name__)
 
@@ -23,6 +26,7 @@ log = CPLog(__name__)
 class Updater(Plugin):
 
     available_notified = False
+    _lock = RLock()
 
     def __init__(self):
 
@@ -100,7 +104,17 @@ class Updater(Plugin):
         return False
 
     def info(self, **kwargs):
-        return self.updater.info()
+        self._lock.acquire()
+
+        info = {}
+        try:
+            info = self.updater.info()
+        except:
+            log.error('Failed getting updater info: %s', traceback.format_exc())
+
+        self._lock.release()
+
+        return info
 
     def checkView(self, **kwargs):
         return {
@@ -127,6 +141,10 @@ class Updater(Plugin):
             'success': success
         }
 
+    def doShutdown(self):
+        self.updater.deletePyc(show_logs = False)
+        return super(Updater, self).doShutdown()
+
 
 class BaseUpdater(Plugin):
 
@@ -144,12 +162,15 @@ class BaseUpdater(Plugin):
         pass
 
     def info(self):
+
+        current_version = self.getVersion()
+
         return {
             'last_check': self.last_check,
             'update_version': self.update_version,
-            'version': self.getVersion(),
+            'version': current_version,
             'repo_name': '%s/%s' % (self.repo_user, self.repo_name),
-            'branch': self.branch,
+            'branch': current_version.get('branch', self.branch),
         }
 
     def getVersion(self):
@@ -158,9 +179,9 @@ class BaseUpdater(Plugin):
     def check(self):
         pass
 
-    def deletePyc(self, only_excess = True):
+    def deletePyc(self, only_excess = True, show_logs = True):
 
-        for root, dirs, files in os.walk(ss(Env.get('app_dir'))):
+        for root, dirs, files in os.walk(Env.get('app_dir')):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -168,7 +189,7 @@ class BaseUpdater(Plugin):
 
             for excess_pyc_file in excess_pyc_files:
                 full_path = os.path.join(root, excess_pyc_file)
-                log.debug('Removing old PYC file: %s', full_path)
+                if show_logs: log.debug('Removing old PYC file: %s', full_path)
                 try:
                     os.remove(full_path)
                 except:
@@ -194,9 +215,6 @@ class GitUpdater(BaseUpdater):
             log.info('Updating to latest version')
             self.repo.pull()
 
-            # Delete leftover .pyc files
-            self.deletePyc()
-
             return True
         except:
             log.error('Failed updating via GIT: %s', traceback.format_exc())
@@ -212,10 +230,11 @@ class GitUpdater(BaseUpdater):
                 output = self.repo.getHead()  # Yes, please
                 log.debug('Git version output: %s', output.hash)
                 self.version = {
-                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
+                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.repo.getCurrentBranch().name or self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
                     'hash': output.hash[:8],
                     'date': output.getDate(),
                     'type': 'git',
+                    'branch': self.repo.getCurrentBranch().name
                 }
             except Exception as e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s', e)
@@ -302,8 +321,9 @@ class SourceUpdater(BaseUpdater):
         return False
 
     def replaceWith(self, path):
-        app_dir = ss(Env.get('app_dir'))
-        data_dir = ss(Env.get('data_dir'))
+        path = sp(path)
+        app_dir = Env.get('app_dir')
+        data_dir = Env.get('data_dir')
 
         # Get list of files we want to overwrite
         self.deletePyc()

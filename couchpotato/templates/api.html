@@ -10,7 +10,7 @@
 		<h1>CouchPotato API Documentation</h1>
 		<div class="api">
 			You can access the API via <pre>{{ Env.get('api_base') }}</pre>
-			To see it in action, have a look at the webinterface with Firebug (on firefox) or the development tools included in Chrome. 
+			To see it in action, have a look at the webinterface with Firebug (on firefox) or the development tools included in Chrome.
 			All the data that you see there are from the API.
 			<br />
 			<br />
@@ -26,7 +26,7 @@
 			Will return {"api_key": "XXXXXXXXXX", "success": true}. When username or password is empty you don't need to md5 it.
 			<br />
 		</div>
-		
+
 		{% for route in routes %}
 			{% if api_docs.get(route) %}
 			<div class="api">

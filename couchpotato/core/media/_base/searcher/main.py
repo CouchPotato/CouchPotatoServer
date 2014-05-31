@@ -1,20 +1,24 @@
+import datetime
+import re
+
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import splitString, removeEmpty, removeDuplicate
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
-import datetime
-import re
+
 
 log = CPLog(__name__)
 
 
 class Searcher(SearcherBase):
 
+    # noinspection PyMissingConstructor
     def __init__(self):
         addEvent('searcher.protocols', self.getSearchProtocols)
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
+        addEvent('searcher.correct_3d', self.correct3D)
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
@@ -48,7 +52,7 @@ class Searcher(SearcherBase):
         results = []
 
         for search_protocol in protocols:
-            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, media['type']), media, quality, merge = True)
+            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, media.get('type')), media, quality, merge = True)
             if protocol_results:
                 results += protocol_results
 
@@ -83,31 +87,23 @@ class Searcher(SearcherBase):
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
         if not preferred_quality: preferred_quality = {}
 
-        name = nzb['name']
-        size = nzb.get('size', 0)
-        nzb_words = re.split('\W+', simplifyString(name))
-
-        qualities = fireEvent('quality.all', single = True)
-
         found = {}
-        for quality in qualities:
-            # Main in words
-            if quality['identifier'] in nzb_words:
-                found[quality['identifier']] = True
-
-            # Alt in words
-            if list(set(nzb_words) & set(quality['alternative'])):
-                found[quality['identifier']] = True
 
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), single = True)
         if guess:
             found[guess['identifier']] = True
 
         # Hack for older movies that don't contain quality tag
+        name = nzb['name']
+        size = nzb.get('size', 0)
+
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
-            if size > 3000:  # Assume dvdr
+            if size > 20000:  # Assume bd50
+                log.info('Quality was missing in name, assuming it\'s a BR-Disk based on the size: %s', size)
+                found['bd50'] = True
+            elif size > 3000:  # Assume dvdr
                 log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', size)
                 found['dvdr'] = True
             else:  # Assume dvdrip
@@ -119,7 +115,21 @@ class Searcher(SearcherBase):
             if found.get(allowed):
                 del found[allowed]
 
-        return not (found.get(preferred_quality['identifier']) and len(found) == 1)
+        if found.get(preferred_quality['identifier']) and len(found) == 1:
+            return False
+
+        return found
+
+    def correct3D(self, nzb, preferred_quality = None):
+        if not preferred_quality: preferred_quality = {}
+        if not preferred_quality.get('custom'): return
+
+        threed = preferred_quality['custom'].get('3d')
+
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+
+        return threed == guess.get('is_3d')
 
     def correctYear(self, haystack, year, year_range):
 
@@ -181,7 +191,7 @@ class Searcher(SearcherBase):
             req = splitString(req_set, '&')
             req_match += len(list(set(rel_words) & set(req))) == len(req)
 
-        if len(required_words) > 0  and req_match == 0:
+        if len(required_words) > 0 and req_match == 0:
             log.info2('Wrong: Required word missing: %s', rel_name)
             return False
 
