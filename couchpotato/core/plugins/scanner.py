@@ -471,7 +471,7 @@ class Scanner(Plugin):
             data['size'] = data.get('size', 0) + self.getFileSize(cur_file)
 
         data['quality'] = None
-        quality = fireEvent('quality.guess', size = data['size'], files = files, extra = data, single = True)
+        quality = fireEvent('quality.guess', size = data.get('size'), files = files, extra = data, single = True)
 
         # Use the quality that we snatched but check if it matches our guess
         if release_download and release_download.get('quality'):
