@@ -229,7 +229,6 @@ class uTorrentAPI(object):
             password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
             password_manager.add_password(realm = None, uri = self.url, user = username, passwd = password)
             self.opener.add_handler(urllib2.HTTPBasicAuthHandler(password_manager))
-            self.opener.add_handler(urllib2.HTTPDigestAuthHandler(password_manager))
         elif username or password:
             log.debug('User or password missing, not using authentication.')
         self.token = self.get_token()

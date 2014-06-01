@@ -3,6 +3,7 @@ import re
 
 from bs4 import BeautifulSoup
 from couchpotato import fireEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
@@ -51,7 +52,7 @@ class IMDBBase(Automation, RSS):
             except:
                 log.error('Failed parsing IMDB page "%s": %s', (url, traceback.format_exc()))
 
-        html = str(html)
+        html = ss(html)
         imdbs = getImdb(html, multiple = True) if html else []
 
         return imdbs
@@ -104,13 +105,14 @@ class IMDBWatchlist(IMDBBase):
 
                     log.debug('Found %s movies on %s', (len(imdbs), w_url))
 
-                    if len(imdbs) < 250:
+                    if len(imdbs) < 225:
                         break
 
-                    start += 250
+                    start = len(movies)
 
                 except:
                     log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
+                    break
 
         return movies
 

@@ -252,7 +252,7 @@ MA.Release = new Class({
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
-						'text': 'This movie is snatched, if anything went wrong, download'
+						'text': 'If anything went wrong, download'
 					}),
 					lr ? new Element('a.button.orange', {
 						'text': 'the same release again',
