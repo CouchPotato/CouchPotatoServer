@@ -16,7 +16,6 @@ from couchpotato.environment import Env
 import requests
 from requests.packages.urllib3 import Timeout
 from requests.packages.urllib3.exceptions import MaxRetryError
-from scandir import scandir
 from tornado import template
 from tornado.web import StaticFileHandler
 
@@ -144,7 +143,7 @@ class Plugin(object):
     def deleteEmptyFolder(self, folder, show_error = True):
         folder = sp(folder)
 
-        for root, dirs, files in scandir.walk(folder):
+        for root, dirs, files in os.walk(folder):
 
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
@@ -162,7 +161,7 @@ class Plugin(object):
                 log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, verify_ssl = True):
         url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
@@ -201,11 +200,12 @@ class Plugin(object):
                 'data': data if len(data) > 0 else None,
                 'timeout': timeout,
                 'files': files,
+                'verify': verify_ssl,
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
-            response = r.request(method, url, verify = False, **kwargs)
+            response = r.request(method, url, **kwargs)
 
             if response.status_code == requests.codes.ok:
                 data = response.content

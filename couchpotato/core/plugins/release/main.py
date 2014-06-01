@@ -58,11 +58,12 @@ class Release(Plugin):
         addEvent('release.for_media', self.forMedia)
 
         # Clean releases that didn't have activity in the last week
-        addEvent('app.load', self.cleanDone)
+        addEvent('app.load', self.cleanDone, priority = 1000)
         fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 12)
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
+        time.sleep(3)
 
         now = time.time()
         week = 262080

@@ -194,7 +194,7 @@ class Sabnzbd(DownloaderBase):
             'output': 'json'
         }))
 
-        data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()}, **kwargs)
+        data = self.urlopen(url, timeout = 60, show_error = False, verify_ssl = False, headers = {'User-Agent': Env.getIdentifier()}, **kwargs)
         if use_json:
             d = json.loads(data)
             if d.get('error'):

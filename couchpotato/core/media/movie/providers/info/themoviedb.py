@@ -106,7 +106,7 @@ class TheMovieDb(MovieProvider):
         if not movie_data:
 
             # Images
-            poster = self.getImage(movie, type = 'poster', size = 'poster')
+            poster = self.getImage(movie, type = 'poster', size = 'w154')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
             extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original', n = self.MAX_EXTRATHUMBS, skipfirst = True)
@@ -183,12 +183,12 @@ class TheMovieDb(MovieProvider):
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_url
-    
+
     def getMultImages(self, movie, type = 'backdrops', size = 'original', n = -1, skipfirst = False):
         """
-        If n < 0, return all images.  Otherwise return n images.  
+        If n < 0, return all images.  Otherwise return n images.
         If n > len(getattr(movie, type)), then return all images.
-        If skipfirst is True, then it will skip getattr(movie, type)[0].  This 
+        If skipfirst is True, then it will skip getattr(movie, type)[0].  This
         is because backdrops[0] is typically backdrop.
         """
 
@@ -202,7 +202,7 @@ class TheMovieDb(MovieProvider):
 
             for i in range(int(skipfirst), num_images + int(skipfirst)):
                 image_urls.append(images[i].geturl(size = size))
-            
+
         except:
             log.debug('Failed getting %i %s.%s for "%s"', (n, type, size, ss(str(movie))))
 
