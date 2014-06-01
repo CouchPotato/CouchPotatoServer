@@ -130,7 +130,7 @@ class NZBVortex(DownloaderBase):
         url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api/' + call
 
         try:
-            data = self.urlopen('%s?%s' % (url, params), *args, **kwargs)
+            data = self.urlopen('%s?%s' % (url, params), *args, verify_ssl = False, **kwargs)
 
             if data:
                 return json.loads(data)
@@ -154,7 +154,7 @@ class NZBVortex(DownloaderBase):
             url = cleanHost(self.conf('host')) + 'api/app/apilevel'
 
             try:
-                data = self.urlopen(url, show_error = False)
+                data = self.urlopen(url, show_error = False, verify_ssl = False)
                 self.api_level = float(json.loads(data).get('apilevel'))
             except URLError as e:
                 if hasattr(e, 'code') and e.code == 403:

@@ -161,7 +161,7 @@ class Plugin(object):
                 log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, verify_ssl = True):
         url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
@@ -200,6 +200,7 @@ class Plugin(object):
                 'data': data if len(data) > 0 else None,
                 'timeout': timeout,
                 'files': files,
+                'verify': verify_ssl,
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
