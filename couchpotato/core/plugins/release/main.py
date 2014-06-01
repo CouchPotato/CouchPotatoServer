@@ -63,7 +63,6 @@ class Release(Plugin):
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
-        time.sleep(3)
 
         now = time.time()
         week = 262080
@@ -87,9 +86,6 @@ class Release(Plugin):
                 log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
 
         del media_exist
-
-        # Reindex statuses
-        db.reindex_index('media_status')
 
         # get movies last_edit more than a week ago
         medias = fireEvent('media.with_status', 'done', single = True)
