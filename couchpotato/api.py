@@ -112,8 +112,11 @@ class ApiHandler(RequestHandler):
 
         except:
             log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
-            self.write({'success': False, 'error': 'Failed returning results'})
-            self.finish()
+            try:
+                self.write({'success': False, 'error': 'Failed returning results'})
+                self.finish()
+            except:
+                log.error('Failed write error "%s": %s', (route, traceback.format_exc()))
 
             api_locks[route].release()
 
@@ -121,26 +124,24 @@ class ApiHandler(RequestHandler):
 
     def taskFinished(self, result, route):
 
-        if self.request.connection.stream.closed():
-            return
+        if not self.request.connection.stream.closed():
+            try:
+                # Check JSONP callback
+                jsonp_callback = self.get_argument('callback_func', default = None)
 
-        try:
-            # Check JSONP callback
-            jsonp_callback = self.get_argument('callback_func', default = None)
-
-            if jsonp_callback:
-                self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
-                self.set_header("Content-Type", "text/javascript")
-                self.finish()
-            elif isinstance(result, tuple) and result[0] == 'redirect':
-                self.redirect(result[1])
-            else:
-                self.write(result)
-                self.finish()
-        except:
-            log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
-            try: self.finish({'success': False, 'error': 'Failed returning results'})
-            except: pass
+                if jsonp_callback:
+                    self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
+                    self.set_header("Content-Type", "text/javascript")
+                    self.finish()
+                elif isinstance(result, tuple) and result[0] == 'redirect':
+                    self.redirect(result[1])
+                else:
+                    self.write(result)
+                    self.finish()
+            except:
+                log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
+                try: self.finish({'success': False, 'error': 'Failed returning results'})
+                except: pass
 
         api_locks[route].release()
 
