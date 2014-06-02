@@ -14,7 +14,7 @@ autoload = 'FanartTV'
 class FanartTV(MovieProvider):
 
     urls = {
-        'api': 'http://api.fanart.tv/webservice/movie/%s/%s/JSON/all/1/2'
+        'api': 'http://api.fanart.tv/webservice/movie/b28b14e9be662e027cfbc7c3dd600405/%s/JSON/all/1/2'
     }
 
     MAX_EXTRAFANART = 20
@@ -31,7 +31,7 @@ class FanartTV(MovieProvider):
         images = {}
 
         try:
-            url = self.urls['api'] % (self.conf('api_key'), identifier)
+            url = self.urls['api'] % identifier
             fanart_data = self.getJsonData(url)
 
             if fanart_data:
@@ -132,24 +132,3 @@ class FanartTV(MovieProvider):
             log.error('No API key provided.')
             return True
         return False
-
-
-config = [{
-    'name': 'fanarttv',
-    'groups': [
-        {
-            'tab': 'providers',
-            'name': 'fanarttv',
-            'label': 'fanart.tv',
-            'hidden': True,
-            'description': 'Used for all calls to fanart.tv.',
-            'options': [
-                {
-                    'name': 'api_key',
-                    'default': 'd788b4822b9e1f44068026e05557e5d9',
-                    'label': 'API Key',
-                },
-            ],
-        },
-    ],
-}]

@@ -16,7 +16,7 @@ class TheMovieDb(MovieProvider):
     MAX_EXTRATHUMBS = 4
 
     def __init__(self):
-        addEvent('movie.info', self.getInfo, priority = 2)
+        addEvent('movie.info', self.getInfo, priority = 3)
         addEvent('movie.info_by_tmdb', self.getInfo)
 
         # Configure TMDB settings
@@ -87,13 +87,6 @@ class TheMovieDb(MovieProvider):
                     result = {}
             except:
                 log.error('Failed getting info for %s: %s', (identifier, traceback.format_exc()))
-
-        # Get extra artwork via Fanart.TV and merge into images dict
-        try:
-            extra_art = fireEvent('movie.extra_art', identifier)[0]
-            result['images'] = dict(result['images'].items() + extra_art.items())
-        except IndexError:
-            pass
 
         return result
 
