@@ -99,7 +99,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
         for root, dirs, files in os.walk(backup_path):
-            for backup_file in files:
+            for backup_file in sorted(files):
                 ints = re.findall('\d+', backup_file)
 
                 # Delete non zip files

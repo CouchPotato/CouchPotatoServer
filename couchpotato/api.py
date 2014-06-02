@@ -1,5 +1,3 @@
-from functools import wraps
-from threading import Thread
 import json
 import threading
 import traceback
@@ -9,7 +7,6 @@ from couchpotato.core.helpers.request import getParams
 from couchpotato.core.logger import CPLog
 from tornado.gen import coroutine
 from tornado.web import RequestHandler, asynchronous
-import tornado
 
 
 log = CPLog(__name__)
@@ -21,16 +18,6 @@ api_nonblock = {}
 
 api_docs = {}
 api_docs_missing = []
-
-
-def run_async(func):
-    @wraps(func)
-    def async_func(*args, **kwargs):
-        func_hl = Thread(target = func, args = args, kwargs = kwargs)
-        func_hl.start()
-        return func_hl
-
-    return async_func
 
 
 # NonBlock API handler
@@ -101,17 +88,12 @@ class ApiHandler(RequestHandler):
             try: del kwargs['t']
             except: pass
 
-            # Add async callback handler
-            @run_async
-            def run_handler(callback):
-                try:
-                    res = api[route](**kwargs)
-                    callback(res)
-                except:
-                    log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
-                    callback({'success': False, 'error': 'Failed returning results'})
-
-            result = yield tornado.gen.Task(run_handler)
+            # Fire api handler(s)
+            try:
+                result = api[route](**kwargs)
+            except:
+                log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
+                result = {'success': False, 'error': 'Failed returning results'}
 
             # Check JSONP callback
             jsonp_callback = self.get_argument('callback_func', default = None)
