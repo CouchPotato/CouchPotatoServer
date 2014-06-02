@@ -102,7 +102,7 @@ class Release(Plugin):
 
                 # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
                 elif rel['status'] in ['snatched', 'downloaded']:
-                    self.updateStatus(rel['_id'], status = 'ignore')
+                    self.updateStatus(rel['_id'], status = 'ignored')
 
             fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
