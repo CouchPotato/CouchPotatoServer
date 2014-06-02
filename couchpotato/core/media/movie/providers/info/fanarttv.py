@@ -1,12 +1,9 @@
-import os
 import traceback
 
+from couchpotato import tryInt
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
-from couchpotato.core.plugins.quality import QualityPlugin
-import libs.fanarttv.errors as fanarttv_errors
-from libs.fanarttv.movie import Movie
 
 
 log = CPLog(__name__)
@@ -16,16 +13,17 @@ autoload = 'FanartTV'
 
 class FanartTV(MovieProvider):
 
+    urls = {
+        'api': 'http://api.fanart.tv/webservice/movie/%s/%s/JSON/all/1/2'
+    }
+
     MAX_EXTRAFANART = 20
 
     def __init__(self):
-        addEvent('movie.extra_art', self.getArt, priority=2)
+        addEvent('movie.info', self.getArt, priority = 1)
 
-        # Configure fanarttv API settings
-        os.environ.setdefault('FANART_APIKEY', self.conf('api_key'))
+    def getArt(self, identifier = None, **kwargs):
 
-    def getArt(self, identifier):
-        # FIXME: I believe I should be registering a cache here... I need to look into that.
         log.debug("Getting Extra Artwork from Fanart.tv...")
         if not identifier:
             return {}
@@ -33,23 +31,24 @@ class FanartTV(MovieProvider):
         images = {}
 
         try:
-            try:
-                exists = True
-                movie = Movie.get(id = identifier)
-            except (fanarttv_errors.FanartError, IOError):
-                exists = False
+            url = self.urls['api'] % (self.conf('api_key'), identifier)
+            fanart_data = self.getJsonData(url)
 
-            if exists:
-                images = self._parseMovie(movie, True)
+            if fanart_data:
+                name, resource = fanart_data.items()[0]
+                log.debug('Found images for %s', name)
+                images = self._parseMovie(resource)
 
         except:
             log.error('Failed getting extra art for %s: %s',
                       (identifier, traceback.format_exc()))
             return {}
 
-        return images
+        return {
+            'images': images
+        }
 
-    def _parseMovie(self, movie, is_hd):
+    def _parseMovie(self, movie):
         images = {
             'landscape': [],
             'logo': [],
@@ -59,56 +58,48 @@ class FanartTV(MovieProvider):
             'extra_fanart': [],
         }
 
-        images['landscape'] = self._getMultImages(movie.thumbs, 1)
-        images['banner'] = self._getMultImages(movie.banners, 1)
-        images['disc_art'] = self._getMultImages(self._trimDiscs(movie.discs, is_hd), 1)
+        images['landscape'] = self._getMultImages(movie.get('moviethumb', []), 1)
+        images['banner'] = self._getMultImages(movie.get('moviebanner', []), 1)
+        images['disc_art'] = self._getMultImages(self._trimDiscs(movie.get('moviedisc', [])), 1)
 
-        images['clear_art'] = self._getMultImages(movie.hdarts, 1)
-        if len(images['clear_art']) is 0:
-            images['clear_art'] = self._getMultImages(movie.arts, 1)
+        images['clear_art'] = self._getMultImages(movie.get('hdmovieart', []), 1)
+        if len(images['clear_art']) == 0:
+            images['clear_art'] = self._getMultImages(movie.get('movieart', []), 1)
 
-        images['logo'] = self._getMultImages(movie.hdlogos, 1)
-        if len(images['logo']) is 0:
-            images['logo'] = self._getMultImages(movie.logos, 1)
+        images['logo'] = self._getMultImages(movie.get('hdmovielogo', []), 1)
+        if len(images['logo']) == 0:
+            images['logo'] = self._getMultImages(movie.get('movielogo', []), 1)
 
-        fanarts = self._getMultImages(movie.backgrounds, self.MAX_EXTRAFANART + 1)
+        fanarts = self._getMultImages(movie.get('moviebackground', []), self.MAX_EXTRAFANART + 1)
 
         if fanarts:
             images['backdrop_original'] = fanarts[0]
             images['extra_fanart'] = fanarts[1:]
 
-        # TODO: Add support for extra backgrounds
-        #extra_fanart = self._getMultImages(movie.backgrounds, -1)
-
         return images
 
-    def _trimDiscs(self, disc_images, is_hd):
+    def _trimDiscs(self, disc_images):
         """
-        Return a subset of discImages based on isHD.  If isHD is true, only 
-        bluray disc images will be returned.  If isHD is false, only dvd disc 
-        images will be returned.  If the resulting list would be an empty list,
-        then the original list is returned instead.
+        Return a subset of discImages. Only bluray disc images will be returned.
         """
 
         trimmed = []
         for disc in disc_images:
-            if is_hd and disc.disc_type == u'bluray':
-                trimmed.append(disc)
-            elif not is_hd and disc.disc_type == u'dvd':
+            if disc.get('disc_type') == 'bluray':
                 trimmed.append(disc)
 
-        if len(trimmed) is 0:
+        if len(trimmed) == 0:
             return disc_images
-        else:
-            return trimmed
+
+        return trimmed
 
     def _getImage(self, images):
         image_url = None
         highscore = -1
         for image in images:
-            if image.likes > highscore:
-                highscore = image.likes
-                image_url = image.url
+            if tryInt(image.get('likes')) > highscore:
+                highscore = tryInt(image.get('likes'))
+                image_url = image.get('url')
 
         return image_url
 
@@ -120,7 +111,7 @@ class FanartTV(MovieProvider):
         image_urls = []
         pool = []
         for image in images:
-            if image.lang == u'en':
+            if image.get('lang') == 'en':
                 pool.append(image)
         orig_pool_size = len(pool)
 
@@ -128,10 +119,10 @@ class FanartTV(MovieProvider):
             best = None
             highscore = -1
             for image in pool:
-                if image.likes > highscore:
-                    highscore = image.likes
+                if tryInt(image.get('likes')) > highscore:
+                    highscore = tryInt(image.get('likes'))
                     best = image
-            image_urls.append(best.url)
+            image_urls.append(best.get('url'))
             pool.remove(best)
 
         return image_urls
@@ -140,12 +131,6 @@ class FanartTV(MovieProvider):
         if self.conf('api_key') == '':
             log.error('No API key provided.')
             return True
-        return False
-
-    def _determineHD(self, quality):
-        for qualityDef in QualityPlugin.qualities:
-            if quality == qualityDef.get('identifier'):
-                return bool(qualityDef.get('hd'))
         return False
 
 
