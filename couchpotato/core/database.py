@@ -372,10 +372,10 @@ class Database(object):
                 m = medias[x]
 
                 status = statuses.get(m['status_id']).get('identifier')
-                l = libraries[m['library_id']]
+                l = libraries.get(m['library_id'])
 
                 # Only migrate wanted movies, Skip if no identifier present
-                if not getImdb(l.get('identifier')): continue
+                if not l or not getImdb(l.get('identifier')): continue
 
                 profile_id = profile_link.get(m['profile_id'])
                 category_id = category_link.get(m['category_id'])

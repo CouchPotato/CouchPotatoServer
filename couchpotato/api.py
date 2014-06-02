@@ -1,3 +1,5 @@
+from functools import wraps
+from threading import Thread
 import json
 import threading
 import traceback
@@ -5,7 +7,6 @@ import urllib
 
 from couchpotato.core.helpers.request import getParams
 from couchpotato.core.logger import CPLog
-from tornado.gen import coroutine
 from tornado.web import RequestHandler, asynchronous
 
 
@@ -18,6 +19,24 @@ api_nonblock = {}
 
 api_docs = {}
 api_docs_missing = []
+
+
+def run_async(func):
+    @wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = Thread(target = func, args = args, kwargs = kwargs)
+        func_hl.start()
+
+    return async_func
+
+@run_async
+def run_handler(route, kwargs, callback = None):
+    try:
+        res = api[route](**kwargs)
+        callback(res, route)
+    except:
+        log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
+        callback({'success': False, 'error': 'Failed returning results'}, route)
 
 
 # NonBlock API handler
@@ -65,7 +84,7 @@ def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
 # Blocking API handler
 class ApiHandler(RequestHandler):
 
-    @coroutine
+    @asynchronous
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
         if not api.get(route):
@@ -88,31 +107,42 @@ class ApiHandler(RequestHandler):
             try: del kwargs['t']
             except: pass
 
-            # Fire api handler(s)
-            try:
-                result = api[route](**kwargs)
-            except:
-                log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
-                result = {'success': False, 'error': 'Failed returning results'}
+            # Add async callback handler
+            run_handler(route, kwargs, callback = self.taskFinished)
 
+        except:
+            log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
+            self.write({'success': False, 'error': 'Failed returning results'})
+            self.finish()
+
+            api_locks[route].release()
+
+    post = get
+
+    def taskFinished(self, result, route):
+
+        if self.request.connection.stream.closed():
+            return
+
+        try:
             # Check JSONP callback
             jsonp_callback = self.get_argument('callback_func', default = None)
 
             if jsonp_callback:
                 self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
                 self.set_header("Content-Type", "text/javascript")
+                self.finish()
             elif isinstance(result, tuple) and result[0] == 'redirect':
                 self.redirect(result[1])
             else:
                 self.write(result)
-
+                self.finish()
         except:
-            log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
-            self.write({'success': False, 'error': 'Failed returning results'})
+            log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
+            try: self.finish({'success': False, 'error': 'Failed returning results'})
+            except: pass
 
         api_locks[route].release()
-
-    post = get
 
 
 def addApiView(route, func, static = False, docs = None, **kwargs):
