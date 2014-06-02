@@ -18,6 +18,7 @@ class FanartTV(MovieProvider):
     }
 
     MAX_EXTRAFANART = 20
+    http_time_between_calls = 0
 
     def __init__(self):
         addEvent('movie.info', self.getArt, priority = 1)
