@@ -39,6 +39,11 @@ class IMDBBase(Automation, RSS):
         except:
             try:
                 split = splitString(html, split_on = "<div id=\"main\">")
+
+                if len(split) < 2:
+                    log.error('Failed parsing IMDB page "%s", unexpected html.', url)
+                    return []
+
                 html = BeautifulSoup(split[1])
                 for x in ['list compact', 'lister', 'list detail sub-list']:
                     html2 = html.find('div', attrs = {
