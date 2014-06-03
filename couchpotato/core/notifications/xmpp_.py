@@ -5,6 +5,8 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import xmpp
 
+print xmpp
+
 
 log = CPLog(__name__)
 
