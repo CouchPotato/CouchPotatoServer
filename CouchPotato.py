@@ -50,7 +50,7 @@ class Loader(object):
         # Create logging dir
         self.log_dir = os.path.join(self.data_dir, 'logs');
         if not os.path.isdir(self.log_dir):
-            os.mkdir(self.log_dir)
+            os.makedirs(self.log_dir)
 
         # Logging
         from couchpotato.core.logger import CPLog
