@@ -351,7 +351,8 @@ class QualityPlugin(Plugin):
 
             # Give panelty for all lower qualities
             for q in self.qualities[self.order.index(quality.get('identifier'))+1:]:
-                score[q.get('identifier')]['score'] -= 1
+                if score.get(q.get('identifier')):
+                    score[q.get('identifier')]['score'] -= 1
 
     def isFinish(self, quality, profile):
         if not isinstance(profile, dict) or not profile.get('qualities'):
