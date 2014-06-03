@@ -77,7 +77,8 @@ class Core(Plugin):
         return True
 
     def cleanUpFolders(self):
-        self.deleteEmptyFolder(Env.get('app_dir'), show_error = False)
+        only_clean = ['couchpotato', 'libs', 'init']
+        self.deleteEmptyFolder(Env.get('app_dir'), show_error = False, only_clean = only_clean)
 
     def available(self, **kwargs):
         return {

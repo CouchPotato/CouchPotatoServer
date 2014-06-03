@@ -140,13 +140,31 @@ class Plugin(object):
 
         return False
 
-    def deleteEmptyFolder(self, folder, show_error = True):
+    def deleteEmptyFolder(self, folder, show_error = True, only_clean = None):
         folder = sp(folder)
+
+        allowed_dirs = []
+        if only_clean:
+            for item in os.listdir(folder):
+                full_path = os.path.join(folder, item)
+                if item in only_clean and os.path.isdir(full_path):
+                    allowed_dirs.append(full_path)
 
         for root, dirs, files in os.walk(folder):
 
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
+
+                if only_clean:
+                    allow = False
+                    for allowed_dir in allowed_dirs:
+                        if allowed_dir in full_path:
+                            allow = True
+                            break
+
+                    if not allow:
+                        continue
+
                 if len(os.listdir(full_path)) == 0:
                     try:
                         os.rmdir(full_path)
