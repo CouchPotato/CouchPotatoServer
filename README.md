@@ -36,7 +36,8 @@ Linux (Ubuntu / Debian):
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
 * To run on boot copy the init script `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
-* Change the paths inside the init script `sudo nano /etc/init.d/couchpotato`
+* Copy the default paths file `sudo cp CouchPotatoServer/init/ubuntu.default /etc/default/couchpotato`
+* Change the paths inside the default file `sudo nano /etc/default/couchpotato`
 * Make it executable `sudo chmod +x /etc/init.d/couchpotato`
 * Add it to defaults `sudo update-rc.d couchpotato defaults`
 * Open your browser and go to `http://localhost:5050/`
