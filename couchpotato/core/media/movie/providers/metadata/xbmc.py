@@ -303,7 +303,7 @@ config = [{
                     'advanced': True,
                 },
                 {
-                    'name': 'meta_disc',
+                    'name': 'meta_disc_art',
                     'label': 'DiscArt',
                     'default': False,
                     'type': 'bool'
