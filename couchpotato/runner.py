@@ -18,6 +18,7 @@ from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt
+import requests
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
@@ -141,6 +142,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
+    Env.set('http_opener', requests.Session())
     Env.set('cache_dir', cache_dir)
     Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)
