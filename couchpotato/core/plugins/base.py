@@ -205,7 +205,7 @@ class Plugin(object):
                 'data': data if len(data) > 0 else None,
                 'timeout': timeout,
                 'files': files,
-                'verify': verify_ssl,
+                'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
