@@ -1,9 +1,7 @@
-from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
 import re
-import urllib2
 
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
@@ -13,6 +11,7 @@ from couchpotato.core.media._base.providers.base import ResultList
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
+from requests import HTTPError
 
 
 log = CPLog(__name__)
