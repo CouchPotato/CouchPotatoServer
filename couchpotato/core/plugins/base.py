@@ -40,7 +40,6 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
-    http_opener = requests.Session()
 
     def __new__(cls, *args, **kwargs):
         new_plugin = super(Plugin, cls).__new__(cls)
@@ -184,7 +183,7 @@ class Plugin(object):
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
-        r = self.http_opener
+        r = Env.get('http_opener')
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
