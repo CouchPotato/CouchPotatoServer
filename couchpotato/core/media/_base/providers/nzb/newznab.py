@@ -184,16 +184,7 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            # Get final redirected url
-            log.debug('Checking %s for redirects.', url)
-            req = urllib2.Request(url)
-            req.add_header('User-Agent', self.user_agent)
-            res = urllib2.urlopen(req)
-            finalurl = res.geturl()
-            if finalurl != url:
-                log.debug('Redirect url used: %s', finalurl)
-
-            data = self.urlopen(finalurl, show_error = False)
+            data = self.urlopen(url, show_error = False)
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
