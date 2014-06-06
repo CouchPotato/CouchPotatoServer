@@ -135,20 +135,28 @@ var QualityBase = new Class({
 		});
 
 		// Sortable
+		var sorted_changed = false;
 		self.profile_sortable = new Sortables(profile_list, {
 			'revert': true,
-			'handle': '',
+			'handle': '.handle',
 			'opacity': 0.5,
-			'onComplete': self.saveProfileOrdering.bind(self)
+			'onSort': function(){
+				sorted_changed = true;
+			},
+			'onComplete': function(){
+				if(sorted_changed){
+					self.saveProfileOrdering();
+					sorted_changed = false;
+				}
+			}
 		});
 
 	},
 
 	saveProfileOrdering: function(){
-		var self = this;
-
-		var ids = [];
-		var hidden = [];
+		var self = this,
+			ids = [],
+			hidden = [];
 
 		self.profile_sortable.list.getElements('li').each(function(el, nr){
 			ids.include(el.get('data-id'));
