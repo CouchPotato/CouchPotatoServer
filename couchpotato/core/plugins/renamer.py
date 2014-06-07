@@ -449,7 +449,10 @@ class Renamer(Plugin):
                 # Get media quality profile
                 profile = None
                 if media.get('profile_id'):
-                    profile = db.get('id', media['profile_id'])
+                    try:
+                        profile = db.get('id', media['profile_id'])
+                    except:
+                        log.error('Error getting quality profile for %s: %s', (media_title, traceback.format_exc()))
                 else:
                     log.debug('Media has no quality profile: %s', media_title)
 
