@@ -37,7 +37,7 @@ class QualityPlugin(Plugin):
     threed_tags = {
         'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
         'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
-        '3d': ['2d3d', '3d2d'],
+        '3d': ['2d3d', '3d2d', '3d'],
     }
 
     cached_qualities = None
@@ -290,13 +290,13 @@ class QualityPlugin(Plugin):
             tags = self.threed_tags.get(key, [])
 
             for tag in tags:
-                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                if isinstance(tag, tuple):
+                    if len(set(words) & set(tag)) == len(tag):
+                        log.debug('Found %s in %s', (tag, cur_file))
+                        return 1, key
+                elif tag in words:
                     log.debug('Found %s in %s', (tag, cur_file))
                     return 1, key
-
-            if list(set([key]) & set(words)):
-                log.debug('Found %s in %s', (key, cur_file))
-                return 1, key
 
         return 0, None
 
@@ -423,6 +423,8 @@ class QualityPlugin(Plugin):
             'Movie Monuments 2013 BrRip 1080p': {'size': 1800, 'quality': 'brrip'},
             'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
             'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True}
         }
 
         correct = 0

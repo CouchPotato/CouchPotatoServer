@@ -74,7 +74,7 @@ class FanartTV(MovieProvider):
         fanarts = self._getMultImages(movie.get('moviebackground', []), self.MAX_EXTRAFANART + 1)
 
         if fanarts:
-            images['backdrop_original'] = fanarts[0]
+            images['backdrop_original'] = [fanarts[0]]
             images['extra_fanart'] = fanarts[1:]
 
         return images

@@ -167,6 +167,9 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             db.delete(rel)
             return True
+        except RecordDeleted:
+            log.error('Already deleted: %s', release_id)
+            return True
         except:
             log.error('Failed: %s', traceback.format_exc())
 

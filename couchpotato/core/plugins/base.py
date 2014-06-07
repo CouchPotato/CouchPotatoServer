@@ -1,3 +1,4 @@
+from urllib import quote
 from urlparse import urlparse
 import glob
 import inspect
@@ -5,7 +6,6 @@ import os.path
 import re
 import time
 import traceback
-import urllib2
 
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
@@ -167,7 +167,7 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, verify_ssl = True):
-        url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
