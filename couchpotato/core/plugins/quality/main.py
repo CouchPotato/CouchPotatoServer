@@ -381,7 +381,7 @@ class QualityPlugin(Plugin):
 
     def isFinish(self, quality, profile, release_age = 0):
         if not isinstance(profile, dict) or not profile.get('qualities'):
-            return False
+            profile = fireEvent('profile.default', single = True)
 
         try:
             index = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else False) == bool(quality.get('is_3d', False))][0]
@@ -395,14 +395,14 @@ class QualityPlugin(Plugin):
 
     def isHigher(self, quality, compare_with, profile = None):
         if not isinstance(profile, dict) or not profile.get('qualities'):
-            profile = {'qualities': self.order}
+            profile = fireEvent('profile.default', single = True)
 
         # Try to find quality in profile, if not found: a quality we do not want is lower than anything else
         try:
             quality_order = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else 0) == bool(quality.get('is_3d', 0))][0]
         except:
             log.debug('Quality %s not found in profile identifiers %s', (quality['identifier'] + (' 3D' if quality.get('is_3d', 0) else ''), \
-                [identifier + ('3D' if (profile['3d'][i] if profile.get('3d') else 0) else '') for i, identifier in enumerate(profile['qualities'])]))
+                [identifier + (' 3D' if (profile['3d'][i] if profile.get('3d') else 0) else '') for i, identifier in enumerate(profile['qualities'])]))
             return 'lower'
 
         # Try to find compare quality in profile, if not found: anything is higher than a not wanted quality
