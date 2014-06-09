@@ -13,7 +13,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
-from scandir import scandir
 from subliminal.videos import Video
 import enzyme
 from six.moves import filter, map, zip
@@ -150,7 +149,7 @@ class Scanner(Plugin):
             check_file_date = True
             try:
                 files = []
-                for root, dirs, walk_files in scandir.walk(folder, followlinks=True):
+                for root, dirs, walk_files in os.walk(folder, followlinks=True):
                     files.extend([sp(os.path.join(sp(root), ss(filename))) for filename in walk_files])
 
                     # Break if CP wants to shut down
@@ -472,7 +471,7 @@ class Scanner(Plugin):
             data['size'] = data.get('size', 0) + self.getFileSize(cur_file)
 
         data['quality'] = None
-        quality = fireEvent('quality.guess', size = data['size'], files = files, extra = data, single = True)
+        quality = fireEvent('quality.guess', size = data.get('size'), files = files, extra = data, single = True)
 
         # Use the quality that we snatched but check if it matches our guess
         if release_download and release_download.get('quality'):

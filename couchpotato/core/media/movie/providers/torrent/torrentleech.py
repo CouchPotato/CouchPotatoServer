@@ -1,4 +1,3 @@
-from couchpotato import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.torrentleech import Base
@@ -21,8 +20,8 @@ class TorrentLeech(MovieProvider, Base):
         ([12], ['dvdr']),
     ]
 
-    def buildUrl(self, media, quality):
+    def buildUrl(self, title, media, quality):
         return (
-            tryUrlencode(fireEvent('library.query', media, single = True)),
+            tryUrlencode(title.replace(':', '')),
             self.getCatId(quality)[0]
         )

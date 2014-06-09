@@ -58,7 +58,7 @@ class Release(Plugin):
         addEvent('release.for_media', self.forMedia)
 
         # Clean releases that didn't have activity in the last week
-        addEvent('app.load', self.cleanDone)
+        addEvent('app.load', self.cleanDone, priority = 1000)
         fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 12)
 
     def cleanDone(self):
@@ -86,9 +86,6 @@ class Release(Plugin):
                 log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
 
         del media_exist
-
-        # Reindex statuses
-        db.reindex_index('media_status')
 
         # get movies last_edit more than a week ago
         medias = fireEvent('media.with_status', 'done', single = True)
@@ -169,6 +166,9 @@ class Release(Plugin):
             db = get_db()
             rel = db.get('id', release_id)
             db.delete(rel)
+            return True
+        except RecordDeleted:
+            log.error('Already deleted: %s', release_id)
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())

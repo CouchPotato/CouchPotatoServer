@@ -307,3 +307,9 @@ def scanForPassword(name):
 
     if m:
         return m.group(1).strip('. '), m.group(2).strip()
+
+
+under_pat = re.compile(r'_([a-z])')
+
+def underscoreToCamel(name):
+    return under_pat.sub(lambda x: x.group(1).upper(), name)

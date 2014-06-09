@@ -8,7 +8,7 @@ autoload = 'WindowsMediaCenter'
 
 class WindowsMediaCenter(MovieMetaData):
 
-    def getThumbnailName(self, name, root):
+    def getThumbnailName(self, name, root, i):
         return os.path.join(root, 'folder.jpg')
 
 

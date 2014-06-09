@@ -9,7 +9,6 @@ from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from scandir import scandir
 from tornado.web import StaticFileHandler
 
 
@@ -49,7 +48,7 @@ class FileManager(Plugin):
                 for x in file_dict.keys():
                     files.extend(file_dict[x])
 
-            for f in scandir.scandir(cache_dir):
+            for f in os.listdir(cache_dir):
                 if os.path.splitext(f.name)[1] in ['.png', '.jpg', '.jpeg']:
                     file_path = os.path.join(cache_dir, f.name)
                     if toUnicode(file_path) not in files:

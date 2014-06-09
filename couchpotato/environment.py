@@ -24,8 +24,7 @@ class Env(object):
     _quiet = False
     _daemonized = False
     _desktop = None
-    _engine = None
-    _session = None
+    _http_opener = None
 
     ''' Data paths and directories '''
     _app_dir = ""

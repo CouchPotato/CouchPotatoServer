@@ -1,6 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.variable import mergeDicts
+from couchpotato.core.helpers.variable import mergeDicts, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 
@@ -35,12 +35,21 @@ class Search(Plugin):
         elif isinstance(types, (list, tuple, set)):
             types = list(types)
 
+        imdb_identifier = getImdb(q)
+
         if not types:
-            result = fireEvent('info.search', q = q, merge = True)
+            if imdb_identifier:
+                result = fireEvent('movie.info', identifier = imdb_identifier, merge = True)
+                result = {result['type']: [result]}
+            else:
+                result = fireEvent('info.search', q = q, merge = True)
         else:
             result = {}
             for media_type in types:
-                result[media_type] = fireEvent('%s.search' % media_type)
+                if imdb_identifier:
+                    result[media_type] = fireEvent('%s.info' % media_type, identifier = imdb_identifier)
+                else:
+                    result[media_type] = fireEvent('%s.search' % media_type, q = q)
 
         return mergeDicts({
             'success': True,

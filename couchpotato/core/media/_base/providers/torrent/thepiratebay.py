@@ -24,15 +24,18 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://tpb.ipredator.se',
+        'https://nobay.net',
+        'https://thebay.al',
         'https://thepiratebay.se',
-        'http://pirateproxy.ca',
-        'http://tpb.al',
+        'http://thepiratebay.cd',
+        'http://thebootlegbay.com',
         'http://www.tpb.gr',
-        'http://bayproxy.me',
-        'http://proxybay.eu',
+        'http://tpbproxy.co.uk',
+        'http://pirateproxy.in',
         'http://www.getpirate.com',
         'http://piratebay.io',
+        'http://bayproxy.li',
+        'http://proxybay.pw',
     ]
 
     def _search(self, media, quality, results):
@@ -110,7 +113,7 @@ class Base(TorrentMagnetProvider):
         html = BeautifulSoup(full_description)
         nfo_pre = html.find('div', attrs = {'class': 'nfo'})
         description = ''
-        try: 
+        try:
             description = toUnicode(nfo_pre.text)
         except:
             pass

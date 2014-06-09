@@ -25,6 +25,12 @@ class CPLog(object):
             self.Env = Env
             self.is_develop = Env.get('dev')
 
+            from couchpotato.core.event import addEvent
+            addEvent('app.after_shutdown', self.close)
+
+    def close(self, *args, **kwargs):
+        logging.shutdown()
+
     def info(self, msg, replace_tuple = ()):
         self.logger.info(self.addContext(msg, replace_tuple))
 

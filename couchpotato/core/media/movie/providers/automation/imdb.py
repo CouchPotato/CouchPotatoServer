@@ -3,6 +3,7 @@ import re
 
 from bs4 import BeautifulSoup
 from couchpotato import fireEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
@@ -27,6 +28,39 @@ class IMDBBase(Automation, RSS):
 
     def getInfo(self, imdb_id):
         return fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
+
+    def getFromURL(self, url):
+        log.debug('Getting IMDBs from: %s', url)
+        html = self.getHTMLData(url)
+
+        try:
+            split = splitString(html, split_on = "<div class=\"list compact\">")[1]
+            html = splitString(split, split_on = "<div class=\"pages\">")[0]
+        except:
+            try:
+                split = splitString(html, split_on = "<div id=\"main\">")
+
+                if len(split) < 2:
+                    log.error('Failed parsing IMDB page "%s", unexpected html.', url)
+                    return []
+
+                html = BeautifulSoup(split[1])
+                for x in ['list compact', 'lister', 'list detail sub-list']:
+                    html2 = html.find('div', attrs = {
+                        'class': x
+                    })
+
+                    if html2:
+                        html = html2.contents
+                        html = ''.join([str(x) for x in html])
+                        break
+            except:
+                log.error('Failed parsing IMDB page "%s": %s', (url, traceback.format_exc()))
+
+        html = ss(html)
+        imdbs = getImdb(html, multiple = True) if html else []
+
+        return imdbs
 
 
 class IMDBWatchlist(IMDBBase):
@@ -65,16 +99,7 @@ class IMDBWatchlist(IMDBBase):
                 try:
 
                     w_url = '%s&start=%s' % (watchlist_url, start)
-                    log.debug('Started IMDB watchlists: %s', w_url)
-                    html = self.getHTMLData(w_url)
-
-                    try:
-                        split = splitString(html, split_on="<div class=\"list compact\">")[1]
-                        html = splitString(split, split_on="<div class=\"pages\">")[0]
-                    except:
-                        pass
-
-                    imdbs = getImdb(html, multiple = True) if html else []
+                    imdbs = self.getFromURL(w_url)
 
                     for imdb in imdbs:
                         if imdb not in movies:
@@ -85,13 +110,14 @@ class IMDBWatchlist(IMDBBase):
 
                     log.debug('Found %s movies on %s', (len(imdbs), w_url))
 
-                    if len(imdbs) < 250:
+                    if len(imdbs) < 225:
                         break
 
-                    start += 250
+                    start = len(movies)
 
                 except:
                     log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
+                    break
 
         return movies
 
@@ -109,12 +135,12 @@ class IMDBAutomation(IMDBBase):
         'boxoffice': {
             'order': 2,
             'name': 'IMDB - Box Office',
-            'url': 'http://www.imdb.com/chart/',
+            'url': 'http://www.imdb.com/boxoffice/',
         },
         'rentals': {
             'order': 3,
             'name': 'IMDB - Top DVD rentals',
-            'url': 'http://m.imdb.com/boxoffice_json',
+            'url': 'http://www.imdb.com/boxoffice/rentals',
             'type': 'json',
         },
         'top250': {
@@ -123,8 +149,6 @@ class IMDBAutomation(IMDBBase):
             'url': 'http://www.imdb.com/chart/top',
         },
     }
-
-    first_table = ['boxoffice']
 
     def getIMDBids(self):
 
@@ -135,36 +159,19 @@ class IMDBAutomation(IMDBBase):
             url = chart.get('url')
 
             if self.conf('automation_charts_%s' % name):
-                data = self.getHTMLData(url)
+                imdb_ids = self.getFromURL(url)
 
-                if data:
-                    try:
-                        html = BeautifulSoup(data)
+                try:
+                    for imdb_id in imdb_ids:
+                        info = self.getInfo(imdb_id)
+                        if info and self.isMinimalMovie(info):
+                            movies.append(imdb_id)
 
-                        if chart.get('type', 'html') == 'html':
-                            result_div = html.find('div', attrs = {'id': 'main'})
+                        if self.shuttingDown():
+                            break
 
-                            try:
-                                if url in self.first_table:
-                                    table = result_div.find('table')
-                                    result_div = table if table else result_div
-                            except:
-                                pass
-
-                            imdb_ids = getImdb(str(result_div), multiple = True)
-                        else:
-                            imdb_ids = getImdb(str(data), multiple = True)
-
-                        for imdb_id in imdb_ids:
-                            info = self.getInfo(imdb_id)
-                            if info and self.isMinimalMovie(info):
-                                movies.append(imdb_id)
-
-                            if self.shuttingDown():
-                                break
-
-                    except:
-                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+                except:
+                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
         return movies
 
@@ -182,42 +189,25 @@ class IMDBAutomation(IMDBBase):
 
                 chart['list'] = []
 
-                data = self.getHTMLData(url)
-                if data:
-                    html = BeautifulSoup(data)
+                imdb_ids = self.getFromURL(url)
 
-                    try:
+                try:
+                    for imdb_id in imdb_ids[0:max_items]:
 
-                        if chart.get('type', 'html') == 'html':
-                            result_div = html.find('div', attrs = {'id': 'main'})
+                        is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
+                        if not is_movie:
+                            continue
 
-                            try:
-                                if url in self.first_table:
-                                    table = result_div.find('table')
-                                    result_div = table if table else result_div
-                            except:
-                                pass
+                        info = self.getInfo(imdb_id)
+                        chart['list'].append(info)
 
-                            imdb_ids = getImdb(str(result_div), multiple = True)
-                        else:
-                            imdb_ids = getImdb(str(data), multiple = True)
+                        if self.shuttingDown():
+                            break
+                except:
+                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
-                        for imdb_id in imdb_ids[0:max_items]:
-
-                            is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
-                            if not is_movie:
-                                continue
-
-                            info = self.getInfo(imdb_id)
-                            chart['list'].append(info)
-
-                            if self.shuttingDown():
-                                break
-                    except:
-                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
-
-                    if chart['list']:
-                        movie_lists.append(chart)
+                if chart['list']:
+                    movie_lists.append(chart)
 
 
         return movie_lists

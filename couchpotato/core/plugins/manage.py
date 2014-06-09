@@ -4,7 +4,6 @@ import sys
 import time
 import traceback
 
-from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
@@ -71,7 +70,8 @@ class Manage(Plugin):
         return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
-        last_update = float(Env.prop('manage.last_update', default = 0))
+        last_update_key = 'manage.last_update%s' % ('_full' if full else '')
+        last_update = float(Env.prop(last_update_key, default = 0))
 
         if self.in_progress:
             log.info('Already updating library: %s', self.in_progress)
@@ -162,7 +162,7 @@ class Manage(Plugin):
                                             used_files[release_file] = release
                             del used_files
 
-            Env.prop('manage.last_update', time.time())
+            Env.prop(last_update_key, time.time())
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
 

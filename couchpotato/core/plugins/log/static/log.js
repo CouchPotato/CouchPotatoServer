@@ -17,7 +17,7 @@ Page.Log = new Class({
 Movie(s) I have this with: ...\n\
 Quality of the movie being searched: ...\n\
 Providers I use: ...\n\
-Version of CouchPotato: ...\n\
+Version of CouchPotato: {version}\n\
 Running on: ...\n\
 \n\
 ### Logs:\n\
@@ -207,7 +207,11 @@ Running on: ...\n\
 
 	showReport: function(text){
 		var self = this,
-			body = self.report_text.replace('{issue}', text);
+			version = Updater.getInfo(),
+			body = self.report_text
+				.replace('{issue}', text)
+				.replace('{version}', version ? version.version.repr : '...'),
+			textarea;
 
 		var overlay = new Element('div.report', {
 			'method': 'post',
@@ -240,7 +244,7 @@ Running on: ...\n\
 						'text': ' before posting, then copy the text below'
 					})
 				),
-				new Element('textarea', {
+				textarea = new Element('textarea', {
 					'text': body,
 					'events': {
 						'click': function(){
@@ -251,7 +255,17 @@ Running on: ...\n\
 				new Element('a.button', {
 					'target': '_blank',
 					'text': 'Create a new issue on GitHub with the text above',
-					'href': 'https://github.com/RuudBurger/CouchPotatoServer/issues/new?body=' + (body.length < 2000 ? encodeURIComponent(body) : 'Paste the text here')
+					'href': 'https://github.com/RuudBurger/CouchPotatoServer/issues/new',
+					'events': {
+						'click': function(e){
+							(e).stop();
+
+							var body = textarea.get('value'),
+								bdy = '?body=' + (body.length < 2000 ? encodeURIComponent(body) : 'Paste the text here'),
+								win = window.open(e.target.get('href') + bdy, '_blank');
+							win.focus();
+						}
+					}
 				})
 			)
 		);
