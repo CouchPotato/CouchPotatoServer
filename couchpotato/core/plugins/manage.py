@@ -52,6 +52,20 @@ class Manage(Plugin):
         if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
+        addEvent('app.load', self.setCrons)
+
+        # Enable / disable interval
+        addEvent('setting.save.manage.library_refresh_interval.after', self.setCrons)
+
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'manage.update_library')
+        refresh = tryInt(self.conf('library_refresh_interval'))
+        if refresh > 0:
+            fireEvent('schedule.interval', 'manage.update_library', self.updateLibrary, hours = refresh, single = True)
+
+        return True
+
     def getProgress(self, **kwargs):
         return {
             'progress': self.in_progress
@@ -161,6 +175,10 @@ class Manage(Plugin):
                                         else:
                                             used_files[release_file] = release
                             del used_files
+
+                    # Break if CP wants to shut down
+                    if self.shuttingDown():
+                        break
 
             Env.prop(last_update_key, time.time())
         except:
@@ -307,6 +325,14 @@ config = [{
                     'default': True,
                     'advanced': True,
                     'description': 'Do a quick scan on startup. On slow systems better disable this.',
+                },
+                {
+                    'label': 'Full library refresh',
+                    'name': 'library_refresh_interval',
+                    'type': 'int',
+                    'default': 0,
+                    'advanced': True,
+                    'description': 'Do a full scan every X hours. (0 is disabled)',
                 },
             ],
         },
