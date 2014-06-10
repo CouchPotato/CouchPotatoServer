@@ -13,6 +13,9 @@ Block.Search = new Class({
 				self.input = new Element('input', {
 					'placeholder': 'Search & add a new media',
 					'events': {
+						'input': self.keyup.bind(self),
+						'paste': self.keyup.bind(self),
+						'change': self.keyup.bind(self),
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
 							if(focus_timer) clearTimeout(focus_timer);
