@@ -850,7 +850,9 @@ class Scanner(Plugin):
                 if key in filename.lower() and key != 'default':
                     return self.resolutions[key]
         except:
-            return self.resolutions['default']
+            pass
+
+        return self.resolutions['default']
 
     def getGroup(self, file):
         try:
