@@ -181,7 +181,7 @@ class YarrProvider(Provider):
         try:
             return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()}, show_error = False)
         except:
-            log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
+            log.error('Failed getting release from %s: %s', (self.getName(), traceback.format_exc()))
 
         return 'try_next'
 
