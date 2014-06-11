@@ -7,7 +7,7 @@ from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toUnicode, sp
+from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -143,7 +143,7 @@ class Release(Plugin):
             })
 
             # Empty out empty file groups
-            release['files'] = dict((k, v) for k, v in group['files'].items() if v)
+            release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
             fireEvent('media.restatus', media['_id'])
