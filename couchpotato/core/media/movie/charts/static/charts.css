@@ -20,6 +20,22 @@
     overflow-y: auto;
 }
 
+::-webkit-scrollbar { 
+	width:5px;
+} 
+
+::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+ 
+::-webkit-scrollbar-thumb {
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+	background: rgba(255,255,255,0.3); 
+}
+
 .charts .chart .media_result.hidden {
     display: none;
 }
