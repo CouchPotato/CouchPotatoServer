@@ -238,10 +238,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
             if outside_eta_results > 0:
-                log.info('Found %s releases, but before ETA. Use dashboard to download manually', outside_eta_results)
+                message = 'Found %s releases for "%s" before ETA. Select and download via the dashboard.' % (outside_eta_results, default_title)
+                log.info(message)
 
                 if not manual:
-                    message = 'Found %s releases for "%s" before ETA. You can check them out on the dashboard.' % (outside_eta_results, default_title)
                     fireEvent('media.available', message = message, data = {})
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
