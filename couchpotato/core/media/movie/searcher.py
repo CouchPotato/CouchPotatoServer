@@ -128,12 +128,22 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         found_releases = []
         previous_releases = movie.get('releases', [])
         too_early_to_search = []
+        outside_eta_results = 0
+        alway_search = self.conf('always_search')
+        ignore_eta = False
 
         default_title = getTitle(movie)
         if not default_title:
             log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
             fireEvent('media.delete', movie['_id'], single = True)
             return
+
+        # Ignore eta once every 7 days
+        if not alway_search:
+            prop_name = 'last_ignored_eta.%s' % movie['_id']
+            last_ignored_eta = float(Env.prop(prop_name, default = 0))
+            if last_ignored_eta > time.time() - 604800:
+                ignore_eta = True
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
@@ -154,9 +164,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             index += 1
 
-            if not self.conf('always_search') and not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year']):
+            could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
+            if not alway_search and could_not_be_released:
                 too_early_to_search.append(q_identifier)
-                continue
+
+                # Skip release, if ETA isn't ignored
+                if not ignore_eta:
+                    continue
 
             has_better_quality = 0
 
@@ -177,14 +191,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 break
 
             quality = fireEvent('quality.single', identifier = q_identifier, single = True)
-            log.info('Search for %s in %s', (default_title, quality['label']))
+            log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if alway_search or ignore_eta else ''))
 
             # Extend quality with profile customs
             quality['custom'] = quality_custom
 
             results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
-            if len(results) == 0:
+            results_count = len(results)
+            if results_count == 0:
                 log.debug('Nothing found for %s in %s', (default_title, quality['label']))
+
+            # Keep track of releases found outside ETA window
+            outside_eta_results += results_count if could_not_be_released else 0
 
             # Check if movie isn't deleted while searching
             if not fireEvent('media.get', movie.get('_id'), single = True):
@@ -193,8 +211,12 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Add them to this movie releases list
             found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
 
+            # Don't trigger download, but notify user of available releases
+            if could_not_be_released:
+                if results_count > 0:
+                    log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
             # Try find a valid result and download it
-            if fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
+            elif fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -213,6 +235,11 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+
+            if outside_eta_results > 0:
+                log.info('Found %s releases, but before ETA. Use dashboard to download manually', outside_eta_results)
+                message = 'Found %s releases for "%s" before ETA. Check them out on the dashboard.' % (outside_eta_results, default_title)
+                fireEvent('media.available', message = message, data = {})
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
 

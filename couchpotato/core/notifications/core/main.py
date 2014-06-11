@@ -28,6 +28,7 @@ class CoreNotifier(Notification):
     m_lock = None
 
     listen_to = [
+        'media.available',
         'renamer.after', 'movie.snatched',
         'updater.available', 'updater.updated',
         'core.message', 'core.message.important',

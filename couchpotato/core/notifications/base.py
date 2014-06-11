@@ -15,6 +15,7 @@ class Notification(Provider):
     test_message = 'ZOMG Lazors Pewpewpew!'
 
     listen_to = [
+        'media.available',
         'renamer.after', 'movie.snatched',
         'updater.available', 'updater.updated',
         'core.message.important',
