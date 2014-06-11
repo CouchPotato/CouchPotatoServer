@@ -364,6 +364,7 @@ class Scanner(Plugin):
 
             if return_ignored is False and identifier in ignored_identifiers:
                 log.debug('Ignore file found, ignoring release: %s', identifier)
+                total_found -= 1
                 continue
 
             # Group extra (and easy) files first
@@ -384,6 +385,7 @@ class Scanner(Plugin):
 
             if len(group['files']['movie']) == 0:
                 log.error('Couldn\'t find any movie files for %s', identifier)
+                total_found -= 1
                 continue
 
             log.debug('Getting metadata for %s', identifier)
@@ -429,7 +431,7 @@ class Scanner(Plugin):
 
             # Notify parent & progress on something found
             if on_found:
-                on_found(group, total_found, total_found - len(processed_movies))
+                on_found(group, total_found, len(valid_files))
 
             # Wait for all the async events calm down a bit
             while threading.activeCount() > 100 and not self.shuttingDown():
