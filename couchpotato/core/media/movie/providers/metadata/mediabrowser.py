@@ -3,7 +3,7 @@ import os
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 
 
-autoload = 'WindowsMediaCenter'
+autoload = 'MediaBrowser'
 
 
 class MediaBrowser(MovieMetaData):

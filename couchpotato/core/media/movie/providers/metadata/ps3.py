@@ -3,7 +3,7 @@ import os
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 
 
-autoload = 'WindowsMediaCenter'
+autoload = 'SonyPS3'
 
 
 class SonyPS3(MovieMetaData):
