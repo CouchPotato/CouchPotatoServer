@@ -84,7 +84,6 @@ class Suggestion(Plugin):
 
         # Get new results and add them
         if len(new_suggestions) - 1 < limit:
-            db = get_db()
             active_movies = fireEvent('media.with_status', ['active', 'done'], single = True)
             movies = [getIdentifier(x) for x in active_movies]
             movies.extend(seen)

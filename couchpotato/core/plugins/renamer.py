@@ -456,7 +456,7 @@ class Renamer(Plugin):
                             mdia['last_edit'] = int(time.time())
                             db.update(mdia)
 
-                except Exception as e:
+                except:
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
 
                 # Go over current movie releases

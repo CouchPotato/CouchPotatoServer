@@ -148,7 +148,6 @@
 		padding: 0 3px 10px 0;
 	}
 		.charts .chart .media_result .data:before {
-			bottom: 0;
 			content: '';
 			display: block;
 			height: 10px;

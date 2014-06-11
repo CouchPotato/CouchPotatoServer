@@ -1,7 +1,7 @@
 import os
 import traceback
 
-from couchpotato import get_db, CPLog
+from couchpotato import CPLog
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.plugins.base import Plugin
