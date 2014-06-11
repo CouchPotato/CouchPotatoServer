@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import traceback
 import ConfigParser
 from hashlib import md5
 

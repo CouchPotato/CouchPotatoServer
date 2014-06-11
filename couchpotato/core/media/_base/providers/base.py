@@ -129,6 +129,9 @@ class YarrProvider(Provider):
         else:
             return []
 
+    def buildUrl(self, *args, **kwargs):
+        pass
+
     def login(self):
 
         # Check if we are still logged in every hour

@@ -32,7 +32,7 @@ class Manage(Plugin):
         # Add files after renaming
         def after_rename(message = None, group = None):
             if not group: group = {}
-            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
+            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'], release_download = group['release_download'])
         addEvent('renamer.after', after_rename, priority = 110)
 
         addApiView('manage.update', self.updateLibraryView, docs = {
@@ -210,14 +210,14 @@ class Manage(Plugin):
                     'to_go': total_found,
                 })
 
+            self.updateProgress(folder, to_go)
+
             if group['media'] and group['identifier']:
                 added_identifiers.append(group['identifier'])
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
                 fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
-            else:
-                self.updateProgress(folder)
 
         return addToLibrary
 
@@ -228,7 +228,6 @@ class Manage(Plugin):
             if not self.in_progress or self.shuttingDown():
                 return
 
-            self.updateProgress(folder)
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
@@ -236,10 +235,11 @@ class Manage(Plugin):
 
         return afterUpdate
 
-    def updateProgress(self, folder):
+    def updateProgress(self, folder, to_go):
 
         pr = self.in_progress[folder]
-        pr['to_go'] -= 1
+        if to_go < pr['to_go']:
+            pr['to_go'] = to_go
 
         avg = (time.time() - pr['started']) / (pr['total'] - pr['to_go'])
         pr['eta'] = tryInt(avg * pr['to_go'])
@@ -254,7 +254,7 @@ class Manage(Plugin):
 
         return []
 
-    def scanFilesToLibrary(self, folder = None, files = None):
+    def scanFilesToLibrary(self, folder = None, files = None, release_download = None):
 
         folder = os.path.normpath(folder)
 
@@ -263,7 +263,10 @@ class Manage(Plugin):
         if groups:
             for group in groups.values():
                 if group.get('media'):
-                    fireEvent('release.add', group = group)
+                    if release_download and release_download.get('release_id'):
+                        fireEvent('release.add', group = group, update_id = release_download.get('release_id'))
+                    else:
+                        fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
 

@@ -91,7 +91,7 @@ class Base(NZBProvider, RSS):
                     # Extract a password from the description
                     password = re.search('(?:' + self.passwords_regex + ')(?: *)(?:\:|\=)(?: *)(.*?)\<br\>|\n|$', description, flags = re.I).group(1)
                     if password:
-                        name = name + ' {{%s}}' % password.strip()
+                        name += ' {{%s}}' % password.strip()
                 except:
                     log.debug('Error getting details of "%s": %s', (name, traceback.format_exc()))
 

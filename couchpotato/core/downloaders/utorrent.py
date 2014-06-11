@@ -168,7 +168,7 @@ class uTorrent(DownloaderBase):
                 status = 'busy'
                 if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
                     status = 'seeding'
-                elif (torrent[1] & self.status_flags['ERROR']):
+                elif torrent[1] & self.status_flags['ERROR']:
                     status = 'failed'
                 elif torrent[4] == 1000:
                     status = 'completed'

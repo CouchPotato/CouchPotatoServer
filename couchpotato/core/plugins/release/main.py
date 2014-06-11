@@ -104,7 +104,7 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignore')
 
-    def add(self, group, update_info = True):
+    def add(self, group, update_info = True, update_id = None):
 
         try:
             db = get_db()
@@ -120,27 +120,43 @@ class Release(Plugin):
                     'profile_id': None,
                 }, search_after = False, update_after = update_info, notify_after = False, status = 'done', single = True)
 
-            # Add Release
-            release = {
-                '_t': 'release',
-                'media_id': media['_id'],
-                'identifier': release_identifier,
-                'quality': group['meta_data']['quality'].get('identifier'),
-                'is_3d': group['meta_data']['quality'].get('is_3d', 0),
-                'last_edit': int(time.time()),
-                'status': 'done'
-            }
-            try:
-                r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
-                r['media_id'] = media['_id']
-            except:
-                r = db.insert(release)
+            release = None
+            if update_id:
+                try:
+                    release = db.get('id', update_id)
+                    release.update({
+                        'identifier': release_identifier,
+                        'last_edit': int(time.time()),
+                        'status': 'done',
+                    })
+                except:
+                    log.error('Failed updating existing release: %s', traceback.format_exc())
+            else:
 
-            # Update with ref and _id
-            release.update({
-                '_id': r['_id'],
-                '_rev': r['_rev'],
-            })
+                # Add Release
+                if not release:
+                    release = {
+                        '_t': 'release',
+                        'media_id': media['_id'],
+                        'identifier': release_identifier,
+                        'quality': group['meta_data']['quality'].get('identifier'),
+                        'is_3d': group['meta_data']['quality'].get('is_3d', 0),
+                        'last_edit': int(time.time()),
+                        'status': 'done'
+                    }
+
+                try:
+                    r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
+                    r['media_id'] = media['_id']
+                except:
+                    log.error('Failed updating release by identifier: %s', traceback.format_exc())
+                    r = db.insert(release)
+
+                # Update with ref and _id
+                release.update({
+                    '_id': r['_id'],
+                    '_rev': r['_rev'],
+                })
 
             # Empty out empty file groups
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
@@ -341,7 +357,7 @@ class Release(Plugin):
 
         return True
 
-    def tryDownloadResult(self, results, media, quality_custom, manual = False):
+    def tryDownloadResult(self, results, media, quality_custom):
 
         wait_for = False
         let_through = False
@@ -375,7 +391,7 @@ class Release(Plugin):
                 wait_for = True
                 continue
 
-            downloaded = fireEvent('release.download', data = rel, media = media, manual = manual, single = True)
+            downloaded = fireEvent('release.download', data = rel, media = media, single = True)
             if downloaded is True:
                 return True
             elif downloaded != 'try_next':

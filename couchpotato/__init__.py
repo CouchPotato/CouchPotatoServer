@@ -45,7 +45,7 @@ class WebHandler(BaseHandler):
             self.write({'success': False, 'error': 'Failed returning results'})
 
 
-def addView(route, func, static = False):
+def addView(route, func):
     views[route] = func
 
 

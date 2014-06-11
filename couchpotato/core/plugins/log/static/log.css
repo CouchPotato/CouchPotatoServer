@@ -23,7 +23,7 @@
 		cursor: pointer;
 	}
 
-		.page.log .nav li:hover:not(.active, .filter) {
+		.page.log .nav li:hover:not(.active):not(.filter) {
 			background: rgba(255, 255, 255, 0.1);
 		}
 

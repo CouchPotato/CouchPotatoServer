@@ -51,19 +51,14 @@ class FanartTV(MovieProvider):
 
     def _parseMovie(self, movie):
         images = {
-            'landscape': [],
+            'landscape': self._getMultImages(movie.get('moviethumb', []), 1),
             'logo': [],
-            'disc_art': [],
-            'clear_art': [],
-            'banner': [],
+            'disc_art': self._getMultImages(self._trimDiscs(movie.get('moviedisc', [])), 1),
+            'clear_art': self._getMultImages(movie.get('hdmovieart', []), 1),
+            'banner': self._getMultImages(movie.get('moviebanner', []), 1),
             'extra_fanart': [],
         }
 
-        images['landscape'] = self._getMultImages(movie.get('moviethumb', []), 1)
-        images['banner'] = self._getMultImages(movie.get('moviebanner', []), 1)
-        images['disc_art'] = self._getMultImages(self._trimDiscs(movie.get('moviedisc', [])), 1)
-
-        images['clear_art'] = self._getMultImages(movie.get('hdmovieart', []), 1)
         if len(images['clear_art']) == 0:
             images['clear_art'] = self._getMultImages(movie.get('movieart', []), 1)
 
@@ -105,10 +100,10 @@ class FanartTV(MovieProvider):
         return image_url
 
     def _getMultImages(self, images, n):
-        '''
+        """
         Chooses the best n images and returns them as a list.
         If n<0, all images will be returned.
-        '''
+        """
         image_urls = []
         pool = []
         for image in images:

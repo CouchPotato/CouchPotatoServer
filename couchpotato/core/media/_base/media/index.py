@@ -99,7 +99,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 
 
 class TitleIndex(TreeBasedIndex):
-    _version = 3
+    _version = 4
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -128,7 +128,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
                 title = title[len(prefix):]
                 break
 
-        return str(nr_prefix + title).ljust(32, '_')[:32]
+        return str(nr_prefix + title).ljust(32, ' ')[:32]
 
 
 class StartsWithIndex(TreeBasedIndex):
