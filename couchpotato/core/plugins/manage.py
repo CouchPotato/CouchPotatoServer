@@ -4,7 +4,6 @@ import sys
 import time
 import traceback
 
-from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
@@ -33,7 +32,7 @@ class Manage(Plugin):
         # Add files after renaming
         def after_rename(message = None, group = None):
             if not group: group = {}
-            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
+            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'], release_download = group['release_download'])
         addEvent('renamer.after', after_rename, priority = 110)
 
         addApiView('manage.update', self.updateLibraryView, docs = {
@@ -53,6 +52,20 @@ class Manage(Plugin):
         if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
+        addEvent('app.load', self.setCrons)
+
+        # Enable / disable interval
+        addEvent('setting.save.manage.library_refresh_interval.after', self.setCrons)
+
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'manage.update_library')
+        refresh = tryInt(self.conf('library_refresh_interval'))
+        if refresh > 0:
+            fireEvent('schedule.interval', 'manage.update_library', self.updateLibrary, hours = refresh, single = True)
+
+        return True
+
     def getProgress(self, **kwargs):
         return {
             'progress': self.in_progress
@@ -71,7 +84,8 @@ class Manage(Plugin):
         return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
-        last_update = float(Env.prop('manage.last_update', default = 0))
+        last_update_key = 'manage.last_update%s' % ('_full' if full else '')
+        last_update = float(Env.prop(last_update_key, default = 0))
 
         if self.in_progress:
             log.info('Already updating library: %s', self.in_progress)
@@ -120,7 +134,7 @@ class Manage(Plugin):
             if self.conf('cleanup') and full and not self.shuttingDown():
 
                 # Get movies with done status
-                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
+                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', release_status = 'done', status_or = True, single = True)
 
                 for done_movie in done_movies:
                     if getIdentifier(done_movie) not in added_identifiers:
@@ -131,12 +145,16 @@ class Manage(Plugin):
 
                         for release in releases:
                             if release.get('files'):
+                                brk = False
                                 for file_type in release.get('files', {}):
                                     for release_file in release['files'][file_type]:
                                         # Remove release not available anymore
                                         if not os.path.isfile(sp(release_file)):
                                             fireEvent('release.clean', release['_id'])
+                                            brk = True
                                             break
+                                    if brk:
+                                        break
 
                         # Check if there are duplicate releases (different quality) use the last one, delete the rest
                         if len(releases) > 1:
@@ -147,16 +165,22 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
+                                            # delete current one
                                             if already_used.get('last_edit', 0) < release.get('last_edit', 0):
-                                                fireEvent('release.delete', release['_id'], single = True)  # delete current one
+                                                fireEvent('release.delete', release['_id'], single = True)
+                                            # delete previous one
                                             else:
-                                                fireEvent('release.delete', already_used['_id'], single = True)  # delete previous one
+                                                fireEvent('release.delete', already_used['_id'], single = True)
                                             break
                                         else:
                                             used_files[release_file] = release
                             del used_files
 
-            Env.prop('manage.last_update', time.time())
+                    # Break if CP wants to shut down
+                    if self.shuttingDown():
+                        break
+
+            Env.prop(last_update_key, time.time())
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
 
@@ -186,14 +210,14 @@ class Manage(Plugin):
                     'to_go': total_found,
                 })
 
+            self.updateProgress(folder, to_go)
+
             if group['media'] and group['identifier']:
                 added_identifiers.append(group['identifier'])
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
                 fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
-            else:
-                self.updateProgress(folder)
 
         return addToLibrary
 
@@ -204,7 +228,6 @@ class Manage(Plugin):
             if not self.in_progress or self.shuttingDown():
                 return
 
-            self.updateProgress(folder)
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
@@ -212,10 +235,11 @@ class Manage(Plugin):
 
         return afterUpdate
 
-    def updateProgress(self, folder):
+    def updateProgress(self, folder, to_go):
 
         pr = self.in_progress[folder]
-        pr['to_go'] -= 1
+        if to_go < pr['to_go']:
+            pr['to_go'] = to_go
 
         avg = (time.time() - pr['started']) / (pr['total'] - pr['to_go'])
         pr['eta'] = tryInt(avg * pr['to_go'])
@@ -230,7 +254,7 @@ class Manage(Plugin):
 
         return []
 
-    def scanFilesToLibrary(self, folder = None, files = None):
+    def scanFilesToLibrary(self, folder = None, files = None, release_download = None):
 
         folder = os.path.normpath(folder)
 
@@ -239,7 +263,10 @@ class Manage(Plugin):
         if groups:
             for group in groups.values():
                 if group.get('media'):
-                    fireEvent('release.add', group = group)
+                    if release_download and release_download.get('release_id'):
+                        fireEvent('release.add', group = group, update_id = release_download.get('release_id'))
+                    else:
+                        fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
 
@@ -301,6 +328,14 @@ config = [{
                     'default': True,
                     'advanced': True,
                     'description': 'Do a quick scan on startup. On slow systems better disable this.',
+                },
+                {
+                    'label': 'Full library refresh',
+                    'name': 'library_refresh_interval',
+                    'type': 'int',
+                    'default': 0,
+                    'advanced': True,
+                    'description': 'Do a full scan every X hours. (0 is disabled)',
                 },
             ],
         },

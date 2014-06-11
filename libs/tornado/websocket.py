@@ -20,7 +20,6 @@ communication between the browser and server.
 from __future__ import absolute_import, division, print_function, with_statement
 # Author: Jacob Kristhammar, 2010
 
-import array
 import base64
 import collections
 import functools
@@ -32,14 +31,19 @@ import tornado.escape
 import tornado.web
 
 from tornado.concurrent import TracebackFuture
-from tornado.escape import utf8, native_str
+from tornado.escape import utf8, native_str, to_unicode
 from tornado import httpclient, httputil
 from tornado.ioloop import IOLoop
 from tornado.iostream import StreamClosedError
 from tornado.log import gen_log, app_log
-from tornado.netutil import Resolver
 from tornado import simple_httpclient
-from tornado.util import bytes_type, unicode_type
+from tornado.tcpclient import TCPClient
+from tornado.util import bytes_type, unicode_type, _websocket_mask
+
+try:
+    from urllib.parse import urlparse # py2
+except ImportError:
+    from urlparse import urlparse # py3
 
 try:
     xrange  # py2
@@ -108,20 +112,17 @@ class WebSocketHandler(tornado.web.RequestHandler):
     def __init__(self, application, request, **kwargs):
         tornado.web.RequestHandler.__init__(self, application, request,
                                             **kwargs)
-        self.stream = request.connection.stream
         self.ws_connection = None
+        self.close_code = None
+        self.close_reason = None
 
-    def _execute(self, transforms, *args, **kwargs):
+    @tornado.web.asynchronous
+    def get(self, *args, **kwargs):
         self.open_args = args
         self.open_kwargs = kwargs
 
-        # Websocket only supports GET method
-        if self.request.method != 'GET':
-            self.stream.write(tornado.escape.utf8(
-                "HTTP/1.1 405 Method Not Allowed\r\n\r\n"
-            ))
-            self.stream.close()
-            return
+        self.stream = self.request.connection.detach()
+        self.stream.set_close_callback(self.on_connection_close)
 
         # Upgrade header should be present and should be equal to WebSocket
         if self.request.headers.get("Upgrade", "").lower() != 'websocket':
@@ -144,9 +145,26 @@ class WebSocketHandler(tornado.web.RequestHandler):
             self.stream.close()
             return
 
+        # Handle WebSocket Origin naming convention differences
         # The difference between version 8 and 13 is that in 8 the
         # client sends a "Sec-Websocket-Origin" header and in 13 it's
         # simply "Origin".
+        if "Origin" in self.request.headers:
+            origin = self.request.headers.get("Origin")
+        else:
+            origin = self.request.headers.get("Sec-Websocket-Origin", None)
+
+
+        # If there was an origin header, check to make sure it matches
+        # according to check_origin. When the origin is None, we assume it
+        # did not come from a browser and that it can be passed on.
+        if origin is not None and not self.check_origin(origin):
+            self.stream.write(tornado.escape.utf8(
+                "HTTP/1.1 403 Cross Origin Websockets Disabled\r\n\r\n"
+            ))
+            self.stream.close()
+            return
+
         if self.request.headers.get("Sec-WebSocket-Version") in ("7", "8", "13"):
             self.ws_connection = WebSocketProtocol13(self)
             self.ws_connection.accept_connection()
@@ -159,6 +177,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
                 "HTTP/1.1 426 Upgrade Required\r\n"
                 "Sec-WebSocket-Version: 8\r\n\r\n"))
             self.stream.close()
+
 
     def write_message(self, message, binary=False):
         """Sends the given message to the client of this Web Socket.
@@ -220,17 +239,69 @@ class WebSocketHandler(tornado.web.RequestHandler):
         pass
 
     def on_close(self):
-        """Invoked when the WebSocket is closed."""
+        """Invoked when the WebSocket is closed.
+
+        If the connection was closed cleanly and a status code or reason
+        phrase was supplied, these values will be available as the attributes
+        ``self.close_code`` and ``self.close_reason``.
+
+        .. versionchanged:: 3.3
+
+           Added ``close_code`` and ``close_reason`` attributes.
+        """
         pass
 
-    def close(self):
+    def close(self, code=None, reason=None):
         """Closes this Web Socket.
 
         Once the close handshake is successful the socket will be closed.
+
+        ``code`` may be a numeric status code, taken from the values
+        defined in `RFC 6455 section 7.4.1
+        <https://tools.ietf.org/html/rfc6455#section-7.4.1>`_.
+        ``reason`` may be a textual message about why the connection is
+        closing.  These values are made available to the client, but are
+        not otherwise interpreted by the websocket protocol.
+
+        The ``code`` and ``reason`` arguments are ignored in the "draft76"
+        protocol version.
+
+        .. versionchanged:: 3.3
+
+           Added the ``code`` and ``reason`` arguments.
         """
         if self.ws_connection:
-            self.ws_connection.close()
+            self.ws_connection.close(code, reason)
             self.ws_connection = None
+
+    def check_origin(self, origin):
+        """Override to enable support for allowing alternate origins.
+
+        The ``origin`` argument is the value of the ``Origin`` HTTP
+        header, the url responsible for initiating this request.  This
+        method is not called for clients that do not send this header;
+        such requests are always allowed (because all browsers that
+        implement WebSockets support this header, and non-browser
+        clients do not have the same cross-site security concerns).
+
+        Should return True to accept the request or False to reject it.
+        By default, rejects all requests with an origin on a host other
+        than this one.
+
+        This is a security protection against cross site scripting attacks on
+        browsers, since WebSockets are allowed to bypass the usual same-origin
+        policies and don't use CORS headers.
+
+        .. versionadded:: 3.3
+        """
+        parsed_origin = urlparse(origin)
+        origin = parsed_origin.netloc
+        origin = origin.lower()
+
+        host = self.request.headers.get("Host")
+
+        # Check to see that origin matches host directly, including ports
+        return origin == host
 
     def allow_draft76(self):
         """Override to enable support for the older "draft76" protocol.
@@ -489,7 +560,7 @@ class WebSocketProtocol76(WebSocketProtocol):
         """Send ping frame."""
         raise ValueError("Ping messages not supported by this version of websockets")
 
-    def close(self):
+    def close(self, code=None, reason=None):
         """Closes the WebSocket connection."""
         if not self.server_terminated:
             if not self.stream.closed():
@@ -739,6 +810,10 @@ class WebSocketProtocol13(WebSocketProtocol):
         elif opcode == 0x8:
             # Close
             self.client_terminated = True
+            if len(data) >= 2:
+                self.handler.close_code = struct.unpack('>H', data[:2])[0]
+            if len(data) > 2:
+                self.handler.close_reason = to_unicode(data[2:])
             self.close()
         elif opcode == 0x9:
             # Ping
@@ -749,11 +824,19 @@ class WebSocketProtocol13(WebSocketProtocol):
         else:
             self._abort()
 
-    def close(self):
+    def close(self, code=None, reason=None):
         """Closes the WebSocket connection."""
         if not self.server_terminated:
             if not self.stream.closed():
-                self._write_frame(True, 0x8, b"")
+                if code is None and reason is not None:
+                    code = 1000  # "normal closure" status code
+                if code is None:
+                    close_data = b''
+                else:
+                    close_data = struct.pack('>H', code)
+                if reason is not None:
+                    close_data += utf8(reason)
+                self._write_frame(True, 0x8, close_data)
             self.server_terminated = True
         if self.client_terminated:
             if self._waiting is not None:
@@ -789,18 +872,25 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             'Sec-WebSocket-Version': '13',
         })
 
-        self.resolver = Resolver(io_loop=io_loop)
+        self.tcp_client = TCPClient(io_loop=io_loop)
         super(WebSocketClientConnection, self).__init__(
             io_loop, None, request, lambda: None, self._on_http_response,
-            104857600, self.resolver)
+            104857600, self.tcp_client, 65536)
 
-    def close(self):
+    def close(self, code=None, reason=None):
         """Closes the websocket connection.
 
+        ``code`` and ``reason`` are documented under
+        `WebSocketHandler.close`.
+
         .. versionadded:: 3.2
+
+        .. versionchanged:: 3.3
+
+           Added the ``code`` and ``reason`` arguments.
         """
         if self.protocol is not None:
-            self.protocol.close()
+            self.protocol.close(code, reason)
             self.protocol = None
 
     def _on_close(self):
@@ -816,8 +906,12 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
                 self.connect_future.set_exception(WebSocketError(
                     "Non-websocket response"))
 
-    def _handle_1xx(self, code):
-        assert code == 101
+    def headers_received(self, start_line, headers):
+        if start_line.code != 101:
+            return super(WebSocketClientConnection, self).headers_received(
+                start_line, headers)
+
+        self.headers = headers
         assert self.headers['Upgrade'].lower() == 'websocket'
         assert self.headers['Connection'].lower() == 'upgrade'
         accept = WebSocketProtocol13.compute_accept_value(self.key)
@@ -829,6 +923,9 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         if self._timeout is not None:
             self.io_loop.remove_timeout(self._timeout)
             self._timeout = None
+
+        self.stream = self.connection.detach()
+        self.stream.set_close_callback(self._on_close)
 
         self.connect_future.set_result(self)
 
@@ -890,35 +987,3 @@ def websocket_connect(url, io_loop=None, callback=None, connect_timeout=None):
     if callback is not None:
         io_loop.add_future(conn.connect_future, callback)
     return conn.connect_future
-
-
-def _websocket_mask_python(mask, data):
-    """Websocket masking function.
-
-    `mask` is a `bytes` object of length 4; `data` is a `bytes` object of any length.
-    Returns a `bytes` object of the same length as `data` with the mask applied
-    as specified in section 5.3 of RFC 6455.
-
-    This pure-python implementation may be replaced by an optimized version when available.
-    """
-    mask = array.array("B", mask)
-    unmasked = array.array("B", data)
-    for i in xrange(len(data)):
-        unmasked[i] = unmasked[i] ^ mask[i % 4]
-    if hasattr(unmasked, 'tobytes'):
-        # tostring was deprecated in py32.  It hasn't been removed,
-        # but since we turn on deprecation warnings in our tests
-        # we need to use the right one.
-        return unmasked.tobytes()
-    else:
-        return unmasked.tostring()
-
-if os.environ.get('TORNADO_NO_EXTENSION'):
-    # This environment variable exists to make it easier to do performance comparisons;
-    # it's not guaranteed to remain supported in the future.
-    _websocket_mask = _websocket_mask_python
-else:
-    try:
-        from tornado.speedups import websocket_mask as _websocket_mask
-    except ImportError:
-        _websocket_mask = _websocket_mask_python

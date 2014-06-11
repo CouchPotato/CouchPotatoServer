@@ -1,8 +1,7 @@
-from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
-import urllib2
+import re
 
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
@@ -12,6 +11,7 @@ from couchpotato.core.media._base.providers.base import ResultList
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -20,10 +20,11 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
-        'detail': 'details&id=%s',
+        'detail': 'details/%s',
         'download': 't=get&id=%s'
     }
 
+    passwords_regex = 'password|wachtwoord'
     limits_reached = {}
 
     http_time_between_calls = 1  # Seconds
@@ -43,10 +44,8 @@ class Base(NZBProvider, RSS):
 
     def _searchOnHost(self, host, media, quality, results):
 
-        query = self.buildUrl(media, host['api_key'])
-
+        query = self.buildUrl(media, host)
         url = '%s&%s' % (self.getUrl(host['host']), query)
-
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
@@ -79,6 +78,23 @@ class Base(NZBProvider, RSS):
             if spotter:
                 name_extra = spotter
 
+            description = ''
+            if "@spot.net" in nzb_id:
+                try:
+                    # Get details for extended description to retrieve passwords
+                    query = self.buildDetailsUrl(nzb_id, host['api_key'])
+                    url = '%s&%s' % (self.getUrl(host['host']), query)
+                    nzb_details = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})[0]
+
+                    description = self.getTextElement(nzb_details, 'description')
+
+                    # Extract a password from the description
+                    password = re.search('(?:' + self.passwords_regex + ')(?: *)(?:\:|\=)(?: *)(.*?)\<br\>|\n|$', description, flags = re.I).group(1)
+                    if password:
+                        name += ' {{%s}}' % password.strip()
+                except:
+                    log.debug('Error getting details of "%s": %s', (name, traceback.format_exc()))
+
             results.append({
                 'id': nzb_id,
                 'provider_extra': urlparse(host['host']).hostname or host['host'],
@@ -87,8 +103,9 @@ class Base(NZBProvider, RSS):
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
-                'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
+                'detail_url': (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id),
                 'content': self.getTextElement(nzb, 'description'),
+                'description': description,
                 'score': host['extra_score'],
             })
 
@@ -166,16 +183,7 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            # Get final redirected url
-            log.debug('Checking %s for redirects.', url)
-            req = urllib2.Request(url)
-            req.add_header('User-Agent', self.user_agent)
-            res = urllib2.urlopen(req)
-            finalurl = res.geturl()
-            if finalurl != url:
-                log.debug('Redirect url used: %s', finalurl)
-
-            data = self.urlopen(finalurl, show_error = False)
+            data = self.urlopen(url, show_error = False)
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
@@ -190,6 +198,15 @@ class Base(NZBProvider, RSS):
             log.error('Failed download from %s: %s', (host, traceback.format_exc()))
 
         return 'try_next'
+
+    def buildDetailsUrl(self, nzb_id, api_key):
+        query = tryUrlencode({
+            't': 'details',
+            'id': nzb_id,
+            'apikey': api_key,
+        })
+        return query
+
 
 
 config = [{
@@ -217,7 +234,7 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'api.nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
+                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
                     'description': 'The hostname of your newznab provider',
                 },
                 {

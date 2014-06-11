@@ -36,7 +36,6 @@ class Charts(Plugin):
             'charts': charts
         }
 
-
     def updateViewCache(self):
 
         if self.update_in_progress:
@@ -46,9 +45,13 @@ class Charts(Plugin):
             if catched_charts:
                 return catched_charts
 
+        charts = []
         try:
             self.update_in_progress = True
             charts = fireEvent('automation.get_chart_list', merge = True)
+            for chart in charts:
+                chart['hide_wanted'] = self.conf('hide_wanted')
+                chart['hide_library'] = self.conf('hide_library')
             self.setCache('charts_cached', charts, timeout = 7200 * tryInt(self.conf('update_interval', default = 12)))
         except:
             log.error('Failed refreshing charts')

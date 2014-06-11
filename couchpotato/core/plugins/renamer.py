@@ -14,7 +14,6 @@ from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from scandir import scandir
 from unrar2 import RarFile
 import six
 from six.moves import filter
@@ -112,16 +111,13 @@ class Renamer(Plugin):
             return
 
         if not base_folder:
-            base_folder = self.conf('from')
+            base_folder = sp(self.conf('from'))
 
         from_folder = sp(self.conf('from'))
         to_folder = sp(self.conf('to'))
 
         # Get media folder to process
-        media_folder = release_download.get('folder')
-
-        # Quality order for calculation quality priority
-        quality_order = fireEvent('quality.order', single = True)
+        media_folder = sp(release_download.get('folder'))
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -149,9 +145,9 @@ class Renamer(Plugin):
 
             # Update to the from folder
             if len(release_download.get('files', [])) == 1:
-                new_media_folder = from_folder
+                new_media_folder = sp(from_folder)
             else:
-                new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
+                new_media_folder = sp(os.path.join(from_folder, os.path.basename(media_folder)))
 
             if not os.path.isdir(new_media_folder):
                 log.error('The provided media folder %s does not exist and could also not be found in the \'from\' folder.', media_folder)
@@ -198,7 +194,7 @@ class Renamer(Plugin):
             else:
                 # Get all files from the specified folder
                 try:
-                    for root, folders, names in scandir.walk(media_folder):
+                    for root, folders, names in os.walk(media_folder):
                         files.extend([sp(os.path.join(root, name)) for name in names])
                 except:
                     log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
@@ -231,6 +227,7 @@ class Renamer(Plugin):
         for group_identifier in groups:
 
             group = groups[group_identifier]
+            group['release_download'] = None
             rename_files = {}
             remove_files = []
             remove_releases = []
@@ -290,8 +287,10 @@ class Renamer(Plugin):
 
                 # Put 'The' at the end
                 name_the = movie_name
-                if movie_name[:4].lower() == 'the ':
-                    name_the = movie_name[4:] + ', The'
+                for prefix in ['the ', 'an ', 'a ']:
+                    if prefix == movie_name[:len(prefix)].lower():
+                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize()
+                        break
 
                 replacements = {
                     'ext': 'mkv',
@@ -312,8 +311,14 @@ class Renamer(Plugin):
                     'cd': '',
                     'cd_nr': '',
                     'mpaa': media['info'].get('mpaa', ''),
+                    'mpaa_only': media['info'].get('mpaa', ''),
                     'category': category_label,
+                    '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
+                    '3d_type': group['meta_data'].get('3d_type'),
                 }
+
+                if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
+                    replacements['mpaa_only'] = 'Not Rated'
 
                 for file_type in group['files']:
 
@@ -410,8 +415,12 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+                                sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
+
+                                # Don't add language to subtitle file it it's already there
+                                if not sub_name.endswith(sub_suffix):
+                                    sub_name = sub_name.replace(replacements['ext'], sub_suffix)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
@@ -438,19 +447,17 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Mark movie "done" once it's found the quality with the finish check
+                profile = None
                 try:
                     if media.get('status') == 'active' and media.get('profile_id'):
                         profile = db.get('id', media['profile_id'])
-                        if group['meta_data']['quality']['identifier'] in profile.get('qualities', []):
-                            nr = profile['qualities'].index(group['meta_data']['quality']['identifier'])
-                            finish = profile['finish'][nr]
-                            if finish:
-                                mdia = db.get('id', media['_id'])
-                                mdia['status'] = 'done'
-                                mdia['last_edit'] = int(time.time())
-                                db.update(mdia)
+                        if fireEvent('quality.isfinish', group['meta_data']['quality'], profile, single = True):
+                            mdia = db.get('id', media['_id'])
+                            mdia['status'] = 'done'
+                            mdia['last_edit'] = int(time.time())
+                            db.update(mdia)
 
-                except Exception as e:
+                except:
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
 
                 # Go over current movie releases
@@ -459,18 +466,19 @@ class Renamer(Plugin):
                     # When a release already exists
                     if release.get('status') == 'done':
 
-                        release_order = quality_order.index(release['quality'])
-                        group_quality_order = quality_order.index(group['meta_data']['quality']['identifier'])
+                        # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
+                        is_higher = fireEvent('quality.ishigher', \
+                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, profile, single = True)
 
-                        # This is where CP removes older, lesser quality releases
-                        if release_order > group_quality_order:
-                            log.info('Removing lesser quality %s for %s.', (media_title, release.get('quality')))
+                        if is_higher == 'higher':
+                            log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
                                     remove_files.append(release_file)
                             remove_releases.append(release)
+
                         # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
-                        elif release_order == group_quality_order:
+                        elif is_higher == 'equal':
                             log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
@@ -497,13 +505,15 @@ class Renamer(Plugin):
                                 if release_download['status'] == 'completed':
                                     # Set the release to downloaded
                                     fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                                    group['release_download'] = release_download
                                 elif release_download['status'] == 'seeding':
                                     # Set the release to seeding
                                     fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
 
                         elif release.get('identifier') == group['meta_data']['quality']['identifier']:
-                                # Set the release to downloaded
-                                fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                            # Set the release to downloaded
+                            fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                            group['release_download'] = release_download
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything
@@ -601,7 +611,7 @@ class Renamer(Plugin):
                     log.error('Failed removing %s: %s', (group_folder, traceback.format_exc()))
 
             # Notify on download, search for trailers etc
-            download_message = 'Downloaded %s (%s)' % (media_title, replacements['quality'])
+            download_message = 'Downloaded %s (%s%s)' % (media_title, replacements['quality'], (' ' + replacements['3d']) if replacements['3d'] else '')
             try:
                 fireEvent('renamer.after', message = download_message, group = group, in_order = True)
             except:
@@ -652,11 +662,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download.get('files', []):
-                tag_files = release_download.get('files', [])
+                tag_files = [filename for filename in release_download.get('files', []) if os.path.exists(filename)]
 
             # Tag all files in release folder
             elif release_download['folder']:
-                for root, folders, names in scandir.walk(release_download['folder']):
+                for root, folders, names in os.walk(sp(release_download['folder'])):
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
@@ -680,13 +690,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if isinstance(group, dict):
             tag_files = [sorted(list(group['files']['movie']))[0]]
 
-            folder = group['parentdir']
+            folder = sp(group['parentdir'])
             if not group.get('dirname') or not os.path.isdir(folder):
                 return False
 
         elif isinstance(release_download, dict):
 
-            folder = release_download['folder']
+            folder = sp(release_download['folder'])
             if not os.path.isdir(folder):
                 return False
 
@@ -696,7 +706,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Untag all files in release folder
             else:
-                for root, folders, names in scandir.walk(folder):
+                for root, folders, names in os.walk(folder):
                     tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         if not folder:
@@ -704,7 +714,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find all .ignore files in folder
         ignore_files = []
-        for root, dirnames, filenames in scandir.walk(folder):
+        for root, dirnames, filenames in os.walk(folder):
             ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and delete if found
@@ -720,7 +730,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if not release_download:
             return False
 
-        folder = release_download['folder']
+        folder = sp(release_download['folder'])
         if not os.path.isdir(folder):
             return False
 
@@ -733,11 +743,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on all files in release folder
         else:
-            for root, folders, names in scandir.walk(folder):
+            for root, folders, names in os.walk(folder):
                 tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
-        for root, dirnames, filenames in scandir.walk(folder):
+        for root, dirnames, filenames in os.walk(folder):
             ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and return True found
@@ -749,7 +759,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return False
 
     def moveFile(self, old, dest, forcemove = False):
-        dest = ss(dest)
+        dest = sp(dest)
         try:
             if forcemove or self.conf('file_action') not in ['copy', 'link']:
                 try:
@@ -822,7 +832,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def replaceDoubles(self, string):
 
         replaces = [
-            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '),
+            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '), (' \\\\', '\\\\'), (' /', '/'),
             ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
         ]
 
@@ -1054,6 +1064,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             release_download.update({
                 'imdb_id': getIdentifier(media),
                 'quality': rls['quality'],
+                'is_3d': rls['is_3d'],
                 'protocol': rls.get('info', {}).get('protocol') or rls.get('info', {}).get('type'),
                 'release_id': rls['_id'],
             })
@@ -1093,7 +1104,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             check_file_date = False
 
         if not files:
-            for root, folders, names in scandir.walk(folder):
+            for root, folders, names in os.walk(folder):
                 files.extend([sp(os.path.join(root, name)) for name in names])
 
         # Find all archive files
@@ -1193,6 +1204,8 @@ rename_options = {
         'first': 'First letter (M)',
         'quality': 'Quality (720p)',
         'quality_type': '(HD) or (SD)',
+        '3d': '3D',
+        '3d_type': '3D Type (Full SBS)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
@@ -1205,7 +1218,8 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
-        'mpaa': 'MPAA Rating',
+        'mpaa': 'MPAA or other certification',
+        'mpaa_only': 'MPAA only certification (G|PG|PG-13|R|NC-17|Not Rated)',
         'category': 'Category label',
     },
 }

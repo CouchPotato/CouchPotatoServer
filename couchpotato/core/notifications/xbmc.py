@@ -36,7 +36,7 @@ class XBMC(Notification):
 
             if self.use_json_notifications.get(host):
                 calls = [
-                    ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+                    ('GUI.ShowNotification', None, {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
                 ]
 
                 if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
@@ -44,7 +44,7 @@ class XBMC(Notification):
                     if not self.conf('force_full_scan') and (self.conf('remote_dir_scan') or socket.getfqdn('localhost') == socket.getfqdn(host.split(':')[0])):
                         param = {'directory': data['destination_dir']}
 
-                    calls.append(('VideoLibrary.Scan', param))
+                    calls.append(('VideoLibrary.Scan', None, param))
 
                 max_successful += len(calls)
                 response = self.request(host, calls)
@@ -52,7 +52,7 @@ class XBMC(Notification):
                 response = self.notifyXBMCnoJSON(host, {'title': self.default_title, 'message': message})
 
                 if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
-                    response += self.request(host, [('VideoLibrary.Scan', {})])
+                    response += self.request(host, [('VideoLibrary.Scan', None, {})])
                     max_successful += 1
 
                 max_successful += 1
@@ -75,7 +75,7 @@ class XBMC(Notification):
 
         # XBMC JSON-RPC version request
         response = self.request(host, [
-            ('JSONRPC.Version', {})
+            ('JSONRPC.Version', None, {})
         ])
         for result in response:
             if result.get('result') and type(result['result']['version']).__name__ == 'int':
@@ -112,7 +112,7 @@ class XBMC(Notification):
                 self.use_json_notifications[host] = True
 
                 # send the text message
-                resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
+                resp = self.request(host, [('GUI.ShowNotification', None, {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
                 for r in resp:
                     if r.get('result') and r['result'] == 'OK':
                         log.debug('Message delivered successfully!')
@@ -184,12 +184,13 @@ class XBMC(Notification):
 
         data = []
         for req in do_requests:
-            method, kwargs = req
+            method, id, kwargs = req
+
             data.append({
                 'method': method,
                 'params': kwargs,
                 'jsonrpc': '2.0',
-                'id': method,
+                'id': id if id else method,
             })
         data = json.dumps(data)
 
@@ -223,7 +224,7 @@ config = [{
             'list': 'notification_providers',
             'name': 'xbmc',
             'label': 'XBMC',
-            'description': 'v11 (Eden) and v12 (Frodo)',
+            'description': 'v11 (Eden), v12 (Frodo), v13 (Gotham)',
             'options': [
                 {
                     'name': 'enabled',
@@ -256,7 +257,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Only scan new movie folder at remote XBMC servers. Works if movie location is the same.',
+                    'description': ('Only scan new movie folder at remote XBMC servers.', 'Useful if the XBMC path is different from the path CPS uses.'),
                 },
                 {
                     'name': 'force_full_scan',
@@ -264,11 +265,11 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Do a full scan instead of only the new movie. Useful if the XBMC path is different from the path CPS uses.',
+                    'description': ('Do a full scan instead of only the new movie.', 'Useful if the XBMC path is different from the path CPS uses.'),
                 },
                 {
                     'name': 'on_snatch',
-                    'default': 0,
+                    'default': False,
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',

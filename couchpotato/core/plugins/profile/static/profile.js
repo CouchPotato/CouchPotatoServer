@@ -41,7 +41,7 @@ var Profile = new Class({
 				new Element('span', {'text':'Wait'}),
 				new Element('input.inlay.xsmall', {
 					'type':'text',
-					'value': data.types && data.types.length > 0 ? data.types[0].wait_for : 0
+					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
 				}),
 				new Element('span', {'text':'day(s) for a better quality.'})
 			),
@@ -63,8 +63,7 @@ var Profile = new Class({
 				data.types.include({
 					'quality': quality,
 					'finish': data.finish[nr] || false,
-					'3d': data['3d'] ? data['3d'][nr] || false : false,
-					'wait_for': data.wait_for[nr] || 0
+					'3d': data['3d'] ? data['3d'][nr] || false : false
 				})
 			});
 		}
@@ -126,8 +125,7 @@ var Profile = new Class({
 				data.types.include({
 					'quality': type.getElement('select').get('value'),
 					'finish': +type.getElement('input.finish[type=checkbox]').checked,
-					'3d': +type.getElement('input.3d[type=checkbox]').checked,
-					'wait_for': 0
+					'3d': +type.getElement('input.3d[type=checkbox]').checked
 				});
 		});
 
@@ -340,8 +338,7 @@ Profile.Type = new Class({
 		return {
 			'quality': self.qualities.get('value'),
 			'finish': +self.finish.checked,
-			'3d': +self['3d'].checked,
-			'wait_for': 0
+			'3d': +self['3d'].checked
 		}
 	},
 

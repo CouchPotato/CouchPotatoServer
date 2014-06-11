@@ -40,15 +40,16 @@ var DownloadersBase = new Class({
 
 								button.set('text', button_name);
 
+								var message;
 								if(json.success){
-									var message = new Element('span.success', {
+									message = new Element('span.success', {
 										'text': 'Connection successful'
 									}).inject(button, 'after')
 								}
 								else {
 									var msg_text = 'Connection failed. Check logs for details.';
 									if(json.hasOwnProperty('msg')) msg_text = json.msg;
-									var message = new Element('span.failed', {
+									message = new Element('span.failed', {
 										'text': msg_text
 									}).inject(button, 'after')
 								}

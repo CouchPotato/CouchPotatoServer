@@ -28,6 +28,7 @@ class Database(object):
 
         addEvent('database.setup_index', self.setupIndex)
         addEvent('app.migrate', self.migrate)
+        addEvent('app.after_shutdown', self.close)
 
     def getDB(self):
 
@@ -36,6 +37,9 @@ class Database(object):
             self.db = get_db()
 
         return self.db
+
+    def close(self, **kwargs):
+        self.getDB().close()
 
     def setupIndex(self, index_name, klass):
 
@@ -285,13 +289,16 @@ class Database(object):
                     for profile_type in types:
                         p_type = types[profile_type]
                         if types[profile_type]['profile_id'] == p['id']:
-                            new_profile['finish'].append(p_type['finish'])
-                            new_profile['wait_for'].append(p_type['wait_for'])
-                            new_profile['qualities'].append(migrate_data['quality'][p_type['quality_id']]['identifier'])
+                            if p_type['quality_id']:
+                                new_profile['finish'].append(p_type['finish'])
+                                new_profile['wait_for'].append(p_type['wait_for'])
+                                new_profile['qualities'].append(migrate_data['quality'][p_type['quality_id']]['identifier'])
 
-                    new_profile.update(db.insert(new_profile))
-
-                    profile_link[x] = new_profile.get('_id')
+                    if len(new_profile['qualities']) > 0:
+                        new_profile.update(db.insert(new_profile))
+                        profile_link[x] = new_profile.get('_id')
+                    else:
+                        log.error('Corrupt profile list for "%s", using default.', p.get('label'))
 
             # Qualities
             log.info('Importing quality sizes')
@@ -365,10 +372,10 @@ class Database(object):
                 m = medias[x]
 
                 status = statuses.get(m['status_id']).get('identifier')
-                l = libraries[m['library_id']]
+                l = libraries.get(m['library_id'])
 
                 # Only migrate wanted movies, Skip if no identifier present
-                if not getImdb(l.get('identifier')): continue
+                if not l or not getImdb(l.get('identifier')): continue
 
                 profile_id = profile_link.get(m['profile_id'])
                 category_id = category_link.get(m['category_id'])
@@ -412,7 +419,10 @@ class Database(object):
                         empty_info = True
                         rel['info'] = {}
 
-                    quality = quality_link[rel.get('quality_id')]
+                    quality = quality_link.get(rel.get('quality_id'))
+                    if not quality:
+                        continue
+
                     release_status = statuses.get(rel.get('status_id')).get('identifier')
 
                     if rel['info'].get('download_id'):

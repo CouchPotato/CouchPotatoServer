@@ -29,7 +29,7 @@ class Loader(object):
 
         # Get options via arg
         from couchpotato.runner import getOptions
-        self.options = getOptions(base_path, sys.argv[1:])
+        self.options = getOptions(sys.argv[1:])
 
         # Load settings
         settings = Env.get('settings')
@@ -50,7 +50,7 @@ class Loader(object):
         # Create logging dir
         self.log_dir = os.path.join(self.data_dir, 'logs');
         if not os.path.isdir(self.log_dir):
-            os.mkdir(self.log_dir)
+            os.makedirs(self.log_dir)
 
         # Logging
         from couchpotato.core.logger import CPLog

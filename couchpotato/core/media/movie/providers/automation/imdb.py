@@ -3,6 +3,7 @@ import re
 
 from bs4 import BeautifulSoup
 from couchpotato import fireEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
@@ -27,6 +28,39 @@ class IMDBBase(Automation, RSS):
 
     def getInfo(self, imdb_id):
         return fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
+
+    def getFromURL(self, url):
+        log.debug('Getting IMDBs from: %s', url)
+        html = self.getHTMLData(url)
+
+        try:
+            split = splitString(html, split_on = "<div class=\"list compact\">")[1]
+            html = splitString(split, split_on = "<div class=\"pages\">")[0]
+        except:
+            try:
+                split = splitString(html, split_on = "<div id=\"main\">")
+
+                if len(split) < 2:
+                    log.error('Failed parsing IMDB page "%s", unexpected html.', url)
+                    return []
+
+                html = BeautifulSoup(split[1])
+                for x in ['list compact', 'lister', 'list detail sub-list']:
+                    html2 = html.find('div', attrs = {
+                        'class': x
+                    })
+
+                    if html2:
+                        html = html2.contents
+                        html = ''.join([str(x) for x in html])
+                        break
+            except:
+                log.error('Failed parsing IMDB page "%s": %s', (url, traceback.format_exc()))
+
+        html = ss(html)
+        imdbs = getImdb(html, multiple = True) if html else []
+
+        return imdbs
 
 
 class IMDBWatchlist(IMDBBase):
@@ -65,16 +99,7 @@ class IMDBWatchlist(IMDBBase):
                 try:
 
                     w_url = '%s&start=%s' % (watchlist_url, start)
-                    log.debug('Started IMDB watchlists: %s', w_url)
-                    html = self.getHTMLData(w_url)
-
-                    try:
-                        split = splitString(html, split_on="<div class=\"list compact\">")[1]
-                        html = splitString(split, split_on="<div class=\"pages\">")[0]
-                    except:
-                        pass
-
-                    imdbs = getImdb(html, multiple = True) if html else []
+                    imdbs = self.getFromURL(w_url)
 
                     for imdb in imdbs:
                         if imdb not in movies:
@@ -85,13 +110,14 @@ class IMDBWatchlist(IMDBBase):
 
                     log.debug('Found %s movies on %s', (len(imdbs), w_url))
 
-                    if len(imdbs) < 250:
+                    if len(imdbs) < 225:
                         break
 
-                    start += 250
+                    start = len(movies)
 
                 except:
                     log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
+                    break
 
         return movies
 
@@ -100,95 +126,88 @@ class IMDBAutomation(IMDBBase):
 
     enabled_option = 'automation_providers_enabled'
 
-    chart_urls = {
-        'theater': 'http://www.imdb.com/movies-in-theaters/',
-        'top250': 'http://www.imdb.com/chart/top',
-        'boxoffice': 'http://www.imdb.com/chart/',
+    charts = {
+        'theater': {
+            'order': 1,
+            'name': 'IMDB - Movies in Theaters',
+            'url': 'http://www.imdb.com/movies-in-theaters/',
+        },
+        'boxoffice': {
+            'order': 2,
+            'name': 'IMDB - Box Office',
+            'url': 'http://www.imdb.com/boxoffice/',
+        },
+        'rentals': {
+            'order': 3,
+            'name': 'IMDB - Top DVD rentals',
+            'url': 'http://www.imdb.com/boxoffice/rentals',
+            'type': 'json',
+        },
+        'top250': {
+            'order': 4,
+            'name': 'IMDB - Top 250 Movies',
+            'url': 'http://www.imdb.com/chart/top',
+        },
     }
-    chart_names = {
-        'theater': 'IMDB - Movies in Theaters',
-        'top250': 'IMDB - Top 250 Movies',
-        'boxoffice': 'IMDB - Box Office',
-    }
-    chart_order = {
-        'theater': 2,
-        'top250': 4,
-        'boxoffice': 3,
-    }
-
-    first_table = ['boxoffice']
 
     def getIMDBids(self):
 
         movies = []
 
-        for url in self.chart_urls:
-            if self.conf('automation_charts_%s' % url):
-                data = self.getHTMLData(self.chart_urls[url])
-                if data:
-                    html = BeautifulSoup(data)
+        for name in self.charts:
+            chart = self.charts[name]
+            url = chart.get('url')
 
-                    try:
-                        result_div = html.find('div', attrs = {'id': 'main'})
+            if self.conf('automation_charts_%s' % name):
+                imdb_ids = self.getFromURL(url)
 
-                        try:
-                            if url in self.first_table:
-                                table = result_div.find('table')
-                                result_div = table if table else result_div
-                        except:
-                            pass
+                try:
+                    for imdb_id in imdb_ids:
+                        info = self.getInfo(imdb_id)
+                        if info and self.isMinimalMovie(info):
+                            movies.append(imdb_id)
 
-                        imdb_ids = getImdb(str(result_div), multiple = True)
+                        if self.shuttingDown():
+                            break
 
-                        for imdb_id in imdb_ids:
-                            info = self.getInfo(imdb_id)
-                            if info and self.isMinimalMovie(info):
-                                movies.append(imdb_id)
-
-                            if self.shuttingDown():
-                                break
-
-                    except:
-                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+                except:
+                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
         return movies
 
-
     def getChartList(self):
+
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
         movie_lists = []
-        max_items = int(self.conf('max_items', section='charts', default=5))
+        max_items = int(self.conf('max_items', section = 'charts', default=5))
 
-        for url in self.chart_urls:
-            if self.conf('chart_display_%s' % url):
-                movie_list = {'name': self.chart_names[url], 'url': self.chart_urls[url], 'order': self.chart_order[url], 'list': []}
-                data = self.getHTMLData(self.chart_urls[url])
-                if data:
-                    html = BeautifulSoup(data)
+        for name in self.charts:
+            chart = self.charts[name].copy()
+            url = chart.get('url')
 
-                    try:
-                        result_div = html.find('div', attrs = {'id': 'main'})
+            if self.conf('chart_display_%s' % name):
 
-                        try:
-                            if url in self.first_table:
-                                table = result_div.find('table')
-                                result_div = table if table else result_div
-                        except:
-                            pass
+                chart['list'] = []
 
-                        imdb_ids = getImdb(str(result_div), multiple = True)
+                imdb_ids = self.getFromURL(url)
 
-                        for imdb_id in imdb_ids[0:max_items]:
-                            info = self.getInfo(imdb_id)
-                            movie_list['list'].append(info)
+                try:
+                    for imdb_id in imdb_ids[0:max_items]:
 
-                            if self.shuttingDown():
-                                break
-                    except:
-                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+                        is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
+                        if not is_movie:
+                            continue
 
-                    if movie_list['list']:
-                        movie_lists.append(movie_list)
+                        info = self.getInfo(imdb_id)
+                        chart['list'].append(info)
+
+                        if self.shuttingDown():
+                            break
+                except:
+                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+
+                if chart['list']:
+                    movie_lists.append(chart)
 
 
         return movie_lists
@@ -241,11 +260,18 @@ config = [{
                     'default': True,
                 },
                 {
+                    'name': 'automation_charts_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
+                },
+                {
                     'name': 'automation_charts_top250',
                     'type': 'bool',
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
-                    'default': True,
+                    'default': False,
                 },
                 {
                     'name': 'automation_charts_boxoffice',
@@ -281,6 +307,13 @@ config = [{
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
                     'default': False,
+                },
+                {
+                    'name': 'chart_display_rentals',
+                    'type': 'bool',
+                    'label': 'DVD Rentals',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'default': True,
                 },
                 {
                     'name': 'chart_display_boxoffice',

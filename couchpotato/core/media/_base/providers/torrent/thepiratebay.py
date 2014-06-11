@@ -24,15 +24,18 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://tpb.ipredator.se',
+        'https://nobay.net',
+        'https://thebay.al',
         'https://thepiratebay.se',
-        'http://pirateproxy.ca',
-        'http://tpb.al',
+        'http://thepiratebay.cd',
+        'http://thebootlegbay.com',
         'http://www.tpb.gr',
-        'http://bayproxy.me',
-        'http://proxybay.eu',
+        'http://tpbproxy.co.uk',
+        'http://pirateproxy.in',
         'http://www.getpirate.com',
         'http://piratebay.io',
+        'http://bayproxy.li',
+        'http://proxybay.pw',
     ]
 
     def _search(self, media, quality, results):
@@ -65,7 +68,7 @@ class Base(TorrentMagnetProvider):
                         pass
 
                     entries = results_table.find_all('tr')
-                    for result in entries[2:]:
+                    for result in entries[1:]:
                         link = result.find(href = re.compile('torrent\/\d+\/'))
                         download = result.find(href = re.compile('magnet:'))
 
@@ -109,7 +112,11 @@ class Base(TorrentMagnetProvider):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
         nfo_pre = html.find('div', attrs = {'class': 'nfo'})
-        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+        description = ''
+        try:
+            description = toUnicode(nfo_pre.text)
+        except:
+            pass
 
         item['description'] = description
         return item

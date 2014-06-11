@@ -8,7 +8,7 @@ import webbrowser
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.variable import cleanHost, md5
+from couchpotato.core.helpers.variable import cleanHost, md5, isSubFolder
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -71,13 +71,14 @@ class Core(Plugin):
         return value if value and len(value) > 3 else uuid4().hex
 
     def checkDataDir(self):
-        if Env.get('app_dir') in Env.get('data_dir'):
+        if isSubFolder(Env.get('data_dir'), Env.get('app_dir')):
             log.error('You should NOT use your CouchPotato directory to save your settings in. Files will get overwritten or be deleted.')
 
         return True
 
     def cleanUpFolders(self):
-        self.deleteEmptyFolder(Env.get('app_dir'), show_error = False)
+        only_clean = ['couchpotato', 'libs', 'init']
+        self.deleteEmptyFolder(Env.get('app_dir'), show_error = False, only_clean = only_clean)
 
     def available(self, **kwargs):
         return {
@@ -90,7 +91,11 @@ class Core(Plugin):
 
         def shutdown():
             self.initShutdown()
-        IOLoop.current().add_callback(shutdown)
+
+        if IOLoop.current()._closing:
+            shutdown()
+        else:
+            IOLoop.current().add_callback(shutdown)
 
         return 'shutdown'
 
@@ -139,7 +144,8 @@ class Core(Plugin):
         log.debug('Safe to shutdown/restart')
 
         try:
-            IOLoop.current().stop()
+            if not IOLoop.current()._closing:
+                IOLoop.current().stop()
         except RuntimeError:
             pass
         except:

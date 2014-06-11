@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import traceback
 import ConfigParser
 from hashlib import md5
 
@@ -49,7 +48,7 @@ class Settings(object):
             'desc': 'Save setting to config file (settings.conf)',
             'params': {
                 'section': {'desc': 'The section name in settings.conf'},
-                'option': {'desc': 'The option name'},
+                'name': {'desc': 'The option name'},
                 'value': {'desc': 'The value you want to save'},
             }
         })
@@ -234,7 +233,7 @@ class Settings(object):
             propert = db.get('property', identifier, with_doc = True)
             prop = propert['doc']['value']
         except:
-            self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
+            pass  # self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
 
         return prop
 

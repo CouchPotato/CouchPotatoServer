@@ -1,5 +1,4 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.sceneaccess import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
@@ -17,13 +16,13 @@ class SceneAccess(MovieProvider, Base):
         ([8], ['dvdr']),
     ]
 
-    def buildUrl(self, media, quality):
+    def buildUrl(self, title, media, quality):
         cat_id = self.getCatId(quality)[0]
         url = self.urls['search'] % (cat_id, cat_id)
 
         arguments = tryUrlencode({
-            'search': fireEvent('library.query', media, single = True),
-            'method': 3,
+            'search': '%s %s' % (title, media['info']['year']),
+            'method': 2,
         })
         query = "%s&%s" % (url, arguments)
 

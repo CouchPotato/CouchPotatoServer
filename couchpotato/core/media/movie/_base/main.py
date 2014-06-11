@@ -105,7 +105,7 @@ class MovieBase(MovieTypeBase):
                     'imdb': params.get('identifier')
                 },
                 'status': status if status else 'active',
-                'profile_id': params.get('profile_id', default_profile.get('_id')),
+                'profile_id': params.get('profile_id') or default_profile.get('_id'),
                 'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None,
             }
 
@@ -139,7 +139,7 @@ class MovieBase(MovieTypeBase):
 
                 # Clean snatched history
                 for release in fireEvent('release.for_media', m['_id'], single = True):
-                    if release.get('status') in ['downloaded', 'snatched', 'done']:
+                    if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
                             release['status'] = 'ignored'
                             db.update(release)

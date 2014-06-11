@@ -88,10 +88,14 @@ class Provider(Plugin):
 
         if data and len(data) > 0:
             try:
-                data = XMLTree.fromstring(ss(data))
+                data = XMLTree.fromstring(data)
                 return self.getElements(data, item_path)
             except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+                try:
+                    data = XMLTree.fromstring(ss(data))
+                    return self.getElements(data, item_path)
+                except:
+                    log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
         return []
 
@@ -124,6 +128,9 @@ class YarrProvider(Provider):
             return self.protocol
         else:
             return []
+
+    def buildUrl(self, *args, **kwargs):
+        pass
 
     def login(self):
 
@@ -177,7 +184,7 @@ class YarrProvider(Provider):
         try:
             return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()}, show_error = False)
         except:
-            log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
+            log.error('Failed getting release from %s: %s', (self.getName(), traceback.format_exc()))
 
         return 'try_next'
 
@@ -200,7 +207,7 @@ class YarrProvider(Provider):
             self._search(media, quality, results)
         # Search possible titles
         else:
-            media_title = fireEvent('library.query', media, single = True)
+            media_title = fireEvent('library.query', media, include_year = False, single = True)
 
             for title in possibleTitles(media_title):
                 self._searchOnTitle(title, media, quality, results)
@@ -298,7 +305,7 @@ class ResultList(list):
             old_score = new_result['score']
             new_result['score'] = int(old_score * is_correct_weight)
 
-            log.info('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
+            log.info2('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
                 is_correct_weight,
                 old_score,
                 new_result['score']

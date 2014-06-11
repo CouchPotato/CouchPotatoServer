@@ -3,10 +3,11 @@ import os
 import time
 import traceback
 
+from CodernityDB.database import RecordDeleted
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -57,8 +58,8 @@ class Release(Plugin):
         addEvent('release.for_media', self.forMedia)
 
         # Clean releases that didn't have activity in the last week
-        addEvent('app.load', self.cleanDone)
-        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
+        addEvent('app.load', self.cleanDone, priority = 1000)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 12)
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
@@ -67,6 +68,24 @@ class Release(Plugin):
         week = 262080
 
         db = get_db()
+
+        # Get (and remove) parentless releases
+        releases = db.all('release', with_doc = True)
+        media_exist = []
+        for release in releases:
+            if release.get('key') in media_exist:
+                continue
+
+            try:
+                db.get('id', release.get('key'))
+                media_exist.append(release.get('key'))
+            except RecordDeleted:
+                db.delete(release['doc'])
+                log.debug('Deleted orphaned release: %s', release['doc'])
+            except:
+                log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        del media_exist
 
         # get movies last_edit more than a week ago
         medias = fireEvent('media.with_status', 'done', single = True)
@@ -85,7 +104,7 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignore')
 
-    def add(self, group, update_info = True):
+    def add(self, group, update_info = True, update_id = None):
 
         try:
             db = get_db()
@@ -101,29 +120,46 @@ class Release(Plugin):
                     'profile_id': None,
                 }, search_after = False, update_after = update_info, notify_after = False, status = 'done', single = True)
 
-            # Add Release
-            release = {
-                '_t': 'release',
-                'media_id': media['_id'],
-                'identifier': release_identifier,
-                'quality': group['meta_data']['quality'].get('identifier'),
-                'last_edit': int(time.time()),
-                'status': 'done'
-            }
-            try:
-                r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
-                r['media_id'] = media['_id']
-            except:
-                r = db.insert(release)
+            release = None
+            if update_id:
+                try:
+                    release = db.get('id', update_id)
+                    release.update({
+                        'identifier': release_identifier,
+                        'last_edit': int(time.time()),
+                        'status': 'done',
+                    })
+                except:
+                    log.error('Failed updating existing release: %s', traceback.format_exc())
+            else:
 
-            # Update with ref and _id
-            release.update({
-                '_id': r['_id'],
-                '_rev': r['_rev'],
-            })
+                # Add Release
+                if not release:
+                    release = {
+                        '_t': 'release',
+                        'media_id': media['_id'],
+                        'identifier': release_identifier,
+                        'quality': group['meta_data']['quality'].get('identifier'),
+                        'is_3d': group['meta_data']['quality'].get('is_3d', 0),
+                        'last_edit': int(time.time()),
+                        'status': 'done'
+                    }
+
+                try:
+                    r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
+                    r['media_id'] = media['_id']
+                except:
+                    log.error('Failed updating release by identifier: %s', traceback.format_exc())
+                    r = db.insert(release)
+
+                # Update with ref and _id
+                release.update({
+                    '_id': r['_id'],
+                    '_rev': r['_rev'],
+                })
 
             # Empty out empty file groups
-            release['files'] = dict((k, v) for k, v in group['files'].items() if v)
+            release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
             fireEvent('media.restatus', media['_id'])
@@ -147,6 +183,9 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             db.delete(rel)
             return True
+        except RecordDeleted:
+            log.error('Already deleted: %s', release_id)
+            return True
         except:
             log.error('Failed: %s', traceback.format_exc())
 
@@ -157,15 +196,20 @@ class Release(Plugin):
         try:
             db = get_db()
             rel = db.get('id', release_id)
+            raw_files = rel.get('files')
 
-            if len(rel.get('files')) == 0:
+            if len(raw_files) == 0:
                 self.delete(rel['_id'])
             else:
 
-                files = []
-                for release_file in rel.get('files'):
-                    if os.path.isfile(ss(release_file['path'])):
-                        files.append(release_file)
+                files = {}
+                for file_type in raw_files:
+
+                    for release_file in raw_files.get(file_type, []):
+                        if os.path.isfile(sp(release_file)):
+                            if file_type not in files:
+                                files[file_type] = []
+                            files[file_type].append(release_file)
 
                 rel['files'] = files
                 db.update(rel)
@@ -313,12 +357,14 @@ class Release(Plugin):
 
         return True
 
-    def tryDownloadResult(self, results, media, quality_custom, manual = False):
+    def tryDownloadResult(self, results, media, quality_custom):
 
+        wait_for = False
+        let_through = False
+        filtered_results = []
+
+        # If a single release comes through the "wait for", let through all
         for rel in results:
-            if not quality_custom.get('finish', False) and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for'), rel['name']))
-                continue
 
             if rel['status'] in ['ignored', 'failed']:
                 log.info('Ignored: %s', rel['name'])
@@ -328,13 +374,30 @@ class Release(Plugin):
                 log.info('Ignored, score to low: %s', rel['name'])
                 continue
 
-            downloaded = fireEvent('release.download', data = rel, media = media, manual = manual, single = True)
+            rel['wait_for'] = False
+            if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
+                rel['wait_for'] = True
+            else:
+                let_through = True
+
+            filtered_results.append(rel)
+
+        # Loop through filtered results
+        for rel in filtered_results:
+
+            # Only wait if not a single release is old enough
+            if rel.get('wait_for') and not let_through:
+                log.info('Ignored, waiting %s days: %s', (quality_custom.get('wait_for') - rel.get('age'), rel['name']))
+                wait_for = True
+                continue
+
+            downloaded = fireEvent('release.download', data = rel, media = media, single = True)
             if downloaded is True:
                 return True
             elif downloaded != 'try_next':
                 break
 
-        return False
+        return wait_for
 
     def createFromSearch(self, search_results, media, quality):
 
@@ -406,7 +469,7 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             if rel and rel.get('status') != status:
 
-                release_name = rel.get('name')
+                release_name = rel['info'].get('name')
                 if rel.get('files'):
                     for file_type in rel.get('files', {}):
                         if file_type == 'movie':

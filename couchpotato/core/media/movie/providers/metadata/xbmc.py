@@ -17,19 +17,43 @@ autoload = 'XBMC'
 
 class XBMC(MovieMetaData):
 
-    def getFanartName(self, name, root):
+    def getFanartName(self, name, root, i):
         return self.createMetaName(self.conf('meta_fanart_name'), name, root)
 
-    def getThumbnailName(self, name, root):
+    def getThumbnailName(self, name, root, i):
         return self.createMetaName(self.conf('meta_thumbnail_name'), name, root)
 
-    def getNfoName(self, name, root):
+    def getNfoName(self, name, root, i):
         return self.createMetaName(self.conf('meta_nfo_name'), name, root)
+
+    def getBannerName(self, name, root, i):
+        return self.createMetaName(self.conf('meta_banner_name'), name, root)
+
+    def getClearArtName(self, name, root, i):
+        return self.createMetaName(self.conf('meta_clear_art_name'), name, root)
+
+    def getLogoName(self, name, root, i):
+        return self.createMetaName(self.conf('meta_logo_name'), name, root)
+
+    def getDiscArtName(self, name, root, i):
+        return self.createMetaName(self.conf('meta_disc_art_name'), name, root)
+
+    def getLandscapeName(self, name, root, i):
+        return self.createMetaName(self.conf('meta_landscape_name'), name, root)
+
+    def getExtraThumbsName(self, name, root, i):
+        return self.createMetaNameMult(self.conf('meta_extra_thumbs_name'), name, root, i)
+
+    def getExtraFanartName(self, name, root, i):
+        return self.createMetaNameMult(self.conf('meta_extra_fanart_name'), name, root, i)
 
     def createMetaName(self, basename, name, root):
         return os.path.join(root, basename.replace('%s', name))
 
-    def getNfo(self, movie_info = None, data = None):
+    def createMetaNameMult(self, basename, name, root, i):
+        return os.path.join(root, basename.replace('%s', name).replace('<i>', str(i + 1)))
+
+    def getNfo(self, movie_info=None, data=None, i=0):
         if not data: data = {}
         if not movie_info: movie_info = {}
 
@@ -129,10 +153,25 @@ class XBMC(MovieMetaData):
         for image_url in movie_info['images']['poster_original']:
             image = SubElement(nfoxml, 'thumb')
             image.text = toUnicode(image_url)
-        fanart = SubElement(nfoxml, 'fanart')
-        for image_url in movie_info['images']['backdrop_original']:
-            image = SubElement(fanart, 'thumb')
-            image.text = toUnicode(image_url)
+
+        image_types = [
+            ('fanart', 'backdrop_original'),
+            ('banner', 'banner'),
+            ('discart', 'disc_art'),
+            ('logo', 'logo'),
+            ('clearart', 'clear_art'),
+            ('landscape', 'landscape'),
+            ('extrathumb', 'extra_thumbs'),
+            ('extrafanart', 'extra_fanart'),
+        ]
+
+        for image_type in image_types:
+            sub, type = image_type
+
+            sub_element = SubElement(nfoxml, sub)
+            for image_url in movie_info['images'][type]:
+                image = SubElement(sub_element, 'thumb')
+                image.text = toUnicode(image_url)
 
         # Add trailer if found
         trailer_found = False
@@ -239,6 +278,92 @@ config = [{
                     'default': '%s.tbn',
                     'advanced': True,
                 },
+                {
+                    'name': 'meta_banner',
+                    'label': 'Banner',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_banner_name',
+                    'label': 'Banner filename',
+                    'default': 'banner.jpg',
+                    'advanced': True,
+                },
+                {
+                    'name': 'meta_clear_art',
+                    'label': 'ClearArt',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_clear_art_name',
+                    'label': 'ClearArt filename',
+                    'default': 'clearart.png',
+                    'advanced': True,
+                },
+                {
+                    'name': 'meta_disc_art',
+                    'label': 'DiscArt',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_disc_art_name',
+                    'label': 'DiscArt filename',
+                    'default': 'disc.png',
+                    'advanced': True,
+                },
+                {
+                    'name': 'meta_landscape',
+                    'label': 'Landscape',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_landscape_name',
+                    'label': 'Landscape filename',
+                    'default': 'landscape.jpg',
+                    'advanced': True,
+                },
+                {
+                    'name': 'meta_logo',
+                    'label': 'ClearLogo',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_logo_name',
+                    'label': 'ClearLogo filename',
+                    'default': 'logo.png',
+                    'advanced': True,
+                },
+                {
+                    'name': 'meta_extra_thumbs',
+                    'label': 'Extrathumbs',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_extra_thumbs_name',
+                    'label': 'Extrathumbs filename',
+                    'description': '&lt;i&gt; is the image number, and must be included to have multiple images',
+                    'default': 'extrathumbs/thumb<i>.jpg',
+                    'advanced': True
+                },
+                {
+                    'name': 'meta_extra_fanart',
+                    'label': 'Extrafanart',
+                    'default': False,
+                    'type': 'bool'
+                },
+                {
+                    'name': 'meta_extra_fanart_name',
+                    'label': 'Extrafanart filename',
+                    'default': 'extrafanart/extrafanart<i>.jpg',
+                    'description': '&lt;i&gt; is the image number, and must be included to have multiple images',
+                    'advanced': True
+                }
             ],
         },
     ],

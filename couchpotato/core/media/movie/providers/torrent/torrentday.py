@@ -1,5 +1,4 @@
 from couchpotato.core.logger import CPLog
-from couchpotato.core.event import fireEvent
 from couchpotato.core.media._base.providers.torrent.torrentday import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
 
@@ -16,6 +15,3 @@ class TorrentDay(MovieProvider, Base):
         ([3], ['dvdr']),
         ([5], ['bd50']),
     ]
-
-    def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)

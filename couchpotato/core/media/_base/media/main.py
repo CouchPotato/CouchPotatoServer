@@ -1,6 +1,7 @@
 import traceback
 from string import ascii_lowercase
 
+from CodernityDB.database import RecordNotFound
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -107,8 +108,7 @@ class MediaPlugin(MediaBase):
             def handler():
                 fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
 
-            if handler:
-                return handler
+            return handler
 
         except:
             log.error('Refresh handler for non existing media: %s', traceback.format_exc())
@@ -120,25 +120,30 @@ class MediaPlugin(MediaBase):
 
     def get(self, media_id):
 
-        db = get_db()
+        try:
+            db = get_db()
 
-        imdb_id = getImdb(str(media_id))
+            imdb_id = getImdb(str(media_id))
 
-        media = None
-        if imdb_id:
-            media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
-        else:
-            media = db.get('id', media_id)
+            if imdb_id:
+                media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
+            else:
+                media = db.get('id', media_id)
 
-        if media:
+            if media:
 
-            # Attach category
-            try: media['category'] = db.get('id', media.get('category_id'))
-            except: pass
+                # Attach category
+                try: media['category'] = db.get('id', media.get('category_id'))
+                except: pass
 
-            media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
+                media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
 
-        return media
+            return media
+
+        except RecordNotFound:
+            log.error('Media with id "%s" not found', media_id)
+        except:
+            raise
 
     def getView(self, id = None, **kwargs):
 
@@ -361,12 +366,17 @@ class MediaPlugin(MediaBase):
             media = db.get('id', media_id)
             if media:
                 deleted = False
+
+                media_releases = fireEvent('release.for_media', media['_id'], single = True)
+
                 if delete_from == 'all':
+                    # Delete connected releases
+                    for release in media_releases:
+                        db.delete(release)
+
                     db.delete(media)
                     deleted = True
                 else:
-
-                    media_releases = fireEvent('release.for_media', media['_id'], single = True)
 
                     total_releases = len(media_releases)
                     total_deleted = 0
@@ -383,7 +393,7 @@ class MediaPlugin(MediaBase):
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active'):
+                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active') or (not new_media_status and delete_from == 'late'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:

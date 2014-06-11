@@ -99,7 +99,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 
 
 class TitleIndex(TreeBasedIndex):
-    _version = 2
+    _version = 4
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -123,16 +123,16 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
         nr_prefix = '' if title and len(title) > 0 and title[0] in ascii_letters else '#'
         title = simplifyString(title)
 
-        for prefix in ['the ']:
+        for prefix in ['the ', 'an ', 'a ']:
             if prefix == title[:len(prefix)]:
                 title = title[len(prefix):]
                 break
 
-        return str(nr_prefix + title).ljust(32, '_')[:32]
+        return str(nr_prefix + title).ljust(32, ' ')[:32]
 
 
 class StartsWithIndex(TreeBasedIndex):
-    _version = 2
+    _version = 3
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -153,7 +153,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
         title = toUnicode(title)
         title = simplifyString(title)
 
-        for prefix in ['the ']:
+        for prefix in ['the ', 'an ', 'a ']:
             if prefix == title[:len(prefix)]:
                 title = title[len(prefix):]
                 break

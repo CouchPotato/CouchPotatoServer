@@ -54,7 +54,7 @@
 	},
 
 	pushState: function(e){
-		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
+		if((!e.meta && Browser.platform.mac) || (!e.control && !Browser.platform.mac)){
 			(e).preventDefault();
 			var url = e.target.get('href');
 			if(History.getPath() != url)
@@ -63,7 +63,7 @@
 	},
 
 	isMac: function(){
-		return Browser.Platform.mac
+		return Browser.platform.mac
 	},
 
 	createLayout: function(){
@@ -137,17 +137,32 @@
 	createPages: function(){
 		var self = this;
 
+		var pages = [];
 		Object.each(Page, function(page_class, class_name){
 			var pg = new Page[class_name](self, {});
 			self.pages[class_name] = pg;
 
-			self.fireEvent('load'+class_name);
-
-			$(pg).inject(self.content);
+			pages.include({
+				'order': pg.order,
+				'name': class_name,
+				'class': pg
+			});
 		});
+
+		pages.stableSort(self.sortPageByOrder).each(function(page){
+			page['class'].load();
+			self.fireEvent('load'+page.name);
+			$(page['class']).inject(self.content);
+		});
+
+		delete pages;
 
 		self.fireEvent('load');
 
+	},
+
+	sortPageByOrder: function(a, b){
+		return (a.order || 100) - (b.order || 100)
 	},
 
 	openPage: function(url) {
@@ -307,7 +322,7 @@
 
 		var url = 'http://www.dereferer.org/?' + el.get('href');
 
-		if(el.get('target') == '_blank' || (e.meta && Browser.Platform.mac) || (e.control && !Browser.Platform.mac))
+		if(el.get('target') == '_blank' || (e.meta && Browser.platform.mac) || (e.control && !Browser.platform.mac))
 			window.open(url);
 		else
 			window.location = url;

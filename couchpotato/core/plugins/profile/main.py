@@ -34,13 +34,22 @@ class ProfilePlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 90)
-        addEvent('app.load', self.forceDefaults)
+        addEvent('app.load', self.forceDefaults, priority = 110)
 
     def forceDefaults(self):
 
+        db = get_db()
+
+        # Fill qualities and profiles if they are empty somehow..
+        if db.count(db.all, 'profile') == 0:
+
+            if db.count(db.all, 'quality') == 0:
+                fireEvent('quality.fill', single = True)
+
+            self.fill()
+
         # Get all active movies without profile
         try:
-            db = get_db()
             medias = fireEvent('media.with_status', 'active', single = True)
 
             profile_ids = [x.get('_id') for x in self.all()]
@@ -87,7 +96,7 @@ class ProfilePlugin(Plugin):
             order = 0
             for type in kwargs.get('types', []):
                 profile['qualities'].append(type.get('quality'))
-                profile['wait_for'].append(tryInt(type.get('wait_for')))
+                profile['wait_for'].append(tryInt(kwargs.get('wait_for', 0)))
                 profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
                 profile['3d'].append(tryInt(type.get('3d')))
                 order += 1

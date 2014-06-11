@@ -174,8 +174,8 @@ class TransmissionRPC(object):
         self.session = {}
         if username and password:
             password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            password_manager.add_password(realm = None, uri = self.url, user = username, passwd = password)
-            opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_manager), urllib2.HTTPDigestAuthHandler(password_manager))
+            password_manager.add_password(realm = 'Transmission', uri = self.url, user = username, passwd = password)
+            opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_manager))
             opener.addheaders = [('User-agent', 'couchpotato-transmission-client/1.0')]
             urllib2.install_opener(opener)
         elif username or password:

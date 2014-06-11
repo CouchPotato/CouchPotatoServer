@@ -2,13 +2,13 @@ import traceback
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 
 
 log = CPLog(__name__)
 
 
-class Base(TorrentProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'test': '%s/api',
@@ -35,7 +35,11 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        search_url = self.urls['search'] % (self.getDomain(), getIdentifier(movie), quality['identifier'])
+        domain = self.getDomain()
+        if not domain:
+            return
+
+        search_url = self.urls['search'] % (domain, getIdentifier(movie), quality['identifier'])
 
         data = self.getJsonData(search_url)
 
@@ -43,21 +47,19 @@ class Base(TorrentProvider):
             try:
                 for result in data.get('MovieList'):
 
-                    try:
-                        title = result['TorrentUrl'].split('/')[-1][:-8].replace('_', '.').strip('._')
-                        title = title.replace('.-.', '-')
-                        title = title.replace('..', '.')
-                    except:
-                        continue
+                    if result['Quality'] and result['Quality'] not in result['MovieTitle']:
+                        title = result['MovieTitle'] + ' BrRip ' + result['Quality']
+                    else: 
+                        title = result['MovieTitle'] + ' BrRip'
 
                     results.append({
                         'id': result['MovieID'],
                         'name': title,
                         'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % (self.getDomain(), result['MovieID']),
+                        'detail_url': self.urls['detail'] % (domain, result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
-                        'leechers': tryInt(result['TorrentPeers'])
+                        'leechers': tryInt(result['TorrentPeers']),
                     })
 
             except:

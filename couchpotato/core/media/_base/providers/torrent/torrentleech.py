@@ -24,9 +24,9 @@ class Base(TorrentProvider):
     http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
-    def _search(self, media, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
-        url = self.urls['search'] % self.buildUrl(media, quality)
+        url = self.urls['search'] % self.buildUrl(title, media, quality)
 
         data = self.getHTMLData(url)
 
