@@ -158,7 +158,7 @@ var Movie = new Class({
 							'text': self.data.info.year || 'n/a'
 						})
 					),
-					self.description = new Element('div.description', {
+					self.description = new Element('div.description.tiny_scroll', {
 						'text': self.data.info.plot
 					}),
 					self.quality = new Element('div.quality', {

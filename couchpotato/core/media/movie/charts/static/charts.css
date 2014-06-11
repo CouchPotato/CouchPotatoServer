@@ -3,23 +3,6 @@
 	margin-bottom: 30px;
 }
 
-    .charts ::-webkit-scrollbar {
-        width: 5px;
-        position: absolute;
-    }
-
-    .charts ::-webkit-scrollbar-track {
-        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
-        -webkit-border-radius: 5px;
-        border-radius: 5px;
-    }
-
-    .charts ::-webkit-scrollbar-thumb {
-        -webkit-border-radius: 5px;
-        border-radius: 5px;
-        background: rgba(255,255,255,0.3);
-    }
-
     .charts > h2 {
         height: 40px;
     }
@@ -29,13 +12,8 @@
         width: 50%;
         vertical-align: top;
         max-height: 510px;
-        overflow: hidden;
         scrollbar-base-color: #4e5969;
     }
-
-        .charts .chart:hover {
-            overflow-y: auto;
-        }
 
     .charts .chart .media_result.hidden {
         display: none;
