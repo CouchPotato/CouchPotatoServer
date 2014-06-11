@@ -138,14 +138,15 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.delete', movie['_id'], single = True)
             return
 
+        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
+
         # Ignore eta once every 7 days
         if not alway_search:
             prop_name = 'last_ignored_eta.%s' % movie['_id']
             last_ignored_eta = float(Env.prop(prop_name, default = 0))
             if last_ignored_eta > time.time() - 604800:
                 ignore_eta = True
-
-        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
+                Env.prop(prop_name, value = time.time())
 
         db = get_db()
 
@@ -238,7 +239,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             if outside_eta_results > 0:
                 log.info('Found %s releases, but before ETA. Use dashboard to download manually', outside_eta_results)
-                message = 'Found %s releases for "%s" before ETA. Check them out on the dashboard.' % (outside_eta_results, default_title)
+                message = 'Found %s releases for "%s" before ETA. You can check them out on the dashboard.' % (outside_eta_results, default_title)
                 fireEvent('media.available', message = message, data = {})
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
