@@ -54,7 +54,7 @@
 	},
 
 	pushState: function(e){
-		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
+		if((!e.meta && Browser.platform.mac) || (!e.control && !Browser.platform.mac)){
 			(e).preventDefault();
 			var url = e.target.get('href');
 			if(History.getPath() != url)
@@ -63,7 +63,7 @@
 	},
 
 	isMac: function(){
-		return Browser.Platform.mac
+		return Browser.platform.mac
 	},
 
 	createLayout: function(){
@@ -322,7 +322,7 @@
 
 		var url = 'http://www.dereferer.org/?' + el.get('href');
 
-		if(el.get('target') == '_blank' || (e.meta && Browser.Platform.mac) || (e.control && !Browser.Platform.mac))
+		if(el.get('target') == '_blank' || (e.meta && Browser.platform.mac) || (e.control && !Browser.platform.mac))
 			window.open(url);
 		else
 			window.location = url;
