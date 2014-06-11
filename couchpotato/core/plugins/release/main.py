@@ -341,7 +341,7 @@ class Release(Plugin):
 
         return True
 
-    def tryDownloadResult(self, results, media, quality_custom, manual = False):
+    def tryDownloadResult(self, results, media, quality_custom):
 
         wait_for = False
         let_through = False
@@ -375,7 +375,7 @@ class Release(Plugin):
                 wait_for = True
                 continue
 
-            downloaded = fireEvent('release.download', data = rel, media = media, manual = manual, single = True)
+            downloaded = fireEvent('release.download', data = rel, media = media, single = True)
             if downloaded is True:
                 return True
             elif downloaded != 'try_next':

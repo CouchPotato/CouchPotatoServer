@@ -28,7 +28,7 @@ class MediaBase(Plugin):
                 media = fireEvent('media.get', media_id, single = True)
                 event_name = '%s.searcher.single' % media.get('type')
 
-                fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id))
+                fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id), manual = True)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
 

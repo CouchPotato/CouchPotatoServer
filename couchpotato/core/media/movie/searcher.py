@@ -58,13 +58,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def searchAllView(self, **kwargs):
 
-        fireEventAsync('movie.searcher.all')
+        fireEventAsync('movie.searcher.all', manual = True)
 
         return {
             'success': not self.in_progress
         }
 
-    def searchAll(self):
+    def searchAll(self, manual = False):
 
         if self.in_progress:
             log.info('Search already in progress')
@@ -91,7 +91,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 media = fireEvent('media.get', media_id, single = True)
 
                 try:
-                    self.single(media, search_protocols)
+                    self.single(media, search_protocols, manual = manual)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (getIdentifier(media), traceback.format_exc()))
                     fireEvent('movie.update_info', media_id)
@@ -130,7 +130,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         too_early_to_search = []
         outside_eta_results = 0
         alway_search = self.conf('always_search')
-        ignore_eta = False
+        ignore_eta = manual
 
         default_title = getTitle(movie)
         if not default_title:
@@ -217,7 +217,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 if results_count > 0:
                     log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
             # Try find a valid result and download it
-            elif fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
+            elif fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -239,8 +239,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             if outside_eta_results > 0:
                 log.info('Found %s releases, but before ETA. Use dashboard to download manually', outside_eta_results)
-                message = 'Found %s releases for "%s" before ETA. You can check them out on the dashboard.' % (outside_eta_results, default_title)
-                fireEvent('media.available', message = message, data = {})
+
+                if not manual:
+                    message = 'Found %s releases for "%s" before ETA. You can check them out on the dashboard.' % (outside_eta_results, default_title)
+                    fireEvent('media.available', message = message, data = {})
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
 
