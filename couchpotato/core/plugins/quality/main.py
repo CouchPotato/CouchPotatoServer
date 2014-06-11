@@ -1,5 +1,6 @@
 import traceback
 import re
+from CodernityDB.database import RecordNotFound
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -51,6 +52,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.order', self.getOrder)
         addEvent('quality.ishigher', self.isHigher)
         addEvent('quality.isfinish', self.isFinish)
+        addEvent('quality.fill', self.fill)
 
         addApiView('quality.size.save', self.saveSize)
         addApiView('quality.list', self.allView, docs = {
@@ -152,24 +154,31 @@ class QualityPlugin(Plugin):
             order = 0
             for q in self.qualities:
 
-                db.insert({
-                    '_t': 'quality',
-                    'order': order,
-                    'identifier': q.get('identifier'),
-                    'size_min': tryInt(q.get('size')[0]),
-                    'size_max': tryInt(q.get('size')[1]),
-                })
+                existing = None
+                try:
+                    existing = db.get('quality', q.get('identifier'))
+                except RecordNotFound:
+                    pass
 
-                log.info('Creating profile: %s', q.get('label'))
-                db.insert({
-                    '_t': 'profile',
-                    'order': order + 20,  # Make sure it goes behind other profiles
-                    'core': True,
-                    'qualities': [q.get('identifier')],
-                    'label': toUnicode(q.get('label')),
-                    'finish': [True],
-                    'wait_for': [0],
-                })
+                if not existing:
+                    db.insert({
+                        '_t': 'quality',
+                        'order': order,
+                        'identifier': q.get('identifier'),
+                        'size_min': tryInt(q.get('size')[0]),
+                        'size_max': tryInt(q.get('size')[1]),
+                    })
+
+                    log.info('Creating profile: %s', q.get('label'))
+                    db.insert({
+                        '_t': 'profile',
+                        'order': order + 20,  # Make sure it goes behind other profiles
+                        'core': True,
+                        'qualities': [q.get('identifier')],
+                        'label': toUnicode(q.get('label')),
+                        'finish': [True],
+                        'wait_for': [0],
+                    })
 
                 order += 1
 

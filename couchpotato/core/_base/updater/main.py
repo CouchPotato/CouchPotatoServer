@@ -142,7 +142,9 @@ class Updater(Plugin):
         }
 
     def doShutdown(self):
-        self.updater.deletePyc(show_logs = False)
+        if not Env.get('dev'):
+            self.updater.deletePyc(show_logs = False)
+
         return super(Updater, self).doShutdown()
 
 

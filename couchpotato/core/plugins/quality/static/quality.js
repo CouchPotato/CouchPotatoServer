@@ -29,9 +29,14 @@ var QualityBase = new Class({
 	},
 
 	getQuality: function(identifier){
-		return this.qualities.filter(function(q){
-			return q.identifier == identifier;
-		}).pick();
+		try {
+			return this.qualities.filter(function(q){
+				return q.identifier == identifier;
+			}).pick();
+		}
+		catch(e){}
+		
+		return {}
 	},
 
 	addSettings: function(){
@@ -104,7 +109,7 @@ var QualityBase = new Class({
 		var profile_list;
 		self.settings.createGroup({
 			'label': 'Profile Defaults',
-			'description':  '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
+			'description': '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
 		}).adopt(
 			new Element('.ctrlHolder#profile_ordering').adopt(
 				new Element('label[text=Order]'),
