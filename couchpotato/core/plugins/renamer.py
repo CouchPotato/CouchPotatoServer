@@ -227,6 +227,7 @@ class Renamer(Plugin):
         for group_identifier in groups:
 
             group = groups[group_identifier]
+            group['release_download'] = None
             rename_files = {}
             remove_files = []
             remove_releases = []
@@ -504,13 +505,15 @@ class Renamer(Plugin):
                                 if release_download['status'] == 'completed':
                                     # Set the release to downloaded
                                     fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                                    group['release_download'] = release_download
                                 elif release_download['status'] == 'seeding':
                                     # Set the release to seeding
                                     fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
 
                         elif release.get('identifier') == group['meta_data']['quality']['identifier']:
-                                # Set the release to downloaded
-                                fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                            # Set the release to downloaded
+                            fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                            group['release_download'] = release_download
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything

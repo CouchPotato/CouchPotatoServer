@@ -32,7 +32,7 @@ class Manage(Plugin):
         # Add files after renaming
         def after_rename(message = None, group = None):
             if not group: group = {}
-            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
+            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'], release_download = group['release_download'])
         addEvent('renamer.after', after_rename, priority = 110)
 
         addApiView('manage.update', self.updateLibraryView, docs = {
@@ -254,7 +254,7 @@ class Manage(Plugin):
 
         return []
 
-    def scanFilesToLibrary(self, folder = None, files = None):
+    def scanFilesToLibrary(self, folder = None, files = None, release_download = None):
 
         folder = os.path.normpath(folder)
 
@@ -263,7 +263,10 @@ class Manage(Plugin):
         if groups:
             for group in groups.values():
                 if group.get('media'):
-                    fireEvent('release.add', group = group)
+                    if release_download and release_download.get('release_id'):
+                        fireEvent('release.add', group = group, update_id = release_download.get('release_id'))
+                    else:
+                        fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
 
