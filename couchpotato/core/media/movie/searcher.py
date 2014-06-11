@@ -109,7 +109,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         self.in_progress = False
 
-    def single(self, movie, search_protocols = None, manual = False):
+    def single(self, movie, search_protocols = None, manual = False, force_download = False):
 
         # Find out search type
         try:
@@ -216,8 +216,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             if could_not_be_released:
                 if results_count > 0:
                     log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
+
             # Try find a valid result and download it
-            elif fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
+            if (force_download or not could_not_be_released) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -364,13 +365,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def tryNextReleaseView(self, media_id = None, **kwargs):
 
-        trynext = self.tryNextRelease(media_id, manual = True)
+        trynext = self.tryNextRelease(media_id, manual = True, force_download = True)
 
         return {
             'success': trynext
         }
 
-    def tryNextRelease(self, media_id, manual = False):
+    def tryNextRelease(self, media_id, manual = False, force_download = False):
 
         try:
             db = get_db()
@@ -382,7 +383,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             movie_dict = fireEvent('media.get', media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict))
-            self.single(movie_dict, manual = manual)
+            self.single(movie_dict, manual = manual, force_download = force_download)
 
             return True
 
