@@ -258,14 +258,14 @@ class CoreNotifier(Notification):
 
         messages = []
 
-        # Get unread
+        # Get last message
         if init:
             db = get_db()
 
-            notifications = db.all('notification_unread', with_doc = True)
+            notifications = db.all('notification', with_doc = True)
 
             for n in notifications:
-                if n['doc'].get('time') > (time.time() - 259200):
+                if n['doc'].get('time') > (time.time() - 604800):
                     messages.append(n['doc'])
 
         return {
