@@ -2,8 +2,9 @@
 import json
 import re
 import urllib
+import datetime
 
-from couchpotato.core.helpers.variable import getIdentifier
+from couchpotato.core.helpers.variable import getIdentifier, tryInt
 from couchpotato.core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.logger import CPLog
 from bs4 import BeautifulSoup
@@ -35,6 +36,14 @@ class Base(OCHProvider):
     #===============================================================================
 
     def parseSearchResult(self, data):
+        def _getDateObject(day, month, year):
+            months = ["januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember"]
+            try:
+                month = months.index(month.lower()) + 1
+                return datetime.date(tryInt(year), month, tryInt(day))
+            except:
+                raise
+
         results = []
 
         dom = BeautifulSoup(data)
@@ -52,9 +61,10 @@ class Base(OCHProvider):
 
             try:
                 dateTag = titleTag.find(attrs={"class": "single-info"}).text
-                date = re.search(r'\d{1,2}\.\s\w+\s\d{4}', dateTag).group(0)
+                relDate = re.search(r'\d{1,2}\.\s\w+\s\d{4}', dateTag).group(0)
+                relDate = _getDateObject(relDate.split(".")[0],relDate.split(".")[1].split(" ")[1],relDate.split(".")[1].split(" ")[2])
             except AttributeError:
-                date = None
+                relDate = None
                 log.debug("Error parsing releasedate of %s." % title)
 
             urlList = []
@@ -85,7 +95,7 @@ class Base(OCHProvider):
             results.append({
                 'name': title,
                 'id': hash(title),
-                'date': date,
+                'age': (datetime.date.today() - relDate).days if relDate is not None else 0,
                 'url': urlList,
                 'size': size
             })

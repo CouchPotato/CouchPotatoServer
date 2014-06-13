@@ -7,6 +7,7 @@ import time
 import datetime
 
 from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.och.base import OCHProvider
 from bs4 import BeautifulSoup
@@ -71,6 +72,14 @@ class Base(OCHProvider):
                 log.error('Something went wrong when trying to parse imdb-id from comment %s.' % str(c))
 
     def parsePost(self, post):
+        def _getDateObject(day, month, year):
+            months = ["january", "february", "march", "april", "may", "june", "juli", "august", "september", "october", "november", "december"]
+            try:
+                month = months.index(month.lower()) + 1
+                return datetime.date(tryInt(year), month, tryInt(day))
+            except:
+                raise
+
         id = post.attrs["id"].split("-")[1]
 
         title = post.h2.a.attrs["title"]
@@ -78,11 +87,13 @@ class Base(OCHProvider):
         relDate = None
         try:
             relDateString = post.find(attrs={"class": "simple_date"}).text.split("on")[1].strip()
-            relDate = time.strptime(relDateString, "%B %d, %Y")  #timestruct
-            relDate = datetime.date.fromtimestamp(time.mktime(relDate))  #date object
-        except ValueError, e:
+            year = relDateString.split(",")[1].strip()
+            month = relDateString.split(" ")[0].strip()
+            day = relDateString.split(" ")[1].strip()[:-1]
+            relDate = _getDateObject(day, month, year)
+        except:
             log.error(
-                "error while parsing date. Dateparsing only works if you set english as your local language atm, sorry.")
+                "error while parsing date. %s" % relDateString)
 
         size_raw = str(post.find('strong', text='Size:').nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
@@ -157,6 +168,13 @@ config = [{
                               'type': 'int',
                               'default': 0,
                               'description': 'Starting score for each release found via this provider.',
+                          },
+                          {
+                              'name': 'hosters',
+                              'label': 'accepted Hosters',
+                              'default': '',
+                              'placeholder': 'Example: uploaded,share-online',
+                              'description': 'List of Hosters separated by ",". Should be at least one!'
                           },
                       ],
                   },

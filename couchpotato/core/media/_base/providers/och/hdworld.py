@@ -4,6 +4,7 @@ import re
 import urllib
 import time
 import datetime
+from couchpotato.core.helpers.variable import tryInt
 
 from couchpotato.core.media._base.providers.och.base import OCHProvider
 from couchpotato.core.helpers.encoding import simplifyString
@@ -60,14 +61,29 @@ class Base(OCHProvider):
     #===============================================================================
 
     def parseInfo(self, info):
+        def _getDateObject(day, month, year):
+            months = ["januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember"]
+            try:
+                month = months.index(month.lower()) + 1
+                return datetime.date(tryInt(year), month, tryInt(day))
+            except:
+                raise
+
         parsed = re.search("Datum:\s(?P<date>\w+,\s\d\d?.\s\w+\s\d{4})", info.p.text, re.UNICODE)
 
         try:
             relDateString = parsed.group('date')
-            relDate = time.strptime(relDateString, "%A, %d. %B %Y")  #timestruct
-            relDate = datetime.date.fromtimestamp(time.mktime(relDate))  #date object
+            day = relDateString.split(" ")[1][:-1]
+            month = relDateString.split(" ")[2]
+            year = relDateString.split(" ")[3]
+            relDate = _getDateObject(day, month, year)
         except AttributeError, e:
+            relDate = None
             log.error("error while parsing date.")
+
+        return {
+            'age':  (datetime.date.today() - relDate).days if relDate is not None else 0,
+        }
 
 
     def parsePost(self, post):
@@ -110,16 +126,17 @@ class Base(OCHProvider):
 
         try:
             postContent = self.parsePost(post)
-        #infoContent = self.parseInfo(info)
+            infoContent = self.parseInfo(info)
         except:
-            postContent = None
+            postContent = {}
+            infoContent = {}
             # :TODO something is wrong here - but usually it works as expected
             log.error("something went wrong when parsing post of release.")
 
         res = {}
-        if postContent is not None:
-            res.update(postContent)
-            res["pwd"] = "hd-world.org"  # hardcoded, is static on hd-world.org page
+        res.update(postContent)
+        res.update(infoContent)
+        res["pwd"] = "hd-world.org"  # hardcoded, is static on hd-world.org page
         return res
 
     def parseSearchResult(self, data):
