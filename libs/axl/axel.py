@@ -1,6 +1,7 @@
 # axel.py
 #
 # Copyright (C) 2010 Adrian Cristea adrian dot cristea at gmail dotcom
+# Edits by Ruud Burger
 #
 # Based on an idea by Peter Thatcher, found on
 # http://www.valuedlessons.com/2008/04/events-in-python.html
@@ -11,11 +12,13 @@
 # Source: http://pypi.python.org/pypi/axel
 # Docs:   http://packages.python.org/axel
 
-from couchpotato.core.helpers.variable import natsortKey
-import Queue
+from Queue import Empty, Queue
 import hashlib
 import sys
 import threading
+
+from couchpotato.core.helpers.variable import natsortKey
+
 
 class Event(object):
     """
@@ -140,7 +143,7 @@ class Event(object):
 
     def fire(self, *args, **kwargs):
         """ Stores all registered handlers in a queue for processing """
-        self.queue = Queue.Queue()
+        self.queue = Queue()
         result = {}
 
         if self.handlers:
@@ -239,9 +242,9 @@ class Event(object):
                         order_lock.release()
 
                     if self.queue.empty():
-                        raise Queue.Empty
+                        raise Empty
 
-            except Queue.Empty:
+            except Empty:
                 break
 
     def _extract(self, queue_item):

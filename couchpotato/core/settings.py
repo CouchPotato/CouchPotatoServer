@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import traceback
 import ConfigParser
 from hashlib import md5
 
@@ -49,7 +48,7 @@ class Settings(object):
             'desc': 'Save setting to config file (settings.conf)',
             'params': {
                 'section': {'desc': 'The section name in settings.conf'},
-                'option': {'desc': 'The option name'},
+                'name': {'desc': 'The option name'},
                 'value': {'desc': 'The value you want to save'},
             }
         })

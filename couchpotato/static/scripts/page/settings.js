@@ -27,8 +27,8 @@ Page.Settings = new Class({
 	},
 
 	openTab: function(action){
-		var self = this;
-		var action = (action == 'index' ? 'about' : action) || self.action;
+		var self = this,
+			action = (action == 'index' ? 'about' : action) || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);

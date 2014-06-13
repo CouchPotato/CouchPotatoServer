@@ -8,6 +8,7 @@ body, html {
 	padding: 0;
 	background: #4e5969;
 	-webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 	body { overflow-y: scroll; }
 	body.noscroll { overflow: hidden; }
@@ -51,6 +52,30 @@ input:-moz-placeholder {
 	color: rgba(255, 255, 255, 0.5) !important;
 	font-style: italic;
 }
+
+.tiny_scroll {
+    overflow: hidden;
+}
+
+    .tiny_scroll:hover {
+        overflow-y: auto;
+    }
+
+    .tiny_scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .tiny_scroll::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+    .tiny_scroll::-webkit-scrollbar-thumb {
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+        background: rgba(255,255,255,0.3);
+    }
 
 a img {
 	border:none;
@@ -166,6 +191,7 @@ body > .spinner, .mask{
 	text-transform: none;
 	line-height: 1;
 	-webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 	font-size: 15px;
 	color: #FFF;
 }

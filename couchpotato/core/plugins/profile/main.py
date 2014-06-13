@@ -38,9 +38,18 @@ class ProfilePlugin(Plugin):
 
     def forceDefaults(self):
 
+        db = get_db()
+
+        # Fill qualities and profiles if they are empty somehow..
+        if db.count(db.all, 'profile') == 0:
+
+            if db.count(db.all, 'quality') == 0:
+                fireEvent('quality.fill', single = True)
+
+            self.fill()
+
         # Get all active movies without profile
         try:
-            db = get_db()
             medias = fireEvent('media.with_status', 'active', single = True)
 
             profile_ids = [x.get('_id') for x in self.all()]

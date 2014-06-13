@@ -357,12 +357,8 @@
 				top: 30px;
 				clear: both;
 				bottom: 30px;
-				overflow: hidden;
 				position: absolute;
 			}
-				.movies .data:hover .description {
-					overflow: auto;
-				}
 				.movies.list_list .movie:not(.details_view) .info .description,
 				.movies.mass_edit_list .info .description,
 				.movies.thumbs_list .info .description {

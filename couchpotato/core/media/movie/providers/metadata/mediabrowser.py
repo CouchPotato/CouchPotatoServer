@@ -3,24 +3,27 @@ import os
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 
 
-autoload = 'WindowsMediaCenter'
+autoload = 'MediaBrowser'
 
 
-class WindowsMediaCenter(MovieMetaData):
+class MediaBrowser(MovieMetaData):
 
     def getThumbnailName(self, name, root, i):
         return os.path.join(root, 'folder.jpg')
 
+    def getFanartName(self, name, root, i):
+        return os.path.join(root, 'backdrop.jpg')
+
 
 config = [{
-    'name': 'windowsmediacenter',
+    'name': 'mediabrowser',
     'groups': [
         {
             'tab': 'renamer',
             'subtab': 'metadata',
-            'name': 'windowsmediacenter_metadata',
-            'label': 'Windows Explorer / Media Center',
-            'description': 'Generate folder.jpg',
+            'name': 'mediabrowser_metadata',
+            'label': 'MediaBrowser',
+            'description': 'Generate folder.jpg and backdrop.jpg',
             'options': [
                 {
                     'name': 'meta_enabled',

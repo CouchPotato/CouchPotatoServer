@@ -1,5 +1,6 @@
 import traceback
 import re
+from CodernityDB.database import RecordNotFound
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -37,7 +38,7 @@ class QualityPlugin(Plugin):
     threed_tags = {
         'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
         'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
-        '3d': ['2d3d', '3d2d'],
+        '3d': ['2d3d', '3d2d', '3d'],
     }
 
     cached_qualities = None
@@ -51,6 +52,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.order', self.getOrder)
         addEvent('quality.ishigher', self.isHigher)
         addEvent('quality.isfinish', self.isFinish)
+        addEvent('quality.fill', self.fill)
 
         addApiView('quality.size.save', self.saveSize)
         addApiView('quality.list', self.allView, docs = {
@@ -152,24 +154,31 @@ class QualityPlugin(Plugin):
             order = 0
             for q in self.qualities:
 
-                db.insert({
-                    '_t': 'quality',
-                    'order': order,
-                    'identifier': q.get('identifier'),
-                    'size_min': tryInt(q.get('size')[0]),
-                    'size_max': tryInt(q.get('size')[1]),
-                })
+                existing = None
+                try:
+                    existing = db.get('quality', q.get('identifier'))
+                except RecordNotFound:
+                    pass
 
-                log.info('Creating profile: %s', q.get('label'))
-                db.insert({
-                    '_t': 'profile',
-                    'order': order + 20,  # Make sure it goes behind other profiles
-                    'core': True,
-                    'qualities': [q.get('identifier')],
-                    'label': toUnicode(q.get('label')),
-                    'finish': [True],
-                    'wait_for': [0],
-                })
+                if not existing:
+                    db.insert({
+                        '_t': 'quality',
+                        'order': order,
+                        'identifier': q.get('identifier'),
+                        'size_min': tryInt(q.get('size')[0]),
+                        'size_max': tryInt(q.get('size')[1]),
+                    })
+
+                    log.info('Creating profile: %s', q.get('label'))
+                    db.insert({
+                        '_t': 'profile',
+                        'order': order + 20,  # Make sure it goes behind other profiles
+                        'core': True,
+                        'qualities': [q.get('identifier')],
+                        'label': toUnicode(q.get('label')),
+                        'finish': [True],
+                        'wait_for': [0],
+                    })
 
                 order += 1
 
@@ -207,15 +216,22 @@ class QualityPlugin(Plugin):
 
                 self.calcScore(score, quality, contains_score, threedscore)
 
-        # Evaluate score based on size
+        size_scores = []
         for quality in qualities:
-            size_score = self.guessSizeScore(quality, size = size)
-            self.calcScore(score, quality, size_score, penalty = False)
 
-        # Try again with loose testing
-        for quality in qualities:
+            # Evaluate score based on size
+            size_score = self.guessSizeScore(quality, size = size)
             loose_score = self.guessLooseScore(quality, extra = extra)
-            self.calcScore(score, quality, loose_score, penalty = False)
+
+            if size_score > 0:
+                size_scores.append(quality)
+
+            self.calcScore(score, quality, size_score + loose_score, penalty = False)
+
+        # Add additional size score if only 1 size validated
+        if len(size_scores) == 1:
+            self.calcScore(score, size_scores[0], 10, penalty = False)
+        del size_scores
 
         # Return nothing if all scores are <= 0
         has_non_zero = 0
@@ -283,13 +299,13 @@ class QualityPlugin(Plugin):
             tags = self.threed_tags.get(key, [])
 
             for tag in tags:
-                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                if isinstance(tag, tuple):
+                    if len(set(words) & set(tag)) == len(tag):
+                        log.debug('Found %s in %s', (tag, cur_file))
+                        return 1, key
+                elif tag in words:
                     log.debug('Found %s in %s', (tag, cur_file))
                     return 1, key
-
-            if list(set([key]) & set(words)):
-                log.debug('Found %s in %s', (key, cur_file))
-                return 1, key
 
         return 0, None
 
@@ -325,6 +341,8 @@ class QualityPlugin(Plugin):
             if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
                 log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
                 score += 5
+            else:
+                score -= 5
 
         return score
 
@@ -351,7 +369,8 @@ class QualityPlugin(Plugin):
 
             # Give panelty for all lower qualities
             for q in self.qualities[self.order.index(quality.get('identifier'))+1:]:
-                score[q.get('identifier')]['score'] -= 1
+                if score.get(q.get('identifier')):
+                    score[q.get('identifier')]['score'] -= 1
 
     def isFinish(self, quality, profile):
         if not isinstance(profile, dict) or not profile.get('qualities'):
@@ -412,6 +431,9 @@ class QualityPlugin(Plugin):
             'Movie Name (2013) 2D + 3D': {'size': 49000, 'quality': 'bd50', 'is_3d': True},
             'Movie Monuments 2013 BrRip 1080p': {'size': 1800, 'quality': 'brrip'},
             'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
+            'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True}
         }
 
         correct = 0
@@ -419,7 +441,7 @@ class QualityPlugin(Plugin):
             test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
             success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
-                log.error('%s failed check, thinks it\'s %s', (name, self.guess([name]).get('identifier')))
+                log.error('%s failed check, thinks it\'s %s', (name, test_quality.get('identifier')))
 
             correct += success
 

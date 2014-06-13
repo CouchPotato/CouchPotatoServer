@@ -10,7 +10,7 @@ from threading import RLock
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss, sp
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -142,7 +142,9 @@ class Updater(Plugin):
         }
 
     def doShutdown(self):
-        self.updater.deletePyc(show_logs = False)
+        if not Env.get('dev'):
+            self.updater.deletePyc(show_logs = False)
+
         return super(Updater, self).doShutdown()
 
 

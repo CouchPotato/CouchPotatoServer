@@ -11,3 +11,6 @@ class TrailerProvider(Provider):
 
     def __init__(self):
         addEvent('trailer.search', self.search)
+
+    def search(self, *args, **kwargs):
+        pass

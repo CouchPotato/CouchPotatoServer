@@ -7,9 +7,9 @@ var ApiClass = new Class({
 	},
 
 	request: function(type, options){
-		var self = this;
+		var self = this,
+			r_type = self.options.is_remote ? 'JSONP' : 'JSON';
 
-		var r_type = self.options.is_remote ? 'JSONP' : 'JSON';
 		return new Request[r_type](Object.merge({
 			'callbackKey': 'callback_func',
 			'method': 'get',

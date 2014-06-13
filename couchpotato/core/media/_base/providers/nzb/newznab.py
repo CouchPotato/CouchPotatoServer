@@ -1,9 +1,7 @@
-from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
 import re
-import urllib2
 
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
@@ -13,6 +11,7 @@ from couchpotato.core.media._base.providers.base import ResultList
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -92,7 +91,7 @@ class Base(NZBProvider, RSS):
                     # Extract a password from the description
                     password = re.search('(?:' + self.passwords_regex + ')(?: *)(?:\:|\=)(?: *)(.*?)\<br\>|\n|$', description, flags = re.I).group(1)
                     if password:
-                        name = name + ' {{%s}}' % password.strip()
+                        name += ' {{%s}}' % password.strip()
                 except:
                     log.debug('Error getting details of "%s": %s', (name, traceback.format_exc()))
 
@@ -184,16 +183,7 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            # Get final redirected url
-            log.debug('Checking %s for redirects.', url)
-            req = urllib2.Request(url)
-            req.add_header('User-Agent', self.user_agent)
-            res = urllib2.urlopen(req)
-            finalurl = res.geturl()
-            if finalurl != url:
-                log.debug('Redirect url used: %s', finalurl)
-
-            data = self.urlopen(finalurl, show_error = False)
+            data = self.urlopen(url, show_error = False)
             self.limits_reached[host] = False
             return data
         except HTTPError as e:

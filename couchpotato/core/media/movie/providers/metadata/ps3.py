@@ -3,24 +3,24 @@ import os
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 
 
-autoload = 'WindowsMediaCenter'
+autoload = 'SonyPS3'
 
 
-class WindowsMediaCenter(MovieMetaData):
+class SonyPS3(MovieMetaData):
 
     def getThumbnailName(self, name, root, i):
-        return os.path.join(root, 'folder.jpg')
+        return os.path.join(root, 'cover.jpg')
 
 
 config = [{
-    'name': 'windowsmediacenter',
+    'name': 'sonyps3',
     'groups': [
         {
             'tab': 'renamer',
             'subtab': 'metadata',
-            'name': 'windowsmediacenter_metadata',
-            'label': 'Windows Explorer / Media Center',
-            'description': 'Generate folder.jpg',
+            'name': 'sonyps3_metadata',
+            'label': 'Sony PS3',
+            'description': 'Generate cover.jpg',
             'options': [
                 {
                     'name': 'meta_enabled',

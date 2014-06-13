@@ -72,6 +72,9 @@ class DownloaderBase(Provider):
             return
         return self.download(data = data, media = media, filedata = filedata)
 
+    def download(self, *args, **kwargs):
+        return False
+
     def _getAllDownloadStatus(self, download_ids):
         if self.isDisabled(manual = True, data = {}):
             return

@@ -1,3 +1,4 @@
+from urllib import quote
 from urlparse import urlparse
 import glob
 import inspect
@@ -5,7 +6,6 @@ import os.path
 import re
 import time
 import traceback
-import urllib2
 
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
@@ -40,7 +40,6 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
-    http_opener = requests.Session()
 
     def __new__(cls, *args, **kwargs):
         new_plugin = super(Plugin, cls).__new__(cls)
@@ -140,19 +139,25 @@ class Plugin(object):
 
         return False
 
-    def deleteEmptyFolder(self, folder, show_error = True):
+    def deleteEmptyFolder(self, folder, show_error = True, only_clean = None):
         folder = sp(folder)
 
-        for root, dirs, files in os.walk(folder):
+        for item in os.listdir(folder):
+            full_folder = os.path.join(folder, item)
 
-            for dir_name in dirs:
-                full_path = os.path.join(root, dir_name)
-                if len(os.listdir(full_path)) == 0:
-                    try:
-                        os.rmdir(full_path)
-                    except:
-                        if show_error:
-                            log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+            if not only_clean or (item in only_clean and os.path.isdir(full_folder)):
+
+                for root, dirs, files in os.walk(full_folder):
+
+                    for dir_name in dirs:
+                        full_path = os.path.join(root, dir_name)
+
+                        if len(os.listdir(full_path)) == 0:
+                            try:
+                                os.rmdir(full_path)
+                            except:
+                                if show_error:
+                                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
             os.rmdir(folder)
@@ -161,8 +166,8 @@ class Plugin(object):
                 log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, verify_ssl = True):
-        url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
+        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
@@ -178,7 +183,7 @@ class Plugin(object):
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
-        r = self.http_opener
+        r = Env.get('http_opener')
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -200,7 +205,7 @@ class Plugin(object):
                 'data': data if len(data) > 0 else None,
                 'timeout': timeout,
                 'files': files,
-                'verify': verify_ssl,
+                'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
             }
             method = 'post' if len(data) > 0 or files else 'get'
 

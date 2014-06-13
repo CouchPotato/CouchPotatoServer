@@ -2,13 +2,13 @@ import traceback
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 
 
 log = CPLog(__name__)
 
 
-class Base(TorrentProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'test': '%s/api',

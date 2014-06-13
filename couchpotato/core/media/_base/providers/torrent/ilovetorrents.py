@@ -51,6 +51,7 @@ class Base(TorrentProvider):
                     results_table = None
 
                     data_split = splitString(data, '<table')
+                    soup = None
                     for x in data_split:
                         soup = BeautifulSoup(x)
                         results_table = soup.find('table', attrs = {'class': 'koptekst'})

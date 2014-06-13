@@ -7,7 +7,6 @@
 	text-align: right;
 	height: 100%;
 	transition: all .4s cubic-bezier(0.9,0,0.1,1);
-	position: absolute;
 	z-index: 20;
 	border: 0 solid transparent;
 	border-bottom-width: 4px;
