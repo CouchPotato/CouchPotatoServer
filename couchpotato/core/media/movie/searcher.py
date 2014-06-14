@@ -121,7 +121,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if not movie['profile_id'] or (movie['status'] == 'done' and not manual):
             log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
+            fireEvent('media.restatus', movie['_id'])
             return
+
+        default_title = getTitle(movie)
+        if not default_title:
+            log.error('No proper info found for movie, removing it from library to stop it from causing more issues.')
+            fireEvent('media.delete', movie['_id'], single = True)
+            return
+
+        # Update media status and check if it is still not done (due to the stop searching after feature
+        if fireEvent('media.restatus', movie['_id'], single = True) == 'done':
+            log.debug('No better quality found, marking movie %s as done.', default_title)
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('movie.update_release_dates', movie['_id'], merge = True)
@@ -134,32 +145,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         ignore_eta = manual
         total_result_count = 0
 
-        default_title = getTitle(movie)
-        if not default_title:
-            log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
-            fireEvent('media.delete', movie['_id'], single = True)
-            return
-
         db = get_db()
         profile = db.get('id', movie['profile_id'])
-
-        # Find out if we need to stop searching because 'stop_after' is met. Compare with the newest release found.
-        done_releases = [release for release in previous_releases if release.get('status') == 'done']
-
-        if done_releases:
-            done_release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
-            if fireEvent('quality.isfinish', {'identifier': done_release['quality'], 'is_3d': done_release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - done_release['last_edit']).days, single = True):
-
-                log.debug('No better quality than %s%s found for %s days, marking movie %s as done.', \
-                          (done_release['quality'], ' 3D' if done_release.get('is_3d', False) else '', profile['stop_after'][0], default_title))
-
-                # Mark media done
-                mdia = db.get('id', movie['_id'])
-                mdia['status'] = 'done'
-                mdia['last_edit'] = int(time.time())
-                db.update(mdia)
-
-                return
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 

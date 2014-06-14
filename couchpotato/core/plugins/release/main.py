@@ -100,7 +100,7 @@ class Release(Plugin):
                 if rel['status'] in ['available']:
                     self.delete(rel['_id'])
 
-                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
+                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the media
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignored')
 

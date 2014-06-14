@@ -1,3 +1,6 @@
+from datetime import timedelta
+from operator import itemgetter
+import time
 import traceback
 from string import ascii_lowercase
 
@@ -452,20 +455,20 @@ class MediaPlugin(MediaBase):
             if not m['profile_id']:
                 m['status'] = 'done'
             else:
-                move_to_wanted = True
+                m['status'] = 'active'
 
                 try:
-                    profile = db.get('id', m['profile_id'])
-                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
+	                profile = db.get('id', m['profile_id'])
+	                media_releases = fireEvent('release.for_media', m['_id'], single = True)
+	                done_releases = [release for release in media_releases if release.get('status') == 'done']
 
-                    for q_identifier in profile['qualities']:
-                        index = profile['qualities'].index(q_identifier)
+	                if done_releases:
+	                    # Only look at latest added release
+	                    release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
 
-                        for release in media_releases:
-                            if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
-                                move_to_wanted = False
-
-                    m['status'] = 'active' if move_to_wanted else 'done'
+	                    # Check if we are finished with the media
+	                    if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
+	                        m['status'] = 'done'
                 except RecordNotFound:
                     log.debug('Failed restatus: %s', traceback.format_exc())
 
@@ -473,7 +476,7 @@ class MediaPlugin(MediaBase):
             if previous_status != m['status']:
                 db.update(m)
 
-            return True
+            return m['status']
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
 

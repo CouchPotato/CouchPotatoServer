@@ -452,20 +452,15 @@ class Renamer(Plugin):
                     try:
                         profile = db.get('id', media['profile_id'])
                     except:
+                        # Set profile to None as it does not exist anymore
+                        media['profile_id'] = None
+                        db.update(media)
                         log.error('Error getting quality profile for %s: %s', (media_title, traceback.format_exc()))
                 else:
                     log.debug('Media has no quality profile: %s', media_title)
 
-                # Mark movie "done" once it's found the quality with the finish check
-                if media.get('status') == 'active':
-                    if fireEvent('quality.isfinish', group['meta_data']['quality'], profile, single = True):
-                        mdia = db.get('id', media['_id'])
-                        mdia['status'] = 'done'
-                        mdia['last_edit'] = int(time.time())
-                        db.update(mdia)
-
-                        # List movie on dashboard
-                        fireEvent('media.tag', media['_id'], 'recent', single = True)
+                #        # List movie on dashboard
+                #        fireEvent('media.tag', media['_id'], 'recent', single = True)
 
                 # Mark media for dashboard
                 mark_as_recent = False
