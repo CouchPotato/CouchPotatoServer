@@ -54,7 +54,7 @@ Page.Home = new Class({
 				})
 			),
 			'filter': {
-				'release_status': 'snatched,seeding,missing,available,downloaded'
+				'release_status': 'snatched,missing,available,downloaded'
 			},
 			'limit': null,
 			'onLoaded': function(){
