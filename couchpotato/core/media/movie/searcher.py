@@ -1,5 +1,4 @@
-from datetime import date, timedelta
-from operator import itemgetter
+from datetime import date
 import random
 import re
 import time
@@ -121,7 +120,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if not movie['profile_id'] or (movie['status'] == 'done' and not manual):
             log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
-            fireEvent('media.restatus', movie['_id'])
+            fireEvent('media.restatus', movie['_id'], single = True)
             return
 
         default_title = getTitle(movie)
@@ -145,9 +144,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         ignore_eta = manual
         total_result_count = 0
 
-        db = get_db()
-        profile = db.get('id', movie['profile_id'])
-
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
         # Ignore eta once every 7 days
@@ -158,6 +154,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 ignore_eta = True
                 Env.prop(prop_name, value = time.time())
 
+        db = get_db()
+
+        profile = db.get('id', movie['profile_id'])
         ret = False
 
         for index, q_identifier in enumerate(profile.get('qualities', [])):
@@ -192,7 +191,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Don't search for quality lower then already available.
             if has_better_quality > 0:
                 log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
-                fireEvent('media.restatus', movie['_id'])
+                fireEvent('media.restatus', movie['_id'], single = True)
                 break
 
             quality = fireEvent('quality.single', identifier = q_identifier, single = True)

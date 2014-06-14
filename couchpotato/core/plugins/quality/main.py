@@ -381,7 +381,8 @@ class QualityPlugin(Plugin):
 
     def isFinish(self, quality, profile, release_age = 0):
         if not isinstance(profile, dict) or not profile.get('qualities'):
-            profile = fireEvent('profile.default', single = True)
+            # No profile so anything (scanned) is good enough
+            return True
 
         try:
             index = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else False) == bool(quality.get('is_3d', False))][0]

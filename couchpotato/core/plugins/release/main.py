@@ -164,7 +164,7 @@ class Release(Plugin):
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
-            fireEvent('media.restatus', media['_id'])
+            fireEvent('media.restatus', media['_id'], single = True)
 
             return True
         except:
