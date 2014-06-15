@@ -95,15 +95,14 @@ class QualityPlugin(Plugin):
 
         db = get_db()
 
-        qualities = db.all('quality', with_doc = True)
-
         temp = []
-        for quality in qualities:
-            quality = quality['doc']
-            q = mergeDicts(self.getQuality(quality.get('identifier')), quality)
+        for quality in self.qualities:
+            quality_doc = db.get('quality', quality.get('identifier'), with_doc = True)['doc']
+            q = mergeDicts(quality, quality_doc)
             temp.append(q)
 
-        self.cached_qualities = temp
+        if len(temp) == len(self.qualities):
+            self.cached_qualities = temp
 
         return temp
 
