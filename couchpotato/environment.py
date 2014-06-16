@@ -2,6 +2,7 @@ import os
 
 from couchpotato.core.database import Database
 from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 
@@ -38,8 +39,11 @@ class Env(object):
         return Env._debug
 
     @staticmethod
-    def get(attr):
-        return getattr(Env, '_' + attr)
+    def get(attr, unicode = False):
+        if unicode:
+            return toUnicode(getattr(Env, '_' + attr))
+        else:
+            return getattr(Env, '_' + attr)
 
     @staticmethod
     def all():
