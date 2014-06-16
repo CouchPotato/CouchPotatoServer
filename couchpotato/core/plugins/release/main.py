@@ -149,7 +149,7 @@ class Release(Plugin):
                     r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
                     r['media_id'] = media['_id']
                 except:
-                    log.error('Failed updating release by identifier: %s', traceback.format_exc())
+                    log.debug('Failed updating release by identifier "%s". Inserting new.', release_identifier)
                     r = db.insert(release)
 
                 # Update with ref and _id
@@ -184,7 +184,7 @@ class Release(Plugin):
             db.delete(rel)
             return True
         except RecordDeleted:
-            log.error('Already deleted: %s', release_id)
+            log.debug('Already deleted: %s', release_id)
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())

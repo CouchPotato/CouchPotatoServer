@@ -136,6 +136,7 @@ class Manage(Plugin):
                 # Get movies with done status
                 total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', release_status = 'done', status_or = True, single = True)
 
+                deleted_releases = []
                 for done_movie in done_movies:
                     if getIdentifier(done_movie) not in added_identifiers:
                         fireEvent('media.delete', media_id = done_movie['_id'], delete_from = 'all')
@@ -165,12 +166,11 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
-                                            # delete current one
-                                            if already_used.get('last_edit', 0) < release.get('last_edit', 0):
-                                                fireEvent('release.delete', release['_id'], single = True)
-                                            # delete previous one
-                                            else:
-                                                fireEvent('release.delete', already_used['_id'], single = True)
+                                            if release_id not in deleted_releases:
+                                                release_id = release['_id'] if already_used.get('last_edit', 0) < release.get('last_edit', 0) else already_used['_id']
+                                                fireEvent('release.delete', release_id, single = True)
+
+                                                deleted_releases.append(release_id)
                                             break
                                         else:
                                             used_files[release_file] = release
