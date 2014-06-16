@@ -90,7 +90,7 @@ class MovieBase(MovieTypeBase):
 
         # Default profile and category
         default_profile = {}
-        if not params.get('profile_id'):
+        if not params.get('profile_id') and status != 'done':
             default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
