@@ -903,6 +903,7 @@ class Scanner(Plugin):
                 log.debug('Could not detect via guessit "%s": %s', (file_name, traceback.format_exc()))
 
         # Backup to simple
+        release_name = os.path.basename(release_name.replace('\\', '/'))
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
