@@ -192,7 +192,7 @@ class QualityPlugin(Plugin):
 
         # Create hash for cache
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
-        cached = None #self.getCache(cache_key)
+        cached = self.getCache(cache_key)
         if cached and len(extra) == 0:
             return cached
 
@@ -209,13 +209,14 @@ class QualityPlugin(Plugin):
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
             name_year = fireEvent('scanner.name_year', cur_file, file_name = cur_file, single = True)
+            threed_words = words
             if name_year and name_year.get('name'):
                 split_name = splitString(name_year.get('name'), ' ')
-                words = [x for x in words if x not in split_name]
+                threed_words = [x for x in words if x not in split_name]
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
-                threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
+                threedscore = self.contains3D(quality, threed_words, cur_file) if quality.get('allow_3d') else (0, None)
 
                 self.calcScore(score, quality, contains_score, threedscore)
 
