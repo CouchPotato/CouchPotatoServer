@@ -9,7 +9,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex
+from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex, MediaTagIndex
 
 
 log = CPLog(__name__)
@@ -21,6 +21,7 @@ class MediaPlugin(MediaBase):
         'media': MediaIndex,
         'media_search_title': TitleSearchIndex,
         'media_status': MediaStatusIndex,
+        'media_tag': MediaTagIndex,
         'media_by_type': MediaTypeIndex,
         'media_title': TitleIndex,
         'media_startswith': StartsWithIndex,
@@ -177,7 +178,7 @@ class MediaPlugin(MediaBase):
 
         log.debug('No media found with identifiers: %s', identifiers)
 
-    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
+    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, with_tags = None, starts_with = None, search = None):
 
         db = get_db()
 
@@ -188,6 +189,8 @@ class MediaPlugin(MediaBase):
             release_status = [release_status]
         if types and not isinstance(types, (list, tuple)):
             types = [types]
+        if with_tags and not isinstance(with_tags, (list, tuple)):
+            with_tags = [with_tags]
 
         # query media ids
         if types:
@@ -214,10 +217,16 @@ class MediaPlugin(MediaBase):
 
         # Add search filters
         if starts_with:
-            filter_by['starts_with'] = set()
             starts_with = toUnicode(starts_with.lower())[0]
             starts_with = starts_with if starts_with in ascii_lowercase else '#'
             filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
+
+        # Add tag filter
+        if with_tags:
+            filter_by['with_tags'] = set()
+            for tag in with_tags:
+                for x in db.get_many('media_tag', tag):
+                    filter_by['with_tags'].add(x['_id'])
 
         # Filter with search query
         if search:
@@ -271,7 +280,8 @@ class MediaPlugin(MediaBase):
             release_status = splitString(kwargs.get('release_status')),
             status_or = kwargs.get('status_or') is not None,
             limit_offset = kwargs.get('limit_offset'),
-            starts_with = kwargs.get('starts_with'),
+            with_tags = kwargs.get('with_tags'),
+            starts_with = splitString(kwargs.get('starts_with')),
             search = kwargs.get('search')
         )
 
