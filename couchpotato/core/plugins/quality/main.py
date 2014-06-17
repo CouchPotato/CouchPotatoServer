@@ -1,12 +1,12 @@
 import traceback
 import re
-from CodernityDB.database import RecordNotFound
 
+from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
@@ -192,7 +192,7 @@ class QualityPlugin(Plugin):
 
         # Create hash for cache
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
-        cached = self.getCache(cache_key)
+        cached = None #self.getCache(cache_key)
         if cached and len(extra) == 0:
             return cached
 
@@ -208,6 +208,10 @@ class QualityPlugin(Plugin):
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
+            name_year = fireEvent('scanner.name_year', cur_file, file_name = cur_file, single = True)
+            if name_year and name_year.get('name'):
+                split_name = splitString(name_year.get('name'), ' ')
+                words = [x for x in words if x not in split_name]
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
@@ -438,6 +442,9 @@ class QualityPlugin(Plugin):
             '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True},
             '/volume1/Public/3D/Moviename/Moviename (2009).3D.SBS.ts': {'size': 7500, 'quality': '1080p', 'is_3d': True},
             '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 5500, 'quality': '1080p'},
+            '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
         }
 
         correct = 0
