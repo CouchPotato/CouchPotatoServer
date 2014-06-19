@@ -1,6 +1,8 @@
 import traceback
 
 from bs4 import BeautifulSoup
+from bs4 import SoupStrainer
+
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -8,6 +10,7 @@ from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
+only_tables_tags = SoupStrainer("table")
 
 class Base(TorrentProvider):
 
@@ -27,15 +30,18 @@ class Base(TorrentProvider):
         data = self.getHTMLData(url)
 
         if data:
-            html = BeautifulSoup(data)
+            #Bitsoup html is really broken, limiting parsing to only tables so that we can avoid parsing the whole broken doc
+            html = BeautifulSoup(data, 'html.parser', parse_only=only_tables_tags)
 
             try:
-                result_table = html.find('table', attrs = {'class': 'koptekst'})
+                result_table = html.find('table', class_='koptekst')
+
                 if not result_table or 'nothing found!' in data.lower():
                     return
 
                 entries = result_table.find_all('tr')
                 for result in entries[1:]:
+                    log.debug('found %s', (result))
 
                     all_cells = result.find_all('td')
 

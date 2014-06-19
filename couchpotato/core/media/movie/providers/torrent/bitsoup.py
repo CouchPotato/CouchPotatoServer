@@ -20,6 +20,6 @@ class Bitsoup(MovieProvider, Base):
     def buildUrl(self, title, media, quality):
         query = tryUrlencode({
             'search': '"%s" %s' % (title, media['info']['year']),
-            'cat': self.getCatId(quality)[0],
+            'cat': self.getCatId(quality),
         })
         return query
