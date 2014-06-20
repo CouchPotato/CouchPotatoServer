@@ -134,6 +134,7 @@ config = [{
             'order': 10,
             'description': 'CouchPotato torrent provider. Checkout <a href="https://github.com/RuudBurger/CouchPotatoServer/wiki/CouchPotato-Torrent-Provider">the wiki page about this provider</a> for more info.',
             'wizard': True,
+            'icon': '',
             'options': [
                 {
                     'name': 'enabled',
