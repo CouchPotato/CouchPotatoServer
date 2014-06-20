@@ -85,7 +85,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': False
+                    'default': True
                 },
                 {
                     'name': 'verified_only',
