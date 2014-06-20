@@ -375,7 +375,11 @@ class Release(Plugin):
                 continue
 
             if rel['score'] <= 0:
-                log.info('Ignored, score to low: %s', rel['name'])
+                log.info('Ignored, score "%s" to low: %s', (rel['score'], rel['name']))
+                continue
+
+            if rel['size'] <= 50:
+                log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
                 continue
 
             rel['wait_for'] = False
