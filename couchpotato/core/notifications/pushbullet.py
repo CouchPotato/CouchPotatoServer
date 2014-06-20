@@ -25,11 +25,7 @@ class Pushbullet(Notification):
 
         # Get all the device IDs linked to this user
         if not len(devices):
-            response = self.request('devices')
-            if not response:
-                return False
-
-            devices += [device.get('id') for device in response['devices']]
+            devices = [None]
 
         successful = 0
         for device in devices:
