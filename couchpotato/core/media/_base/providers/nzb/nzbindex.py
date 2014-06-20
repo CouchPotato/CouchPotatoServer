@@ -105,6 +105,7 @@ config = [{
             'name': 'nzbindex',
             'description': 'Free provider, less accurate. See <a href="https://www.nzbindex.com/">NZBIndex</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAo0lEQVR42t2SQQ2AMBAEcUCwUAv94QMLfHliAQtYqIVawEItYAG6yZFMLkUANNlk79Kbbtp2P1j9uKxVV9VWFeStl+Wh3fWK9hNwEoADZkJtMD49AqS5AUjWGx6A+m+ARICGrM5W+wSTB0gETKzdHZwCEZAJ8PGZQN4AiQAmkR9s06EBAugJiBoAAPFfAQcBgZcIHzwA6TYP4JsXeSg3P9L31w3eksbH3zMb/wAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',
