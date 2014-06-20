@@ -153,8 +153,10 @@ class TheMovieDb(MovieProvider):
             movie_data = dict((k, v) for k, v in movie_data.items() if v)
 
             # Add alternative names
+            if movie_data['original_title'] and movie_data['original_title'] not in movie_data['titles']:
+                movie_data['titles'].insert(0, movie_data['original_title'])
+
             if extended:
-                movie_data['titles'].append(movie.originaltitle)
                 for alt in movie.alternate_titles:
                     alt_name = alt.title
                     if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:

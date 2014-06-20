@@ -19,7 +19,12 @@ base_path = dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(base_path, 'libs'))
 
 from couchpotato.environment import Env
-from couchpotato.core.helpers.variable import getDataDir
+from couchpotato.core.helpers.variable import getDataDir, removePyc
+
+
+# Remove pyc files before dynamic load (sees .pyc files regular .py modules)
+removePyc(base_path)
+
 
 class Loader(object):
 

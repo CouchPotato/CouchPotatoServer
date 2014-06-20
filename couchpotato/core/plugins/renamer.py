@@ -457,8 +457,14 @@ class Renamer(Plugin):
                             mdia['last_edit'] = int(time.time())
                             db.update(mdia)
 
+                            # List movie on dashboard
+                            fireEvent('media.tag', media['_id'], 'recent', single = True)
+
                 except:
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
+
+                # Mark media for dashboard
+                mark_as_recent = False
 
                 # Go over current movie releases
                 for release in fireEvent('release.for_media', media['_id'], single = True):
@@ -506,14 +512,21 @@ class Renamer(Plugin):
                                     # Set the release to downloaded
                                     fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
                                     group['release_download'] = release_download
+                                    mark_as_recent = True
                                 elif release_download['status'] == 'seeding':
                                     # Set the release to seeding
                                     fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
+                                    mark_as_recent = True
 
                         elif release.get('identifier') == group['meta_data']['quality']['identifier']:
                             # Set the release to downloaded
                             fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
                             group['release_download'] = release_download
+                            mark_as_recent = True
+
+                # Mark media for dashboard
+                if mark_as_recent:
+                    fireEvent('media.tag', group['media'].get('_id'), 'recent', single = True)
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything

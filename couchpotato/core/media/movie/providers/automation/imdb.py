@@ -263,7 +263,7 @@ config = [{
                     'name': 'automation_charts_rentals',
                     'type': 'bool',
                     'label': 'DVD Rentals',
-                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals">rentals</a> chart',
                     'default': True,
                 },
                 {
@@ -312,7 +312,7 @@ config = [{
                     'name': 'chart_display_rentals',
                     'type': 'bool',
                     'label': 'DVD Rentals',
-                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals/">rentals</a> chart',
+                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals">rentals</a> chart',
                     'default': True,
                 },
                 {

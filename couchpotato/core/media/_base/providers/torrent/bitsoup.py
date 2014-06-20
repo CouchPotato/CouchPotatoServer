@@ -1,6 +1,6 @@
 import traceback
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -20,6 +20,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    only_tables_tags = SoupStrainer('table')
 
     def _searchOnTitle(self, title, movie, quality, results):
 
@@ -27,7 +28,7 @@ class Base(TorrentProvider):
         data = self.getHTMLData(url)
 
         if data:
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, 'html.parser', parse_only = self.only_tables_tags)
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
