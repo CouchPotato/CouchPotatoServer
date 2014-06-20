@@ -14,7 +14,7 @@ autoload = 'Pushbullet'
 
 class Pushbullet(Notification):
 
-    url = 'https://api.pushbullet.com/api/%s'
+    url = 'https://api.pushbullet.com/v2/%s'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
