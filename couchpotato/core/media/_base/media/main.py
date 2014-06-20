@@ -476,6 +476,9 @@ class MediaPlugin(MediaBase):
             if previous_status != m['status']:
                 db.update(m)
 
+                # Tag media as recent
+                self.tag(media_id, 'recent')
+
             return m['status']
         except:
             log.error('Failed restatus: %s', traceback.format_exc())

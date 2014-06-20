@@ -338,12 +338,7 @@ class Release(Plugin):
                         self.updateStatus(rls['_id'], status = 'done')
 
                         # Mark media done
-                        mdia = db.get('id', media['_id'])
-                        mdia['status'] = 'done'
-                        mdia['last_edit'] = int(time.time())
-                        db.update(mdia)
-
-                        fireEvent('media.tag', media['_id'], 'recent', single = True)
+                        fireEvent('media.restatus', media['_id'], single = True)
 
                         return True
 

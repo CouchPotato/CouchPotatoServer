@@ -460,9 +460,6 @@ class Renamer(Plugin):
                 else:
                     log.debug('Media has no quality profile: %s', media_title)
 
-                #        # List movie on dashboard
-                #        fireEvent('media.tag', media['_id'], 'recent', single = True)
-
                 # Mark media for dashboard
                 mark_as_recent = False
 
