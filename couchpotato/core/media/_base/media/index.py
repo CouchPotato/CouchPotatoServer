@@ -178,7 +178,7 @@ class MediaChildrenIndex(TreeBasedIndex):
 
 
 class MediaTagIndex(MultiTreeBasedIndex):
-    _version = 1
+    _version = 2
 
     custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
 
@@ -187,7 +187,7 @@ class MediaTagIndex(MultiTreeBasedIndex):
         super(MediaTagIndex, self).__init__(*args, **kwargs)
 
     def make_key_value(self, data):
-        if data.get('_t') == 'media' and len(data.get('tags', [])) > 0:
+        if data.get('_t') == 'media' and data.get('tags') and len(data.get('tags', [])) > 0:
 
             tags = set()
             for tag in data.get('tags', []):
