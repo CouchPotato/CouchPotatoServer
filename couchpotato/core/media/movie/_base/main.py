@@ -149,6 +149,7 @@ class MovieBase(MovieTypeBase):
                 m['profile_id'] = params.get('profile_id', default_profile.get('id'))
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
                 m['last_edit'] = int(time.time())
+                m['tags'] = []
 
                 do_search = True
                 db.update(m)

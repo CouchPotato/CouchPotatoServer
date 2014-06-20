@@ -82,6 +82,8 @@ class MediaPlugin(MediaBase):
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
+        addEvent('media.tag', self.tag)
+        addEvent('media.untag', self.unTag)
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -469,3 +471,41 @@ class MediaPlugin(MediaBase):
             return True
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
+
+    def tag(self, media_id, tag):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            tags = m.get('tags') or []
+            if tag not in tags:
+                tags.append(tag)
+                m['tags'] = tags
+                db.update(m)
+
+            return True
+        except:
+            log.error('Failed tagging: %s', traceback.format_exc())
+
+        return False
+
+    def unTag(self, media_id, tag):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            tags = m.get('tags') or []
+            if tag in tags:
+                new_tags = list(set(tags))
+                new_tags.remove(tag)
+
+                m['tags'] = new_tags
+                db.update(m)
+
+            return True
+        except:
+            log.error('Failed untagging: %s', traceback.format_exc())
+
+        return False

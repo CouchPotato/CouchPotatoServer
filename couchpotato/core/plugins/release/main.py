@@ -104,6 +104,8 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignore')
 
+            fireEvent('media.untag', media.get('_id'), 'recent', single = True)
+
     def add(self, group, update_info = True, update_id = None):
 
         try:
@@ -345,6 +347,8 @@ class Release(Plugin):
                         mdia['status'] = 'done'
                         mdia['last_edit'] = int(time.time())
                         db.update(mdia)
+
+                        fireEvent('media.tag', media['_id'], 'recent', single = True)
 
                         return True
 
