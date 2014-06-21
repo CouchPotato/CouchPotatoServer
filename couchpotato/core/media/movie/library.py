@@ -1,4 +1,5 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.library.base import LibraryBase
 
@@ -17,7 +18,9 @@ class MovieLibraryPlugin(LibraryBase):
         if media.get('type') != 'movie':
             return
 
+        default_title = getTitle(media)
         titles = media['info'].get('titles', [])
+        titles.insert(0, default_title)
 
         # Add year identifier to titles
         if include_year:
