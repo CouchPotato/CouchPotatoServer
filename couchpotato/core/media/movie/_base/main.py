@@ -2,6 +2,7 @@ import os
 import traceback
 import time
 
+from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -117,8 +118,17 @@ class MovieBase(MovieTypeBase):
             media['info'] = info
 
             new = False
+            previous_profile = None
             try:
                 m = db.get('media', 'imdb-%s' % params.get('identifier'), with_doc = True)['doc']
+
+                try:
+                    db.get('id', m.get('profile_id'))
+                    previous_profile = m.get('profile_id')
+                except RecordNotFound:
+                    pass
+                except:
+                    log.error('Failed getting previous profile: %s', traceback.format_exc())
             except:
                 new = True
                 m = db.insert(media)
@@ -146,7 +156,7 @@ class MovieBase(MovieTypeBase):
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 
-                m['profile_id'] = params.get('profile_id') or default_profile.get('_id')
+                m['profile_id'] = (params.get('profile_id') or default_profile.get('_id')) if not previous_profile else previous_profile
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
                 m['last_edit'] = int(time.time())
                 m['tags'] = []
