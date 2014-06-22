@@ -166,10 +166,9 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
+                                            release_id = release['_id'] if already_used.get('last_edit', 0) < release.get('last_edit', 0) else already_used['_id']
                                             if release_id not in deleted_releases:
-                                                release_id = release['_id'] if already_used.get('last_edit', 0) < release.get('last_edit', 0) else already_used['_id']
                                                 fireEvent('release.delete', release_id, single = True)
-
                                                 deleted_releases.append(release_id)
                                             break
                                         else:
