@@ -304,6 +304,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             loop.start()
             server.close_all_connections()
             server.stop()
+            loop.close(all_fds = True)
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
