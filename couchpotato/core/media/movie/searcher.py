@@ -131,6 +131,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         outside_eta_results = 0
         alway_search = self.conf('always_search')
         ignore_eta = manual
+        total_result_count = 0
 
         default_title = getTitle(movie)
         if not default_title:
@@ -199,6 +200,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
             results_count = len(results)
+            total_result_count += results_count
             if results_count == 0:
                 log.debug('Nothing found for %s in %s', (default_title, quality['label']))
 
@@ -218,7 +220,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
             # Try find a valid result and download it
-            if (force_download or not could_not_be_released) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
+            if (force_download or not could_not_be_released or alway_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -234,6 +236,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:
                 break
+
+        if total_result_count > 0:
+            fireEvent('media.tag', movie['_id'], 'recent', single = True)
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))

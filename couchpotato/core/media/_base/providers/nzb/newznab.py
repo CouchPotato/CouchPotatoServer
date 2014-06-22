@@ -222,6 +222,7 @@ config = [{
                 <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a>, <a href="https://nzbgeek.info/" target="_blank">NZBGeek</a>, \
                 <a href="https://smackdownonyou.com" target="_blank">SmackDown</a>, <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEVjhwD///86aRovd/sBAAAAMklEQVQI12NgAIPQUCCRmQkjssDEShiRuRIqwZqZGcDAGBrqANUhGgIkWAOABKMDxCAA24UK50b26SAAAAAASUVORK5CYII=',
             'options': [
                 {
                     'name': 'enabled',

@@ -26,7 +26,9 @@ class Database(object):
         addApiView('database.document.update', self.updateDocument)
         addApiView('database.document.delete', self.deleteDocument)
 
+        addEvent('database.setup.after', self.startup_compact)
         addEvent('database.setup_index', self.setupIndex)
+
         addEvent('app.migrate', self.migrate)
         addEvent('app.after_shutdown', self.close)
 
@@ -140,8 +142,14 @@ class Database(object):
 
         success = True
         try:
+            start = time.time()
             db = self.getDB()
+            size = float(db.get_db_details().get('size', 0))
+            log.debug('Compacting database, current size: %sMB', round(size/1048576, 2))
+
             db.compact()
+            new_size = float(db.get_db_details().get('size', 0))
+            log.debug('Done compacting database in %ss, new size: %sMB, saved: %sMB', (round(time.time()-start, 2), round(new_size/1048576, 2), round((size-new_size)/1048576, 2)))
         except:
             log.error('Failed compact: %s', traceback.format_exc())
             success = False
@@ -149,6 +157,18 @@ class Database(object):
         return {
             'success': success
         }
+
+    # Compact on start
+    def startup_compact(self):
+        from couchpotato import Env
+
+        db = self.getDB()
+        size = db.get_db_details().get('size')
+        prop_name = 'last_db_compact'
+        last_check = int(Env.prop(prop_name, default = 0))
+        if size > 26214400 and last_check < time.time()-604800: # 25MB / 7 days
+            self.compact()
+            Env.prop(prop_name, value = int(time.time()))
 
     def migrate(self):
 

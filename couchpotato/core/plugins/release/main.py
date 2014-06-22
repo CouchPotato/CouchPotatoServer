@@ -104,6 +104,8 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignore')
 
+            fireEvent('media.untag', media.get('_id'), 'recent', single = True)
+
     def add(self, group, update_info = True, update_id = None):
 
         try:
@@ -149,7 +151,7 @@ class Release(Plugin):
                     r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
                     r['media_id'] = media['_id']
                 except:
-                    log.error('Failed updating release by identifier: %s', traceback.format_exc())
+                    log.debug('Failed updating release by identifier "%s". Inserting new.', release_identifier)
                     r = db.insert(release)
 
                 # Update with ref and _id
@@ -184,7 +186,7 @@ class Release(Plugin):
             db.delete(rel)
             return True
         except RecordDeleted:
-            log.error('Already deleted: %s', release_id)
+            log.debug('Already deleted: %s', release_id)
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
@@ -346,6 +348,8 @@ class Release(Plugin):
                         mdia['last_edit'] = int(time.time())
                         db.update(mdia)
 
+                        fireEvent('media.tag', media['_id'], 'recent', single = True)
+
                         return True
 
                 # Assume release downloaded
@@ -371,7 +375,11 @@ class Release(Plugin):
                 continue
 
             if rel['score'] <= 0:
-                log.info('Ignored, score to low: %s', rel['name'])
+                log.info('Ignored, score "%s" to low: %s', (rel['score'], rel['name']))
+                continue
+
+            if rel['size'] <= 50:
+                log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
                 continue
 
             rel['wait_for'] = False

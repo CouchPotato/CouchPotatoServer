@@ -1,12 +1,12 @@
 import traceback
 import re
-from CodernityDB.database import RecordNotFound
 
+from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
@@ -22,12 +22,12 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
-        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
         {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
+        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
         {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':[]},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':[]},
@@ -95,15 +95,14 @@ class QualityPlugin(Plugin):
 
         db = get_db()
 
-        qualities = db.all('quality', with_doc = True)
-
         temp = []
-        for quality in qualities:
-            quality = quality['doc']
-            q = mergeDicts(self.getQuality(quality.get('identifier')), quality)
+        for quality in self.qualities:
+            quality_doc = db.get('quality', quality.get('identifier'), with_doc = True)['doc']
+            q = mergeDicts(quality, quality_doc)
             temp.append(q)
 
-        self.cached_qualities = temp
+        if len(temp) == len(self.qualities):
+            self.cached_qualities = temp
 
         return temp
 
@@ -209,10 +208,15 @@ class QualityPlugin(Plugin):
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
+            name_year = fireEvent('scanner.name_year', cur_file, file_name = cur_file, single = True)
+            threed_words = words
+            if name_year and name_year.get('name'):
+                split_name = splitString(name_year.get('name'), ' ')
+                threed_words = [x for x in words if x not in split_name]
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
-                threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
+                threedscore = self.contains3D(quality, threed_words, cur_file) if quality.get('allow_3d') else (0, None)
 
                 self.calcScore(score, quality, contains_score, threedscore)
 
@@ -257,6 +261,9 @@ class QualityPlugin(Plugin):
         cur_file = ss(cur_file)
         score = 0
 
+        extension = words[-1]
+        words = words[:-1]
+
         points = {
             'identifier': 10,
             'label': 10,
@@ -276,7 +283,7 @@ class QualityPlugin(Plugin):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
 
-                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower():
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in words:
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     score += points.get(tag_type) / 2
 
@@ -286,8 +293,8 @@ class QualityPlugin(Plugin):
 
         # Check extention
         for ext in quality.get('ext', []):
-            if ext == words[-1]:
-                log.debug('Found %s extension in %s', (ext, cur_file))
+            if ext == extension:
+                log.debug('Found %s with .%s extension in %s', (quality['identifier'], ext, cur_file))
                 score += points['ext']
 
         return score
@@ -433,7 +440,12 @@ class QualityPlugin(Plugin):
             'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
             'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
             '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
-            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True}
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True},
+            '/volume1/Public/3D/Moviename/Moviename (2009).3D.SBS.ts': {'size': 7500, 'quality': '1080p', 'is_3d': True},
+            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 5500, 'quality': '1080p'},
+            '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
         }
 
         correct = 0
@@ -441,7 +453,10 @@ class QualityPlugin(Plugin):
             test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
             success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
-                log.error('%s failed check, thinks it\'s %s', (name, test_quality.get('identifier')))
+                log.error('%s failed check, thinks it\'s "%s" expecting "%s"', (name,
+                                                                            test_quality.get('identifier') + (' 3D' if test_quality.get('is_3d') else ''),
+                                                                            tests[name]['quality'] + (' 3D' if tests[name].get('is_3d') else '')
+                ))
 
             correct += success
 

@@ -6,8 +6,9 @@ import random
 import re
 import string
 import sys
+import traceback
 
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp
 from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
@@ -313,3 +314,30 @@ under_pat = re.compile(r'_([a-z])')
 
 def underscoreToCamel(name):
     return under_pat.sub(lambda x: x.group(1).upper(), name)
+
+
+def removePyc(folder, only_excess = True, show_logs = True):
+
+    folder = sp(folder)
+
+    for root, dirs, files in os.walk(folder):
+
+        pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
+        py_files = set(filter(lambda filename: filename.endswith('.py'), files))
+        excess_pyc_files = filter(lambda pyc_filename: pyc_filename[:-1] not in py_files, pyc_files) if only_excess else pyc_files
+
+        for excess_pyc_file in excess_pyc_files:
+            full_path = os.path.join(root, excess_pyc_file)
+            if show_logs: log.debug('Removing old PYC file: %s', full_path)
+            try:
+                os.remove(full_path)
+            except:
+                log.error('Couldn\'t remove %s: %s', (full_path, traceback.format_exc()))
+
+        for dir_name in dirs:
+            full_path = os.path.join(root, dir_name)
+            if len(os.listdir(full_path)) == 0:
+                try:
+                    os.rmdir(full_path)
+                except:
+                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
