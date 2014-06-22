@@ -263,7 +263,7 @@ class Plugin(object):
     def afterCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__), False)
 
-    def doShutdown(self):
+    def doShutdown(self, *args, **kwargs):
         self.shuttingDown(True)
         return True
 

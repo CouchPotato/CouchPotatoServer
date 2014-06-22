@@ -454,17 +454,20 @@ class MediaPlugin(MediaBase):
             else:
                 move_to_wanted = True
 
-                profile = db.get('id', m['profile_id'])
-                media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                try:
+                    profile = db.get('id', m['profile_id'])
+                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
 
-                for q_identifier in profile['qualities']:
-                    index = profile['qualities'].index(q_identifier)
+                    for q_identifier in profile['qualities']:
+                        index = profile['qualities'].index(q_identifier)
 
-                    for release in media_releases:
-                        if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
-                            move_to_wanted = False
+                        for release in media_releases:
+                            if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
+                                move_to_wanted = False
 
-                m['status'] = 'active' if move_to_wanted else 'done'
+                    m['status'] = 'active' if move_to_wanted else 'done'
+                except RecordNotFound:
+                    log.debug('Failed restatus: %s', traceback.format_exc())
 
             # Only update when status has changed
             if previous_status != m['status']:

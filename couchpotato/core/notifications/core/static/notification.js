@@ -122,8 +122,11 @@ var NotificationBase = new Class({
 	startPoll: function(){
 		var self = this;
 
-		if(self.stopped || (self.request && self.request.isRunning()))
+		if(self.stopped)
 			return;
+
+		if(self.request && self.request.isRunning())
+			self.request.cancel();
 
 		self.request = Api.request('nonblock/notification.listener', {
     		'onSuccess': function(json){
@@ -149,7 +152,7 @@ var NotificationBase = new Class({
 		var self = this;
 
 		// Process data
-		if(json){
+		if(json && json.result){
 			Array.each(json.result, function(result){
 				App.trigger(result._t || result.type, [result]);
 				if(result.message && result.read === undefined && !init)
