@@ -314,6 +314,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                         continue
                     else:
                         return
+            except ValueError:
+                return
             except:
                 pass
 
