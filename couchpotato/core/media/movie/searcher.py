@@ -220,7 +220,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
             # Try find a valid result and download it
-            if (force_download or not could_not_be_released) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
+            if (force_download or not could_not_be_released or alway_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore

@@ -302,7 +302,7 @@ MA.Release = new Class({
 			self.movie.data.releases.each(function(release){
 				if(has_available && has_snatched) return;
 
-				if(['snatched', 'downloaded', 'seeding'].contains(release.status))
+				if(['snatched', 'downloaded', 'seeding', 'done'].contains(release.status))
 					has_snatched = true;
 
 				if(['available'].contains(release.status))
