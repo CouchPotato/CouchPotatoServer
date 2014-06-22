@@ -411,6 +411,8 @@ class MediaPlugin(MediaBase):
                     elif new_media_status:
                         media['status'] = new_media_status
                         db.update(media)
+
+                        fireEvent('media.untag', media['_id'], 'recent', single = True)
                     else:
                         fireEvent('media.restatus', media.get('_id'), single = True)
 
