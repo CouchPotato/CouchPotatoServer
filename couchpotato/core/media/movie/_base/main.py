@@ -90,7 +90,7 @@ class MovieBase(MovieTypeBase):
 
         # Default profile and category
         default_profile = {}
-        if not params.get('profile_id') and status != 'done':
+        if (not params.get('profile_id') and status != 'done') or params.get('ignore_previous', False):
             default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
@@ -146,7 +146,7 @@ class MovieBase(MovieTypeBase):
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 
-                m['profile_id'] = params.get('profile_id', default_profile.get('id'))
+                m['profile_id'] = params.get('profile_id') or default_profile.get('_id')
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
                 m['last_edit'] = int(time.time())
                 m['tags'] = []
