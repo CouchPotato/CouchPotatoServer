@@ -72,7 +72,7 @@ config = [{
                 {
                     'name': 'api_token',
                     'description': '<a href="https://pushover.net/apps/clone/couchpotato" target="_blank">Register on pushover.net</a> to get one.',
-                    'hidden': True,
+                    'advanced': True,
                     'default': 'YkxHMYDZp285L265L3IwH3LmzkTaCy',
                 },
                 {
