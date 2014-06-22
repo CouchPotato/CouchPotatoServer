@@ -69,6 +69,10 @@ config = [{
                     'name': 'user_key',
                     'description': 'Register on pushover.net to get one.'
                 },
+				{
+                    'name': 'api_token',
+                    'description': '<a href="https://pushover.net/apps/clone/couchpotato" target="_blank">Register on pushover.net</a> to get one.'
+                },
                 {
                     'name': 'api_token',
                     'description': '<a href="https://pushover.net/apps/clone/couchpotato" target="_blank">Register on pushover.net</a> to get one.',
