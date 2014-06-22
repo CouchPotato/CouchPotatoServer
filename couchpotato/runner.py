@@ -286,13 +286,14 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     except: pass
     fireEventAsync('app.load')
 
+    ssl_options = None
     if config['ssl_cert'] and config['ssl_key']:
-        server = HTTPServer(application, no_keep_alive = True, ssl_options = {
+        ssl_options = {
             'certfile': config['ssl_cert'],
             'keyfile': config['ssl_key'],
-        })
-    else:
-        server = HTTPServer(application, no_keep_alive = True)
+        }
+
+    server = HTTPServer(application, no_keep_alive = True)
 
     try_restart = True
     restart_tries = 5
@@ -301,6 +302,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
             loop.start()
+            server.close_all_connections()
+            server.stop()
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:

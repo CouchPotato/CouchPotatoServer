@@ -72,10 +72,11 @@ class Loader(object):
         signal.signal(signal.SIGTERM, lambda signum, stack_frame: sys.exit(1))
 
         from couchpotato.core.event import addEvent
-        addEvent('app.after_shutdown', self.afterShutdown)
+        addEvent('app.do_shutdown', self.setRestart)
 
-    def afterShutdown(self, restart):
+    def setRestart(self, restart):
         self.do_restart = restart
+        return True
 
     def onExit(self, signal, frame):
         from couchpotato.core.event import fireEvent
@@ -103,7 +104,6 @@ class Loader(object):
 
             # Release log files and shutdown logger
             logging.shutdown()
-            time.sleep(3)
 
             args = [sys.executable] + [os.path.join(base_path, os.path.basename(__file__))] + sys.argv[1:]
             subprocess.Popen(args)
