@@ -3,6 +3,7 @@ import os
 import string
 
 from couchpotato.api import addApiView
+from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
 import six
@@ -51,7 +52,7 @@ class FileBrowser(Plugin):
 
         dirs = []
         for f in os.listdir(path):
-            p = os.path.join(path, f)
+            p = os.path.join(ss(path), ss(f))
             if os.path.isdir(p) and ((self.is_hidden(p) and bool(int(show_hidden))) or not self.is_hidden(p)):
                 dirs.append(p + os.path.sep)
 
