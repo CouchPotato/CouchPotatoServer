@@ -2,6 +2,7 @@ Page.Settings = new Class({
 
 	Extends: PageBase,
 
+	order: 50,
 	name: 'settings',
 	title: 'Change settings.',
 	wizard_only: false,
@@ -26,8 +27,8 @@ Page.Settings = new Class({
 	},
 
 	openTab: function(action){
-		var self = this;
-		var action = (action == 'index' ? 'about' : action) || self.action;
+		var self = this,
+			action = (action == 'index' ? 'about' : action) || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);
@@ -112,14 +113,20 @@ Page.Settings = new Class({
 	},
 
     sortByOrder: function(a, b){
-			return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100)
 	},
 
 	create: function(json){
 		var self = this;
 
 		self.tabs_container = new Element('ul.tabs');
-		self.containers = new Element('form.uniForm.containers').adopt(
+		self.containers = new Element('form.uniForm.containers', {
+			'events': {
+				'click:relay(.enabler.disabled h2)': function(e, el){
+					el.getPrevious().getElements('.check').fireEvent('click');
+				}
+			}
+		}).adopt(
 			new Element('label.advanced_toggle').adopt(
 				new Element('span', {
 					'text': 'Show advanced settings'
@@ -284,14 +291,23 @@ Page.Settings = new Class({
 			})
 		}
 
+		var icon;
+		if(group.icon){
+			icon = new Element('span.icon').grab(new Element('img', {
+				'src': 'data:image/png;base64,' + group.icon
+			}));
+		}
+
+		var label = new Element('span.group_label', {
+			'text': group.label || (group.name).capitalize()
+		})
 
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
 		}).grab(
-				new Element('h2', {
-					'text': group.label || (group.name).capitalize()
-				}).grab(hint)
-			);
+			new Element('h2').adopt(icon, label, hint)
+		);
+
 	},
 
 	createList: function(content_container){
@@ -370,7 +386,7 @@ var OptionBase = new Class({
 				createTooltip(self.options.description[1]).inject(hint, 'top');
 			}
 			else {
-				var hint = new Element('p.formHint', {
+				new Element('p.formHint', {
 					'html': self.options.description || ''
 				}).inject(self.el)
 			}
@@ -1312,8 +1328,9 @@ Option.Combined = new Class({
 		var head = new Element('div.head').inject(self.combined_list);
 
 		Object.each(self.inputs, function(input, name){
+			var _in = input.getNext();
 			self.labels[name] = input.getPrevious().get('text');
-			self.descriptions[name] = (_in = input.getNext()) ? _in.get('text') : '';
+			self.descriptions[name] = _in ? _in.get('text') : '';
 
 			new Element('abbr', {
 				'class': name,
@@ -1465,4 +1482,4 @@ var createTooltip = function(description){
 		);
 
 	return tip;
-}
+};

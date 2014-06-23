@@ -24,11 +24,11 @@ class Score(Plugin):
         try: preferred_words = removeDuplicate(preferred_words + splitString(movie['category']['preferred'].lower()))
         except: pass
 
-        score = nameScore(toUnicode(nzb['name']), movie['library']['year'], preferred_words)
+        score = nameScore(toUnicode(nzb['name']), movie['info']['year'], preferred_words)
 
-        for movie_title in movie['library']['titles']:
-            score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
-            score += namePositionScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
+        for movie_title in movie['info']['titles']:
+            score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title))
+            score += namePositionScore(toUnicode(nzb['name']), toUnicode(movie_title))
 
         score += sizeScore(nzb['size'])
 
@@ -44,7 +44,7 @@ class Score(Plugin):
         score += providerScore(nzb['provider'])
 
         # Duplicates in name
-        score += duplicateScore(nzb['name'], getTitle(movie['library']))
+        score += duplicateScore(nzb['name'], getTitle(movie))
 
         # Merge global and category
         ignored_words = splitString(Env.setting('ignored_words', section = 'searcher').lower())
@@ -52,7 +52,7 @@ class Score(Plugin):
         except: pass
 
         # Partial ignored words
-        score += partialIgnoredScore(nzb['name'], getTitle(movie['library']), ignored_words)
+        score += partialIgnoredScore(nzb['name'], getTitle(movie), ignored_words)
 
         # Ignore single downloads from multipart
         score += halfMultipartScore(nzb['name'])

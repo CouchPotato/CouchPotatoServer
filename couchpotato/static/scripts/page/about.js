@@ -6,7 +6,7 @@ var AboutSettingTab = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('load', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self))
 
 	},
 

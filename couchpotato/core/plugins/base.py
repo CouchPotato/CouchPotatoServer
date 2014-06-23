@@ -1,14 +1,4 @@
-from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toSafeString, \
-    toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt
-from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
-import requests
-from requests.packages.urllib3 import Timeout
-from requests.packages.urllib3.exceptions import MaxRetryError
-from tornado import template
-from tornado.web import StaticFileHandler
+from urllib import quote
 from urlparse import urlparse
 import glob
 import inspect
@@ -16,7 +6,19 @@ import os.path
 import re
 import time
 import traceback
-import urllib2
+
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import ss, toSafeString, \
+    toUnicode, sp
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier
+from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
+import requests
+from requests.packages.urllib3 import Timeout
+from requests.packages.urllib3.exceptions import MaxRetryError
+from tornado import template
+from tornado.web import StaticFileHandler
+
 
 log = CPLog(__name__)
 
@@ -24,6 +26,7 @@ log = CPLog(__name__)
 class Plugin(object):
 
     _class_name = None
+    _database = None
     plugin_path = None
 
     enabled_option = 'enabled'
@@ -37,10 +40,9 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
-    http_opener = requests.Session()
 
-    def __new__(typ, *args, **kwargs):
-        new_plugin = super(Plugin, typ).__new__(typ)
+    def __new__(cls, *args, **kwargs):
+        new_plugin = super(Plugin, cls).__new__(cls)
         new_plugin.registerPlugin()
 
         return new_plugin
@@ -52,6 +54,17 @@ class Plugin(object):
 
         if self.auto_register_static:
             self.registerStatic(inspect.getfile(self.__class__))
+
+        # Setup database
+        if self._database:
+            addEvent('database.setup', self.databaseSetup)
+
+    def databaseSetup(self):
+
+        for index_name in self._database:
+            klass = self._database[index_name]
+
+            fireEvent('database.setup_index', index_name, klass)
 
     def conf(self, attr, value = None, default = None, section = None):
         class_name = self.getName().lower().split(':')[0].lower()
@@ -98,7 +111,7 @@ class Plugin(object):
                     fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
 
     def createFile(self, path, content, binary = False):
-        path = ss(path)
+        path = sp(path)
 
         self.makeDir(os.path.dirname(path))
 
@@ -116,7 +129,7 @@ class Plugin(object):
                 os.remove(path)
 
     def makeDir(self, path):
-        path = ss(path)
+        path = sp(path)
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
@@ -126,9 +139,35 @@ class Plugin(object):
 
         return False
 
+    def deleteEmptyFolder(self, folder, show_error = True, only_clean = None):
+        folder = sp(folder)
+
+        for item in os.listdir(folder):
+            full_folder = os.path.join(folder, item)
+
+            if not only_clean or (item in only_clean and os.path.isdir(full_folder)):
+
+                for root, dirs, files in os.walk(full_folder):
+
+                    for dir_name in dirs:
+                        full_path = os.path.join(root, dir_name)
+
+                        if len(os.listdir(full_path)) == 0:
+                            try:
+                                os.rmdir(full_path)
+                            except:
+                                if show_error:
+                                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+        try:
+            os.rmdir(folder)
+        except:
+            if show_error:
+                log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
-        url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
@@ -144,7 +183,7 @@ class Plugin(object):
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
-        r = self.http_opener
+        r = Env.get('http_opener')
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -166,11 +205,12 @@ class Plugin(object):
                 'data': data if len(data) > 0 else None,
                 'timeout': timeout,
                 'files': files,
+                'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
-            response = r.request(method, url, verify = False, **kwargs)
+            response = r.request(method, url, **kwargs)
 
             if response.status_code == requests.codes.ok:
                 data = response.content
@@ -223,7 +263,7 @@ class Plugin(object):
     def afterCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__), False)
 
-    def doShutdown(self):
+    def doShutdown(self, *args, **kwargs):
         self.shuttingDown(True)
         return True
 
@@ -291,19 +331,22 @@ class Plugin(object):
         if name_password:
             release_name, password = name_password
             tag += '{{%s}}' % password
+        elif data.get('password'):
+            tag += '{{%s}}' % data.get('password')
 
-        max_length = 127 - len(tag) # Some filesystems don't support 128+ long filenames
+        max_length = 127 - len(tag)  # Some filesystems don't support 128+ long filenames
         return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
 
     def createFileName(self, data, filedata, media):
-        name = sp(os.path.join(self.createNzbName(data, media)))
+        name = self.createNzbName(data, media)
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
 
     def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + media['library'].get('identifier') + ')' if media['library'].get('identifier') else ''
+            identifier = getIdentifier(media)
+            return '.cp(' + identifier + ')' if identifier else ''
 
         return ''
 
@@ -311,6 +354,7 @@ class Plugin(object):
         now = time.time()
         file_too_new = False
 
+        file_time = []
         for cur_file in files:
 
             # File got removed while checking

@@ -123,15 +123,18 @@
 		.movies.thumbs_list .movie {
 			width: 16.66667%;
 			height: auto;
+			min-height: 200px;
 			display: inline-block;
 			margin: 0;
 			padding: 0;
 			vertical-align: top;
+			line-height: 0;
 		}
 
 			@media all and (max-width: 800px) {
 				.movies.thumbs_list .movie {
 					width: 25%;
+					min-height: 100px;
 				}
 			}
 
@@ -343,6 +346,7 @@
 					top: auto;
 					right: auto;
 					color: #FFF;
+					line-height: 18px;
 				}
 
 				.touch_enabled .movies.list_list .movie .info .year {
@@ -353,17 +357,39 @@
 				top: 30px;
 				clear: both;
 				bottom: 30px;
-				overflow: hidden;
 				position: absolute;
 			}
-				.movies .data:hover .description {
-					overflow: auto;
-				}
 				.movies.list_list .movie:not(.details_view) .info .description,
 				.movies.mass_edit_list .info .description,
 				.movies.thumbs_list .info .description {
 					display: none;
 				}
+
+		.movies .data .eta {
+			display: none;
+		}
+
+		.movies.details_list .data .eta {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			display: block;
+			min-height: 20px;
+			text-align: right;
+			font-style: italic;
+			opacity: .8;
+			font-size: 11px;
+		}
+
+			.movies.details_list .movie:hover .data .eta {
+				display: none;
+			}
+
+		.movies.thumbs_list .data .eta {
+			display: block;
+			position: absolute;
+			bottom: 40px;
+		}
 
 		.movies .data .quality {
 			position: absolute;
@@ -396,7 +422,6 @@
 
 			.movies .data .quality span {
 				padding: 2px 3px;
-				font-weight: bold;
 				opacity: 0.5;
 				font-size: 10px;
 				height: 16px;
@@ -449,7 +474,6 @@
 			right: 20px;
 			line-height: 0;
 			top: 0;
-			display: block;
 			width: auto;
 			opacity: 0;
 			display: none;
@@ -831,7 +855,6 @@
 		}
 
 	.movies .alph_nav .search input {
-		padding: 6px 5px;
 		width: 100%;
 		height: 44px;
 		display: inline-block;
@@ -839,7 +862,6 @@
 		background: none;
 		color: #444;
 		font-size: 14px;
-		padding: 10px;
 		padding: 0 10px 0 30px;
 		border-bottom: 1px solid rgba(0,0,0,.08);
 	}
@@ -1041,7 +1063,6 @@
 			}
 
 			.movies .progress > div .percentage {
-				font-weight: bold;
 				display: inline-block;
 				text-transform: uppercase;
 				font-weight: normal;

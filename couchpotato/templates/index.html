@@ -69,18 +69,14 @@
 					'qualities': {{ json_encode(fireEvent('quality.all', single = True)) }}
 				});
 
-				Status.setup({{ json_encode(fireEvent('status.all', single = True)) }});
-
-				File.Type.setup({{ json_encode(fireEvent('file.types', single = True)) }});
-
 				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({
 					'base_url': {{ json_encode(Env.get('web_base')) }},
-					'args': {{ json_encode(Env.get('args')) }},
+					'args': {{ json_encode(Env.get('args', unicode = True)) }},
 					'options': {{ json_encode(('%s' % Env.get('options'))) }},
-					'app_dir': {{ json_encode(Env.get('app_dir')) }},
-					'data_dir': {{ json_encode(Env.get('data_dir')) }},
+					'app_dir': {{ json_encode(Env.get('app_dir', unicode = True)) }},
+					'data_dir': {{ json_encode(Env.get('data_dir', unicode = True)) }},
 					'pid': {{ json_encode(Env.getPid()) }},
 					'userscript_version': {{ json_encode(fireEvent('userscript.get_version', single = True)) }}
 				});

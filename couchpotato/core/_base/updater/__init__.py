@@ -1,9 +1,10 @@
-from .main import Updater
-from couchpotato.environment import Env
 import os
 
+from .main import Updater
+from couchpotato.environment import Env
 
-def start():
+
+def autoload():
     return Updater()
 
 config = [{

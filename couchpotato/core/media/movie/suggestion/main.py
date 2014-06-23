@@ -1,12 +1,12 @@
-from couchpotato import get_session
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import splitString, removeDuplicate
+from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Media, Library
 from couchpotato.environment import Env
-from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import or_
+
+
+autoload = 'Suggestion'
 
 
 class Suggestion(Plugin):
@@ -28,11 +28,8 @@ class Suggestion(Plugin):
         else:
 
             if not movies or len(movies) == 0:
-                db = get_session()
-                active_movies = db.query(Media) \
-                    .options(joinedload_all('library')) \
-                    .filter(or_(*[Media.status.has(identifier = s) for s in ['active', 'done']])).all()
-                movies = [x.library.identifier for x in active_movies]
+                active_movies = fireEvent('media.with_status', ['active', 'done'], single = True)
+                movies = [getIdentifier(x) for x in active_movies]
 
             if not ignored or len(ignored) == 0:
                 ignored = splitString(Env.prop('suggest_ignore', default = ''))
@@ -87,15 +84,8 @@ class Suggestion(Plugin):
 
         # Get new results and add them
         if len(new_suggestions) - 1 < limit:
-
-            active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
-
-            db = get_session()
-            active_movies = db.query(Media) \
-                .join(Library) \
-                .with_entities(Library.identifier) \
-                .filter(Media.status_id.in_([active_status.get('id'), done_status.get('id')])).all()
-            movies = [x[0] for x in active_movies]
+            active_movies = fireEvent('media.with_status', ['active', 'done'], single = True)
+            movies = [getIdentifier(x) for x in active_movies]
             movies.extend(seen)
 
             ignored.extend([x.get('imdb') for x in cached_suggestion])

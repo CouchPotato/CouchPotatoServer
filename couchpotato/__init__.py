@@ -15,6 +15,7 @@ log = CPLog(__name__)
 views = {}
 template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))
 
+
 class BaseHandler(RequestHandler):
 
     def get_current_user(self):
@@ -44,12 +45,12 @@ class WebHandler(BaseHandler):
             self.write({'success': False, 'error': 'Failed returning results'})
 
 
-def addView(route, func, static = False):
+def addView(route, func):
     views[route] = func
 
 
-def get_session():
-    return Env.getSession()
+def get_db():
+    return Env.get('db')
 
 
 # Web view
@@ -71,8 +72,16 @@ def apiDocs():
 addView('docs', apiDocs)
 
 
+# Database debug manager
+def databaseManage():
+    return template_loader.load('database.html').generate(fireEvent = fireEvent, Env = Env)
+
+addView('database', databaseManage)
+
+
 # Make non basic auth option to get api key
 class KeyHandler(RequestHandler):
+
     def get(self, *args, **kwargs):
         api_key = None
 

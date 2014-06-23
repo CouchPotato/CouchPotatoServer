@@ -92,6 +92,22 @@
 				border-bottom: 1px solid #333;
 				box-shadow: 0 1px 0 rgba(255,255,255, 0.15);
 			}
+
+			.page fieldset h2 .icon {
+				vertical-align: bottom;
+				position: absolute;
+				left: -25px;
+				top: 3px;
+				background: #FFF;
+				border-radius: 2.5px;
+				line-height: 0;
+				overflow: hidden;
+			}
+
+				.page fieldset.enabler:hover h2 .icon {
+					display: none;
+				}
+
 			.page fieldset h2 .hint {
 				font-size: 12px;
 				margin-left: 10px;
@@ -200,17 +216,23 @@
 
 	.page .option_list .enabler.disabled {
 		display: inline-block;
-		margin: 3px 3px 3px 20px;
-		padding: 4px 0;
-		width: 173px;
+		padding: 4px 0 5px;
+		width: 24%;
 		vertical-align: top;
 	}
+		.page .option_list .enabler:not(.disabled) .icon {
+			display: none;
+		}
 
 		.page .option_list .enabler.disabled h2 {
+			cursor: pointer;
 			border: none;
 			box-shadow: none;
-			padding: 0 10px 0 25px;
+			padding: 0 10px 0 0;
 			font-size: 16px;
+			position: relative;
+			left: 25px;
+			margin-right: 25px;
 		}
 
 			.page .option_list .enabler:not(.disabled) h2 {
@@ -698,11 +720,17 @@
 		}
 
 .group_userscript {
-	background:  center bottom no-repeat;
-	min-height: 360px;
+	background:  5px 75px no-repeat;
+	min-height: 460px;
 	font-size: 20px;
 	font-weight: normal;
 }
+
+	.settings .group_userscript {
+		background-position: center 120px;
+		background-size: auto 70%;
+		min-height: 360px;
+	}
 
 	.group_userscript h2 .hint {
 		display: block;
@@ -741,7 +769,7 @@
 
 .tooltip {
 	position: absolute;
-	right: 0px;
+	right: 0;
 	width: 30px;
 	height: 30px;
 }

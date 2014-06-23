@@ -1,0 +1,132 @@
+import json
+import re
+import traceback
+
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import tryInt, tryFloat, splitString
+from couchpotato.core.logger import CPLog
+from couchpotato.core.media.movie.providers.base import MovieProvider
+
+
+log = CPLog(__name__)
+
+autoload = 'OMDBAPI'
+
+
+class OMDBAPI(MovieProvider):
+
+    urls = {
+        'search': 'http://www.omdbapi.com/?%s',
+        'info': 'http://www.omdbapi.com/?i=%s',
+    }
+
+    http_time_between_calls = 0
+
+    def __init__(self):
+        addEvent('info.search', self.search)
+        addEvent('movie.search', self.search)
+        addEvent('movie.info', self.getInfo)
+
+    def search(self, q, limit = 12):
+
+        name_year = fireEvent('scanner.name_year', q, single = True)
+
+        if not name_year or (name_year and not name_year.get('name')):
+            name_year = {
+                'name': q
+            }
+
+        cache_key = 'omdbapi.cache.%s' % q
+        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}), timeout = 3)
+
+        if cached:
+            result = self.parseMovie(cached)
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result.get('year')) + ')')
+                return [result]
+
+            return []
+
+        return []
+
+    def getInfo(self, identifier = None, **kwargs):
+
+        if not identifier:
+            return {}
+
+        cache_key = 'omdbapi.cache.%s' % identifier
+        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3)
+
+        if cached:
+            result = self.parseMovie(cached)
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result['year']) + ')')
+                return result
+
+        return {}
+
+    def parseMovie(self, movie):
+
+        movie_data = {}
+        try:
+
+            try:
+                if isinstance(movie, (str, unicode)):
+                    movie = json.loads(movie)
+            except ValueError:
+                log.info('No proper json to decode')
+                return movie_data
+
+            if movie.get('Response') == 'Parse Error' or movie.get('Response') == 'False':
+                return movie_data
+
+            if movie.get('Type').lower() != 'movie':
+                return movie_data
+
+            tmp_movie = movie.copy()
+            for key in tmp_movie:
+                if tmp_movie.get(key).lower() == 'n/a':
+                    del movie[key]
+
+            year = tryInt(movie.get('Year', ''))
+
+            movie_data = {
+                'type': 'movie',
+                'via_imdb': True,
+                'titles': [movie.get('Title')] if movie.get('Title') else [],
+                'original_title': movie.get('Title'),
+                'images': {
+                    'poster': [movie.get('Poster', '')] if movie.get('Poster') and len(movie.get('Poster', '')) > 4 else [],
+                },
+                'rating': {
+                    'imdb': (tryFloat(movie.get('imdbRating', 0)), tryInt(movie.get('imdbVotes', '').replace(',', ''))),
+                    #'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', '').replace(',', ''))),
+                },
+                'imdb': str(movie.get('imdbID', '')),
+                'mpaa': str(movie.get('Rated', '')),
+                'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
+                'released': movie.get('Released'),
+                'year': year if isinstance(year, int) else None,
+                'plot': movie.get('Plot'),
+                'genres': splitString(movie.get('Genre', '')),
+                'directors': splitString(movie.get('Director', '')),
+                'writers': splitString(movie.get('Writer', '')),
+                'actors': splitString(movie.get('Actors', '')),
+            }
+            movie_data = dict((k, v) for k, v in movie_data.items() if v)
+        except:
+            log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
+
+        return movie_data
+
+    def runtimeToMinutes(self, runtime_str):
+        runtime = 0
+
+        regex = '(\d*.?\d+).(h|hr|hrs|mins|min)+'
+        matches = re.findall(regex, runtime_str)
+        for match in matches:
+            nr, size = match
+            runtime += tryInt(nr) * (60 if 'h' is str(size)[0] else 1)
+
+        return runtime

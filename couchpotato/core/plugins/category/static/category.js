@@ -3,13 +3,13 @@ var CategoryListBase = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('load', self.addSettings.bind(self));
+		App.addEvent('loadSettings', self.addSettings.bind(self));
 	},
 
 	setup: function(categories){
 		var self = this;
 
-		self.categories = []
+		self.categories = [];
 		Array.each(categories, self.createCategory.bind(self));
 
 	},
@@ -17,7 +17,7 @@ var CategoryListBase = new Class({
 	addSettings: function(){
 		var self = this;
 
-		self.settings = App.getPage('Settings')
+		self.settings = App.getPage('Settings');
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createSubTab('category', {
 				'label': 'Categories',
@@ -31,7 +31,7 @@ var CategoryListBase = new Class({
 			self.createList();
 			self.createOrdering();
 
-		})
+		});
 
 		// Add categories in renamer
 		self.settings.addEvent('create', function(){
@@ -86,7 +86,7 @@ var CategoryListBase = new Class({
 
 	getCategory: function(id){
 		return this.categories.filter(function(category){
-			return category.data.id == id
+			return category.data._id == id
 		}).pick()
 	},
 
@@ -97,9 +97,9 @@ var CategoryListBase = new Class({
 	createCategory: function(data){
 		var self = this;
 
-		var data = data || {'id': randomString()}
-		var category = new Category(data)
-		self.categories.include(category)
+		var data = data || {'id': randomString()};
+		var category = new Category(data);
+		self.categories.include(category);
 
 		return category;
 	},
@@ -108,7 +108,7 @@ var CategoryListBase = new Class({
 		var self = this;
 
 		var category_list;
-		var group = self.settings.createGroup({
+		self.settings.createGroup({
 			'label': 'Category ordering'
 		}).adopt(
 			new Element('.ctrlHolder#category_ordering').adopt(
@@ -118,10 +118,10 @@ var CategoryListBase = new Class({
 					'html': 'Change the order the categories are in the dropdown list.<br />First one will be default.'
 				})
 			)
-		).inject(self.content)
+		).inject(self.content);
 
 		Array.each(self.categories, function(category){
-			new Element('li', {'data-id': category.data.id}).adopt(
+			new Element('li', {'data-id': category.data._id}).adopt(
 				new Element('span.category_label', {
 					'text': category.data.label
 				}),
@@ -145,7 +145,7 @@ var CategoryListBase = new Class({
 
 		var ids = [];
 
-		self.category_sortable.list.getElements('li').each(function(el, nr){
+		self.category_sortable.list.getElements('li').each(function(el){
 			ids.include(el.get('data-id'));
 		});
 
@@ -157,7 +157,7 @@ var CategoryListBase = new Class({
 
 	}
 
-})
+});
 
 window.CategoryList = new CategoryListBase();
 
@@ -235,8 +235,6 @@ var Category = new Class({
 		if(self.save_timer) clearTimeout(self.save_timer);
 		self.save_timer = (function(){
 
-			var data = self.getData();
-
 			Api.request('category.save', {
 				'data': self.getData(),
 				'useSpinner': true,
@@ -257,21 +255,19 @@ var Category = new Class({
 	getData: function(){
 		var self = this;
 
-		var data = {
-			'id' : self.data.id,
+		return {
+			'id' : self.data._id,
 			'label' : self.el.getElement('.category_label input').get('value'),
 			'required' : self.el.getElement('.category_required input').get('value'),
 			'preferred' : self.el.getElement('.category_preferred input').get('value'),
 			'ignored' : self.el.getElement('.category_ignored input').get('value'),
 			'destination': self.data.destination
 		}
-
-		return data
 	},
 
 	del: function(){
 		var self = this;
-		
+
 		if(self.data.label == undefined){
 			self.el.destroy();
 			return;
@@ -286,7 +282,7 @@ var Category = new Class({
 					(e).preventDefault();
 					Api.request('category.delete', {
 						'data': {
-							'id': self.data.id
+							'id': self.data._id
 						},
 						'useSpinner': true,
 						'spinnerOptions': {

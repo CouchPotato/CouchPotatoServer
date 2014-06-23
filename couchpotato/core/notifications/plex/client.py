@@ -1,8 +1,10 @@
 import json
+
 from couchpotato import CPLog
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 import requests
+
 
 log = CPLog(__name__)
 

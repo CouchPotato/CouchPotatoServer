@@ -1,7 +1,5 @@
 from .main import Release
 
 
-def start():
+def autoload():
     return Release()
-
-config = []
