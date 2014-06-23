@@ -100,9 +100,9 @@ class Release(Plugin):
                 if rel['status'] in ['available']:
                     self.delete(rel['_id'])
 
-                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
+                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the media
                 elif rel['status'] in ['snatched', 'downloaded']:
-                    self.updateStatus(rel['_id'], status = 'ignore')
+                    self.updateStatus(rel['_id'], status = 'ignored')
 
             fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
@@ -164,7 +164,7 @@ class Release(Plugin):
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
-            fireEvent('media.restatus', media['_id'])
+            fireEvent('media.restatus', media['_id'], single = True)
 
             return True
         except:
@@ -331,24 +331,14 @@ class Release(Plugin):
 
                 if media['status'] == 'active':
                     profile = db.get('id', media['profile_id'])
-                    finished = False
-                    if rls['quality'] in profile['qualities']:
-                        nr = profile['qualities'].index(rls['quality'])
-                        finished = profile['finish'][nr]
-
-                    if finished:
+                    if fireEvent('quality.isfinish', {'identifier': rls['quality'], 'is_3d': rls.get('is_3d', False)}, profile, single = True):
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                         # Mark release done
                         self.updateStatus(rls['_id'], status = 'done')
 
                         # Mark media done
-                        mdia = db.get('id', media['_id'])
-                        mdia['status'] = 'done'
-                        mdia['last_edit'] = int(time.time())
-                        db.update(mdia)
-
-                        fireEvent('media.tag', media['_id'], 'recent', single = True)
+                        fireEvent('media.restatus', media['_id'], single = True)
 
                         return True
 

@@ -44,6 +44,7 @@ var Profile = new Class({
 					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
 				}),
 				new Element('span', {'text':'day(s) for a better quality.'})
+				// "Wait the entered number of days for a checked quality, before downloading a lower quality release."
 			),
 			new Element('div.qualities.ctrlHolder').adopt(
 				new Element('label', {'text': 'Search for'}),
@@ -51,6 +52,15 @@ var Profile = new Class({
 				new Element('div.formHint', {
 					'html': "Search these qualities (2 minimum), from top to bottom. Use the checkbox, to stop searching after it found this quality."
 				})
+			),
+			new Element('div.stop_after.ctrlHolder').adopt(
+				new Element('span', {'text':'Keep searching'}),
+				new Element('input.inlay.xsmall', {
+					'type':'text',
+					'value': data.stop_after && data.stop_after.length > 0 ? data.stop_after[0] : 0
+				}),
+				new Element('span', {'text':'day(s) for a better checked quality.'})
+				// "After a checked quality is found and downloaded, continue searching for even better quality releases for the entered number of days."
 			)
 		);
 
@@ -117,6 +127,7 @@ var Profile = new Class({
 			'id' : self.data._id,
 			'label' : self.el.getElement('.quality_label input').get('value'),
 			'wait_for' : self.el.getElement('.wait_for input').get('value'),
+			'stop_after' : self.el.getElement('.stop_after input').get('value'),
 			'types': []
 		};
 
