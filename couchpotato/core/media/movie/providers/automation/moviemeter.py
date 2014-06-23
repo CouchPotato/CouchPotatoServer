@@ -21,11 +21,15 @@ class Moviemeter(Automation, RSS):
 
         for movie in rss_movies:
 
-            name_year = fireEvent('scanner.name_year', self.getTextElement(movie, 'title'), single = True)
-            imdb = self.search(name_year.get('name'), name_year.get('year'))
+            title = self.getTextElement(movie, 'title')
+            name_year = fireEvent('scanner.name_year', title, single = True)
+            if name_year.get('name') and name_year.get('year'):
+                imdb = self.search(name_year.get('name'), name_year.get('year'))
 
-            if imdb and self.isMinimalMovie(imdb):
-                movies.append(imdb['imdb'])
+                if imdb and self.isMinimalMovie(imdb):
+                    movies.append(imdb['imdb'])
+            else:
+                log.error('Failed getting name and year from: %s', title)
 
         return movies
 
