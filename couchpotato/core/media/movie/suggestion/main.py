@@ -1,4 +1,3 @@
-from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier
