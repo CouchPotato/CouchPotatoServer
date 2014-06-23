@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
@@ -178,6 +179,10 @@ class Manage(Plugin):
                     # Break if CP wants to shut down
                     if self.shuttingDown():
                         break
+
+                if not self.shuttingDown():
+                    db = get_db()
+                    db.reindex()
 
             Env.prop(last_update_key, time.time())
         except:

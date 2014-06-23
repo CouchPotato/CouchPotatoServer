@@ -105,7 +105,7 @@ class Scanner(Plugin):
         'HDTV': ['hdtv']
     }
 
-    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|half.sbs|full.sbs|ou|half.ou|full.ou|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|half.sbs|full.sbs|ou|half.ou|full.ou|extended|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
             '|hdtvrip|webdl|web.dl|webrip|web.rip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|hc|\[.*\])(?=[ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
@@ -634,7 +634,14 @@ class Scanner(Plugin):
 
                     name_year = self.getReleaseNameYear(identifier, file_name = filename if not group['is_dvd'] else None)
                     if name_year.get('name') and name_year.get('year'):
-                        movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
+                        search_q = '%(name)s %(year)s' % name_year
+                        movie = fireEvent('movie.search', q = search_q, merge = True, limit = 1)
+
+                        # Try with other
+                        if len(movie) == 0 and name_year.get('other') and name_year['other'].get('name') and name_year['other'].get('year'):
+                            search_q2 = '%(name)s %(year)s' % name_year
+                            if search_q2 != search_q:
+                                movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year.get('other'), merge = True, limit = 1)
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
@@ -938,8 +945,11 @@ class Scanner(Plugin):
                 pass
 
         if cp_guess.get('year') == guess.get('year') and len(cp_guess.get('name', '')) > len(guess.get('name', '')):
+            cp_guess['other'] = guess
             return cp_guess
         elif guess == {}:
+            cp_guess['other'] = guess
             return cp_guess
 
+        guess['other'] = cp_guess
         return guess

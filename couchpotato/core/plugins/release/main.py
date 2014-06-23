@@ -477,13 +477,16 @@ class Release(Plugin):
             rel = db.get('id', release_id)
             if rel and rel.get('status') != status:
 
-                release_name = rel['info'].get('name')
+                release_name = None
                 if rel.get('files'):
                     for file_type in rel.get('files', {}):
                         if file_type == 'movie':
                             for release_file in rel['files'][file_type]:
                                 release_name = os.path.basename(release_file)
                                 break
+
+                if not release_name and rel.get('info'):
+                    release_name = rel['info'].get('name')
 
                 #update status in Db
                 log.debug('Marking release %s as %s', (release_name, status))

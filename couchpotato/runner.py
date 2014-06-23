@@ -293,7 +293,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             'keyfile': config['ssl_key'],
         }
 
-    server = HTTPServer(application, no_keep_alive = True)
+    server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
     try_restart = True
     restart_tries = 5
