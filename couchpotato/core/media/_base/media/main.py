@@ -167,8 +167,15 @@ class MediaPlugin(MediaBase):
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
+            for ms in db.get_many('media_status', s):
+                if with_doc:
+                    try:
+                        doc = db.get('id', ms['_id'])
+                        yield doc
+                    except RecordNotFound:
+                        log.debug('Record not found, skipping: %s', ms['_id'])
+                else:
+                    yield ms
 
     def withIdentifiers(self, identifiers, with_doc = False):
 
