@@ -127,7 +127,7 @@ class WorkerThread(Thread):
         # Get options via arg
         from couchpotato.runner import getOptions
         args = ['--quiet']
-        self.options = getOptions(base_path, args)
+        self.options = getOptions(args)
 
         # Load settings
         settings = Env.get('settings')
