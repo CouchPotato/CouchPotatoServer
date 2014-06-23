@@ -458,17 +458,17 @@ class MediaPlugin(MediaBase):
                 m['status'] = 'active'
 
                 try:
-	                profile = db.get('id', m['profile_id'])
-	                media_releases = fireEvent('release.for_media', m['_id'], single = True)
-	                done_releases = [release for release in media_releases if release.get('status') == 'done']
+                    profile = db.get('id', m['profile_id'])
+                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                    done_releases = [release for release in media_releases if release.get('status') == 'done']
 
-	                if done_releases:
-	                    # Only look at latest added release
-	                    release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
+                    if done_releases:
+                        # Only look at latest added release
+                        release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
 
-	                    # Check if we are finished with the media
-	                    if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
-	                        m['status'] = 'done'
+                        # Check if we are finished with the media
+                        if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
+                            m['status'] = 'done'
                 except RecordNotFound:
                     log.debug('Failed restatus: %s', traceback.format_exc())
 
