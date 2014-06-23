@@ -3,7 +3,7 @@ import os
 import time
 import traceback
 
-from CodernityDB.database import RecordDeleted
+from CodernityDB.database import RecordDeleted, RecordNotFound
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
@@ -100,9 +100,9 @@ class Release(Plugin):
                 if rel['status'] in ['available']:
                     self.delete(rel['_id'])
 
-                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
+                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the media
                 elif rel['status'] in ['snatched', 'downloaded']:
-                    self.updateStatus(rel['_id'], status = 'ignore')
+                    self.updateStatus(rel['_id'], status = 'ignored')
 
             fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
@@ -164,7 +164,7 @@ class Release(Plugin):
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
-            fireEvent('media.restatus', media['_id'])
+            fireEvent('media.restatus', media['_id'], single = True)
 
             return True
         except:
@@ -331,24 +331,14 @@ class Release(Plugin):
 
                 if media['status'] == 'active':
                     profile = db.get('id', media['profile_id'])
-                    finished = False
-                    if rls['quality'] in profile['qualities']:
-                        nr = profile['qualities'].index(rls['quality'])
-                        finished = profile['finish'][nr]
-
-                    if finished:
+                    if fireEvent('quality.isfinish', {'identifier': rls['quality'], 'is_3d': rls.get('is_3d', False)}, profile, single = True):
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                         # Mark release done
                         self.updateStatus(rls['_id'], status = 'done')
 
                         # Mark media done
-                        mdia = db.get('id', media['_id'])
-                        mdia['status'] = 'done'
-                        mdia['last_edit'] = int(time.time())
-                        db.update(mdia)
-
-                        fireEvent('media.tag', media['_id'], 'recent', single = True)
+                        fireEvent('media.restatus', media['_id'], single = True)
 
                         return True
 
@@ -511,8 +501,15 @@ class Release(Plugin):
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('release_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
+            for ms in db.get_many('release_status', s):
+                if with_doc:
+                    try:
+                        doc = db.get('id', ms['_id'])
+                        yield doc
+                    except RecordNotFound:
+                        log.debug('Record not found, skipping: %s', ms['_id'])
+                else:
+                    yield ms
 
     def forMedia(self, media_id):
 

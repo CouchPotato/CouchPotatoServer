@@ -75,6 +75,8 @@
 			color: #edc07f;
 		}
 		.page.show_advanced .advanced { display: block; }
+		.page.show_advanced span.advanced,
+		.page.show_advanced input.advanced { display: inline; }
 
 		.page.settings .tab_content {
 			display: none;
@@ -176,7 +178,7 @@
 			padding: 6px 0 0;
 		}
 
-		.page .xsmall { width: 20px !important; text-align: center; }
+		.page .xsmall { width: 25px !important; text-align: center; }
 
 	.page .enabler {
 		display: block;

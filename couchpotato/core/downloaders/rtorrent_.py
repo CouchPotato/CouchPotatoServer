@@ -5,7 +5,6 @@ from urlparse import urlparse
 import os
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
-
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
