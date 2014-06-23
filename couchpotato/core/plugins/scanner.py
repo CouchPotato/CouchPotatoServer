@@ -634,11 +634,14 @@ class Scanner(Plugin):
 
                     name_year = self.getReleaseNameYear(identifier, file_name = filename if not group['is_dvd'] else None)
                     if name_year.get('name') and name_year.get('year'):
-                        movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
+                        search_q = '%(name)s %(year)s' % name_year
+                        movie = fireEvent('movie.search', q = search_q, merge = True, limit = 1)
 
                         # Try with other
                         if len(movie) == 0 and name_year.get('other') and name_year['other'].get('name') and name_year['other'].get('year'):
-                            movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year.get('other'), merge = True, limit = 1)
+                            search_q2 = '%(name)s %(year)s' % name_year
+                            if search_q2 != search_q:
+                                movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year.get('other'), merge = True, limit = 1)
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
