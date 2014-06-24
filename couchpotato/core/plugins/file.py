@@ -82,6 +82,7 @@ class FileManager(Plugin):
     def doSubfolderTest(self):
 
         tests = {
+            ('/test/subfolder', '/test/sub'): False,
             ('/test/sub/folder', '/test/sub'): True,
             ('/test/sub/folder', '/test/sub2'): False,
             ('/sub/fold', '/test/sub/fold'): False,
