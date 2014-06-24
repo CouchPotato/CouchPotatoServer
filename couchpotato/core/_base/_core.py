@@ -118,7 +118,7 @@ class Core(Plugin):
 
         self.shutdown_started = True
 
-        fireEvent('app.do_shutdown')
+        fireEvent('app.do_shutdown', restart = restart)
         log.debug('Every plugin got shutdown event')
 
         loop = True
@@ -143,9 +143,11 @@ class Core(Plugin):
 
         log.debug('Safe to shutdown/restart')
 
+        loop = IOLoop.current()
+
         try:
-            if not IOLoop.current()._closing:
-                IOLoop.current().stop()
+            if not loop._closing:
+                loop.stop()
         except RuntimeError:
             pass
         except:

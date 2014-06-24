@@ -142,11 +142,11 @@ class Updater(Plugin):
             'success': success
         }
 
-    def doShutdown(self):
+    def doShutdown(self, *args, **kwargs):
         if not Env.get('dev'):
             removePyc(Env.get('app_dir'), show_logs = False)
 
-        return super(Updater, self).doShutdown()
+        return super(Updater, self).doShutdown(*args, **kwargs)
 
 
 class BaseUpdater(Plugin):

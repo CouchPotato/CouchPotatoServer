@@ -43,9 +43,8 @@
 	}
 
 	.profile .wait_for {
-		position: absolute;
-		right: 60px;
-		top: 0;
+		padding-top: 0;
+		padding-bottom: 20px;
 	}
 
 	.profile .wait_for input {

@@ -120,7 +120,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if not movie['profile_id'] or (movie['status'] == 'done' and not manual):
             log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
+            fireEvent('media.restatus', movie['_id'], single = True)
             return
+
+        default_title = getTitle(movie)
+        if not default_title:
+            log.error('No proper info found for movie, removing it from library to stop it from causing more issues.')
+            fireEvent('media.delete', movie['_id'], single = True)
+            return
+
+        # Update media status and check if it is still not done (due to the stop searching after feature
+        if fireEvent('media.restatus', movie['_id'], single = True) == 'done':
+            log.debug('No better quality found, marking movie %s as done.', default_title)
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('movie.update_release_dates', movie['_id'], merge = True)
@@ -132,12 +143,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         alway_search = self.conf('always_search')
         ignore_eta = manual
         total_result_count = 0
-
-        default_title = getTitle(movie)
-        if not default_title:
-            log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
-            fireEvent('media.delete', movie['_id'], single = True)
-            return
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
@@ -154,8 +159,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         profile = db.get('id', movie['profile_id'])
         ret = False
 
-        index = 0
-        for q_identifier in profile.get('qualities'):
+        for index, q_identifier in enumerate(profile.get('qualities', [])):
             quality_custom = {
                 'index': index,
                 'quality': q_identifier,
@@ -163,8 +167,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'wait_for': tryInt(profile['wait_for'][index]),
                 '3d': profile['3d'][index] if profile.get('3d') else False
             }
-
-            index += 1
 
             could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
             if not alway_search and could_not_be_released:
@@ -189,7 +191,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Don't search for quality lower then already available.
             if has_better_quality > 0:
                 log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
-                fireEvent('media.restatus', movie['_id'])
+                fireEvent('media.restatus', movie['_id'], single = True)
                 break
 
             quality = fireEvent('quality.single', identifier = q_identifier, single = True)

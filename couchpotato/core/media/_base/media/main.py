@@ -1,3 +1,6 @@
+from datetime import timedelta
+from operator import itemgetter
+import time
 import traceback
 from string import ascii_lowercase
 
@@ -164,8 +167,15 @@ class MediaPlugin(MediaBase):
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
+            for ms in db.get_many('media_status', s):
+                if with_doc:
+                    try:
+                        doc = db.get('id', ms['_id'])
+                        yield doc
+                    except RecordNotFound:
+                        log.debug('Record not found, skipping: %s', ms['_id'])
+                else:
+                    yield ms
 
     def withIdentifiers(self, identifiers, with_doc = False):
 
@@ -405,12 +415,14 @@ class MediaPlugin(MediaBase):
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active') or (not new_media_status and delete_from == 'late'):
+                    if (total_releases == total_deleted and media['status'] != 'active') or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
                         media['status'] = new_media_status
                         db.update(media)
+
+                        fireEvent('media.untag', media['_id'], 'recent', single = True)
                     else:
                         fireEvent('media.restatus', media.get('_id'), single = True)
 
@@ -450,25 +462,31 @@ class MediaPlugin(MediaBase):
             if not m['profile_id']:
                 m['status'] = 'done'
             else:
-                move_to_wanted = True
+                m['status'] = 'active'
 
-                profile = db.get('id', m['profile_id'])
-                media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                try:
+                    profile = db.get('id', m['profile_id'])
+                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                    done_releases = [release for release in media_releases if release.get('status') == 'done']
 
-                for q_identifier in profile['qualities']:
-                    index = profile['qualities'].index(q_identifier)
+                    if done_releases:
+                        # Only look at latest added release
+                        release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
 
-                    for release in media_releases:
-                        if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
-                            move_to_wanted = False
-
-                m['status'] = 'active' if move_to_wanted else 'done'
+                        # Check if we are finished with the media
+                        if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
+                            m['status'] = 'done'
+                except RecordNotFound:
+                    log.debug('Failed restatus: %s', traceback.format_exc())
 
             # Only update when status has changed
             if previous_status != m['status']:
                 db.update(m)
 
-            return True
+                # Tag media as recent
+                self.tag(media_id, 'recent')
+
+            return m['status']
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
 

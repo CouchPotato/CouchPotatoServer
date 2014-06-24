@@ -277,22 +277,23 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loop = IOLoop.current()
 
     # Reload hook
-    def test():
+    def reload_hook():
         fireEvent('app.shutdown')
-    add_reload_hook(test)
+    add_reload_hook(reload_hook)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
+    ssl_options = None
     if config['ssl_cert'] and config['ssl_key']:
-        server = HTTPServer(application, no_keep_alive = True, ssl_options = {
+        ssl_options = {
             'certfile': config['ssl_cert'],
             'keyfile': config['ssl_key'],
-        })
-    else:
-        server = HTTPServer(application, no_keep_alive = True)
+        }
+
+    server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
     try_restart = True
     restart_tries = 5
@@ -301,6 +302,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
             loop.start()
+            server.close_all_connections()
+            server.stop()
+            loop.close(all_fds = True)
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
@@ -314,6 +318,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                         continue
                     else:
                         return
+            except ValueError:
+                return
             except:
                 pass
 
