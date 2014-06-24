@@ -387,8 +387,8 @@ class QualityPlugin(Plugin):
         try:
             index = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else False) == bool(quality.get('is_3d', False))][0]
 
-            if index == 0 or profile['finish'][index] and int(release_age) >= int(profile['stop_after'][0]):
-                return True 
+            if index == 0 or (profile['finish'][index] and int(release_age) >= int(profile.get('stop_after', [0])[0])):
+                return True
 
             return False
         except:
