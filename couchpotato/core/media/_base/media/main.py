@@ -477,7 +477,8 @@ class MediaPlugin(MediaBase):
                         if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
                             m['status'] = 'done'
                 except RecordNotFound:
-                    log.debug('Failed restatus: %s', traceback.format_exc())
+                    log.debug('Failed restatus, keeping previous: %s', traceback.format_exc())
+                    m['status'] = previous_status
 
             # Only update when status has changed
             if previous_status != m['status']:

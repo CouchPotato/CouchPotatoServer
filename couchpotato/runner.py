@@ -17,7 +17,7 @@ from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import getDataDir, tryInt
+from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
@@ -194,6 +194,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
     log.debug('Started with options %s', options)
+
+    # Check available space
+    try:
+        total_space, available_space = getFreeSpace(data_dir)
+        if available_space < 100:
+            log.error('Shutting down as CP needs some space to work. You\'ll get corrupted data otherwise. Only %sMB left', available_space)
+            return
+    except:
+        log.error('Failed getting diskspace: %s', traceback.format_exc())
 
     def customwarn(message, category, filename, lineno, file = None, line = None):
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
