@@ -496,7 +496,7 @@ class Renamer(Plugin):
                             self.tagRelease(group = group, tag = 'exists')
 
                             # Notify on rename fail
-                            download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (media_title, group['meta_data']['quality']['label'], release.get('identifier'))
+                            download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (media_title, group['meta_data']['quality']['label'], release.get('quality'))
                             fireEvent('movie.renaming.canceled', message = download_message, data = group)
                             remove_leftovers = False
 
@@ -515,7 +515,7 @@ class Renamer(Plugin):
                                     fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
                                     mark_as_recent = True
 
-                        elif release.get('identifier') == group['meta_data']['quality']['identifier']:
+                        elif release.get('quality') == group['meta_data']['quality']['identifier']:
                             # Set the release to downloaded
                             fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
                             group['release_download'] = release_download
