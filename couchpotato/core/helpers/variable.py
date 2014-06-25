@@ -1,4 +1,5 @@
 import collections
+import ctypes
 import hashlib
 import os
 import platform
@@ -291,9 +292,14 @@ def dictIsSubset(a, b):
     return all([k in b and b[k] == v for k, v in a.items()])
 
 
+# Returns True if sub_folder is the same as or inside base_folder
 def isSubFolder(sub_folder, base_folder):
-    # Returns True if sub_folder is the same as or inside base_folder
-    return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+    if base_folder and sub_folder:
+        base = sp(os.path.realpath(base_folder)) + os.path.sep
+        subfolder = sp(os.path.realpath(sub_folder)) + os.path.sep
+        return os.path.commonprefix([subfolder, base]) == base
+
+    return False
 
 
 # From SABNZBD
@@ -341,3 +347,37 @@ def removePyc(folder, only_excess = True, show_logs = True):
                     os.rmdir(full_path)
                 except:
                     log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+
+def getFreeSpace(directories):
+
+    single = not isinstance(directories, (tuple, list))
+    if single:
+        directories = [directories]
+
+    free_space = {}
+    for folder in directories:
+
+        size = None
+        if os.path.isdir(folder):
+            if os.name == 'nt':
+                _, total, free = ctypes.c_ulonglong(), ctypes.c_ulonglong(), \
+                                   ctypes.c_ulonglong()
+                if sys.version_info >= (3,) or isinstance(folder, unicode):
+                    fun = ctypes.windll.kernel32.GetDiskFreeSpaceExW #@UndefinedVariable
+                else:
+                    fun = ctypes.windll.kernel32.GetDiskFreeSpaceExA #@UndefinedVariable
+                ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
+                if ret == 0:
+                    raise ctypes.WinError()
+                used = total.value - free.value
+                return [total.value, used, free.value]
+            else:
+                s = os.statvfs(folder)
+                size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
+
+        if single: return size
+
+        free_space[folder] = size
+
+    return free_space

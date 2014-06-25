@@ -639,9 +639,9 @@ class Scanner(Plugin):
 
                         # Try with other
                         if len(movie) == 0 and name_year.get('other') and name_year['other'].get('name') and name_year['other'].get('year'):
-                            search_q2 = '%(name)s %(year)s' % name_year
+                            search_q2 = '%(name)s %(year)s' % name_year.get('other')
                             if search_q2 != search_q:
-                                movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year.get('other'), merge = True, limit = 1)
+                                movie = fireEvent('movie.search', q = search_q2, merge = True, limit = 1)
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
