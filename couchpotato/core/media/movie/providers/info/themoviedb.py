@@ -156,7 +156,7 @@ class TheMovieDb(MovieProvider):
 
             # Add alternative names
             if movie_data['original_title'] and movie_data['original_title'] not in movie_data['titles']:
-                movie_data['titles'].insert(0, movie_data['original_title'])
+                movie_data['titles'].append(movie_data['original_title'])
 
             if extended:
                 for alt in movie.alternate_titles:
