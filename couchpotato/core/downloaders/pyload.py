@@ -154,7 +154,7 @@ class pyload(DownloaderBase):
                 pids = []
             #Ther could be more then one package of a DL-Realease ID in Pyload (two mirrors)
             pid_states = {}
-            for pid in pids:
+            for pid in ["676"]:
                 pid_states[pid] = None
                 try:
                     package = self.pyload_api.get_package_data(pid)
@@ -182,6 +182,7 @@ class pyload(DownloaderBase):
                                 pid_states[pid] = 'completed'
                                 del self.time_pending[pid] # clean time cache of pending packages
                             else:
+                                log.debug("Actual Time: %s \t Remaining Time to Wait: %s" % (str(time.clock()), str(time.clock() - self.time_pending[pid])))
                                 pid_states[pid] = 'pending'
                         else:
                             self.time_pending[pid] = time.clock()
