@@ -154,7 +154,7 @@ class pyload(DownloaderBase):
                 pids = []
             #Ther could be more then one package of a DL-Realease ID in Pyload (two mirrors)
             pid_states = {}
-            for pid in ["676"]:
+            for pid in pids:
                 pid_states[pid] = None
                 try:
                     package = self.pyload_api.get_package_data(pid)
