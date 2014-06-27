@@ -178,14 +178,14 @@ class pyload(DownloaderBase):
 
                     if len(finishedFiles) == len(files):
                         if pid in self.time_pending:
-                            if (time.clock() - self.time_pending[pid]) >= self.conf('wait_time'):
+                            if (time.time() - self.time_pending[pid]) >= self.conf('wait_time'):
                                 pid_states[pid] = 'completed'
                                 del self.time_pending[pid] # clean time cache of pending packages
                             else:
-                                log.debug("Actual Time: %s \t Remaining Time to Wait: %s" % (str(time.clock()), str(time.clock() - self.time_pending[pid])))
+                                log.debug("Actual Time: %s \t Remaining Time to Wait: %s" % (str(time.time()), str(time.time() - self.time_pending[pid])))
                                 pid_states[pid] = 'pending'
                         else:
-                            self.time_pending[pid] = time.clock()
+                            self.time_pending[pid] = time.time()
                             pid_states[pid] = 'pending'
                             log.debug("Download of all files in Package %s finished. Waiting %s seconds for possible post processing in pyload.", (pid, self.conf('wait_time')))
                         break
