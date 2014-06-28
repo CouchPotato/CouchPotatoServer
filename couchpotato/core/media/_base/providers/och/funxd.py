@@ -73,7 +73,7 @@ class Base(OCHProvider):
 
     def parsePost(self, post):
         def _getDateObject(day, month, year):
-            months = ["january", "february", "march", "april", "may", "june", "juli", "august", "september", "october", "november", "december"]
+            months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
             try:
                 month = months.index(month.lower()) + 1
                 return datetime.date(tryInt(year), month, tryInt(day))
