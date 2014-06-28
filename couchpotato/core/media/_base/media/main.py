@@ -229,6 +229,7 @@ class MediaPlugin(MediaBase):
 
         # Add search filters
         if starts_with:
+            print starts_with
             starts_with = toUnicode(starts_with.lower())[0]
             starts_with = starts_with if starts_with in ascii_lowercase else '#'
             filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
@@ -292,8 +293,8 @@ class MediaPlugin(MediaBase):
             release_status = splitString(kwargs.get('release_status')),
             status_or = kwargs.get('status_or') is not None,
             limit_offset = kwargs.get('limit_offset'),
-            with_tags = kwargs.get('with_tags'),
-            starts_with = splitString(kwargs.get('starts_with')),
+            with_tags = splitString(kwargs.get('with_tags')),
+            starts_with = kwargs.get('starts_with'),
             search = kwargs.get('search')
         )
 
