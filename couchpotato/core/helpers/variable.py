@@ -370,8 +370,7 @@ def getFreeSpace(directories):
                 ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
                 if ret == 0:
                     raise ctypes.WinError()
-                used = total.value - free.value
-                return [total.value, used, free.value]
+                return [total.value, free.value]
             else:
                 s = os.statvfs(folder)
                 size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
