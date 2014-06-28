@@ -48,9 +48,9 @@ class Base(TorrentProvider):
                         'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
-                        'size': self.parseSize(result.find_all('td')[4].string),
-                        'seeders': tryInt(result.find_all('td')[6].string),
-                        'leechers': tryInt(result.find_all('td')[7].string),
+                        'size': self.parseSize(result.find_all('td')[5].string),
+                        'seeders': tryInt(result.find_all('td')[7].string),
+                        'leechers': tryInt(result.find_all('td')[8].string),
                     })
 
             except:
