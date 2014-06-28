@@ -229,7 +229,6 @@ class MediaPlugin(MediaBase):
 
         # Add search filters
         if starts_with:
-            print starts_with
             starts_with = toUnicode(starts_with.lower())[0]
             starts_with = starts_with if starts_with in ascii_lowercase else '#'
             filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
@@ -412,7 +411,7 @@ class MediaPlugin(MediaBase):
                                 total_deleted += 1
                             new_media_status = 'done'
                         elif delete_from == 'manage':
-                            if release.get('status') == 'done':
+                            if release.get('status') == 'done' or media.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
 
@@ -477,6 +476,9 @@ class MediaPlugin(MediaBase):
                         # Check if we are finished with the media
                         if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
                             m['status'] = 'done'
+                    elif previous_status == 'done':
+                        m['status'] = 'done'
+
                 except RecordNotFound:
                     log.debug('Failed restatus, keeping previous: %s', traceback.format_exc())
                     m['status'] = previous_status
