@@ -79,6 +79,13 @@ class Release(Plugin):
             try:
                 db.get('id', release.get('key'))
                 media_exist.append(release.get('key'))
+
+                try:
+                    if release['doc'].get('status') == 'ignore':
+                        release['doc']['status'] = 'ignored'
+                        db.update(release['doc'])
+                except:
+                    log.error('Failed fixing mis-status tag: %s', traceback.format_exc())
             except RecordDeleted:
                 db.delete(release['doc'])
                 log.debug('Deleted orphaned release: %s', release['doc'])
