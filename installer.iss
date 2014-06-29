@@ -1,7 +1,7 @@
-#define MyAppName "CouchPotato"   
-#define MyAppVer "2.4.0"
+#define MyAppName "CouchPotato"
+#define MyAppVer "2.5.0"
 #define MyAppBit "win32" 
-//#define MyAppBit "win-amd64" 
+//#define MyAppBit "win-amd64"
 
 [Setup]
 AppName={#MyAppName}
