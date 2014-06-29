@@ -136,7 +136,7 @@ class Renamer(Plugin):
         else:
             for item in no_process:
                 if isSubFolder(item, base_folder):
-                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder. "%s" in "%s"', (item, base_folder))
                     return
 
         # Check to see if the no_process folders are inside the provided media_folder
@@ -168,7 +168,7 @@ class Renamer(Plugin):
         if media_folder:
             for item in no_process:
                 if isSubFolder(item, media_folder):
-                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder.')
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder. "%s" in "%s"', (item, media_folder))
                     return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
