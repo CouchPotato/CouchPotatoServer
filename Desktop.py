@@ -154,6 +154,7 @@ class WorkerThread(Thread):
             pass
 
         self._desktop.frame.Close()
+        self._desktop.ExitMainLoop()
 
 
 class CouchPotatoApp(wx.App, SoftwareUpdate):
