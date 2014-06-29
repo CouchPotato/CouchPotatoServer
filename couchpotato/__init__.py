@@ -1,3 +1,7 @@
+import os
+import time
+import traceback
+
 from couchpotato.api import api_docs, api_docs_missing, api
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import md5, tryInt
@@ -5,9 +9,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from tornado import template
 from tornado.web import RequestHandler, authenticated
-import os
-import time
-import traceback
 
 
 log = CPLog(__name__)

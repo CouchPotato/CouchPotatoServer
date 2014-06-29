@@ -1,13 +1,12 @@
-import ctypes
 import os
-import sys
 import time
 import traceback
 
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import splitString, getTitle, tryInt, getIdentifier
+from couchpotato.core.helpers.variable import splitString, getTitle, tryInt, getIdentifier, getFreeSpace
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -179,6 +178,10 @@ class Manage(Plugin):
                     if self.shuttingDown():
                         break
 
+                if not self.shuttingDown():
+                    db = get_db()
+                    db.reindex()
+
             Env.prop(last_update_key, time.time())
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
@@ -268,31 +271,7 @@ class Manage(Plugin):
                         fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
-
-        free_space = {}
-        for folder in self.directories():
-
-            size = None
-            if os.path.isdir(folder):
-                if os.name == 'nt':
-                    _, total, free = ctypes.c_ulonglong(), ctypes.c_ulonglong(), \
-                                       ctypes.c_ulonglong()
-                    if sys.version_info >= (3,) or isinstance(folder, unicode):
-                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExW #@UndefinedVariable
-                    else:
-                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExA #@UndefinedVariable
-                    ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
-                    if ret == 0:
-                        raise ctypes.WinError()
-                    used = total.value - free.value
-                    return [total.value, used, free.value]
-                else:
-                    s = os.statvfs(folder)
-                    size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
-
-            free_space[folder] = size
-
-        return free_space
+        return getFreeSpace(self.directories())
 
 
 config = [{

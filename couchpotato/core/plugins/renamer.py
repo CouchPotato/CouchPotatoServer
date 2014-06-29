@@ -136,7 +136,7 @@ class Renamer(Plugin):
         else:
             for item in no_process:
                 if isSubFolder(item, base_folder):
-                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder. "%s" in "%s"', (item, base_folder))
                     return
 
         # Check to see if the no_process folders are inside the provided media_folder
@@ -168,7 +168,7 @@ class Renamer(Plugin):
         if media_folder:
             for item in no_process:
                 if isSubFolder(item, media_folder):
-                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder.')
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder. "%s" in "%s"', (item, media_folder))
                     return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
@@ -446,22 +446,19 @@ class Renamer(Plugin):
                 # Before renaming, remove the lower quality files
                 remove_leftovers = True
 
-                # Mark movie "done" once it's found the quality with the finish check
+                # Get media quality profile
                 profile = None
-                try:
-                    if media.get('status') == 'active' and media.get('profile_id'):
+                if media.get('profile_id'):
+                    try:
                         profile = db.get('id', media['profile_id'])
-                        if fireEvent('quality.isfinish', group['meta_data']['quality'], profile, single = True):
-                            mdia = db.get('id', media['_id'])
-                            mdia['status'] = 'done'
-                            mdia['last_edit'] = int(time.time())
-                            db.update(mdia)
-
-                            # List movie on dashboard
-                            fireEvent('media.tag', media['_id'], 'recent', single = True)
-
-                except:
-                    log.error('Failed marking movie finished: %s', (traceback.format_exc()))
+                    except:
+                        # Set profile to None as it does not exist anymore
+                        mdia = db.get('id', media['_id'])
+                        mdia['profile_id'] = None
+                        db.update(mdia)
+                        log.error('Error getting quality profile for %s: %s', (media_title, traceback.format_exc()))
+                else:
+                    log.debug('Media has no quality profile: %s', media_title)
 
                 # Mark media for dashboard
                 mark_as_recent = False
@@ -474,7 +471,7 @@ class Renamer(Plugin):
 
                         # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
                         is_higher = fireEvent('quality.ishigher', \
-                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, profile, single = True)
+                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, single = True)
 
                         if is_higher == 'higher':
                             log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
@@ -499,7 +496,7 @@ class Renamer(Plugin):
                             self.tagRelease(group = group, tag = 'exists')
 
                             # Notify on rename fail
-                            download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (media_title, group['meta_data']['quality']['label'], release.get('identifier'))
+                            download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (media_title, group['meta_data']['quality']['label'], release.get('quality'))
                             fireEvent('movie.renaming.canceled', message = download_message, data = group)
                             remove_leftovers = False
 
@@ -518,7 +515,7 @@ class Renamer(Plugin):
                                     fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
                                     mark_as_recent = True
 
-                        elif release.get('identifier') == group['meta_data']['quality']['identifier']:
+                        elif release.get('quality') == group['meta_data']['quality']['identifier']:
                             # Set the release to downloaded
                             fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
                             group['release_download'] = release_download

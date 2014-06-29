@@ -236,7 +236,7 @@ class MovieBase(MovieTypeBase):
 
                     db.update(m)
 
-                    fireEvent('media.restatus', m['_id'])
+                    fireEvent('media.restatus', m['_id'], single = True)
 
                     m = db.get('id', media_id)
 

@@ -89,6 +89,7 @@ class ApiHandler(RequestHandler):
         route = route.strip('/')
         if not api.get(route):
             self.write('API call doesn\'t seem to exist')
+            self.finish()
             return
 
         # Create lock if it doesn't exist
