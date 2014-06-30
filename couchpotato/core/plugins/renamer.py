@@ -1144,10 +1144,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
-                    if not packedinfo.isdir and not os.path.isfile(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename)))):
+                    extr_file_path = sp(os.path.join(extr_path, os.path.basename(packedinfo.filename)))
+                    if not packedinfo.isdir and not os.path.isfile(extr_file_path):
                         log.debug('Extracting %s...', packedinfo.filename)
                         rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
-                        extr_files.append(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename))))
+                        if self.conf('unrar_modify_date'):
+                            try:
+                                os.utime(extr_file_path, (os.path.getatime(archive['file']), os.path.getmtime(archive['file'])))
+                            except:
+                                log.error('Rar modify date enabled, but failed: %s', traceback.format_exc())
+                        extr_files.append(extr_file_path)
                 del rar_handle
             except Exception as e:
                 log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
@@ -1286,6 +1292,13 @@ config = [{
                     'advanced': True,
                     'name': 'unrar_path',
                     'description': 'Custom path to unrar bin',
+                },
+                {
+                    'advanced': True,
+                    'name': 'unrar_modify_date',
+                    'type': 'bool',
+                    'description': ('Set modify date of unrar-ed files to the rar-file\'s date.', 'This will allow XBMC to recognize extracted files as recently added even if the movie was released some time ago.'),
+                    'default': False,
                 },
                 {
                     'name': 'cleanup',
