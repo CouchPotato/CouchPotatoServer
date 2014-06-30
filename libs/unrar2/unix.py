@@ -24,11 +24,13 @@
 
 import subprocess
 import gc
-
-import os, os.path
-import time, re
+import os
+import os.path
+import time
+import re
 
 from rar_exceptions import *
+
 
 class UnpackerNotInstalled(Exception): pass
 
