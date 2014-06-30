@@ -1140,7 +1140,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
-                rar_handle = RarFile(archive['file'])
+                rar_handle = RarFile(archive['file'], custom_path = self.conf('unrar_path'))
                 extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
@@ -1281,6 +1281,11 @@ config = [{
                     'type': 'bool',
                     'description': 'Extract rar files if found.',
                     'default': False,
+                },
+                {
+                    'advanced': True,
+                    'name': 'unrar_path',
+                    'description': 'Custom path to unrar bin',
                 },
                 {
                     'name': 'cleanup',

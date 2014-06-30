@@ -237,7 +237,7 @@ def generate_password_provider(password):
 
 class RarFileImplementation(object):
 
-    def init(self, password=None):
+    def init(self, password=None, custom_path = None):
         self.password = password
         archiveData = RAROpenArchiveDataEx(ArcNameW=self.archiveName, OpenMode=RAR_OM_EXTRACT)
         self._handle = RAROpenArchiveEx(ctypes.byref(archiveData))

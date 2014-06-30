@@ -46,11 +46,12 @@ if os.path.isfile(osx_unrar) and 'darwin' in platform.platform().lower():
     except:
         pass
 
-def call_unrar(params):
+def call_unrar(params, custom_path = None):
     "Calls rar/unrar command line executable, returns stdout pipe"
     global rar_executable_cached
     if rar_executable_cached is None:
-        for command in ('unrar', 'rar', osx_unrar):
+        for command in (custom_path, 'unrar', 'rar', osx_unrar):
+            if not command: continue
             try:
                 subprocess.Popen([command], stdout = subprocess.PIPE)
                 rar_executable_cached = command
@@ -70,10 +71,10 @@ def call_unrar(params):
 
 class RarFileImplementation(object):
 
-    def init(self, password = None):
+    def init(self, password = None, custom_path = None):
         global rar_executable_version
         self.password = password
-
+        self.custom_path = custom_path
 
         stdoutdata, stderrdata = self.call('v', []).communicate()
 
@@ -129,7 +130,7 @@ class RarFileImplementation(object):
     def call(self, cmd, options = [], files = []):
         options2 = options + ['p' + self.escaped_password()]
         soptions = ['-' + x for x in options2]
-        return call_unrar([cmd] + soptions + ['--', self.archiveName] + files)
+        return call_unrar([cmd] + soptions + ['--', self.archiveName] + files, self.custom_path)
 
     def infoiter(self):
 
