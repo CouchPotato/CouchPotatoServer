@@ -21,7 +21,8 @@
 # SOFTWARE.
 
 # Unix version uses unrar command line executable
-
+import platform
+import stat
 import subprocess
 import gc
 import os
@@ -37,11 +38,19 @@ class UnpackerNotInstalled(Exception): pass
 rar_executable_cached = None
 rar_executable_version = None
 
+osx_unrar = os.path.join(os.path.dirname(__file__), 'unrar')
+if os.path.isfile(osx_unrar) and 'darwin' in platform.platform().lower():
+    try:
+        st = os.stat(osx_unrar)
+        os.chmod(osx_unrar, st.st_mode | stat.S_IEXEC)
+    except:
+        pass
+
 def call_unrar(params):
     "Calls rar/unrar command line executable, returns stdout pipe"
     global rar_executable_cached
     if rar_executable_cached is None:
-        for command in ('unrar', 'rar', os.path.join(os.path.dirname(__file__), 'unrar')):
+        for command in ('unrar', 'rar', osx_unrar):
             try:
                 subprocess.Popen([command], stdout = subprocess.PIPE)
                 rar_executable_cached = command
