@@ -123,11 +123,6 @@ class Renamer(Plugin):
         no_process = [to_folder]
         cat_list = fireEvent('category.all', single = True) or []
         no_process.extend([item['destination'] for item in cat_list])
-        try:
-            if Env.setting('library', section = 'manage').strip():
-                no_process.extend([sp(manage_folder) for manage_folder in splitString(Env.setting('library', section = 'manage'), '::')])
-        except:
-            pass
 
         # Check to see if the no_process folders are inside the "from" folder.
         if not os.path.isdir(base_folder) or not os.path.isdir(to_folder):
