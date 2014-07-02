@@ -197,14 +197,18 @@ class Renamer(Plugin):
         db = get_db()
 
         # Extend the download info with info stored in the downloaded release
+        keep_original = self.moveTypeIsLinked()
+        is_torrent = False
         if release_download:
             release_download = self.extendReleaseDownload(release_download)
+            is_torrent = self.downloadIsTorrent(release_download)
+            keep_original = True if is_torrent and self.conf('file_action') not in ['move'] else keep_original
 
         # Unpack any archives
         extr_files = None
         if self.conf('unrar'):
             folder, media_folder, files, extr_files = self.extractFiles(folder = folder, media_folder = media_folder, files = files,
-                                                                        cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
+                                                                        cleanup = self.conf('cleanup') and not keep_original)
 
         groups = fireEvent('scanner.scan', folder = folder if folder else base_folder,
                            files = files, release_download = release_download, return_ignored = False, single = True) or []
@@ -321,7 +325,7 @@ class Renamer(Plugin):
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
                         for current_file in group['files'][file_type]:
-                            if self.conf('cleanup') and (not self.downloadIsTorrent(release_download) or self.fileIsAdded(current_file, group)):
+                            if self.conf('cleanup') and (not keep_original or self.fileIsAdded(current_file, group)):
                                 remove_files.append(current_file)
                         continue
 
@@ -527,7 +531,7 @@ class Renamer(Plugin):
                 log.debug('Removing leftover files')
                 for current_file in group['files']['leftover']:
                     if self.conf('cleanup') and not self.conf('move_leftover') and \
-                            (not self.downloadIsTorrent(release_download) or self.fileIsAdded(current_file, group)):
+                            (not keep_original or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
 
             # Remove files
@@ -574,7 +578,7 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
+                        self.moveFile(src, dst, use_default = not is_torrent or self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed renaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
@@ -590,7 +594,7 @@ class Renamer(Plugin):
                 self.untagRelease(group = group, tag = 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(media_folder) and self.downloadIsTorrent(release_download):
+            if self.movieInFromFolder(media_folder) and keep_original:
                 self.tagRelease(group = group, tag = 'renamed_already')
 
             # Remove matching releases
@@ -601,7 +605,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (release, traceback.format_exc()))
 
-            if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
+            if group['dirname'] and group['parentdir'] and not keep_original:
                 if media_folder:
                     # Delete the movie folder
                     group_folder = media_folder
@@ -763,10 +767,15 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return False
 
-    def moveFile(self, old, dest, forcemove = False):
+    def moveFile(self, old, dest, use_default = False):
         dest = sp(dest)
         try:
-            if forcemove or self.conf('file_action') not in ['copy', 'link']:
+
+            move_type = self.conf('file_action')
+            if use_default:
+                move_type = self.conf('default_file_action')
+
+            if move_type not in ['copy', 'link']:
                 try:
                     shutil.move(old, dest)
                 except:
@@ -775,16 +784,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         os.unlink(old)
                     else:
                         raise
-            elif self.conf('file_action') == 'copy':
+            elif move_type == 'copy':
                 shutil.copy(old, dest)
-            elif self.conf('file_action') == 'link':
+            else:
                 # First try to hardlink
                 try:
                     log.debug('Hardlinking file "%s" to "%s"...', (old, dest))
                     link(old, dest)
                 except:
                     # Try to simlink next
-                    log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
+                    log.debug('Couldn\'t hardlink file "%s" to "%s". Symlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
                     shutil.copy(old, dest)
                     try:
                         symlink(dest, old + '.link')
@@ -1084,6 +1093,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             return False
         return src in group['before_rename']
 
+    def moveTypeIsLinked(self):
+        return self.conf('default_file_action') in ['copy', 'link']
+
     def statusInfoComplete(self, release_download):
         return release_download.get('id') and release_download.get('downloader') and release_download.get('folder')
 
@@ -1346,13 +1358,22 @@ config = [{
                     'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
                 },
                 {
+                    'name': 'default_file_action',
+                    'label': 'Default File Action',
+                    'default': 'move',
+                    'type': 'dropdown',
+                    'values': [('Link', 'link'), ('Copy', 'copy'), ('Move', 'move')],
+                    'description': ('<strong>Link</strong>, <strong>Copy</strong> or <strong>Move</strong> after download completed.',
+                                    'Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy.'),
+                    'advanced': True,
+                },
+                {
                     'name': 'file_action',
                     'label': 'Torrent File Action',
                     'default': 'link',
                     'type': 'dropdown',
                     'values': [('Link', 'link'), ('Copy', 'copy'), ('Move', 'move')],
-                    'description': ('<strong>Link</strong>, <strong>Copy</strong> or <strong>Move</strong> after download completed.',
-                                    'Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy. It is perfered to use link when downloading torrents as it will save you space, while still beeing able to seed.'),
+                    'description': 'See above. It is prefered to use link when downloading torrents as it will save you space, while still beeing able to seed.',
                     'advanced': True,
                 },
                 {
