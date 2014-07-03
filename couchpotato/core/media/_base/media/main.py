@@ -292,8 +292,8 @@ class MediaPlugin(MediaBase):
             release_status = splitString(kwargs.get('release_status')),
             status_or = kwargs.get('status_or') is not None,
             limit_offset = kwargs.get('limit_offset'),
-            with_tags = kwargs.get('with_tags'),
-            starts_with = splitString(kwargs.get('starts_with')),
+            with_tags = splitString(kwargs.get('with_tags')),
+            starts_with = kwargs.get('starts_with'),
             search = kwargs.get('search')
         )
 
@@ -411,7 +411,7 @@ class MediaPlugin(MediaBase):
                                 total_deleted += 1
                             new_media_status = 'done'
                         elif delete_from == 'manage':
-                            if release.get('status') == 'done':
+                            if release.get('status') == 'done' or media.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
 
@@ -476,6 +476,9 @@ class MediaPlugin(MediaBase):
                         # Check if we are finished with the media
                         if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
                             m['status'] = 'done'
+                    elif previous_status == 'done':
+                        m['status'] = 'done'
+
                 except RecordNotFound:
                     log.debug('Failed restatus, keeping previous: %s', traceback.format_exc())
                     m['status'] = previous_status
