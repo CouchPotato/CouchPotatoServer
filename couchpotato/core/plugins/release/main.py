@@ -327,7 +327,7 @@ class Release(Plugin):
             log_movie = '%s (%s) in %s' % (getTitle(media), media['info']['year'], rls['quality'])
             snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
             log.info(snatch_message)
-            fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls)
+            fireEvent('%s.snatched' % data['type'], message = snatch_message, data = media)
 
             # Mark release as snatched
             if renamer_enabled:
