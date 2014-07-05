@@ -9,7 +9,6 @@ from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
-
 class TorrentProvider(YarrProvider):
 
     protocol = 'torrent'
