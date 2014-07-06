@@ -5,14 +5,12 @@ from urlparse import urlparse
 import os
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
-
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
 from bencode import bencode, bdecode
 from rtorrent import RTorrent
-from scandir import scandir
 
 
 log = CPLog(__name__)
@@ -238,7 +236,7 @@ class rTorrent(DownloaderBase):
             if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
                 # Remove empty directories bottom up
                 try:
-                    for path, _, _ in scandir.walk(sp(torrent.directory), topdown = False):
+                    for path, _, _ in os.walk(sp(torrent.directory), topdown = False):
                         os.rmdir(path)
                 except OSError:
                     log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)

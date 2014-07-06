@@ -80,11 +80,12 @@ config = [{
             'name': 'Torrentz',
             'description': 'Torrentz is a free, fast and powerful meta-search engine. <a href="https://torrentz.eu/">Torrentz</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVQ4y2NgAALjtJn/ycEMlGiGG0IVAxiwAKzOxaKGARcgxgC8YNSAwWoAzuRMjgsIugqfAUR5CZcBRIcHsWEAADSA96Ig020yAAAAAElFTkSuQmCC',
             'options': [
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': False
+                    'default': True
                 },
                 {
                     'name': 'verified_only',

@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -16,7 +17,8 @@ class Synoindex(Notification):
     index_path = '/usr/syno/bin/synoindex'
 
     def __init__(self):
-        super(Synoindex, self).__init__()
+        addApiView(self.testNotifyName(), self.test)
+
         addEvent('renamer.after', self.addToLibrary)
 
     def addToLibrary(self, message = None, group = None):

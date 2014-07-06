@@ -22,9 +22,11 @@ var Charts = new Class({
 					'events': {
 						'click': function(e) {
 							e.preventDefault();
-							self.el.getChildren('div.chart').destroy();
+
+							self.el.getElements('.chart').destroy();
 							self.el_refreshing_text.show();
 							self.el_refresh_link.hide();
+
 							self.api_request = Api.request('charts.view', {
 								'data': { 'force_update': 1 },
 								'onComplete': self.fill.bind(self)
@@ -72,7 +74,7 @@ var Charts = new Class({
 
 			Object.each(json.charts, function(chart){
 
-				var c = new Element('div.chart').grab(
+				var c = new Element('div.chart.tiny_scroll').grab(
 					new Element('h3').grab( new Element('a', {
 						'text': chart.name,
 						'href': chart.url

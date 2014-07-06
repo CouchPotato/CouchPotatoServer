@@ -134,8 +134,8 @@ class Logging(Plugin):
         logs_raw = toUnicode(log_content).split('[0m\n')
 
         logs = []
-        for log in logs_raw:
-            split = splitString(log, '\x1b')
+        for log_line in logs_raw:
+            split = splitString(log_line, '\x1b')
             if split:
                 try:
                     date, time, log_type = splitString(split[0], ' ')

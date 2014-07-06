@@ -2,13 +2,13 @@ import traceback
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 
 
 log = CPLog(__name__)
 
 
-class Base(TorrentProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'test': '%s/api',
@@ -49,7 +49,7 @@ class Base(TorrentProvider):
 
                     if result['Quality'] and result['Quality'] not in result['MovieTitle']:
                         title = result['MovieTitle'] + ' BrRip ' + result['Quality']
-                    else: 
+                    else:
                         title = result['MovieTitle'] + ' BrRip'
 
                     results.append({
@@ -79,6 +79,7 @@ config = [{
             'name': 'Yify',
             'description': 'Free provider, less accurate. Small HD movies, encoded by <a href="https://yify-torrents.com/">Yify</a>.',
             'wizard': False,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACL0lEQVR4AS1SPW/UQBAd23fxne/Ld2dvzvHuzPocEBAKokCBqGiQ6IgACYmvUKRBFEQgKKGg4BAlUoggggYUEQpSHOI7CIEoQs/fYcbLaU/efTvvvZlnA1qydoxU5kcxX0CkgmQZtPy0hCUjvK+WgEByOZ5dns1O5bzna8fRVkgsxH8B0YouIvBhdD5T11NiVOoKrsttyUcpRW0InUrFnwe9HzuP2uaQZYhF2LQ76TTXw2RVMTK8mYYbjfh+zNquMVCrqn93aArLSixPxnafdGDLaz1tjY5rmNa8z5BczEQOxQfCl1GyoqoWxYRN1bkh7ELw3q/vhP6HIL4TG9KumpjgvwuyM7OsjSj98E/vszMfZ7xvPtMaWxGO5crwIumKCR5HxDtJ0AWKGG204RfUd/3smJYqwem/Q7BTS1ZGfM4LNpVwuKAz6cMeROst0S2EwNE7GjTehO2H3dxqIpdkydat15G3F8SXBi4GlpBNlSz012L/k2+W0CLLk/jbcf13rf41yJeMQ8QWUZiHCfCA9ad+81nEKPtoS9mJOf9v0NmMJHgUT6xayheK9EIK7JJeU/AF4scDF7Y5SPlJrRcxJ+um4ibNEdObxLiIwJim+eT2AL5D9CIcnZ5zvSJi9eIlNHVVtZ831dk5svPgvjPWTq+ktWkd/kD0qtm71x+sDQe3kt6DXnM7Ct+GajmTxKlkAokWljyAKSm5oWa2w+BH4P2UuVub7eTyiGOQYapY/wEztHduSDYz5gAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',

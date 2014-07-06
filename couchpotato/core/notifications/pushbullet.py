@@ -14,7 +14,7 @@ autoload = 'Pushbullet'
 
 class Pushbullet(Notification):
 
-    url = 'https://api.pushbullet.com/api/%s'
+    url = 'https://api.pushbullet.com/v2/%s'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
@@ -25,11 +25,7 @@ class Pushbullet(Notification):
 
         # Get all the device IDs linked to this user
         if not len(devices):
-            response = self.request('devices')
-            if not response:
-                return False
-
-            devices += [device.get('id') for device in response['devices']]
+            devices = [None]
 
         successful = 0
         for device in devices:
@@ -88,7 +84,8 @@ config = [{
                 },
                 {
                     'name': 'api_key',
-                    'label': 'User API Key'
+                    'label': 'Access Token',
+                    'description': 'Can be found on <a href="https://www.pushbullet.com/account" target="_blank">Account Settings</a>',
                 },
                 {
                     'name': 'devices',

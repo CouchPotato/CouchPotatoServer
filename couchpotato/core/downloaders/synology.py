@@ -90,6 +90,7 @@ class SynologyRPC(object):
 
         self.download_url = 'http://%s:%s/webapi/DownloadStation/task.cgi' % (host, port)
         self.auth_url = 'http://%s:%s/webapi/auth.cgi' % (host, port)
+        self.sid = None
         self.username = username
         self.password = password
         self.destination = destination

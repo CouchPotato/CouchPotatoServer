@@ -120,8 +120,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'IPTorrents',
-            'description': 'See <a href="http://www.iptorrents.com">IPTorrents</a>',
+            'description': '<a href="http://www.iptorrents.com">IPTorrents</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABRklEQVR42qWQO0vDUBiG8zeKY3EqQUtNO7g0J6ZJ1+ifKIIFQXAqDYKCyaaYxM3udrZLHdRFhXrZ6liCW6mubfk874EESgqaeOCF7/Y8hEh41aq6yZi2nyZgBGya9XKtZs4No05pAkZV2YbEmyMMsoSxLQeC46wCTdPPY4HruPQyGIhF97qLWsS78Miydn4XdK46NJ9OsQAYBzMIMf8MQ9wtCnTdWCaIDx/u7uljOIQEe0hiIWPamSTLay3+RxOCSPI9+RJAo7Er9r2bnqjBFAqyK+VyK4f5/Cr5ni8OFKVCz49PFI5GdNvvU7ttE1M1zMU+8AMqFksEhrMnQsBDzqmDAwzx2ehRLwT7yyCI+vSC99c3mozH1NxrJgWWtR1BOECfEJSVCm6WCzJGCA7+IWhBsM4zywDPwEp4vCjx2DzBH2ODAfsDb33Ps6dQwJgAAAAASUVORK5CYII=',
             'options': [
                 {
                     'name': 'enabled',

@@ -10,13 +10,13 @@ from threading import RLock
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss, sp
+from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.helpers.variable import removePyc
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from dateutil.parser import parse
 from git.repository import LocalRepository
-from scandir import scandir
 import version
 from six.moves import filter
 
@@ -142,9 +142,11 @@ class Updater(Plugin):
             'success': success
         }
 
-    def doShutdown(self):
-        self.updater.deletePyc(show_logs = False)
-        return super(Updater, self).doShutdown()
+    def doShutdown(self, *args, **kwargs):
+        if not Env.get('dev') and not Env.get('desktop'):
+            removePyc(Env.get('app_dir'), show_logs = False)
+
+        return super(Updater, self).doShutdown(*args, **kwargs)
 
 
 class BaseUpdater(Plugin):
@@ -179,30 +181,6 @@ class BaseUpdater(Plugin):
 
     def check(self):
         pass
-
-    def deletePyc(self, only_excess = True, show_logs = True):
-
-        for root, dirs, files in scandir.walk(Env.get('app_dir')):
-
-            pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
-            py_files = set(filter(lambda filename: filename.endswith('.py'), files))
-            excess_pyc_files = filter(lambda pyc_filename: pyc_filename[:-1] not in py_files, pyc_files) if only_excess else pyc_files
-
-            for excess_pyc_file in excess_pyc_files:
-                full_path = os.path.join(root, excess_pyc_file)
-                if show_logs: log.debug('Removing old PYC file: %s', full_path)
-                try:
-                    os.remove(full_path)
-                except:
-                    log.error('Couldn\'t remove %s: %s', (full_path, traceback.format_exc()))
-
-            for dir_name in dirs:
-                full_path = os.path.join(root, dir_name)
-                if len(os.listdir(full_path)) == 0:
-                    try:
-                        os.rmdir(full_path)
-                    except:
-                        log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
 
 class GitUpdater(BaseUpdater):
@@ -327,13 +305,13 @@ class SourceUpdater(BaseUpdater):
         data_dir = Env.get('data_dir')
 
         # Get list of files we want to overwrite
-        self.deletePyc()
+        removePyc(app_dir)
         existing_files = []
-        for root, subfiles, filenames in scandir.walk(app_dir):
+        for root, subfiles, filenames in os.walk(app_dir):
             for filename in filenames:
                 existing_files.append(os.path.join(root, filename))
 
-        for root, subfiles, filenames in scandir.walk(path):
+        for root, subfiles, filenames in os.walk(path):
             for filename in filenames:
                 fromfile = os.path.join(root, filename)
                 tofile = os.path.join(app_dir, fromfile.replace(path + os.path.sep, ''))

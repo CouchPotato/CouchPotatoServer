@@ -43,9 +43,8 @@
 	}
 
 	.profile .wait_for {
-		position: absolute;
-		right: 60px;
-		top: 0;
+		padding-top: 0;
+		padding-bottom: 20px;
 	}
 
 	.profile .wait_for input {
@@ -159,9 +158,6 @@
 	}
 
 		#profile_ordering li {
-			cursor: -webkit-grab;
-			cursor: -moz-grab;
-			cursor: grab;
 			border-bottom: 1px solid rgba(255,255,255,0.2);
 			padding: 0 5px;
 		}
@@ -183,6 +179,9 @@
 				background: url('../../images/handle.png') center;
 				width: 20px;
 				float: right;
+				cursor: -webkit-grab;
+				cursor: -moz-grab;
+				cursor: grab;
 			}
 
 	#profile_ordering .formHint {

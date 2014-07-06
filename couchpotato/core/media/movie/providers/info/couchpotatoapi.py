@@ -29,7 +29,7 @@ class CouchPotatoApi(MovieProvider):
     api_version = 1
 
     def __init__(self):
-        addEvent('movie.info', self.getInfo, priority = 1)
+        addEvent('movie.info', self.getInfo, priority = 2)
         addEvent('movie.info.release_date', self.getReleaseDate)
 
         addEvent('info.search', self.search, priority = 1)

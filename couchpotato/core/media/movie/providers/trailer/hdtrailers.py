@@ -1,5 +1,4 @@
 from string import digits, ascii_letters
-from urllib2 import HTTPError
 import re
 
 from bs4 import SoupStrainer, BeautifulSoup
@@ -7,6 +6,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.trailer.base import TrailerProvider
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -21,6 +21,7 @@ class HDTrailers(TrailerProvider):
         'backup': 'http://www.hd-trailers.net/blog/',
     }
     providers = ['apple.ico', 'yahoo.ico', 'moviefone.ico', 'myspace.ico', 'favicon.ico']
+    only_tables_tags = SoupStrainer('table')
 
     def search(self, group):
 
@@ -67,8 +68,7 @@ class HDTrailers(TrailerProvider):
             return results
 
         try:
-            tables = SoupStrainer('div')
-            html = BeautifulSoup(data, parse_only = tables)
+            html = BeautifulSoup(data, 'html.parser', parse_only = self.only_tables_tags)
             result_table = html.find_all('h2', text = re.compile(movie_name))
 
             for h2 in result_table:
@@ -90,8 +90,7 @@ class HDTrailers(TrailerProvider):
 
         results = {'480p':[], '720p':[], '1080p':[]}
         try:
-            tables = SoupStrainer('table')
-            html = BeautifulSoup(data, parse_only = tables)
+            html = BeautifulSoup(data, 'html.parser', parse_only = self.only_tables_tags)
             result_table = html.find('table', attrs = {'class':'bottomTable'})
 
             for tr in result_table.find_all('tr'):

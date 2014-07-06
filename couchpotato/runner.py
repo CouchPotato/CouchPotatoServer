@@ -17,8 +17,8 @@ from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import getDataDir, tryInt
-from scandir import scandir
+from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
+import requests
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
@@ -99,8 +99,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         existing_backups = []
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
-        for root, dirs, files in scandir.walk(backup_path):
-            for backup_file in files:
+        for root, dirs, files in os.walk(backup_path):
+            for backup_file in sorted(files):
                 ints = re.findall('\d+', backup_file)
 
                 # Delete non zip files
@@ -116,7 +116,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         # Create new backup
         new_backup = sp(os.path.join(backup_path, '%s.tar.gz' % int(time.time())))
         zipf = tarfile.open(new_backup, 'w:gz')
-        for root, dirs, files in scandir.walk(db_path):
+        for root, dirs, files in os.walk(db_path):
             for zfilename in files:
                 zipf.add(os.path.join(root, zfilename), arcname = 'database/%s' % os.path.join(root[len(db_path) + 1:], zfilename))
         zipf.close()
@@ -127,13 +127,24 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     else:
         db.create()
 
+    # Force creation of cachedir
+    log_dir = sp(log_dir)
+    cache_dir = sp(os.path.join(data_dir, 'cache'))
+    python_cache = sp(os.path.join(cache_dir, 'python'))
+
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    if not os.path.exists(python_cache):
+        os.mkdir(python_cache)
+
     # Register environment settings
     Env.set('app_dir', sp(base_path))
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('cache_dir', sp(os.path.join(data_dir, 'cache')))
-    Env.set('cache', FileSystemCache(sp(os.path.join(Env.get('cache_dir'), 'python'))))
+    Env.set('http_opener', requests.Session())
+    Env.set('cache_dir', cache_dir)
+    Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
     Env.set('desktop', desktop)
@@ -183,6 +194,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
     log.debug('Started with options %s', options)
+
+    # Check available space
+    try:
+        total_space, available_space = getFreeSpace(data_dir)
+        if available_space < 100:
+            log.error('Shutting down as CP needs some space to work. You\'ll get corrupted data otherwise. Only %sMB left', available_space)
+            return
+    except:
+        log.error('Failed getting diskspace: %s', traceback.format_exc())
 
     def customwarn(message, category, filename, lineno, file = None, line = None):
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
@@ -266,22 +286,23 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loop = IOLoop.current()
 
     # Reload hook
-    def test():
+    def reload_hook():
         fireEvent('app.shutdown')
-    add_reload_hook(test)
+    add_reload_hook(reload_hook)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
+    ssl_options = None
     if config['ssl_cert'] and config['ssl_key']:
-        server = HTTPServer(application, no_keep_alive = True, ssl_options = {
+        ssl_options = {
             'certfile': config['ssl_cert'],
             'keyfile': config['ssl_key'],
-        })
-    else:
-        server = HTTPServer(application, no_keep_alive = True)
+        }
+
+    server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
     try_restart = True
     restart_tries = 5
@@ -290,6 +311,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
             loop.start()
+            server.close_all_connections()
+            server.stop()
+            loop.close(all_fds = True)
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
@@ -303,6 +327,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                         continue
                     else:
                         return
+            except ValueError:
+                return
             except:
                 pass
 
