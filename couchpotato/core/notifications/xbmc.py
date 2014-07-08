@@ -208,7 +208,7 @@ class XBMC(Notification):
             log.debug('Returned from request %s: %s', (host, response))
 
             return response
-        except (MaxRetryError, requests.exceptions.Timeout):
+        except (MaxRetryError, requests.exceptions.Timeout, ConnectionError):
             log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
             return []
         except:
