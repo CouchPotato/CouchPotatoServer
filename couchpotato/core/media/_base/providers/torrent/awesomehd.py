@@ -61,7 +61,7 @@ class Base(TorrentProvider):
                         'name': re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) %s' % (name, year, torrent_desc)),
                         'url': self.urls['download'] % (torrent_id, authkey, self.conf('passkey')),
                         'detail_url': self.urls['detail'] % torrent_id,
-                        'size': self.parseSize(entry.find('size').get_text()),
+                        'size': tryInt(entry.find('size').get_text()) / 1048576,
                         'seeders': tryInt(entry.find('seeders').get_text()),
                         'leechers': tryInt(entry.find('leechers').get_text()),
                         'score': torrentscore
