@@ -163,6 +163,7 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
     events = {}
     restart = False
     closing = False
+    triggered_onClose = False
 
     def OnInit(self):
 
@@ -198,7 +199,9 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
             self.closing = True
             self.frame.tbicon.onTaskBarClose(event)
 
-            onClose = self.events.get('onClose')
+        onClose = self.events.get('onClose')
+        if onClose and not self.triggered_onClose:
+            self.triggered_onClose = True
             onClose(event)
 
     def afterShutdown(self, restart = False):
