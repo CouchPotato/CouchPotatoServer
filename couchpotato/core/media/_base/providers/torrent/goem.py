@@ -1,8 +1,8 @@
+import traceback
 import re
 from bs4 import BeautifulSoup
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.helpers.variable import tryInt
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 
 __author__ = 'Scott Faria - scott.faria@gmail.com'
@@ -11,7 +11,6 @@ log = CPLog(__name__)
 
 
 class Base(TorrentProvider):
-
     http_time_between_calls = 1
 
     urls = {
@@ -93,8 +92,8 @@ class Base(TorrentProvider):
         quality = quality_map['tag']
         use_source_tag = quality_map['param']
 
-        year = movie['library']['year']
-        imdb_id = movie['library']['identifier']
+        year = movie['info']['year']
+        imdb_id = movie['info']['imdb']
 
         current_page = 1
         pages = -1
@@ -102,7 +101,7 @@ class Base(TorrentProvider):
         while True:
             try:
                 url = self._format_url(current_page, imdb_id, year, quality, use_source_tag)
-                data = self.getHTMLData(url, opener=self.login_opener)
+                data = self.getHTMLData(url)
 
                 if data:
                     html = BeautifulSoup(data)
@@ -122,17 +121,10 @@ class Base(TorrentProvider):
                 return
 
     def getLoginParams(self):
-        return tryUrlencode({
-            'goeser': self.conf('username'),
-            'gassmord': self.conf('password'),
-            'login': 'submit',
-        })
+        return {'goeser': self.conf('username'), 'gassmord': self.conf('password'), 'login': 'submit', }
 
     def loginSuccess(self, output):
-        return 'Login failed!' not in output.lower()
-
-    def isEnabled(self):
-        return super(Base, self).isEnabled() and self.getDomain()
+        return 'login failed!' not in output.lower()
 
 
 config = [{
@@ -153,11 +145,9 @@ config = [{
                           },
                           {
                               'name': 'username',
-                              'default': 'actionjack',
                           },
                           {
                               'name': 'password',
-                              'default': 'hAIerDaCx9',
                               'type': 'password',
                           },
                           {
