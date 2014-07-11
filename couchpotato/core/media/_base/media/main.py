@@ -4,7 +4,7 @@ import time
 import traceback
 from string import ascii_lowercase
 
-from CodernityDB.database import RecordNotFound
+from CodernityDB.database import RecordNotFound, RecordDeleted
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -146,7 +146,7 @@ class MediaPlugin(MediaBase):
 
             return media
 
-        except RecordNotFound:
+        except (RecordNotFound, RecordDeleted):
             log.error('Media with id "%s" not found', media_id)
         except:
             raise
