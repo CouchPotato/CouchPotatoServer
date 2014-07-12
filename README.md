@@ -41,10 +41,9 @@ Linux:
 * (Ubuntu / Debian) Change the paths inside the default file `sudo nano /etc/default/couchpotato`
 * (Ubuntu / Debian) Make it executable `sudo chmod +x /etc/init.d/couchpotato`
 * (Ubuntu / Debian) Add it to defaults `sudo update-rc.d couchpotato defaults`
-Systemd specific:
-* To run on boot copy the systemd config `sudo cp CouchPotatoServer/init/couchpotato.fedora.service /etc/systemd/system/couchpotato.service`
-* Update the systemd config file with your user and path to CouchPotato.py 
-* Enable it at boot with `sudo systemctl enable couchpotato`
+* (systemd) To run on boot copy the systemd config `sudo cp CouchPotatoServer/init/couchpotato.fedora.service /etc/systemd/system/couchpotato.service`
+* (systemd) Update the systemd config file with your user and path to CouchPotato.py 
+* (systemd) Enable it at boot with `sudo systemctl enable couchpotato`
 
 * Open your browser and go to `http://localhost:5050/`
 
