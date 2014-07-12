@@ -522,7 +522,7 @@ class Renamer(Plugin):
 
                 # Mark media for dashboard
                 if mark_as_recent:
-                    fireEvent('media.tag', group['media'].get('_id'), 'recent', single = True)
+                    fireEvent('media.tag', group['media'].get('_id'), 'recent', update_edited = True, single = True)
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything

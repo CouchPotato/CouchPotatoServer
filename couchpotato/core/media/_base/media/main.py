@@ -4,7 +4,7 @@ import time
 import traceback
 from string import ascii_lowercase
 
-from CodernityDB.database import RecordNotFound
+from CodernityDB.database import RecordNotFound, RecordDeleted
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -146,7 +146,7 @@ class MediaPlugin(MediaBase):
 
             return media
 
-        except RecordNotFound:
+        except (RecordNotFound, RecordDeleted):
             log.error('Media with id "%s" not found', media_id)
         except:
             raise
@@ -488,17 +488,20 @@ class MediaPlugin(MediaBase):
                 db.update(m)
 
                 # Tag media as recent
-                self.tag(media_id, 'recent')
+                self.tag(media_id, 'recent', update_edited = True)
 
             return m['status']
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
 
-    def tag(self, media_id, tag):
+    def tag(self, media_id, tag, update_edited = False):
 
         try:
             db = get_db()
             m = db.get('id', media_id)
+
+            if update_edited:
+                m['last_edit'] = int(time.time())
 
             tags = m.get('tags') or []
             if tag not in tags:
