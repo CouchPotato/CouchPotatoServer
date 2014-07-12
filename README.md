@@ -44,7 +44,6 @@ Linux:
 * (systemd) To run on boot copy the systemd config `sudo cp CouchPotatoServer/init/couchpotato.fedora.service /etc/systemd/system/couchpotato.service`
 * (systemd) Update the systemd config file with your user and path to CouchPotato.py 
 * (systemd) Enable it at boot with `sudo systemctl enable couchpotato`
-
 * Open your browser and go to `http://localhost:5050/`
 
 
