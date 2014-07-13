@@ -8,17 +8,21 @@
 
 
 		{% for url in fireEvent('clientscript.get_styles', location = 'front', single = True) %}
-		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
+		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 		{% for url in fireEvent('clientscript.get_scripts', location = 'front', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
 		{% for url in fireEvent('clientscript.get_scripts', location = 'head', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 		{% for url in fireEvent('clientscript.get_styles', location = 'head', single = True) %}
-		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
+		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 
 		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
+
+		{% if Env.get('dev') %}
+		<script type="text/javascript" src="{{ Env.get('static_path') }}scripts/reloader.js"></script>
+		{% end %}
 
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 

@@ -53,7 +53,7 @@ class ClientScript(Plugin):
         ],
     }
 
-    watcher = None
+    watches = {}
 
     original_paths = {'style': {}, 'script': {}}
     paths = {'style': {}, 'script': {}}
@@ -82,17 +82,7 @@ class ClientScript(Plugin):
     def livereload(self):
 
         if Env.get('dev'):
-            from livereload import Server
-            from livereload.watcher import Watcher
-
-            self.livereload_server = Server()
-            self.livereload_server.watch('%s/minified/*.css' % Env.get('cache_dir'))
-            self.livereload_server.watch('%s/*.css' % os.path.join(Env.get('app_dir'), 'couchpotato', 'static', 'style'))
-
-            self.watcher = Watcher()
-            fireEvent('schedule.interval', 'livereload.watcher', self.watcher.examine, seconds = .5)
-
-            self.livereload_server.serve(port = 35729)
+            fireEvent('schedule.interval', 'livereload.watcher', self.watcher, seconds = .5)
 
     def addCore(self):
 
@@ -105,6 +95,39 @@ class ClientScript(Plugin):
                     self.registerScript(core_url, file_path, position = 'front')
                 else:
                     self.registerStyle(core_url, file_path, position = 'front')
+
+    def watcher(self):
+
+        changed = []
+
+        for file_path in self.watches:
+            info = self.watches[file_path]
+            old_time = info['file_time']
+            file_time = os.path.getmtime(file_path)
+            if file_time > old_time:
+                changed.append(info['api_path'])
+
+                if info['compiled_path']:
+                    compiler = Scss(live_errors = True, search_paths = [os.path.dirname(file_path)])
+                    f = open(file_path, 'r').read()
+                    f = compiler.compile(f)
+
+                    self.createFile(info['compiled_path'], f.strip())
+
+
+                # Add file to watchlist again, with current filetime
+                self.watches[file_path]['file_time'] = file_time
+
+        # Notify fronted with changes
+        if changed:
+            fireEvent('notify.frontend', type = 'watcher.changed', data = changed)
+
+    def watchFile(self, file_path, api_path, compiled_path = False):
+        self.watches[file_path] = {
+            'file_time': os.path.getmtime(file_path),
+            'api_path': api_path,
+            'compiled_path': compiled_path,
+        }
 
     def compile(self):
 
@@ -146,7 +169,6 @@ class ClientScript(Plugin):
 
                 # Reload watcher
                 if Env.get('dev'):
-                    self.watcher.watch(file_path, self.compile)
 
                     compiled_file_name = position + '_%s.css' % url_path.replace('/', '_').split('.scss')[0]
                     compiled_file_path = os.path.join(minified_dir, compiled_file_name)
@@ -154,6 +176,8 @@ class ClientScript(Plugin):
 
                     # Remove scss path
                     x = (file_path, 'minified/%s?%s' % (compiled_file_name, tryInt(time.time())))
+
+                    self.watchFile(file_path, x[1], compiled_path = compiled_file_path)
 
             if not Env.get('dev'):
 
@@ -198,6 +222,8 @@ class ClientScript(Plugin):
         self.register(api_path, file_path, 'script', position)
 
     def register(self, api_path, file_path, type, location):
+
+        self.watchFile(file_path, api_path)
 
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 

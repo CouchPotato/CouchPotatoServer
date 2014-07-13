@@ -5,7 +5,7 @@ body, html {
 	font-size: 14px;
 	line-height: 1.5;
 	font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
-	height: 100%;
+	height:  100%;
 	margin: 0;
 	padding: 0;
 	background: #111;
@@ -75,6 +75,11 @@ a {
     border-radius: 3px 0 0 3px;
     overflow: hidden;
 
+    h1, h2, h3 {
+        padding: 0;
+        margin: 0;
+    }
+
     .pages {
         height: 100%;
         widows: 100%;
@@ -91,6 +96,7 @@ a {
 .page {
 
     display: none;
+    padding: 20px;
 
     &.active {
         display: block;
