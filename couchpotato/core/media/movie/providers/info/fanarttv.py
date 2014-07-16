@@ -14,7 +14,7 @@ autoload = 'FanartTV'
 class FanartTV(MovieProvider):
 
     urls = {
-        'api': 'http://api.fanart.tv/webservice/movie/b28b14e9be662e027cfbc7c3dd600405/%s/JSON/all/1/2'
+        'api': 'http://webservice.fanart.tv/v3/movies/%s?api_key=b28b14e9be662e027cfbc7c3dd600405'
     }
 
     MAX_EXTRAFANART = 20
@@ -36,9 +36,8 @@ class FanartTV(MovieProvider):
             fanart_data = self.getJsonData(url)
 
             if fanart_data:
-                name, resource = fanart_data.items()[0]
-                log.debug('Found images for %s', name)
-                images = self._parseMovie(resource)
+                log.debug('Found images for %s', fanart_data.get('name'))
+                images = self._parseMovie(fanart_data)
 
         except:
             log.error('Failed getting extra art for %s: %s',
@@ -95,7 +94,7 @@ class FanartTV(MovieProvider):
         for image in images:
             if tryInt(image.get('likes')) > highscore:
                 highscore = tryInt(image.get('likes'))
-                image_url = image.get('url')
+                image_url = image.get('url') or image.get('href')
 
         return image_url
 
@@ -118,7 +117,9 @@ class FanartTV(MovieProvider):
                 if tryInt(image.get('likes')) > highscore:
                     highscore = tryInt(image.get('likes'))
                     best = image
-            image_urls.append(best.get('url'))
+            url = best.get('url') or best.get('href')
+            if url:
+                image_urls.append(url)
             pool.remove(best)
 
         return image_urls
