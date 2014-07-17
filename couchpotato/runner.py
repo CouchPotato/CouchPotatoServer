@@ -87,6 +87,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Do db stuff
     db_path = sp(os.path.join(data_dir, 'database'))
+    old_db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Remove database folder if both exists
+    if os.path.isdir(db_path) and os.path.isfile(old_db_path):
+        db = SuperThreadSafeDatabase(db_path)
+        db.open()
+        db.destroy()
 
     # Check if database exists
     db = SuperThreadSafeDatabase(db_path)

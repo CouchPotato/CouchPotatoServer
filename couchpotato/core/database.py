@@ -3,10 +3,11 @@ import os
 import time
 import traceback
 
+from CodernityDB.database import RecordNotFound
 from CodernityDB.index import IndexException, IndexNotFoundException, IndexConflict
 from couchpotato import CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getImdb, tryInt
 
@@ -226,6 +227,33 @@ class Database(object):
         from couchpotato import Env
 
         db = self.getDB()
+
+        # Try fix for migration failures on desktop
+        if Env.get('desktop'):
+            try:
+                list(db.all('profile', with_doc = True))
+            except RecordNotFound:
+
+                failed_location = '%s_failed' % db.path
+                old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db.old')
+
+                if not os.path.isdir(failed_location) and os.path.isfile(old_db):
+                    db.close()
+
+                    # Rename database folder
+                    os.rename(db.path, '%s_failed' % db.path)
+
+                    # Rename .old database to try another migrate
+                    os.rename(old_db, old_db[:-4])
+
+                    fireEventAsync('app.restart')
+                else:
+                    log.error('Migration failed and couldn\'t recover database. Please report on GitHub, with this message.')
+                    db.reindex()
+
+                return
+
+        # Check size and compact if needed
         size = db.get_db_details().get('size')
         prop_name = 'last_db_compact'
         last_check = int(Env.prop(prop_name, default = 0))
