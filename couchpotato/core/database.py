@@ -238,6 +238,7 @@ class Database(object):
                 old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db.old')
 
                 if not os.path.isdir(failed_location) and os.path.isfile(old_db):
+                    log.error('Corrupt database, trying migrate again')
                     db.close()
 
                     # Rename database folder
@@ -331,6 +332,8 @@ class Database(object):
             log.info('Getting data took %s', time.time() - migrate_start)
 
             db = self.getDB()
+            if not db.opened:
+                return
 
             # Use properties
             properties = migrate_data['properties']
