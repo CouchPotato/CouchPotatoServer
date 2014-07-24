@@ -44,7 +44,7 @@ def nameScore(name, year, preferred_words):
             score += add
 
     # points if the year is correct
-    if str(year) in name:
+    if year and str(year) in name:
         score += 5
 
     # Contains preferred word

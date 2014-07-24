@@ -11,6 +11,7 @@ class Library(LibraryBase):
     def __init__(self):
         addEvent('library.title', self.title)
         addEvent('library.related', self.related)
+        addEvent('library.root', self.root)
 
         addApiView('library.query', self.queryView)
         addApiView('library.related', self.relatedView)
@@ -54,3 +55,12 @@ class Library(LibraryBase):
             result[cur['type']] = cur
 
         return result
+
+    def root(self, media):
+        db = get_db()
+        cur = media
+
+        while cur and cur.get('parent_id'):
+            cur = db.get('id', cur['parent_id'])
+
+        return cur

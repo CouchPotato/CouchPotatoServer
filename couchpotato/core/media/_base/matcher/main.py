@@ -40,7 +40,7 @@ class Matcher(MatcherBase):
         return False
 
     def correctTitle(self, chain, media):
-        root_library = media['library']['root_library']
+        root = fireEvent('library.root', media, single = True)
 
         if 'show_name' not in chain.info or not len(chain.info['show_name']):
             log.info('Wrong: missing show name in parsed result')
@@ -50,10 +50,10 @@ class Matcher(MatcherBase):
         chain_words = [x.lower() for x in chain.info['show_name']]
 
         # Build a list of possible titles of the media we are searching for
-        titles = root_library['info']['titles']
+        titles = root['info']['titles']
 
         # Add year suffix titles (will result in ['<name_one>', '<name_one> <suffix_one>', '<name_two>', ...])
-        suffixes = [None, root_library['info']['year']]
+        suffixes = [None, root['info']['year']]
 
         titles = [
             title + ((' %s' % suffix) if suffix else '')
