@@ -13,9 +13,6 @@ autoload = 'Season'
 class Season(MediaBase):
 
     def __init__(self):
-        addEvent('media.search_query', self.query)
-        addEvent('media.identifier', self.identifier)
-
         addEvent('show.season.add', self.add)
         addEvent('show.season.update_info', self.updateInfo)
 
@@ -87,51 +84,3 @@ class Season(MediaBase):
         self.getPoster(image_urls, existing_files)
 
         return season
-
-    def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
-        if library is list or library.get('type') != 'season':
-            return
-
-        # Get the titles of the show
-        if not library.get('related_libraries', {}).get('show', []):
-            log.warning('Invalid library, unable to determine title.')
-            return
-
-        titles = fireEvent(
-            'media._search_query',
-            library['related_libraries']['show'][0],
-            first=False,
-            condense=condense,
-
-            single=True
-        )
-
-        # Add season map_names if they exist
-        if 'map_names' in library['info']:
-            season_names = library['info']['map_names'].get(str(library['season_number']), {})
-
-            # Add titles from all locations
-            # TODO only add name maps from a specific location
-            for location, names in season_names.items():
-                titles += [name for name in names if name and name not in titles]
-
-
-        identifier = fireEvent('media.identifier', library, single = True)
-
-        # Add season identifier to titles
-        if include_identifier and identifier.get('season') is not None:
-            titles = [title + (' S%02d' % identifier['season']) for title in titles]
-
-
-        if first:
-            return titles[0] if titles else None
-
-        return titles
-
-    def identifier(self, library):
-        if library.get('type') != 'season':
-            return
-
-        return {
-            'season': tryInt(library['season_number'], None)
-        }

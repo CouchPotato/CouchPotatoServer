@@ -17,7 +17,6 @@ log = CPLog(__name__)
 class ShowBase(MediaBase):
 
     _type = 'show'
-    query_condenser = QueryCondenser()
 
     def __init__(self):
         super(ShowBase, self).__init__()
@@ -34,8 +33,6 @@ class ShowBase(MediaBase):
 
         addEvent('show.add', self.add)
         addEvent('show.update_info', self.updateInfo)
-
-        addEvent('media.search_query', self.query)
 
     def addView(self, **kwargs):
         add_dict = self.add(params = kwargs)
@@ -255,25 +252,3 @@ class ShowBase(MediaBase):
             log.error('Failed update media: %s', traceback.format_exc())
 
         return {}
-
-    def query(self, media, first = True, condense = True, **kwargs):
-        if media.get('type') != 'show':
-            return
-
-        titles = media['info']['titles']
-
-        if condense:
-            # Use QueryCondenser to build a list of optimal search titles
-            condensed_titles = self.query_condenser.distinct(titles)
-
-            if condensed_titles:
-                # Use condensed titles if we got a valid result
-                titles = condensed_titles
-            else:
-                # Fallback to simplifying titles
-                titles = [simplifyString(title) for title in titles]
-
-        if first:
-            return titles[0] if titles else None
-
-        return titles
