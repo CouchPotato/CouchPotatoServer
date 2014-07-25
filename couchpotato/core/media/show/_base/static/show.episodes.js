@@ -34,34 +34,48 @@ var Episodes = new Class({
         var self = this;
 
         self.data.seasons.sort(function(a, b) {
-            var an = a.info.number || 0;
-            var bn = b.info.number || 0;
+            // Move "Specials" to the bottom of the list
+            if(!a.info.number) {
+                return 1;
+            }
 
-            if(an < bn)
+            if(!b.info.number) {
+                return -1;
+            }
+
+            // Order seasons descending
+            if(a.info.number < b.info.number)
                 return -1;
 
-            if(an > bn)
+            if(a.info.number > b.info.number)
                 return 1;
 
             return 0;
         });
 
         self.data.seasons.each(function(season) {
+            var title = '';
+
+            if(season.info.number) {
+                title = 'Season ' + season.info.number;
+            } else {
+                // Season 0 / Specials
+                title = 'Specials';
+            }
+
             season['el'] = new Element('div', {
                 'class': 'item head',
                 'id': 'season_'+season._id
             }).adopt(
-                new Element('span.name', {'text': 'Season ' + (season.info.number || 0)})
+                new Element('span.name', {'text': title})
             ).inject(self.episodes_container);
 
             season.episodes.sort(function(a, b) {
-                var an = a.info.number || 0;
-                var bn = b.info.number || 0;
-
-                if(an < bn)
+                // Order episodes descending
+                if(a.info.number <  b.info.number)
                     return -1;
 
-                if(an > bn)
+                if(a.info.number >  b.info.number)
                     return 1;
 
                 return 0;
@@ -72,6 +86,8 @@ var Episodes = new Class({
 
                 if(episode.info.titles && episode.info.titles.length > 0) {
                     title = episode.info.titles[0];
+                } else {
+                    title = 'Episode ' + episode.info.number;
                 }
 
                 episode['el'] = new Element('div', {
