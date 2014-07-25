@@ -12,7 +12,7 @@ Page.Shows = new Class({
 		if(!self.wanted){
 
 			// Wanted movies
-			self.wanted = new MovieList({
+			self.wanted = new ShowList({
 				'identifier': 'wanted',
 				'status': 'active',
 				'type': 'show',
