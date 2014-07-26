@@ -80,18 +80,12 @@ class Library(LibraryBase):
         result = media
 
         db = get_db()
-
-        # TODO this probably should be using an index?
-        items = [
-            item['doc']
-            for item in db.all('media', with_doc = True)
-            if item['doc'].get('parent_id') == media['_id']
-        ]
+        items = db.get_many('media_children', media['_id'], with_doc = True)
 
         keys = []
 
         for item in items:
-            key = item['type'] + 's'
+            key = item['doc']['type'] + 's'
 
             if key not in result:
                 result[key] = {}
@@ -99,7 +93,7 @@ class Library(LibraryBase):
             if key not in keys:
                 keys.append(key)
 
-            result[key][item['_id']] = fireEvent('library.tree', item, single = True)
+            result[key][item['_id']] = fireEvent('library.tree', item['doc'], single = True)
 
         for key in keys:
             result[key] = result[key].values()
