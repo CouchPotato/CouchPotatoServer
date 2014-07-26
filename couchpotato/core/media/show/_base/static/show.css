@@ -680,22 +680,38 @@
 						.hide_trailer.hide {
 							top: -30px;
 						}
-
-                .shows .list .show .episodes .item {
+                .shows .list .episodes .item {
                     position: relative;
+                    width: auto;
+                    height: auto;
+                    padding: 0;
                 }
 
-                .shows .list .show .episodes .actions {
+                    .shows .list .episodes .item span.episode {
+                        width: 40px;
+                        padding: 0 10px;
+                    }
+
+                    .shows .list .episodes .item span.name {
+                        width: 280px;
+                    }
+
+                    .shows .list .episodes .item span.firstaired {
+                        width: 80px;
+                    }
+
+                .shows .list .show .episodes .episode-actions {
                     position: absolute;
                     width: auto;
                     right: 0;
+                    top: 0;
 
                     border-left: none;
                 }
 
-                .shows .list .show .episodes .actions .refresh {
-                    color: #cbeecc;
-                }
+                    .shows .list .show .episodes .episode-actions .refresh {
+                        color: #cbeecc;
+                    }
 
 				.shows .list .show .try_container {
 					padding: 5px 10px;
