@@ -24,7 +24,7 @@ class Score(Plugin):
         try: preferred_words = removeDuplicate(preferred_words + splitString(movie['category']['preferred'].lower()))
         except: pass
 
-        score = nameScore(toUnicode(nzb['name']), movie['info']['year'], preferred_words)
+        score = nameScore(toUnicode(nzb['name']), movie['info'].get('year'), preferred_words)
 
         for movie_title in movie['info']['titles']:
             score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title))

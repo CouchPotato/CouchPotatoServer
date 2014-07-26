@@ -13,9 +13,6 @@ autoload = 'Episode'
 class Episode(MediaBase):
 
     def __init__(self):
-        addEvent('media.search_query', self.query)
-        addEvent('media.identifier', self.identifier)
-
         addEvent('show.episode.add', self.add)
         addEvent('show.episode.update_info', self.updateInfo)
 
@@ -85,63 +82,3 @@ class Episode(MediaBase):
         self.getPoster(image_urls, existing_files)
 
         return episode
-
-    def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
-        if library is list or library.get('type') != 'episode':
-            return
-
-        # Get the titles of the season
-        if not library.get('related_libraries', {}).get('season', []):
-            log.warning('Invalid library, unable to determine title.')
-            return
-
-        titles = fireEvent(
-            'media.search_query',
-            library['related_libraries']['season'][0],
-            first=False,
-            include_identifier=include_identifier,
-            condense=condense,
-
-            single=True
-        )
-
-        identifier = fireEvent('media.identifier', library, single = True)
-
-        # Add episode identifier to titles
-        if include_identifier and identifier.get('episode'):
-            titles = [title + ('E%02d' % identifier['episode']) for title in titles]
-
-
-        if first:
-            return titles[0] if titles else None
-
-        return titles
-
-
-    def identifier(self, media):
-        if media.get('type') != 'episode':
-            return
-
-        identifier = {
-            'season': None,
-            'episode': None
-        }
-
-        scene_map = media['info'].get('map_episode', {}).get('scene')
-
-        if scene_map:
-            # Use scene mappings if they are available
-            identifier['season'] = scene_map.get('season_nr')
-            identifier['episode'] = scene_map.get('episode_nr')
-        else:
-            # Fallback to normal season/episode numbers
-            identifier['season'] = media['info'].get('season_number')
-            identifier['episode'] = media['info'].get('number')
-
-
-        # Cast identifiers to integers
-        # TODO this will need changing to support identifiers with trailing 'a', 'b' characters
-        identifier['season'] = tryInt(identifier['season'], None)
-        identifier['episode'] = tryInt(identifier['episode'], None)
-
-        return identifier
