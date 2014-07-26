@@ -242,11 +242,10 @@ class ShowBase(MediaBase):
 
             # Update image file
             image_urls = info.get('images', [])
-            existing_files = media.get('files', {})
-            self.getPoster(image_urls, existing_files)
+
+            self.getPoster(media, image_urls)
 
             db.update(media)
-
             return media
         except:
             log.error('Failed update media: %s', traceback.format_exc())
