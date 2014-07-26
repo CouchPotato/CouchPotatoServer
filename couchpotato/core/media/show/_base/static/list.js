@@ -283,6 +283,7 @@ var ShowList = new Class({
 			if(!available_chars && (self.navigation.isDisplayed() || self.navigation.isVisible()))
 				Api.request('media.available_chars', {
 					'data': Object.merge({
+                        'type': 'show',
 						'status': self.options.status
 					}, self.filter),
 					'onSuccess': function(json){
