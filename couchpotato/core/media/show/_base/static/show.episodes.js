@@ -33,93 +33,71 @@ var Episodes = new Class({
     createEpisodes: function() {
         var self = this;
 
-        self.data.seasons.sort(function(a, b) {
-            // Move "Specials" to the bottom of the list
-            if(!a.info.number) {
-                return 1;
-            }
-
-            if(!b.info.number) {
-                return -1;
-            }
-
-            // Order seasons descending
-            if(a.info.number < b.info.number)
-                return -1;
-
-            if(a.info.number > b.info.number)
-                return 1;
-
-            return 0;
-        });
-
+        self.data.seasons.sort(self.sortSeasons);
         self.data.seasons.each(function(season) {
-            var title = '';
+            self.createSeason(season);
 
-            if(season.info.number) {
-                title = 'Season ' + season.info.number;
-            } else {
-                // Season 0 / Specials
-                title = 'Specials';
-            }
-
-            season['el'] = new Element('div', {
-                'class': 'item head',
-                'id': 'season_'+season._id
-            }).adopt(
-                new Element('span.name', {'text': title})
-            ).inject(self.episodes_container);
-
-            season.episodes.sort(function(a, b) {
-                // Order episodes descending
-                if(a.info.number <  b.info.number)
-                    return -1;
-
-                if(a.info.number >  b.info.number)
-                    return 1;
-
-                return 0;
-            });
-
+            season.episodes.sort(self.sortEpisodes);
             season.episodes.each(function(episode) {
-                var title = '';
-
-                if(episode.info.titles && episode.info.titles.length > 0) {
-                    title = episode.info.titles[0];
-                } else {
-                    title = 'Episode ' + episode.info.number;
-                }
-
-                episode['el'] = new Element('div', {
-                    'class': 'item',
-                    'id': 'episode_'+episode._id
-                }).adopt(
-                    new Element('span.episode', {'text': (episode.info.number || 0)}),
-                    new Element('span.name', {'text': title}),
-                    new Element('span.firstaired', {'text': episode.info.firstaired})
-                ).inject(self.episodes_container);
-
-                episode['el_actions'] = new Element('div.actions').inject(episode['el']);
-
-                if(episode.identifiers && episode.identifiers.imdb) {
-                    new Element('a.imdb.icon2', {
-                        'title': 'Go to the IMDB page of ' + self.show.getTitle(),
-                        'href': 'http://www.imdb.com/title/' + episode.identifiers.imdb + '/',
-                        'target': '_blank'
-                    }).inject(episode['el_actions']);
-                }
-
-                new Element('a.refresh.icon2', {
-                    'title': 'Refresh the episode info and do a forced search',
-                    'events': {
-                        'click': self.doRefresh.bind(self)
-                    }
-                }).inject(episode['el_actions']);
+                self.createEpisode(episode);
             });
         });
     },
 
-    doRefresh: function() {
+    createSeason: function(season) {
+        var self = this,
+            title = '';
 
+        if(season.info.number) {
+            title = 'Season ' + season.info.number;
+        } else {
+            // Season 0 / Specials
+            title = 'Specials';
+        }
+
+        season['el'] = new Element('div', {
+            'class': 'item head',
+            'id': 'season_'+season._id
+        }).adopt(
+            new Element('span.name', {'text': title})
+        ).inject(self.episodes_container);
+    },
+
+    createEpisode: function(episode){
+        var self = this,
+            e = new Episode(self.show, episode);
+
+        $(e).inject(self.episodes_container);
+    },
+
+    sortSeasons: function(a, b) {
+        // Move "Specials" to the bottom of the list
+        if(!a.info.number) {
+            return 1;
+        }
+
+        if(!b.info.number) {
+            return -1;
+        }
+
+        // Order seasons descending
+        if(a.info.number < b.info.number)
+            return -1;
+
+        if(a.info.number > b.info.number)
+            return 1;
+
+        return 0;
+    },
+
+    sortEpisodes: function(a, b) {
+        // Order episodes descending
+        if(a.info.number <  b.info.number)
+            return -1;
+
+        if(a.info.number >  b.info.number)
+            return 1;
+
+        return 0;
     }
 });
