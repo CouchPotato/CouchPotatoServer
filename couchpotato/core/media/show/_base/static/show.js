@@ -264,7 +264,7 @@ var Show = new Class({
 		return t;
 	},
 
-	slide: function(direction, el){
+	slide: function(direction, el, expand){
 		var self = this;
 
 		if(direction == 'in'){
@@ -278,8 +278,10 @@ var Show = new Class({
 			el.show();
 
 
-            self.el.addClass('expanded');
-            self.el.getElements('.table').addClass('expanded');
+            if(expand === true) {
+                self.el.addClass('expanded');
+                self.el.getElements('.table').addClass('expanded');
+            }
 
 			self.data_container.addClass('hide_right');
 		}

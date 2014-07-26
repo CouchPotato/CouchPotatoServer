@@ -27,7 +27,7 @@ var Episodes = new Class({
             });
         }
 
-        self.show.slide('in', self.container);
+        self.show.slide('in', self.container, true);
     },
 
     createEpisodes: function() {
