@@ -63,7 +63,9 @@ class Library(LibraryBase):
         while cur and cur.get('parent_id'):
             cur = db.get('id', cur['parent_id'])
 
-            result[cur['type']] = cur
+            parts = cur['type'].split('.')
+
+            result[parts[-1]] = cur
 
         return result
 
@@ -85,7 +87,8 @@ class Library(LibraryBase):
         keys = []
 
         for item in items:
-            key = item['doc']['type'] + 's'
+            parts = item['doc']['type'].split('.')
+            key = parts[-1] + 's'
 
             if key not in result:
                 result[key] = {}
