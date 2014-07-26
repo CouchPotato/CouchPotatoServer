@@ -1,4 +1,4 @@
-.shows {
+.shows.details_list {
 	padding: 10px 0 20px;
 	position: relative;
 	z-index: 3;
@@ -88,7 +88,7 @@
 		padding-top: 6px;
 	}
 
-	.shows .show {
+	.shows .list .show {
 		position: relative;
 		margin: 10px 0;
 		padding-left: 20px;
@@ -100,11 +100,11 @@
 		background: rgba(0,0,0,.2);
 	}
 
-    .shows .show.expanded {
+    .shows .list .show.expanded {
         height: 360px;
     }
 
-        .shows .show .table.expanded {
+        .shows .list .show .table.expanded {
             height: 360px;
         }
 
@@ -113,7 +113,7 @@
 			background: none;
 		}
 
-		.shows.details_list .show {
+		.shows.details_list .list .show {
 			padding-left: 120px;
 		}
 
@@ -146,7 +146,7 @@
 				}
 			}
 
-		.shows .show .mask {
+		.shows .list .show .mask {
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -196,7 +196,7 @@
 				right: -100%;
 			}
 
-		.shows .show .check {
+		.shows .list .show .check {
 			display: none;
 		}
 
@@ -471,8 +471,8 @@
 				}
 			}
 
-			.shows .show:hover .data .actions,
-			.touch_enabled .shows .show .data .actions {
+			.shows .list .show:hover .data .actions,
+			.touch_enabled .shows .list .show .data .actions {
 				opacity: 1;
 				display: inline-block;
 			}
@@ -482,7 +482,7 @@
 				bottom: 18px;
 			}
 
-			.shows .show:hover .actions {
+			.shows .list .show:hover .actions {
 				opacity: 1;
 				display: inline-block;
 			}
@@ -492,8 +492,8 @@
 				top: auto;
 			}
 
-			.shows .show:hover .action { opacity: 0.6; }
-			.shows .show:hover .action:hover { opacity: 1; }
+			.shows .list .show:hover .action { opacity: 0.6; }
+			.shows .list .show:hover .action:hover { opacity: 1; }
 
 			.shows .data .action {
 				display: inline-block;
@@ -681,11 +681,11 @@
 							top: -30px;
 						}
 
-                .shows .show .episodes .item {
+                .shows .list .show .episodes .item {
                     position: relative;
                 }
 
-                .shows .show .episodes .actions {
+                .shows .list .show .episodes .actions {
                     position: absolute;
                     width: auto;
                     right: 0;
@@ -693,36 +693,36 @@
                     border-left: none;
                 }
 
-                .shows .show .episodes .actions .refresh {
+                .shows .list .show .episodes .actions .refresh {
                     color: #cbeecc;
                 }
 
-				.shows .show .try_container {
+				.shows .list .show .try_container {
 					padding: 5px 10px;
 					text-align: center;
 				}
 
-					.shows .show .try_container a {
+					.shows .list .show .try_container a {
 						margin: 0 5px;
 						padding: 2px 5px;
 					}
 
-					.shows .show .releases .next_release {
+					.shows .list .show .releases .next_release {
 						border-left: 6px solid #2aa300;
 					}
 
-						.shows .show .releases .next_release > :first-child {
+						.shows .list .show .releases .next_release > :first-child {
 							margin-left: -6px;
 						}
 
-					.shows .show .releases .last_release {
+					.shows .list .show .releases .last_release {
 						border-left: 6px solid #ffa200;
 					}
 
-						.shows .show .releases .last_release > :first-child {
+						.shows .list .show .releases .last_release > :first-child {
 							margin-left: -6px;
 						}
-				.shows .show .trynext {
+				.shows .list .show .trynext {
 					display: inline;
 					position: absolute;
 					right: 180px;
@@ -733,32 +733,32 @@
 					height: 100%;
 					top: 0;
 				}
-					.touch_enabled .shows .show .trynext {
+					.touch_enabled .shows .list .show .trynext {
 						display: none;
 					}
 
 					@media all and (max-width: 480px) {
-						.shows .show .trynext {
+						.shows .list .show .trynext {
 							display: none;
 						}
 					}
 					.shows.mass_edit_list .trynext { display: none; }
-					.wanted .shows .show .trynext {
+					.wanted .shows .list .show .trynext {
 						padding-right: 30px;
 					}
-					.shows .show:hover .trynext,
-					.touch_enabled .shows.details_list .show .trynext {
+					.shows .list .show:hover .trynext,
+					.touch_enabled .shows.details_list .list .show .trynext {
 						opacity: 1;
 					}
 
-					.shows.details_list .show .trynext {
+					.shows.details_list .list .show .trynext {
 						background: #47515f;
 						padding: 0;
 						right: 0;
 						height: 25px;
 					}
 
-					.shows .show .trynext a {
+					.shows .list .show .trynext a {
 						background-position: 5px center;
 						padding: 0 5px 0 25px;
 						margin-right: 10px;
@@ -767,19 +767,19 @@
 						line-height: 27px;
 						font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
 					}
-						.shows .show .trynext a:before {
+						.shows .list .show .trynext a:before {
 							margin: 2px 0 0 -20px;
 							position: absolute;
 							font-family: 'Elusive-Icons';
 						}
-						.shows.details_list .show .trynext a {
+						.shows.details_list .list .show .trynext a {
 							line-height: 23px;
 						}
-						.shows .show .trynext a:last-child {
+						.shows .list .show .trynext a:last-child {
 							margin: 0;
 						}
-						.shows .show .trynext a:hover,
-						.touch_enabled .shows .show .trynext a {
+						.shows .list .show .trynext a:hover,
+						.touch_enabled .shows .list .show .trynext a {
 							background-color: #369545;
 						}
 

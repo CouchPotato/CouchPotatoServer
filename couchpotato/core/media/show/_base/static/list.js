@@ -37,7 +37,7 @@ var ShowList = new Class({
 				'html': self.options.description,
 				'styles': {'display': 'none'}
 			}) : null,
-			self.movie_list = new Element('div'),
+			self.movie_list = new Element('div.list'),
 			self.load_more = self.options.load_more ? new Element('a.load_more', {
 				'events': {
 					'click': self.loadMore.bind(self)
@@ -79,7 +79,7 @@ var ShowList = new Class({
 		self.fireEvent('movieAdded', notification);
 		if(self.options.add_new && !self.movies_added[notification.data._id] && notification.data.status == self.options.status){
 			window.scroll(0,0);
-			self.createMovie(notification.data, 'top');
+			self.createShow(notification.data, 'top');
 			self.setCounter(self.counter_count+1);
 
 			self.checkIfEmpty();
@@ -117,7 +117,7 @@ var ShowList = new Class({
 		}
 
 		Object.each(movies, function(movie){
-			self.createMovie(movie);
+			self.createShow(movie);
 		});
 
 		self.total_movies += total;
@@ -131,7 +131,7 @@ var ShowList = new Class({
 		if(!self.navigation_counter) return;
 
 		self.counter_count = count;
-		self.navigation_counter.set('text', (count || 0) + ' movies');
+		self.navigation_counter.set('text', (count || 0) + ' shows');
 
 		if (self.empty_message) {
 			self.empty_message.destroy();
@@ -143,7 +143,7 @@ var ShowList = new Class({
 				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
 
 			self.empty_message = new Element('.message', {
-				'html': 'No movies found ' + message + '.<br/>'
+				'html': 'No shows found ' + message + '.<br/>'
 			}).grab(
 				new Element('a', {
 					'text': 'Reset filter',
@@ -167,20 +167,20 @@ var ShowList = new Class({
 
 	},
 
-	createMovie: function(movie, inject_at){
+	createShow: function(show, inject_at){
 		var self = this;
 		var m = new Show(self, {
 			'actions': self.options.actions,
 			'view': self.current_view,
 			'onSelect': self.calculateSelected.bind(self)
-		}, movie);
+		}, show);
 
 		$(m).inject(self.movie_list, inject_at || 'bottom');
 
 		m.fireEvent('injected');
 
 		self.movies.include(m);
-		self.movies_added[movie._id] = true;
+		self.movies_added[show._id] = true;
 	},
 
 	createNavigation: function(){
