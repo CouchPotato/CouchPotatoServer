@@ -26,7 +26,7 @@ class Episode(MediaBase):
         # Add Season
         episode_info = {
             '_t': 'media',
-            'type': 'episode',
+            'type': 'show.episode',
             'identifiers': identifiers,
             'parent_id': parent_id,
             'info': info, # Returned dict by providers
