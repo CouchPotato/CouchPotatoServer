@@ -4,16 +4,19 @@ var Episode = new Class({
 
     action: {},
 
-    initialize: function(show, data){
+    initialize: function(show, options, data){
         var self = this;
+        self.setOptions(options);
 
         self.show = show;
+        self.options = options;
         self.data = data;
 
         self.profile = self.show.profile;
 
-        self.el = new Element('div.item.data');
-        self.el_actions = new Element('div.episode-actions');
+        self.el = new Element('div.item').adopt(
+            self.detail = new Element('div.item.data')
+        );
 
         self.create();
     },
@@ -21,34 +24,16 @@ var Episode = new Class({
     create: function(){
         var self = this;
 
-        self.el.set('id', 'episode_'+self.data._id);
+        self.detail.set('id', 'episode_'+self.data._id);
 
-        self.el.adopt(
+        self.detail.adopt(
             new Element('span.episode', {'text': (self.data.info.number || 0)}),
             new Element('span.name', {'text': self.getTitle()}),
             new Element('span.firstaired', {'text': self.data.info.firstaired}),
 
-            self.quality = new Element('span.quality')
+            self.quality = new Element('span.quality'),
+            self.actions = new Element('div.episode-actions')
         );
-
-        self.el_actions.inject(self.el);
-
-        // imdb
-        if(self.data.identifiers && self.data.identifiers.imdb) {
-            new Element('a.imdb.icon2', {
-                'title': 'Go to the IMDB page of ' + self.show.getTitle(),
-                'href': 'http://www.imdb.com/title/' + self.data.identifiers.imdb + '/',
-                'target': '_blank'
-            }).inject(self.el_actions);
-        }
-
-        // refresh
-        new Element('a.refresh.icon2', {
-            'title': 'Refresh the episode info and do a forced search',
-            'events': {
-                'click': self.doRefresh.bind(self)
-            }
-        }).inject(self.el_actions);
 
         // Add profile
         if(self.profile.data) {
@@ -64,6 +49,12 @@ var Episode = new Class({
 
         // Add releases
         self.updateReleases();
+
+        Object.each(self.options.actions, function(action, key){
+            self.action[key.toLowerCase()] = action = new self.options.actions[key](self);
+            if(action.el)
+                self.actions.adopt(action)
+        });
     },
 
     updateReleases: function(){
@@ -111,13 +102,18 @@ var Episode = new Class({
         return title;
     },
 
-    doRefresh: function(e) {
+    getIdentifier: function(){
         var self = this;
 
-        Api.request('media.refresh', {
-            'data': {
-                'id': self.data._id
-            }
-        });
+        try {
+            return self.get('identifiers').imdb;
+        }
+        catch (e){ }
+
+        return self.get('imdb');
+    },
+
+    get: function(attr){
+        return this.data[attr] || this.data.info[attr]
     }
 });

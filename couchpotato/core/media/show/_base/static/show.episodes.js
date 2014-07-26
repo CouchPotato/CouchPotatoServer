@@ -1,8 +1,9 @@
 var Episodes = new Class({
-    initialize: function(show) {
+    initialize: function(show, options) {
         var self = this;
 
         self.show = show;
+        self.options = options;
     },
 
     open: function(){
@@ -65,7 +66,7 @@ var Episodes = new Class({
 
     createEpisode: function(episode){
         var self = this,
-            e = new Episode(self.show, episode);
+            e = new Episode(self.show, self.options, episode);
 
         $(e).inject(self.episodes_container);
     },

@@ -13,7 +13,9 @@ var Show = new Class({
 
 		self.el = new Element('div.show');
 
-        self.episodes = new Episodes(self);
+        self.episodes = new Episodes(self, {
+            'actions': [EA.IMDB, EA.Release, EA.Refresh]
+        });
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.category = CategoryList.getCategory(data.category_id) || {};

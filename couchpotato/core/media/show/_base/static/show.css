@@ -682,25 +682,47 @@
 						}
                 .shows .list .episodes .item {
                     position: relative;
-                    width: auto;
+                    width: 100%;
                     height: auto;
                     padding: 0;
+
+                    text-align: left;
+
+                    transition: all .6s cubic-bezier(0.9,0,0.1,1);
                 }
 
-                    .shows .list .episodes .item span.episode {
+                    .shows .list .episodes .item.data span.episode {
                         width: 40px;
                         padding: 0 10px;
                     }
 
-                    .shows .list .episodes .item span.name {
+                    .shows .list .episodes .item.data span.name {
                         width: 280px;
                     }
 
-                    .shows .list .episodes .item span.firstaired {
+                    .shows .list .episodes .item.data span.firstaired {
                         width: 80px;
                     }
 
-                .shows .list .show .episodes .episode-actions {
+                    .shows .list .episodes .item.data span.quality {
+                        bottom: auto;
+                    }
+
+                .shows .list .episodes .releases.table {
+                    display: none;
+                    width: 100%;
+                    height: auto;
+
+                    padding: 0;
+
+                    background: rgba(0,0,0,.2);
+                }
+
+                .shows .list .episodes .releases.table.expanded {
+                    display: block;
+                }
+
+                .shows .list .episodes .episode-actions {
                     position: absolute;
                     width: auto;
                     right: 0;
