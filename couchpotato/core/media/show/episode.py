@@ -63,7 +63,16 @@ class Episode(MediaBase):
 
         # Get new info
         if not info:
-            info = fireEvent('episode.info', episode.get('identifiers'), merge = True)
+            season = db.get('id', episode['parent_id'])
+            show = db.get('id', season['parent_id'])
+
+            info = fireEvent(
+                'episode.info', show.get('identifiers'), {
+                    'season_identifier': season.get('info', {}).get('number'),
+                    'episode_identifier': episode.get('identifiers')
+                },
+                merge = True
+            )
 
         # Update/create media
         if force:

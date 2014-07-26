@@ -172,15 +172,16 @@ class TheTVDb(ShowProvider):
         """Either return a list of all episodes or a single episode.
         If episode_identifer contains an episode number to search for
         """
-        season_identifier = params.get('season_identifier', None)
-        episode_identifier = params.get('episode_identifier', None)
+        season_identifier = self.getIdentifier(params.get('season_identifier', None))
+        episode_identifier = self.getIdentifier(params.get('episode_identifier', None))
+        identifier = self.getIdentifier(identifier)
 
         if not identifier and season_identifier is None:
             return False
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
-        if season_identifier:
+        if not identifier and season_identifier:
             try:
                 identifier, season_identifier = season_identifier.split(':')
                 season_identifier = int(season_identifier)
@@ -205,14 +206,20 @@ class TheTVDb(ShowProvider):
 
             for episode in season.values():
                 if episode_identifier is not None and episode['id'] == toUnicode(episode_identifier):
-                    result = self._parseEpisode(show, episode)
+                    result = self._parseEpisode(episode)
                     self.setCache(cache_key, result)
                     return result
                 else:
-                    result.append(self._parseEpisode(show, episode))
+                    result.append(self._parseEpisode(episode))
 
         self.setCache(cache_key, result)
         return result
+
+    def getIdentifier(self, value):
+        if type(value) is dict:
+            return value.get('thetvdb')
+
+        return value
 
     def _parseShow(self, show):
 
