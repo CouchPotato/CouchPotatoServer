@@ -82,10 +82,12 @@ class Library(LibraryBase):
         result = media
 
         db = get_db()
-        items = db.get_many('media_children', media['_id'], with_doc = True)
 
+        # Find children
+        items = db.get_many('media_children', media['_id'], with_doc = True)
         keys = []
 
+        # Build children arrays
         for item in items:
             parts = item['doc']['type'].split('.')
             key = parts[-1] + 's'
@@ -98,7 +100,11 @@ class Library(LibraryBase):
 
             result[key][item['_id']] = fireEvent('library.tree', item['doc'], single = True)
 
+        # Unique children
         for key in keys:
             result[key] = result[key].values()
+
+        # Include releases
+        result['releases'] = fireEvent('release.for_media', media['_id'], single = True)
 
         return result
