@@ -14,7 +14,7 @@ class EpisodeLibraryPlugin(LibraryBase):
         addEvent('library.identifier', self.identifier)
 
     def query(self, media, first = True, condense = True, include_identifier = True, **kwargs):
-        if media.get('type') != 'episode':
+        if media.get('type') != 'show.episode':
             return
 
         related = fireEvent('library.related', media, single = True)
@@ -43,7 +43,7 @@ class EpisodeLibraryPlugin(LibraryBase):
         return titles
 
     def identifier(self, media):
-        if media.get('type') != 'episode':
+        if media.get('type') != 'show.episode':
             return
 
         identifier = {

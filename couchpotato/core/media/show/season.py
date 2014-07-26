@@ -28,7 +28,7 @@ class Season(MediaBase):
         # Add Season
         season_info = {
             '_t': 'media',
-            'type': 'season',
+            'type': 'show.season',
             'identifiers': identifiers,
             'parent_id': parent_id,
             'info': info,  # Returned dict by providers
