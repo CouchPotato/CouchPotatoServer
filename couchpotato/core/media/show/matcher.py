@@ -83,7 +83,7 @@ class Base(MatcherBase):
 
 
 class Episode(Base):
-    type = 'episode'
+    type = 'show.episode'
 
     def correctIdentifier(self, chain, media):
         identifier = self.getChainIdentifier(chain)
@@ -108,7 +108,7 @@ class Episode(Base):
         return True
 
 class Season(Base):
-    type = 'season'
+    type = 'show.season'
 
     def correctIdentifier(self, chain, media):
         identifier = self.getChainIdentifier(chain)

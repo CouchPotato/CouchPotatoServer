@@ -6,8 +6,8 @@ class ShowProvider(BaseInfoProvider):
 
 
 class SeasonProvider(BaseInfoProvider):
-    type = 'season'
+    type = 'show.season'
 
 
 class EpisodeProvider(BaseInfoProvider):
-    type = 'episode'
+    type = 'show.episode'
