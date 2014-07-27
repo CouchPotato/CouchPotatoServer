@@ -378,6 +378,32 @@
 					display: none;
 				}
 
+        .shows .data .eta {
+            display: none;
+        }
+
+        .shows.details_list .data .eta {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: block;
+            min-height: 20px;
+            text-align: right;
+            font-style: italic;
+            opacity: .8;
+            font-size: 11px;
+        }
+
+        .shows.details_list .movie:hover .data .eta {
+            display: none;
+        }
+
+        .shows.thumbs_list .data .eta {
+            display: block;
+            position: absolute;
+            bottom: 40px;
+        }
+
 		.shows .data .quality {
 			position: absolute;
 			bottom: 2px;
