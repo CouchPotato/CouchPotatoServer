@@ -16,7 +16,7 @@ class Episode(MediaBase):
         addEvent('show.episode.add', self.add)
         addEvent('show.episode.update_info', self.updateInfo)
 
-    def add(self, parent_id, info = None, update_after = True):
+    def add(self, parent_id, info = None, update_after = True, status = None):
         if not info: info = {}
 
         identifiers = info.get('identifiers')
@@ -28,6 +28,7 @@ class Episode(MediaBase):
             '_t': 'media',
             'type': 'show.episode',
             'identifiers': identifiers,
+            'status': status if status else 'active',
             'parent_id': parent_id,
             'info': info, # Returned dict by providers
         }
