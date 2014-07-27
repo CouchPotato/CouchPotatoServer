@@ -1,6 +1,6 @@
 from couchpotato import fireEvent, get_db, Env
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEventAsync
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media._base.searcher.main import SearchSetupError
@@ -19,10 +19,25 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
     def __init__(self):
         super(EpisodeSearcher, self).__init__()
 
+        addEvent('%s.searcher.all' % self.getType(), self.searchAll)
         addEvent('%s.searcher.single' % self.getType(), self.single)
         addEvent('searcher.correct_release', self.correctRelease)
 
+        addApiView('%s.searcher.full_search' % self.getType(), self.searchAllView, docs = {
+            'desc': 'Starts a full search for all wanted shows',
+        })
+
         addApiView('%s.searcher.single' % self.getType(), self.singleView)
+
+    def searchAllView(self, **kwargs):
+        fireEventAsync('%s.searcher.all' % self.getType(), manual = True)
+
+        return {
+            'success': not self.in_progress
+        }
+
+    def searchAll(self, manual = False):
+        pass
 
     def singleView(self, media_id, **kwargs):
         db = get_db()

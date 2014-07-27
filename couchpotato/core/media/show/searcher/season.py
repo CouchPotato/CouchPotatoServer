@@ -1,4 +1,5 @@
-from couchpotato.core.event import addEvent
+from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent, fireEventAsync
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.show import ShowTypeBase
@@ -16,7 +17,22 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
     def __init__(self):
         super(SeasonSearcher, self).__init__()
 
+        addEvent('%s.searcher.all' % self.getType(), self.searchAll)
         addEvent('%s.searcher.single' % self.getType(), self.single)
+
+        addApiView('%s.searcher.full_search' % self.getType(), self.searchAllView, docs = {
+            'desc': 'Starts a full search for all wanted seasons',
+        })
+
+    def searchAllView(self, **kwargs):
+        fireEventAsync('%s.searcher.all' % self.getType(), manual = True)
+
+        return {
+            'success': not self.in_progress
+        }
+
+    def searchAll(self, manual = False):
+        pass
 
     def single(self, media, show, profile):
 
