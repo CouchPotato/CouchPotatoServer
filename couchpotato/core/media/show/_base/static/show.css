@@ -708,19 +708,36 @@
                         bottom: auto;
                     }
 
+                .shows .list .episodes .episode-options {
+                    display: block;
+
+                    width: 100%;
+                    height: 0;
+                    min-height: 0;
+
+                    padding: 0;
+
+                    transition: all 0.6s cubic-bezier(0.9,0,0.1,1);
+                    transition-property: width, height;
+
+                    overflow: hidden;
+                }
+
                 .shows .list .episodes .releases.table {
-                    display: none;
                     width: 100%;
                     height: auto;
-
                     padding: 0;
 
                     background: rgba(0,0,0,.2);
                 }
 
-                .shows .list .episodes .releases.table.expanded {
-                    display: block;
-                }
+                    .shows .list .episodes .releases.table span.name {
+                        width: 300px;
+                    }
+
+                    .shows .list .episodes .releases.table span.status {
+                        width: 85px;
+                    }
 
                 .shows .list .episodes .episode-actions {
                     position: absolute;

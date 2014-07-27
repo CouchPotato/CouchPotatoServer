@@ -102,9 +102,11 @@ EA.Release = new Class({
         self.el = new Element('a.releases.download', {
             'title': 'Show the releases that are available for ' + self.getTitle(),
             'events': {
-                'click': self.open.bind(self)
+                'click': self.toggle.bind(self)
             }
         });
+
+        self.options = new Element('div.episode-options').inject(self.episode.el);
 
         if(!self.episode.data.releases || self.episode.data.releases.length == 0)
             self.el.hide();
@@ -123,8 +125,19 @@ EA.Release = new Class({
 
     },
 
+    toggle: function(e){
+        var self = this;
+
+        if(self.options && self.options.hasClass('expanded')) {
+            self.close();
+        } else {
+            self.open();
+        }
+    },
+
     open: function(e){
         var self = this;
+
         if(e)
             (e).preventDefault();
 
@@ -132,11 +145,23 @@ EA.Release = new Class({
 
     },
 
+    close: function(e) {
+        var self = this;
+
+        if(e)
+            (e).preventDefault();
+
+        self.options.setStyle('height', 0)
+                    .removeClass('expanded');
+    },
+
     createReleases: function(){
         var self = this;
 
-        if(!self.releases_container){
-            self.releases_container = new Element('div.releases.table').inject(self.episode.el);
+        if(!self.releases_table){
+            self.options.adopt(
+                self.releases_table = new Element('div.releases.table')
+            );
 
             // Header
             new Element('div.item.head').adopt(
@@ -147,7 +172,7 @@ EA.Release = new Class({
                 new Element('span.age', {'text': 'Age'}),
                 new Element('span.score', {'text': 'Score'}),
                 new Element('span.provider', {'text': 'Provider'})
-            ).inject(self.releases_container);
+            ).inject(self.releases_table);
 
             if(self.episode.data.releases)
                 self.episode.data.releases.each(function(release){
@@ -174,7 +199,7 @@ EA.Release = new Class({
                         'id': 'release_'+release._id
                     }).adopt(
                             new Element('span.name', {'text': release_name, 'title': release_name}),
-                            new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
+                            new Element('span.status', {'text': release.status, 'class': 'status '+release.status}),
                             new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
                             new Element('span.size', {'text': info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
                             new Element('span.age', {'text': self.get(release, 'age')}),
@@ -201,7 +226,7 @@ EA.Release = new Class({
                                     }
                                 }
                             })
-                        ).inject(self.releases_container);
+                        ).inject(self.releases_table);
 
                     if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
                         if(!self.last_release || (self.last_release && self.last_release.status != 'snatched' && release.status == 'snatched'))
@@ -237,14 +262,14 @@ EA.Release = new Class({
                 });
 
             if(self.last_release)
-                self.releases_container.getElements('#release_'+self.last_release._id).addClass('last_release');
+                self.releases_table.getElements('#release_'+self.last_release._id).addClass('last_release');
 
             if(self.next_release)
-                self.releases_container.getElements('#release_'+self.next_release._id).addClass('next_release');
+                self.releases_table.getElements('#release_'+self.next_release._id).addClass('next_release');
 
             if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status) === false)){
 
-                self.trynext_container = new Element('div.buttons.try_container').inject(self.releases_container, 'top');
+                self.trynext_container = new Element('div.buttons.try_container').inject(self.releases_table, 'top');
 
                 var nr = self.next_release,
                     lr = self.last_release;
@@ -282,13 +307,12 @@ EA.Release = new Class({
             self.next_release = null;
 
             self.episode.el.addEvent('outerClick', function(){
-                console.log('outerClick');
-
-                self.releases_container.removeClass('expanded');
+                self.close();
             });
         }
 
-        self.releases_container.addClass('expanded');
+        self.options.setStyle('height', self.releases_table.getSize().y)
+                    .addClass('expanded');
 
     },
 
@@ -349,7 +373,7 @@ EA.Release = new Class({
     download: function(release){
         var self = this;
 
-        var release_el = self.releases_container.getElement('#release_'+release._id),
+        var release_el = self.releases_table.getElement('#release_'+release._id),
             icon = release_el.getElement('.download.icon2');
 
         if(icon)
@@ -442,7 +466,7 @@ EA.Refresh = new Class({
 
         Api.request('media.refresh', {
             'data': {
-                'id': self.show.get('_id')
+                'id': self.episode.get('_id')
             }
         });
     }

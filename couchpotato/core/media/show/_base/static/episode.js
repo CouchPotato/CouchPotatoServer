@@ -31,7 +31,16 @@ var Episode = new Class({
             new Element('span.name', {'text': self.getTitle()}),
             new Element('span.firstaired', {'text': self.data.info.firstaired}),
 
-            self.quality = new Element('span.quality'),
+            self.quality = new Element('span.quality', {
+                'events': {
+                    'click': function(e){
+                        var releases = self.detail.getElement('.episode-actions .releases');
+
+                        if(releases.isVisible())
+                            releases.fireEvent('click', [e])
+                    }
+                }
+            }),
             self.actions = new Element('div.episode-actions')
         );
 
