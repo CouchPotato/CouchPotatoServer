@@ -1,7 +1,7 @@
 from httplib import HTTPSConnection
 
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 
@@ -13,7 +13,6 @@ autoload = 'Pushover'
 
 class Pushover(Notification):
 
-    app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
@@ -22,15 +21,15 @@ class Pushover(Notification):
 
         api_data = {
             'user': self.conf('user_key'),
-            'token': self.app_token,
+            'token': self.conf('api_token'),
             'message': toUnicode(message),
             'priority': self.conf('priority'),
             'sound': self.conf('sound'),
         }
 
-        if data and data.get('identifier'):
+        if data and getIdentifier(data):
             api_data.update({
-                'url': toUnicode('http://www.imdb.com/title/%s/' % data['identifier']),
+                'url': toUnicode('http://www.imdb.com/title/%s/' % getIdentifier(data)),
                 'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 
@@ -49,7 +48,7 @@ class Pushover(Notification):
             log.error('Pushover auth failed: %s', response.reason)
             return False
         else:
-            log.error('Pushover notification failed.')
+            log.error('Pushover notification failed: %s', request_status)
             return False
 
 
@@ -69,6 +68,12 @@ config = [{
                 {
                     'name': 'user_key',
                     'description': 'Register on pushover.net to get one.'
+                },
+                {
+                    'name': 'api_token',
+                    'description': '<a href="https://pushover.net/apps/clone/couchpotato" target="_blank">Register on pushover.net</a> to get one.',
+                    'advanced': True,
+                    'default': 'YkxHMYDZp285L265L3IwH3LmzkTaCy',
                 },
                 {
                     'name': 'priority',

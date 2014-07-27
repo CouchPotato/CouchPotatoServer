@@ -272,11 +272,18 @@
 
 		(function(){
 
-			Api.request('app.available', {
-				'onFailure': function(){
-					self.checkAvailable.delay(1000, self, [delay, onAvailable]);
-					self.fireEvent('unload');
+			var onFailure = function(){
+				self.checkAvailable.delay(1000, self, [delay, onAvailable]);
+				self.fireEvent('unload');
+			}
+
+			var request = Api.request('app.available', {
+				'timeout': 2000,
+				'onTimeout': function(){
+					request.cancel();
+					onFailure();
 				},
+				'onFailure': onFailure,
 				'onSuccess': function(){
 					if(onAvailable)
 						onAvailable();

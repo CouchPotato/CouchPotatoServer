@@ -3,10 +3,12 @@ import os
 import time
 import traceback
 
+from CodernityDB.database import RecordNotFound
+from CodernityDB.index import IndexException, IndexNotFoundException, IndexConflict
 from couchpotato import CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getImdb, tryInt
 
 
@@ -15,10 +17,12 @@ log = CPLog(__name__)
 
 class Database(object):
 
-    indexes = []
+    indexes = None
     db = None
 
     def __init__(self):
+
+        self.indexes = {}
 
         addApiView('database.list_documents', self.listDocuments)
         addApiView('database.reindex', self.reindex)
@@ -26,7 +30,9 @@ class Database(object):
         addApiView('database.document.update', self.updateDocument)
         addApiView('database.document.delete', self.deleteDocument)
 
+        addEvent('database.setup.after', self.startup_compact)
         addEvent('database.setup_index', self.setupIndex)
+
         addEvent('app.migrate', self.migrate)
         addEvent('app.after_shutdown', self.close)
 
@@ -43,26 +49,45 @@ class Database(object):
 
     def setupIndex(self, index_name, klass):
 
-        self.indexes.append(index_name)
+        self.indexes[index_name] = klass
 
         db = self.getDB()
 
         # Category index
         index_instance = klass(db.path, index_name)
         try:
-            db.add_index(index_instance)
-            db.reindex_index(index_name)
-        except:
-            previous = db.indexes_names[index_name]
-            previous_version = previous._version
-            current_version = klass._version
 
-            # Only edit index if versions are different
-            if previous_version < current_version:
-                log.debug('Index "%s" already exists, updating and reindexing', index_name)
-                db.destroy_index(previous)
+            # Make sure store and bucket don't exist
+            exists = []
+            for x in ['buck', 'stor']:
+                full_path = os.path.join(db.path, '%s_%s' % (index_name, x))
+                if os.path.exists(full_path):
+                    exists.append(full_path)
+
+            if index_name not in db.indexes_names:
+
+                # Remove existing buckets if index isn't there
+                for x in exists:
+                    os.unlink(x)
+
+                # Add index (will restore buckets)
                 db.add_index(index_instance)
                 db.reindex_index(index_name)
+            else:
+                # Previous info
+                previous = db.indexes_names[index_name]
+                previous_version = previous._version
+                current_version = klass._version
+
+                # Only edit index if versions are different
+                if previous_version < current_version:
+                    log.debug('Index "%s" already exists, updating and reindexing', index_name)
+                    db.destroy_index(previous)
+                    db.add_index(index_instance)
+                    db.reindex_index(index_name)
+
+        except:
+            log.error('Failed adding index %s: %s', (index_name, traceback.format_exc()))
 
     def deleteDocument(self, **kwargs):
 
@@ -136,19 +161,107 @@ class Database(object):
             'success': success
         }
 
-    def compact(self, **kwargs):
+    def compact(self, try_repair = True, **kwargs):
 
-        success = True
+        success = False
+        db = self.getDB()
+
+        # Removing left over compact files
+        db_path = sp(db.path)
+        for f in os.listdir(sp(db.path)):
+            for x in ['_compact_buck', '_compact_stor']:
+                if f[-len(x):] == x:
+                    os.unlink(os.path.join(db_path, f))
+
         try:
-            db = self.getDB()
+            start = time.time()
+            size = float(db.get_db_details().get('size', 0))
+            log.debug('Compacting database, current size: %sMB', round(size/1048576, 2))
+
             db.compact()
+            new_size = float(db.get_db_details().get('size', 0))
+            log.debug('Done compacting database in %ss, new size: %sMB, saved: %sMB', (round(time.time()-start, 2), round(new_size/1048576, 2), round((size-new_size)/1048576, 2)))
+            success = True
+        except (IndexException, AttributeError):
+            if try_repair:
+                log.error('Something wrong with indexes, trying repair')
+
+                # Remove all indexes
+                old_indexes = self.indexes.keys()
+                for index_name in old_indexes:
+                    try:
+                        db.destroy_index(index_name)
+                    except IndexNotFoundException:
+                        pass
+                    except:
+                        log.error('Failed removing old index %s', index_name)
+
+                # Add them again
+                for index_name in self.indexes:
+                    klass = self.indexes[index_name]
+
+                    # Category index
+                    index_instance = klass(db.path, index_name)
+                    try:
+                        db.add_index(index_instance)
+                        db.reindex_index(index_name)
+                    except IndexConflict:
+                        pass
+                    except:
+                        log.error('Failed adding index %s', index_name)
+                        raise
+
+                self.compact(try_repair = False)
+            else:
+                log.error('Failed compact: %s', traceback.format_exc())
+
         except:
             log.error('Failed compact: %s', traceback.format_exc())
-            success = False
 
         return {
             'success': success
         }
+
+    # Compact on start
+    def startup_compact(self):
+        from couchpotato import Env
+
+        db = self.getDB()
+
+        # Try fix for migration failures on desktop
+        if Env.get('desktop'):
+            try:
+                list(db.all('profile', with_doc = True))
+            except RecordNotFound:
+
+                failed_location = '%s_failed' % db.path
+                old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db.old')
+
+                if not os.path.isdir(failed_location) and os.path.isfile(old_db):
+                    log.error('Corrupt database, trying migrate again')
+                    db.close()
+
+                    # Rename database folder
+                    os.rename(db.path, '%s_failed' % db.path)
+
+                    # Rename .old database to try another migrate
+                    os.rename(old_db, old_db[:-4])
+
+                    fireEventAsync('app.restart')
+                else:
+                    log.error('Migration failed and couldn\'t recover database. Please report on GitHub, with this message.')
+                    db.reindex()
+
+                return
+
+        # Check size and compact if needed
+        size = db.get_db_details().get('size')
+        prop_name = 'last_db_compact'
+        last_check = int(Env.prop(prop_name, default = 0))
+
+        if size > 26214400 and last_check < time.time()-604800: # 25MB / 7 days
+            self.compact()
+            Env.prop(prop_name, value = int(time.time()))
 
     def migrate(self):
 
@@ -219,6 +332,8 @@ class Database(object):
             log.info('Getting data took %s', time.time() - migrate_start)
 
             db = self.getDB()
+            if not db.opened:
+                return
 
             # Use properties
             properties = migrate_data['properties']
