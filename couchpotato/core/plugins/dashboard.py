@@ -69,16 +69,16 @@ class Dashboard(Plugin):
                 coming_soon = False
 
                 # Theater quality
-                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, media['info']['year'], single = True):
+                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, media['info'].get('year'), single = True):
                     coming_soon = True
-                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, media['info']['year'], single = True):
+                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, media['info'].get('year'), single = True):
                     coming_soon = True
 
                 if coming_soon:
 
                     # Don't list older movies
-                    if ((not late and (media['info']['year'] >= now_year - 1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                            (late and (media['info']['year'] < now_year - 1 or (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200)))):
+                    if ((not late and (media['info'].get('year') >= now_year - 1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and (media['info'].get('year') < now_year - 1 or (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200)))):
 
                         add = True
 
