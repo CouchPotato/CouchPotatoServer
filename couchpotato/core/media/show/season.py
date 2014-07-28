@@ -50,38 +50,45 @@ class Season(MediaBase):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update_info', season.get('_id'), info = info, single = True)
+            handle('show.season.update_info', season.get('_id'), identifiers, info, single = True)
 
         return season
 
-    def updateInfo(self, media_id = None, info = None, force = False):
+    def updateInfo(self, media_id = None, identifiers = None, info = None):
         if not info: info = {}
+
+        identifiers = info.get('identifiers') or identifiers
+        try: del info['identifiers']
+        except: pass
+        try: del info['episodes']
+        except: pass
 
         if self.shuttingDown():
             return
 
         db = get_db()
 
-        season = db.get('id', media_id)
+        if media_id:
+            season = db.get('id', media_id)
+        else:
+            season = db.get('media', identifiers, with_doc = True)['doc']
+
+        show = db.get('id', season['parent_id'])
 
         # Get new info
         if not info:
-            info = fireEvent('season.info', season.get('identifiers'), merge = True)
+            info = fireEvent('season.info', show.get('identifiers'), {
+                'season_number': season.get('info', {}).get('number', 0)
+            }, merge = True)
 
         # Update/create media
-        if force:
-
-            season['identifiers'].update(info['identifiers'])
-            if 'identifiers' in info:
-                del info['identifiers']
-
-            season.update({'info': info})
-            s = db.update(season)
-            season.update(s)
+        season['identifiers'].update(identifiers)
+        season.update({'info': info})
 
         # Get images
         image_urls = info.get('images', [])
         existing_files = season.get('files', {})
         self.getPoster(image_urls, existing_files)
 
+        db.update(season)
         return season

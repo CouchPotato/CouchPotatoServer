@@ -48,12 +48,16 @@ class Episode(MediaBase):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update_info', episode.get('_id'), info = info, single = True)
+            handle('show.season.update_info', episode.get('_id'), identifiers, info, single = True)
 
         return episode
 
-    def updateInfo(self, media_id = None, info = None, force = False):
+    def updateInfo(self, media_id = None, identifiers = None, info = None):
         if not info: info = {}
+
+        identifiers = info.get('identifiers') or identifiers
+        try: del info['identifiers']
+        except: pass
 
         if self.shuttingDown():
             return
@@ -69,26 +73,25 @@ class Episode(MediaBase):
 
             info = fireEvent(
                 'episode.info', show.get('identifiers'), {
-                    'season_identifier': season.get('info', {}).get('number'),
-                    'episode_identifier': episode.get('identifiers')
+                    'season_identifiers': season.get('identifiers'),
+                    'season_number': season.get('info', {}).get('number'),
+
+                    'episode_identifiers': episode.get('identifiers'),
+                    'episode_number': episode.get('info', {}).get('number'),
+
+                    'absolute_number': episode.get('info', {}).get('absolute_number')
                 },
                 merge = True
             )
 
         # Update/create media
-        if force:
-
-            episode['identifiers'].update(info['identifiers'])
-            if 'identifiers' in info:
-                del info['identifiers']
-
-            episode.update({'info': info})
-            e = db.update(episode)
-            episode.update(e)
+        episode['identifiers'].update(identifiers)
+        episode.update({'info': info})
 
         # Get images
         image_urls = info.get('images', [])
         existing_files = episode.get('files', {})
         self.getPoster(image_urls, existing_files)
 
+        db.update(episode)
         return episode

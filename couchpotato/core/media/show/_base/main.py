@@ -5,7 +5,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, find
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
 from qcond import QueryCondenser
@@ -79,15 +79,13 @@ class ShowBase(MediaBase):
                 'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None
             }
 
-            # TODO: stuff below is mostly a copy of what is done in movie
-            # Can we make a base function to do this stuff?
-
             # Remove season info for later use (save separately)
             seasons_info = info.get('seasons', {})
             identifiers = info.get('identifiers', {})
 
             # Make sure we don't nest in_wanted data
-            del info['identifiers']
+            try: del info['identifiers']
+            except: pass
             try: del info['in_wanted']
             except: pass
             try: del info['in_library']
@@ -164,15 +162,14 @@ class ShowBase(MediaBase):
                 season_info = seasons_info[season_nr]
                 episodes = season_info.get('episodes', {})
 
-                season = fireEvent('show.season.add', m.get('_id'), season_info, single = True)
+                season = fireEvent('show.season.add', m.get('_id'), season_info, update_after = False, single = True)
 
                 # Add Episodes
                 for episode_nr in episodes:
 
                     episode_info = episodes[episode_nr]
                     episode_info['season_number'] = season_nr
-                    fireEvent('show.episode.add', season.get('_id'), episode_info, single = True)
-
+                    fireEvent('show.episode.add', season.get('_id'), episode_info, update_after = False, single = True)
 
             if added and notify_after:
 
@@ -191,10 +188,7 @@ class ShowBase(MediaBase):
         except:
             log.error('Failed adding media: %s', traceback.format_exc())
 
-    def updateInfo(self, media_id = None, identifiers = None, info = None):
-        if not info: info = {}
-        if not identifiers: identifiers = {}
-
+    def updateInfo(self, media_id = None, media = None, identifiers = None, info = None):
         """
         Update movie information inside media['doc']['info']
 
@@ -209,28 +203,37 @@ class ShowBase(MediaBase):
         @return: dict, with media
         """
 
+        if not info: info = {}
+        if not identifiers: identifiers = {}
+
         if self.shuttingDown():
             return
 
         try:
             db = get_db()
 
-            if media_id:
-                media = db.get('id', media_id)
-            else:
-                media = db.get('media', identifiers, with_doc = True)['doc']
+            if media is None:
+                if media_id:
+                    media = db.get('id', media_id)
+                else:
+                    media = db.get('media', identifiers, with_doc = True)['doc']
 
             if not info:
                 info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
 
-            # Don't need those here
-            try: del info['seasons']
-            except: pass
+            # Remove season info for later use (save separately)
+            seasons_info = info.get('seasons', {})
+            identifiers = info.get('identifiers', {})
+
             try: del info['identifiers']
             except: pass
             try: del info['in_wanted']
             except: pass
             try: del info['in_library']
+            except: pass
+            try: del info['identifiers']
+            except: pass
+            try: del info['seasons']
             except: pass
 
             if not info or len(info) == 0:
@@ -240,9 +243,35 @@ class ShowBase(MediaBase):
             # Update basic info
             media['info'] = info
 
+            show_tree = fireEvent('library.tree', media_id = media['_id'], single = True)
+
+            # Update seasons
+            for season_num in seasons_info:
+                season_info = seasons_info[season_num]
+                episodes = season_info.get('episodes', {})
+
+                # Find season that matches number
+                season = find(lambda s: s.get('info', {}).get('number', 0) == season_num, show_tree.get('seasons', []))
+
+                if not season:
+                    log.warning('Unable to find season "%s"', season_num)
+                    continue
+
+                # Update season
+                fireEvent('show.season.update_info', season['_id'], info = season_info, single = True)
+
+                # Update episodes
+                for episode_num in episodes:
+                    episode_info = episodes[episode_num]
+                    episode_info['season_number'] = season_num
+
+                    # Find episode that matches number
+                    episode = find(lambda s: s.get('info', {}).get('number', 0) == episode_num, season.get('episodes', []))
+
+                    fireEvent('show.episode.update_info', episode['_id'], info = episode_info, single = True)
+
             # Update image file
             image_urls = info.get('images', [])
-
             self.getPoster(media, image_urls)
 
             db.update(media)
