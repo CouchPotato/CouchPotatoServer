@@ -32,7 +32,7 @@ class ShowBase(MediaBase):
         })
 
         addEvent('show.add', self.add)
-        addEvent('show.update_info', self.updateInfo)
+        addEvent('show.update', self.update)
         addEvent('show.update_extras', self.updateExtras)
 
     def addView(self, **kwargs):
@@ -79,53 +79,6 @@ class ShowBase(MediaBase):
         except:
             log.error('Failed adding media: %s', traceback.format_exc())
 
-    def updateInfo(self, media_id = None, media = None, identifiers = None, info = None):
-        """
-        Update movie information inside media['doc']['info']
-
-        @param media_id: document id
-        @param identifiers: identifiers from multiple providers
-            {
-                'thetvdb': 123,
-                'imdb': 'tt123123',
-                ..
-            }
-        @param extended: update with extended info (parses more info, actors, images from some info providers)
-        @return: dict, with media
-        """
-
-        if not info: info = {}
-        if not identifiers: identifiers = {}
-
-        db = get_db()
-
-        if self.shuttingDown():
-            return
-
-        if media is None and media_id:
-            media = db.get('id', media_id)
-        else:
-            log.error('missing "media" and "media_id" parameters, unable to update')
-            return
-
-        if not info:
-            info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
-
-        try:
-            identifiers = info.pop('identifiers', {})
-            seasons = info.pop('seasons', {})
-
-            self.update(media, info)
-            self.updateEpisodes(media, seasons)
-            self.updateExtras(media, info)
-
-            db.update(media)
-            return media
-        except:
-            log.error('Failed update media: %s', traceback.format_exc())
-
-        return {}
-
     def create(self, info, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
         db = get_db()
 
@@ -153,7 +106,7 @@ class ShowBase(MediaBase):
         seasons = info.pop('seasons', {})
 
         # Update media with info
-        self.update(media, info)
+        self.updateInfo(media, info)
 
         new = False
         try:
@@ -230,7 +183,54 @@ class ShowBase(MediaBase):
 
                 fireEvent('show.episode.add', season.get('_id'), episode_info, update_after = False, single = True)
 
-    def update(self, media, info):
+    def update(self, media_id = None, media = None, identifiers = None, info = None):
+        """
+        Update movie information inside media['doc']['info']
+
+        @param media_id: document id
+        @param identifiers: identifiers from multiple providers
+            {
+                'thetvdb': 123,
+                'imdb': 'tt123123',
+                ..
+            }
+        @param extended: update with extended info (parses more info, actors, images from some info providers)
+        @return: dict, with media
+        """
+
+        if not info: info = {}
+        if not identifiers: identifiers = {}
+
+        db = get_db()
+
+        if self.shuttingDown():
+            return
+
+        if media is None and media_id:
+            media = db.get('id', media_id)
+        else:
+            log.error('missing "media" and "media_id" parameters, unable to update')
+            return
+
+        if not info:
+            info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
+
+        try:
+            identifiers = info.pop('identifiers', {})
+            seasons = info.pop('seasons', {})
+
+            self.updateInfo(media, info)
+            self.updateEpisodes(media, seasons)
+            self.updateExtras(media, info)
+
+            db.update(media)
+            return media
+        except:
+            log.error('Failed update media: %s', traceback.format_exc())
+
+        return {}
+
+    def updateInfo(self, media, info):
         db = get_db()
 
         # Remove season info for later use (save separately)
@@ -261,7 +261,7 @@ class ShowBase(MediaBase):
                 continue
 
             # Update season
-            fireEvent('show.season.update_info', season['_id'], info = season_info, single = True)
+            fireEvent('show.season.update', season['_id'], info = season_info, single = True)
 
             # Update episodes
             for episode_num in episodes:
@@ -276,11 +276,9 @@ class ShowBase(MediaBase):
                     fireEvent('show.episode.add', season.get('_id'), episode_info, update_after = False, single = True)
                     continue
 
-                fireEvent('show.episode.update_info', episode['_id'], info = episode_info, single = True)
+                fireEvent('show.episode.update', episode['_id'], info = episode_info, single = True)
 
     def updateExtras(self, media, info, store=False):
-        log.debug('Updating extras for "%s"', media['_id'])
-
         db = get_db()
 
         # Update image file

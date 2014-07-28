@@ -14,7 +14,7 @@ class Season(MediaBase):
 
     def __init__(self):
         addEvent('show.season.add', self.add)
-        addEvent('show.season.update_info', self.updateInfo)
+        addEvent('show.season.update', self.update)
 
     def add(self, parent_id, info = None, update_after = True, status = None):
         if not info: info = {}
@@ -50,11 +50,11 @@ class Season(MediaBase):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update_info', season.get('_id'), identifiers, info, single = True)
+            handle('show.season.update', season.get('_id'), identifiers, info, single = True)
 
         return season
 
-    def updateInfo(self, media_id = None, identifiers = None, info = None):
+    def update(self, media_id = None, identifiers = None, info = None):
         if not info: info = {}
 
         identifiers = info.get('identifiers') or identifiers
