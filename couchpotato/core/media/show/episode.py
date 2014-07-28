@@ -19,9 +19,11 @@ class Episode(MediaBase):
     def add(self, parent_id, info = None, update_after = True, status = None):
         if not info: info = {}
 
-        identifiers = info.get('identifiers')
-        try: del info['identifiers']
-        except: pass
+        identifiers = info.pop('identifiers', None)
+
+        if not identifiers:
+            log.warning('Unable to add episode, missing identifiers (info provider mismatch?)')
+            return
 
         # Add Season
         episode_info = {
