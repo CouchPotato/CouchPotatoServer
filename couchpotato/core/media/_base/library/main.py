@@ -78,13 +78,18 @@ class Library(LibraryBase):
 
         return cur
 
-    def tree(self, media):
-        result = media
-
+    def tree(self, media = None, media_id = None):
         db = get_db()
 
+        if media:
+            result = media
+        elif media_id:
+            result = db.get('id', media_id, with_doc = True)
+        else:
+            return None
+
         # Find children
-        items = db.get_many('media_children', media['_id'], with_doc = True)
+        items = db.get_many('media_children', result['_id'], with_doc = True)
         keys = []
 
         # Build children arrays
@@ -93,6 +98,8 @@ class Library(LibraryBase):
             key = parts[-1] + 's'
 
             if key not in result:
+                result[key] = {}
+            elif type(result[key]) is not dict:
                 result[key] = {}
 
             if key not in keys:
@@ -105,6 +112,6 @@ class Library(LibraryBase):
             result[key] = result[key].values()
 
         # Include releases
-        result['releases'] = fireEvent('release.for_media', media['_id'], single = True)
+        result['releases'] = fireEvent('release.for_media', result['_id'], single = True)
 
         return result

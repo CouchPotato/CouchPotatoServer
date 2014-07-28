@@ -5,7 +5,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, find
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
 from qcond import QueryCondenser
@@ -32,7 +32,8 @@ class ShowBase(MediaBase):
         })
 
         addEvent('show.add', self.add)
-        addEvent('show.update_info', self.updateInfo)
+        addEvent('show.update', self.update)
+        addEvent('show.update_extras', self.updateExtras)
 
     def addView(self, **kwargs):
         add_dict = self.add(params = kwargs)
@@ -45,8 +46,6 @@ class ShowBase(MediaBase):
     def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
         if not params: params = {}
 
-        db = get_db()
-
         # Identifiers
         if not params.get('identifiers'):
             msg = 'Can\'t add show without at least 1 identifier.'
@@ -58,124 +57,13 @@ class ShowBase(MediaBase):
         if not info or (info and len(info.get('titles', [])) == 0):
             info = fireEvent('show.info', merge = True, identifiers = params.get('identifiers'))
 
-        # Set default title
-        def_title = self.getDefaultTitle(info)
-
-        # Default profile and category
-        default_profile = {}
-        if not params.get('profile_id'):
-            default_profile = fireEvent('profile.default', single = True)
-        cat_id = params.get('category_id')
-
         # Add Show
         try:
-            media = {
-                '_t': 'media',
-                'type': 'show',
-                'title': def_title,
-                'identifiers': info.get('identifiers'),
-                'status': status if status else 'active',
-                'profile_id': params.get('profile_id', default_profile.get('_id')),
-                'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None
-            }
+            m, added = self.create(info, params, force_readd, search_after, update_after)
 
-            # TODO: stuff below is mostly a copy of what is done in movie
-            # Can we make a base function to do this stuff?
-
-            # Remove season info for later use (save separately)
-            seasons_info = info.get('seasons', {})
-            identifiers = info.get('identifiers', {})
-
-            # Make sure we don't nest in_wanted data
-            del info['identifiers']
-            try: del info['in_wanted']
-            except: pass
-            try: del info['in_library']
-            except: pass
-            try: del info['identifiers']
-            except: pass
-            try: del info['seasons']
-            except: pass
-
-            media['info'] = info
-
-            new = False
-            try:
-                m = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True, single = True)['doc']
-            except:
-                new = True
-                m = db.insert(media)
-
-            # Update dict to be usable
-            m.update(media)
-
-
-            added = True
-            do_search = False
-            search_after = search_after and self.conf('search_on_add', section = 'showsearcher')
-            onComplete = None
-
-            if new:
-                if search_after:
-                    onComplete = self.createOnComplete(m['_id'])
-                search_after = False
-            elif force_readd:
-
-                # Clean snatched history
-                for release in fireEvent('release.for_media', m['_id'], single = True):
-                    if release.get('status') in ['downloaded', 'snatched', 'done']:
-                        if params.get('ignore_previous', False):
-                            release['status'] = 'ignored'
-                            db.update(release)
-                        else:
-                            fireEvent('release.delete', release['_id'], single = True)
-
-                m['profile_id'] = params.get('profile_id', default_profile.get('id'))
-                m['category_id'] = media.get('category_id')
-                m['last_edit'] = int(time.time())
-
-                do_search = True
-                db.update(m)
-            else:
-                try: del params['info']
-                except: pass
-                log.debug('Show already exists, not updating: %s', params)
-                added = False
-
-            # Trigger update info
-            if added and update_after:
-                # Do full update to get images etc
-                fireEventAsync('show.update_info', m['_id'], info = info, on_complete = onComplete)
-
-            # Remove releases
-            for rel in fireEvent('release.for_media', m['_id'], single = True):
-                if rel['status'] is 'available':
-                    db.delete(rel)
-
-            movie_dict = fireEvent('media.get', m['_id'], single = True)
-
-            if do_search and search_after:
-                onComplete = self.createOnComplete(m['_id'])
-                onComplete()
-
-            # Add Seasons
-            for season_nr in seasons_info:
-
-                season_info = seasons_info[season_nr]
-                episodes = season_info.get('episodes', {})
-
-                season = fireEvent('show.season.add', m.get('_id'), season_info, single = True)
-
-                # Add Episodes
-                for episode_nr in episodes:
-
-                    episode_info = episodes[episode_nr]
-                    episode_info['season_number'] = season_nr
-                    fireEvent('show.episode.add', season.get('_id'), episode_info, single = True)
-
+            result = fireEvent('media.get', m['_id'], single = True)
 
             if added and notify_after:
-
                 if params.get('title'):
                     message = 'Successfully added "%s" to your wanted list.' % params.get('title', '')
                 else:
@@ -184,17 +72,118 @@ class ShowBase(MediaBase):
                         message = 'Successfully added "%s" to your wanted list.' % title
                     else:
                         message = 'Successfully added to your wanted list.'
-                fireEvent('notify.frontend', type = 'show.added', data = movie_dict, message = message)
 
+                fireEvent('notify.frontend', type = 'show.added', data = result, message = message)
 
-            return movie_dict
+            return result
         except:
             log.error('Failed adding media: %s', traceback.format_exc())
 
-    def updateInfo(self, media_id = None, identifiers = None, info = None):
-        if not info: info = {}
-        if not identifiers: identifiers = {}
+    def create(self, info, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
+        db = get_db()
 
+        # Set default title
+        def_title = self.getDefaultTitle(info)
+
+        # Default profile and category
+        default_profile = {}
+        if not params.get('profile_id'):
+            default_profile = fireEvent('profile.default', single = True)
+
+        cat_id = params.get('category_id')
+
+        media = {
+            '_t': 'media',
+            'type': 'show',
+            'title': def_title,
+            'identifiers': info.get('identifiers'),
+            'status': status if status else 'active',
+            'profile_id': params.get('profile_id', default_profile.get('_id')),
+            'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None
+        }
+
+        identifiers = info.pop('identifiers', {})
+        seasons = info.pop('seasons', {})
+
+        # Update media with info
+        self.updateInfo(media, info)
+
+        new = False
+        try:
+            m = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True, single = True)['doc']
+        except:
+            new = True
+            m = db.insert(media)
+
+        # Update dict to be usable
+        m.update(media)
+
+        added = True
+        do_search = False
+        search_after = search_after and self.conf('search_on_add', section = 'showsearcher')
+        onComplete = None
+
+        if new:
+            if search_after:
+                onComplete = self.createOnComplete(m['_id'])
+
+            search_after = False
+        elif force_readd:
+            # Clean snatched history
+            for release in fireEvent('release.for_media', m['_id'], single = True):
+                if release.get('status') in ['downloaded', 'snatched', 'done']:
+                    if params.get('ignore_previous', False):
+                        release['status'] = 'ignored'
+                        db.update(release)
+                    else:
+                        fireEvent('release.delete', release['_id'], single = True)
+
+            m['profile_id'] = params.get('profile_id', default_profile.get('id'))
+            m['category_id'] = media.get('category_id')
+            m['last_edit'] = int(time.time())
+
+            do_search = True
+            db.update(m)
+        else:
+            params.pop('info', None)
+            log.debug('Show already exists, not updating: %s', params)
+            added = False
+
+        # Create episodes
+        self.createEpisodes(m, seasons)
+
+        # Trigger update info
+        if added and update_after:
+            # Do full update to get images etc
+            fireEventAsync('show.update_extras', m, info, store = True, on_complete = onComplete)
+
+        # Remove releases
+        for rel in fireEvent('release.for_media', m['_id'], single = True):
+            if rel['status'] is 'available':
+                db.delete(rel)
+
+        if do_search and search_after:
+            onComplete = self.createOnComplete(m['_id'])
+            onComplete()
+
+        return m, added
+
+    def createEpisodes(self, m, seasons_info):
+        # Add Seasons
+        for season_nr in seasons_info:
+            season_info = seasons_info[season_nr]
+            episodes = season_info.get('episodes', {})
+
+            season = fireEvent('show.season.add', m.get('_id'), season_info, update_after = False, single = True)
+
+            # Add Episodes
+            for episode_nr in episodes:
+                episode_info = episodes[episode_nr]
+                episode_info['season_number'] = season_nr
+
+                fireEvent('show.episode.add', season.get('_id'), episode_info, update_after = False, single = True)
+
+    def update(self, media_id = None, media = None, identifiers = None, info = None):
         """
         Update movie information inside media['doc']['info']
 
@@ -209,41 +198,30 @@ class ShowBase(MediaBase):
         @return: dict, with media
         """
 
+        if not info: info = {}
+        if not identifiers: identifiers = {}
+
+        db = get_db()
+
         if self.shuttingDown():
             return
 
+        if media is None and media_id:
+            media = db.get('id', media_id)
+        else:
+            log.error('missing "media" and "media_id" parameters, unable to update')
+            return
+
+        if not info:
+            info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
+
         try:
-            db = get_db()
+            identifiers = info.pop('identifiers', {})
+            seasons = info.pop('seasons', {})
 
-            if media_id:
-                media = db.get('id', media_id)
-            else:
-                media = db.get('media', identifiers, with_doc = True)['doc']
-
-            if not info:
-                info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
-
-            # Don't need those here
-            try: del info['seasons']
-            except: pass
-            try: del info['identifiers']
-            except: pass
-            try: del info['in_wanted']
-            except: pass
-            try: del info['in_library']
-            except: pass
-
-            if not info or len(info) == 0:
-                log.error('Could not update, no show info to work with: %s', media.get('identifier'))
-                return False
-
-            # Update basic info
-            media['info'] = info
-
-            # Update image file
-            image_urls = info.get('images', [])
-
-            self.getPoster(media, image_urls)
+            self.updateInfo(media, info)
+            self.updateEpisodes(media, seasons)
+            self.updateExtras(media, info)
 
             db.update(media)
             return media
@@ -251,3 +229,61 @@ class ShowBase(MediaBase):
             log.error('Failed update media: %s', traceback.format_exc())
 
         return {}
+
+    def updateInfo(self, media, info):
+        db = get_db()
+
+        # Remove season info for later use (save separately)
+        info.pop('in_wanted', None)
+        info.pop('in_library', None)
+
+        if not info or len(info) == 0:
+            log.error('Could not update, no show info to work with: %s', media.get('identifier'))
+            return False
+
+        # Update basic info
+        media['info'] = info
+
+    def updateEpisodes(self, media, seasons):
+        # Fetch current season/episode tree
+        show_tree = fireEvent('library.tree', media_id = media['_id'], single = True)
+
+        # Update seasons
+        for season_num in seasons:
+            season_info = seasons[season_num]
+            episodes = season_info.get('episodes', {})
+
+            # Find season that matches number
+            season = find(lambda s: s.get('info', {}).get('number', 0) == season_num, show_tree.get('seasons', []))
+
+            if not season:
+                log.warning('Unable to find season "%s"', season_num)
+                continue
+
+            # Update season
+            fireEvent('show.season.update', season['_id'], info = season_info, single = True)
+
+            # Update episodes
+            for episode_num in episodes:
+                episode_info = episodes[episode_num]
+                episode_info['season_number'] = season_num
+
+                # Find episode that matches number
+                episode = find(lambda s: s.get('info', {}).get('number', 0) == episode_num, season.get('episodes', []))
+
+                if not episode:
+                    log.debug('Creating new episode %s in season %s', (episode_num, season_num))
+                    fireEvent('show.episode.add', season.get('_id'), episode_info, update_after = False, single = True)
+                    continue
+
+                fireEvent('show.episode.update', episode['_id'], info = episode_info, single = True)
+
+    def updateExtras(self, media, info, store=False):
+        db = get_db()
+
+        # Update image file
+        image_urls = info.get('images', [])
+        self.getPoster(media, image_urls)
+
+        if store:
+            db.update(media)
