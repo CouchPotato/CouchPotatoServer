@@ -60,8 +60,9 @@ class TheTVDb(ShowProvider):
             self.tvdb_api_parms['language'] = language
             self._setup()
 
-        search_string = simplifyString(q)
-        cache_key = 'thetvdb.cache.search.%s.%s' % (search_string, limit)
+        query = q
+        #query = simplifyString(query)
+        cache_key = 'thetvdb.cache.search.%s.%s' % (query, limit)
         results = self.getCache(cache_key)
 
         if not results:
@@ -69,9 +70,9 @@ class TheTVDb(ShowProvider):
 
             raw = None
             try:
-                raw = self.tvdb.search(search_string)
+                raw = self.tvdb.search(query)
             except (tvdb_exceptions.tvdb_error, IOError), e:
-                log.error('Failed searching TheTVDB for "%s": %s', (search_string, traceback.format_exc()))
+                log.error('Failed searching TheTVDB for "%s": %s', (query, traceback.format_exc()))
                 return False
 
             results = []
