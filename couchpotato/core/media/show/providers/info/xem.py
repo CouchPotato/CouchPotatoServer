@@ -5,6 +5,8 @@ from couchpotato.core.media.show.providers.base import ShowProvider
 
 log = CPLog(__name__)
 
+autoload = 'Xem'
+
 
 class Xem(ShowProvider):
     '''
@@ -76,8 +78,13 @@ class Xem(ShowProvider):
         self.config['url_all_names']  = u"%(base_url)s/map/allNames?" % self.config
 
     # TODO: Also get show aliases (store as titles)
-    def getShowInfo(self, identifier = None):
+    def getShowInfo(self, identifiers = None):
         if self.isDisabled():
+            return {}
+
+        identifier = identifiers.get('thetvdb')
+
+        if not identifier:
             return {}
 
         cache_key = 'xem.cache.%s' % identifier
@@ -86,65 +93,63 @@ class Xem(ShowProvider):
         if result:
             return result
 
+        result['seasons'] = {}
+
         # Create season/episode and absolute mappings
-        url =  self.config['url_all'] + "id=%s&origin=tvdb" % tryUrlencode(identifier)
+        url = self.config['url_all'] + "id=%s&origin=tvdb" % tryUrlencode(identifier)
         response = self.getJsonData(url)
-        if response:
-            if response.get('result') == 'success':
-                data = response.get('data', None)
-                result = self._parse(data)
+
+        if response and response.get('result') == 'success':
+            data = response.get('data', None)
+            self.parseMaps(result, data)
 
         # Create name alias mappings
-        url =  self.config['url_names'] + "id=%s&origin=tvdb" % tryUrlencode(identifier)
+        url = self.config['url_names'] + "id=%s&origin=tvdb" % tryUrlencode(identifier)
         response = self.getJsonData(url)
-        if response:
-            if response.get('result') == 'success':
-                data = response.get('data', None)
-                result.update({'map_names': data})
+
+        if response and response.get('result') == 'success':
+            data = response.get('data', None)
+            self.parseNames(result, data)
 
         self.setCache(cache_key, result)
         return result
 
-    def getEpisodeInfo(self, identifier = None, params = {}):
-        episode = params.get('episode', None)
-        if episode is None:
+    def getEpisodeInfo(self, identifiers = None, params = {}):
+        episode_number = params.get('episode_number', None)
+        if episode_number is None:
             return False
 
-        season_identifier = params.get('season_identifier', None)
-        if season_identifier is None:
+        season_number = params.get('season_number', None)
+        if season_number is None:
             return False
 
-        episode_identifier = params.get('episode_identifier', None)
-        absolute = params.get('absolute', None)
+        absolute_number = params.get('absolute_number', None)
+        episode_identifier = params.get('episode_identifiers', {}).get('thetvdb')
 
-        # season_identifier must contain the 'show id : season number' since there is no tvdb id
-        # for season and we need a reference to both the show id and season number
-        if season_identifier:
-            try:
-                identifier, season_identifier = season_identifier.split(':')
-                season = int(season_identifier)
-            except: return False
-
-        result = self.getShowInfo(identifier)
+        result = self.getShowInfo(identifiers)
         map = {}
+
         if result:
-            map_episode = result.get('map_episode', {}).get(season, {}).get(episode, {})
+            map_episode = result.get('map_episode', {}).get(season_number, {}).get(episode_number, {})
+
             if map_episode:
                 map.update({'map_episode': map_episode})
 
-            if absolute:
-                map_absolute = result.get('map_absolute', {}).get(absolute, {})
+            if absolute_number:
+                map_absolute = result.get('map_absolute', {}).get(absolute_number, {})
+
                 if map_absolute:
                     map.update({'map_absolute': map_absolute})
 
-            map_names = result.get('map_names', {}).get(toUnicode(season), {})
+            map_names = result.get('map_names', {}).get(toUnicode(season_number), {})
+
             if map_names:
                 map.update({'map_names': map_names})
 
         return map
 
 
-    def _parse(self, data, master = 'tvdb'):
+    def parseMaps(self, result, data, master = 'tvdb'):
         '''parses xem map and returns a custom formatted dict map
 
         To retreive map for scene:
@@ -152,17 +157,44 @@ class Xem(ShowProvider):
             print map['map_episode'][1][1]['scene']['season']
         '''
         if not isinstance(data, list):
-            return {}
+            return
 
-        map = {'map_episode': {}, 'map_absolute': {}}
-        for maps in data:
-            origin = maps.pop(master, None)
+        for episode_map in data:
+            origin = episode_map.pop(master, None)
             if origin is None:
-                continue # No master origin to map to
-            map.get('map_episode').setdefault(origin['season'], {}).setdefault(origin['episode'], maps.copy())
-            map.get('map_absolute').setdefault(origin['absolute'], maps.copy())
+                continue  # No master origin to map to
 
-        return map
+            o_season = origin['season']
+            o_episode = origin['episode']
+
+            # Create season info
+            if o_season not in result['seasons']:
+                result['seasons'][o_season] = {}
+
+            season = result['seasons'][o_season]
+
+            if 'episodes' not in season:
+                season['episodes'] = {}
+
+            # Create episode info
+            if o_episode not in season['episodes']:
+                season['episodes'][o_episode] = {}
+
+            episode = season['episodes'][o_episode]
+            episode['episode_map'] = episode_map
+
+    def parseNames(self, result, data):
+        result['title_map'] = data.pop('all', None)
+
+        for season, title_map in data.items():
+            season = int(season)
+
+            # Create season info
+            if season not in result['seasons']:
+                result['seasons'][season] = {}
+
+            season = result['seasons'][season]
+            season['title_map'] = title_map
 
     def isDisabled(self):
         if __name__ == '__main__':
