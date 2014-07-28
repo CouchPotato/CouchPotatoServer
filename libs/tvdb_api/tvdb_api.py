@@ -705,7 +705,7 @@ class Tvdb:
             for k, v in banners[btype][btype2][bid].items():
                 if k.endswith("path"):
                     new_key = "_%s" % (k)
-                    log().debug("Transforming %s to %s" % (k, new_key))
+                    #log().debug("Transforming %s to %s" % (k, new_key))
                     new_url = self.config['url_artworkPrefix'] % (v)
                     banners[btype][btype2][bid][new_key] = new_url
 
