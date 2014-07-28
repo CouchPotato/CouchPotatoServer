@@ -130,22 +130,17 @@ class TheTVDb(ShowProvider):
 
         return result or {}
 
-    def getSeasonInfo(self, identifier = None, params = {}):
+    def getSeasonInfo(self, identifiers = None, params = {}):
         """Either return a list of all seasons or a single season by number.
         identifier is the show 'id'
         """
-        if not identifier:
-            return False
+        if not identifiers or not identifiers.get('thetvdb'):
+            return None
 
-        season_identifier = params.get('season_identifier', None)
+        season_number = params.get('season_number', None)
+        identifier = tryInt(identifiers.get('thetvdb'))
 
-        # season_identifier must contain the 'show id : season number' since there is no tvdb id
-        # for season and we need a reference to both the show id and season number
-        if season_identifier:
-            try: season_identifier = int(season_identifier.split(':')[1])
-            except: return False
-
-        cache_key = 'thetvdb.cache.%s.%s' % (identifier, season_identifier)
+        cache_key = 'thetvdb.cache.%s.%s' % (identifier, season_number)
         log.debug('Getting SeasonInfo: %s', cache_key)
         result = self.getCache(cache_key) or {}
         if result:
@@ -159,12 +154,12 @@ class TheTVDb(ShowProvider):
 
         result = []
         for number, season in show.items():
-            if season_identifier is not None and number == season_identifier:
-                result = self._parseSeason(show, (number, season))
+            if season_number is not None and number == season_number:
+                result = self._parseSeason(show, number, season)
                 self.setCache(cache_key, result)
                 return result
             else:
-                result.append(self._parseSeason(show, (number, season)))
+                result.append(self._parseSeason(show, number, season))
 
         self.setCache(cache_key, result)
         return result
@@ -173,22 +168,22 @@ class TheTVDb(ShowProvider):
         """Either return a list of all episodes or a single episode.
         If episode_identifer contains an episode number to search for
         """
-        season_identifier = self.getIdentifier(params.get('season_identifier', None))
-        episode_identifier = self.getIdentifier(params.get('episode_identifier', None))
+        season_number = self.getIdentifier(params.get('season_number', None))
+        episode_identifier = self.getIdentifier(params.get('episode_identifiers', None))
         identifier = self.getIdentifier(identifier)
 
-        if not identifier and season_identifier is None:
+        if not identifier and season_number is None:
             return False
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
-        if not identifier and season_identifier:
+        if not identifier and season_number:
             try:
-                identifier, season_identifier = season_identifier.split(':')
-                season_identifier = int(season_identifier)
+                identifier, season_number = season_number.split(':')
+                season_number = int(season_number)
             except: return None
 
-        cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_identifier)
+        cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_number)
         log.debug('Getting EpisodeInfo: %s', cache_key)
         result = self.getCache(cache_key) or {}
         if result:
@@ -202,7 +197,7 @@ class TheTVDb(ShowProvider):
 
         result = []
         for number, season in show.items():
-            if season_identifier is not None and number != season_identifier:
+            if season_number is not None and number != season_number:
                 continue
 
             for episode in season.values():
