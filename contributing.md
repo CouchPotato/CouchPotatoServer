@@ -13,8 +13,8 @@ Lastly, for anything related to CouchPotato, feel free to stop by the [forum](ht
 ## Issues
 Issues are intended for reporting bugs and weird behaviour or suggesting improvements to CouchPotatoServer.
 Before you submit an issue, please go through the following checklist:
- * FILL IN ALL THE FIELDS ASKED FOR, if you don't tell why you didn't or isn't relevant
- * POST MORE THAN A SINGLE LINE, if you do, you'd better have a easy reproducable bug
+ * **FILL IN ALL THE FIELDS ASKED FOR**
+ * **POST MORE THAN A SINGLE LINE LOG**, if you do, you'd better have a easy reproducable bug
  * Search through existing issues (*including closed issues!*) first: you might be able to get your answer there.
  * Double check your issue manually, because it could be an external issue. 
  * Post logs with your issue: Without seeing what is going on, the developers can't reproduce the error.
