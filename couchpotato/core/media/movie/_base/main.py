@@ -46,7 +46,7 @@ class MovieBase(MovieTypeBase):
         })
 
         addEvent('movie.add', self.add)
-        addEvent('movie.update_info', self.updateInfo)
+        addEvent('movie.update', self.update)
         addEvent('movie.update_release_dates', self.updateReleaseDate)
 
     def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
@@ -172,7 +172,7 @@ class MovieBase(MovieTypeBase):
             # Trigger update info
             if added and update_after:
                 # Do full update to get images etc
-                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
+                fireEventAsync('movie.update', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in fireEvent('release.for_media', m['_id'], single = True):
@@ -256,7 +256,7 @@ class MovieBase(MovieTypeBase):
             'success': False,
         }
 
-    def updateInfo(self, media_id = None, identifier = None, default_title = None, extended = False):
+    def update(self, media_id = None, identifier = None, default_title = None, extended = False):
         """
         Update movie information inside media['doc']['info']
 
@@ -337,7 +337,7 @@ class MovieBase(MovieTypeBase):
             media = db.get('id', media_id)
 
             if not media.get('info'):
-                media = self.updateInfo(media_id)
+                media = self.update(media_id)
                 dates = media.get('info', {}).get('release_date')
             else:
                 dates = media.get('info').get('release_date')
