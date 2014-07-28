@@ -160,9 +160,12 @@ class MediaPlugin(MediaBase):
             'media': media,
         }
 
-    def withStatus(self, status, with_doc = True):
+    def withStatus(self, status, types = None, with_doc = True):
 
         db = get_db()
+
+        if types and not isinstance(types, (list, tuple)):
+            types = [types]
 
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
@@ -171,6 +174,10 @@ class MediaPlugin(MediaBase):
                 if with_doc:
                     try:
                         doc = db.get('id', ms['_id'])
+
+                        if types and doc.get('type') not in types:
+                            continue
+
                         yield doc
                     except RecordNotFound:
                         log.debug('Record not found, skipping: %s', ms['_id'])

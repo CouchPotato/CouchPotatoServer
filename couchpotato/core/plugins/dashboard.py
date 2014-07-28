@@ -62,7 +62,7 @@ class Dashboard(Plugin):
             for media_id in active_ids:
                 media = db.get('id', media_id)
 
-                pp = profile_pre.get(media['profile_id'])
+                pp = profile_pre.get(media.get('profile_id'))
                 if not pp: continue
 
                 eta = media['info'].get('release_date', {}) or {}
