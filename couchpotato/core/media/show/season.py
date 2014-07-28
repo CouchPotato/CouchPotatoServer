@@ -15,15 +15,13 @@ class Season(MediaBase):
     def __init__(self):
         addEvent('show.season.add', self.add)
         addEvent('show.season.update', self.update)
+        addEvent('show.season.update_extras', self.updateExtras)
 
     def add(self, parent_id, info = None, update_after = True, status = None):
         if not info: info = {}
 
-        identifiers = info.get('identifiers')
-        try: del info['identifiers']
-        except: pass
-        try: del info['episodes']
-        except: pass
+        identifiers = info.pop('identifiers', None)
+        info.pop('episodes', None)
 
         # Add Season
         season_info = {
@@ -43,6 +41,7 @@ class Season(MediaBase):
         if existing_season:
             s = existing_season['doc']
             s.update(season_info)
+
             season = db.update(s)
         else:
             season = db.insert(season_info)
@@ -50,29 +49,19 @@ class Season(MediaBase):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update', season.get('_id'), identifiers, info, single = True)
+            handle('show.season.update_extras', season, info, store = True, single = True)
 
         return season
 
     def update(self, media_id = None, identifiers = None, info = None):
         if not info: info = {}
 
-        identifiers = info.get('identifiers') or identifiers
-        try: del info['identifiers']
-        except: pass
-        try: del info['episodes']
-        except: pass
-
         if self.shuttingDown():
             return
 
         db = get_db()
 
-        if media_id:
-            season = db.get('id', media_id)
-        else:
-            season = db.get('media', identifiers, with_doc = True)['doc']
-
+        season = db.get('id', media_id)
         show = db.get('id', season['parent_id'])
 
         # Get new info
@@ -81,14 +70,25 @@ class Season(MediaBase):
                 'season_number': season.get('info', {}).get('number', 0)
             }, merge = True)
 
+        identifiers = info.pop('identifiers', None) or identifiers
+        info.pop('episodes', None)
+
         # Update/create media
         season['identifiers'].update(identifiers)
         season.update({'info': info})
+
+        self.updateExtras(season, info)
+
+        db.update(season)
+        return season
+
+    def updateExtras(self, season, info, store=False):
+        db = get_db()
 
         # Get images
         image_urls = info.get('images', [])
         existing_files = season.get('files', {})
         self.getPoster(image_urls, existing_files)
 
-        db.update(season)
-        return season
+        if store:
+            db.update(season)

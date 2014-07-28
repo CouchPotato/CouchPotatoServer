@@ -77,7 +77,6 @@ class Xem(ShowProvider):
         self.config['url_names']  = u"%(base_url)s/map/names?" % self.config
         self.config['url_all_names']  = u"%(base_url)s/map/allNames?" % self.config
 
-    # TODO: Also get show aliases (store as titles)
     def getShowInfo(self, identifiers = None):
         if self.isDisabled():
             return {}
@@ -115,39 +114,30 @@ class Xem(ShowProvider):
         return result
 
     def getEpisodeInfo(self, identifiers = None, params = {}):
-        episode_number = params.get('episode_number', None)
-        if episode_number is None:
+        episode_num = params.get('episode_number', None)
+        if episode_num is None:
             return False
 
-        season_number = params.get('season_number', None)
-        if season_number is None:
+        season_num = params.get('season_number', None)
+        if season_num is None:
             return False
-
-        absolute_number = params.get('absolute_number', None)
-        episode_identifier = params.get('episode_identifiers', {}).get('thetvdb')
 
         result = self.getShowInfo(identifiers)
-        map = {}
 
-        if result:
-            map_episode = result.get('map_episode', {}).get(season_number, {}).get(episode_number, {})
+        if not result:
+            return False
 
-            if map_episode:
-                map.update({'map_episode': map_episode})
+        # Find season
+        if season_num not in result['seasons']:
+            return False
 
-            if absolute_number:
-                map_absolute = result.get('map_absolute', {}).get(absolute_number, {})
+        season = result['seasons'][season_num]
 
-                if map_absolute:
-                    map.update({'map_absolute': map_absolute})
+        # Find episode
+        if episode_num not in season['episodes']:
+            return False
 
-            map_names = result.get('map_names', {}).get(toUnicode(season_number), {})
-
-            if map_names:
-                map.update({'map_names': map_names})
-
-        return map
-
+        return season['episodes'][episode_num]
 
     def parseMaps(self, result, data, master = 'tvdb'):
         '''parses xem map and returns a custom formatted dict map

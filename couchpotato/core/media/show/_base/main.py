@@ -155,7 +155,7 @@ class ShowBase(MediaBase):
         # Trigger update info
         if added and update_after:
             # Do full update to get images etc
-            fireEventAsync('show.update_extras', m, info = info, store = True, on_complete = onComplete)
+            fireEventAsync('show.update_extras', m, info, store = True, on_complete = onComplete)
 
         # Remove releases
         for rel in fireEvent('release.for_media', m['_id'], single = True):

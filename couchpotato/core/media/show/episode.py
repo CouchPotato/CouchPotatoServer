@@ -15,6 +15,7 @@ class Episode(MediaBase):
     def __init__(self):
         addEvent('show.episode.add', self.add)
         addEvent('show.episode.update', self.update)
+        addEvent('show.episode.update_extras', self.updateExtras)
 
     def add(self, parent_id, info = None, update_after = True, status = None):
         if not info: info = {}
@@ -43,6 +44,7 @@ class Episode(MediaBase):
         if existing_episode:
             s = existing_episode['doc']
             s.update(episode_info)
+
             episode = db.update(s)
         else:
             episode = db.insert(episode_info)
@@ -50,16 +52,12 @@ class Episode(MediaBase):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update', episode.get('_id'), identifiers, info, single = True)
+            handle('show.episode.update_extras', episode, info, store = True, single = True)
 
         return episode
 
     def update(self, media_id = None, identifiers = None, info = None):
         if not info: info = {}
-
-        identifiers = info.get('identifiers') or identifiers
-        try: del info['identifiers']
-        except: pass
 
         if self.shuttingDown():
             return
@@ -86,14 +84,24 @@ class Episode(MediaBase):
                 merge = True
             )
 
+        identifiers = info.pop('identifiers', None) or identifiers
+
         # Update/create media
         episode['identifiers'].update(identifiers)
         episode.update({'info': info})
+
+        self.updateExtras(episode, info)
+
+        db.update(episode)
+        return episode
+
+    def updateExtras(self, episode, info, store=False):
+        db = get_db()
 
         # Get images
         image_urls = info.get('images', [])
         existing_files = episode.get('files', {})
         self.getPoster(image_urls, existing_files)
 
-        db.update(episode)
-        return episode
+        if store:
+            db.update(episode)
