@@ -106,7 +106,7 @@ class Matcher(MatcherBase):
             rip = True
 
         # TV Rip
-        elif checkQuality(release_video_info, 'source', ['hdtv', 'pdtv', 'ws']):
+        elif checkQuality(release_video_info, 'source', ['hdtv', 'pdtv', 'dsr']) or checkQuality(release_video_info, 'aspect': 'ws'):
             tv = True
 
         # Web Rip
@@ -131,7 +131,6 @@ class Matcher(MatcherBase):
         elif (rip or codec in ["xvid", "divx", "x264"]) and not hd:
             log.info("this is SDDVD!")
             if quality['identifier'] == "sddvd":
-                log.info('BANG!')
                 return True
         
         # HDTV 
@@ -139,7 +138,6 @@ class Matcher(MatcherBase):
         elif (r720 and tv and (codec == "x264")) and not webrip:
             log.info("this is 720 HDTV!")
             if quality['identifier'] == "hdtv":
-                log.info('BANG!')
                 return True
 
         # RAW-HDTV
@@ -147,7 +145,6 @@ class Matcher(MatcherBase):
         elif ((r720 or r1080) and codec in ["mpeg2", ["mpeg", "2"]]) or (r1080 and tv and codec in ["h264", ["h", "264"]]):
             log.info("this is RAW-HDTV!")
             if quality['identifier'] == "raw_hdtv":
-                log.info('BANG!')
                 return True
         
         # 1080 HDTV
@@ -155,7 +152,6 @@ class Matcher(MatcherBase):
         elif r1080 and tv and codec == "x264":
             log.info('this is 1080 HDTV!')
             if quality['identifier'] == "hdtv_1080p":
-                log.info('BANG!')
                 return True
         
         # 720 WEB-DL
@@ -163,7 +159,6 @@ class Matcher(MatcherBase):
         elif r720 and webrip:
             log.info('this is 720 WEB-DL!')
             if quality['identifier'] == "webdl_720p":
-                log.info('BANG!')
                 return True
 
         # 1080 WEB-DL
@@ -171,7 +166,6 @@ class Matcher(MatcherBase):
         elif r1080 and webrip:
             log.info('this is 1080 WEB-DL!')
             if quality['identifier'] == "webdl_1080p":
-                log.info('BANG!')
                 return True
 
         # 720 BLURAY
@@ -179,7 +173,6 @@ class Matcher(MatcherBase):
         elif r720 and rip and codec == "x264":
             log.info('this is 720 BluRay!')
             if quality['identifier'] == "bluray_720p":
-                log.info('BANG!')
                 return True
 
         # 1080 BLURAY
@@ -187,7 +180,6 @@ class Matcher(MatcherBase):
         elif r1080 and rip and codec == "x264":
             log.info('this is 1080 BluRay!')
             if quality['identifier'] == "bluray_1080p":
-                log.info('BANG!')
                 return True
 
         else:
