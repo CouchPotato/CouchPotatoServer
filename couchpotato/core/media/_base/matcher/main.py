@@ -113,6 +113,7 @@ class Matcher(MatcherBase):
         elif checkQuality(release_video_info, 'source', [['web', 'dl'], 'itunes']):
             webrip = True
 
+        log.info('SD:%s HD: %s, 720: %s, 1080: %s, rip: %s, tv: %s, webrip: %s', (sd, hd, r720, r1080, rip, tv, webrip))
         # SDTV
         # checkName( SOURCE (pdtv|hdtv|dsr|tvrip) AND CODEC (xvid|x264)"], all)
         # and not checkName RESOLUTION (["(720|1080)[pi]"], all)
@@ -120,14 +121,14 @@ class Matcher(MatcherBase):
         # 
         # checkName([SOURCE "web.dl|webrip", CODEC "xvid|x264|h.?264"], all)
         # not checkName RESOLUTION (["(720|1080)[pi]"], all): 
-        if (tv and codec in ["xvid", "x264"] and not hd) or (webrip and codec in ["xvid", "x264", "h264"] and not hd):
+        if (tv and (codec in ["xvid", "x264"]) and not hd) or (webrip and (codec in ["xvid", "x264", "h264"]) and not hd):
             log.info("this is SDTV!")
             if quality['identifier'] == "sdtv":
                 return True
         
         # SDDVD
         # checkName(["(dvdrip|bdrip)(.ws)?.(xvid|divx|x264)"], any) and not checkName(["(720|1080)[pi]"], all):
-        elif rip or codec in ["xvid", "divx", "x264"] and not hd:
+        elif (rip or codec in ["xvid", "divx", "x264"]) and not hd:
             log.info("this is SDDVD!")
             if quality['identifier'] == "sddvd":
                 log.info('BANG!')
@@ -135,7 +136,7 @@ class Matcher(MatcherBase):
         
         # HDTV 
         # checkName(["720p", "hdtv", "x264"], all) or checkName(["hr.ws.pdtv.x264"], any) and not checkName(["(1080)[pi]"], all):
-        elif r720 and tv or codec == "x264" and not webrip:
+        elif (r720 and tv and (codec == "x264")) and not webrip:
             log.info("this is 720 HDTV!")
             if quality['identifier'] == "hdtv":
                 log.info('BANG!')
@@ -143,7 +144,7 @@ class Matcher(MatcherBase):
 
         # RAW-HDTV
         # checkName(["720p|1080i", "hdtv", "mpeg-?2"], all) or checkName(["1080[pi].hdtv", "h.?264"], all):
-        elif (r720 or r1080 and codec in ["mpeg2", ["mpeg", "2"]]) or (r1080 and tv and codec in ["h264", ["h", "264"]]):
+        elif ((r720 or r1080) and codec in ["mpeg2", ["mpeg", "2"]]) or (r1080 and tv and codec in ["h264", ["h", "264"]]):
             log.info("this is RAW-HDTV!")
             if quality['identifier'] == "raw_hdtv":
                 log.info('BANG!')
