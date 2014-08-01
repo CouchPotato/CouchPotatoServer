@@ -71,7 +71,7 @@ class Matcher(MatcherBase):
 
         return False
 
-    def correctQuality(self, chain, quality, quality_map):
+    def correctQuality(self, chain, quality):
         log.info('quality: %s', quality['identifier'])
         release_video_info = {}
         for link in chain.info['video']: 
