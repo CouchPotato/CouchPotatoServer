@@ -79,117 +79,108 @@ class Matcher(MatcherBase):
         codec = checkCodec(release_video_info)
         log.info('release_video_info: %s', release_video_info)
         
-        sd, hd, r720, r1080, rip, tv, webrip = (False,)*7
+        hd, interlaced, pdtv, r720, r1080, rip, sd, tv, webrip = (False,) * 9
 
         # 720 Resolution
-        if checkQuality(release_video_info, 'resolution', ["720p","720i"]):
+        if checkQuality(release_video_info, 'resolution', ['720i', '720p']):
             hd = True
             r720 = True
 
         # 1080 resolution
-        elif checkQuality(release_video_info, 'resolution', ["1080p","1080i"]):
+        elif checkQuality(release_video_info, 'resolution', ['1080i', '1080p']):
             hd = True
             r1080 = True
 
         # SD resolutions
-        elif checkQuality(release_video_info, 'resolution', ["480p","480i","576p","576i"]):
+        elif checkQuality(release_video_info, 'resolution', ['480i', '480p', '576i', '576p']):
             sd = True
 
         # default to sd for unknown resolution
         else:
             sd = True
-
+        
+        # check if interlaced
+        if checkQuality(release_video_info, 'resolution', ['480i', '576i', '720i', '1080i']):
+            interlaced = True
+        
         # Sources
-
         # Disc Rip        
-        if checkQuality(release_video_info, 'source', ['dvdrip', 'bdrip', 'brrip', 'bluray', ['blu', 'ray']]):
+        if checkQuality(release_video_info, 'source', ['dvdrip', 'bdrip', 'brrip', 'bluray', 'hddvd', ['blu', 'ray'], ['hd', 'dvd']]):
             rip = True
 
         # TV Rip
-        elif checkQuality(release_video_info, 'source', ['hdtv', 'pdtv', 'dsr']) or checkQuality(release_video_info, 'aspect': 'ws'):
+        elif checkQuality(release_video_info, 'source', ['dsr', 'hdtv', 'sdtv', 'tvrip']):
             tv = True
 
         # Web Rip
         elif checkQuality(release_video_info, 'source', [['web', 'dl'], 'itunes']):
             webrip = True
 
-        log.info('SD:%s HD: %s, 720: %s, 1080: %s, rip: %s, tv: %s, webrip: %s', (sd, hd, r720, r1080, rip, tv, webrip))
-        # SDTV
-        # checkName( SOURCE (pdtv|hdtv|dsr|tvrip) AND CODEC (xvid|x264)"], all)
-        # and not checkName RESOLUTION (["(720|1080)[pi]"], all)
-        # and not checkName(["hr.ws.pdtv.x264"], any):
-        # 
-        # checkName([SOURCE "web.dl|webrip", CODEC "xvid|x264|h.?264"], all)
-        # not checkName RESOLUTION (["(720|1080)[pi]"], all): 
-        if (tv and (codec in ["xvid", "x264"]) and not hd) or (webrip and (codec in ["xvid", "x264", "h264"]) and not hd):
-            log.info("this is SDTV!")
-            if quality['identifier'] == "sdtv":
-                return True
-        
-        # SDDVD
-        # checkName(["(dvdrip|bdrip)(.ws)?.(xvid|divx|x264)"], any) and not checkName(["(720|1080)[pi]"], all):
-        elif (rip or codec in ["xvid", "divx", "x264"]) and not hd:
-            log.info("this is SDDVD!")
-            if quality['identifier'] == "sddvd":
-                return True
-        
-        # HDTV 
-        # checkName(["720p", "hdtv", "x264"], all) or checkName(["hr.ws.pdtv.x264"], any) and not checkName(["(1080)[pi]"], all):
-        elif (r720 and tv and (codec == "x264")) and not webrip:
-            log.info("this is 720 HDTV!")
-            if quality['identifier'] == "hdtv":
+        if checkQuality(release_video_info, 'source', ['pdtv']):
+            pdtv = True
+
+        # Temporary, remove the following line when finished:
+        log.info('SD:%s HD: %s, interlaced: %s, pdtv: %s, r720: %s, r1080: %s, rip %s, tv %s, webrip: %s', (sd, hd, interlaced, pdtv, r720, r1080, rip, tv, webrip))
+
+        # sdtv
+        if tv and (codec in ['h264', ['h', '264'], 'xvid', 'x264']) and not hd:
+            log.info('sdtv')
+            if quality['identifier'] == 'sdtv':
                 return True
 
-        # RAW-HDTV
-        # checkName(["720p|1080i", "hdtv", "mpeg-?2"], all) or checkName(["1080[pi].hdtv", "h.?264"], all):
-        elif ((r720 or r1080) and codec in ["mpeg2", ["mpeg", "2"]]) or (r1080 and tv and codec in ["h264", ["h", "264"]]):
-            log.info("this is RAW-HDTV!")
-            if quality['identifier'] == "raw_hdtv":
+        elif tv and (codec in ['xvid', 'x264']) and not hd and not pdtv:
+            log.info('sdtv2')
+            if quality['identifier'] == 'sdtv':
+                return True
+
+        # sd_dvd
+        elif (rip or (codec in ['xvid', 'divx', 'x264'])) and not hd:
+            log.info('sd_dvd')
+            if quality['identifier'] == 'sd_dvd':
                 return True
         
-        # 1080 HDTV
-        # checkName(["1080p", "hdtv", "x264"], all):
-        elif r1080 and tv and codec == "x264":
-            log.info('this is 1080 HDTV!')
-            if quality['identifier'] == "hdtv_1080p":
+        # hdtv
+        elif r720 and tv and (codec == 'x264') and not webrip and not pdtv:
+            log.info('hdtv')
+            if quality['identifier'] == 'hdtv':
+                return True
+
+        # raw_hdtv
+        elif ((r720 or (r1080 and interlaced)) and (codec in ['mpeg2', ['mpeg', '2']])) or (r1080 and tv and codec in ['h264', ['h', '264']]):
+            log.info('raw_hdtv')
+            if quality['identifier'] == 'raw_hdtv':
                 return True
         
-        # 720 WEB-DL
-        # checkName(["720p", "web.dl|webrip"], all) or checkName(["720p", "itunes", "h.?264"], all):
-        elif r720 and webrip:
-            log.info('this is 720 WEB-DL!')
-            if quality['identifier'] == "webdl_720p":
+        # hdtv_1080p
+        elif r1080 and not interlaced and tv and (codec == 'x264'):
+            log.info('hdtv_1080p')
+            if quality['identifier'] == 'hdtv_1080p':
+                return True
+        
+        # webdl_720p
+        elif r720 and webrip and not interlaced:
+            log.info('webdl_720p')
+            if quality['identifier'] == 'webdl_720p':
                 return True
 
-        # 1080 WEB-DL
-        # checkName(["1080p", "web.dl|webrip"], all) or checkName(["1080p", "itunes", "h.?264"], all)
-        elif r1080 and webrip:
-            log.info('this is 1080 WEB-DL!')
-            if quality['identifier'] == "webdl_1080p":
+        # webdl_1080p
+        elif r1080 and webrip and not interlaced:
+            log.info('webdl_1080p')
+            if quality['identifier'] == 'webdl_1080p':
                 return True
 
-        # 720 BLURAY
-        # checkName(["720p", "bluray|hddvd", "x264"], all):
-        elif r720 and rip and codec == "x264":
-            log.info('this is 720 BluRay!')
-            if quality['identifier'] == "bluray_720p":
+        # bluray_720p
+        elif r720 and rip and not interlaced:
+            log.info('bluray_720p')
+            if quality['identifier'] == 'bluray_720p':
                 return True
 
-        # 1080 BLURAY
-        # checkName(["1080p", "bluray|hddvd", "x264"], all):
-        elif r1080 and rip and codec == "x264":
-            log.info('this is 1080 BluRay!')
-            if quality['identifier'] == "bluray_1080p":
+        # bluray_1080p
+        elif r1080 and rip and not interlaced:
+            log.info('bluray_1080p')
+            if quality['identifier'] == 'bluray_1080p':
                 return True
 
         else:
             log.info('unknown quality')
-            log.info('SD: %s', sd)
-            log.info('HD: %s', hd)
-            log.info('720: %s', r720)
-            log.info('1080: %s', r1080)
-            log.info('DiscRip: %s', rip)
-            log.info('TVRip: %s', tv)
-            log.info('WebRip: %s', webrip)
-            log.info('codec: %s', codec)
         return False

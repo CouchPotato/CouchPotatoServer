@@ -50,7 +50,7 @@ class QualityPlugin(Plugin):
         # HDTV
         {'identifier': 'hdtv', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'alternative': [], 'allow': [], 'ext':['mpg', 'mpeg', 'm2v', 'avi']},
         # SDDVD
-        {'identifier': 'sddvd', 'hd': False, 'size': (100, 1000), 'label': 'SDDVD', 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
+        {'identifier': 'sd_dvd', 'hd': False, 'size': (100, 1000), 'label': 'SDDVD', 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
         # SDTV
         {'identifier': 'sdtv', 'hd': False, 'size': (100, 1000), 'label': 'SDTV', 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
     ]
