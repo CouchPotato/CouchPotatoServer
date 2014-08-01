@@ -234,8 +234,9 @@ class Release(Plugin):
         db = get_db()
 
         try:
-            rel = db.get('id', id, with_doc = True)
-            self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
+            if id:
+                rel = db.get('id', id, with_doc = True)
+                self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
 
             return {
                 'success': True
