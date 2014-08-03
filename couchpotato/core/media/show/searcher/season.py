@@ -57,7 +57,7 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
             quality_order = fireEvent('quality.order', single = True)
 
         # Find 'active' episodes
-        episodes = media.get('episodes', [])
+        episodes = related['episodes']
         episodes_active = []
 
         for episode in episodes:
