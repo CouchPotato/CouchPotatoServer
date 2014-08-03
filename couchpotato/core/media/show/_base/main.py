@@ -4,11 +4,9 @@ import traceback
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import getTitle, find
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from qcond import QueryCondenser
 
 
 log = CPLog(__name__)
@@ -110,7 +108,7 @@ class ShowBase(MediaBase):
 
         new = False
         try:
-            m = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True, single = True)['doc']
+            m = db.get('media', 'thetvdb-%s' % params.get('identifiers', {}).get('thetvdb'), with_doc = True)['doc']
         except:
             new = True
             m = db.insert(media)
@@ -155,7 +153,7 @@ class ShowBase(MediaBase):
         # Trigger update info
         if added and update_after:
             # Do full update to get images etc
-            fireEventAsync('show.update_extras', m, info, store = True, on_complete = onComplete)
+            fireEventAsync('show.update_extras', m.copy(), info, store = True, on_complete = onComplete)
 
         # Remove releases
         for rel in fireEvent('release.for_media', m['_id'], single = True):

@@ -135,7 +135,7 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
                 # Remove releases that aren't found anymore
                 for release in releases:
                     if release.get('status') == 'available' and release.get('identifier') not in found_releases:
-                        fireEvent('release.delete', release.get('id'), single = True)
+                        fireEvent('release.delete', release.get('_id'), single = True)
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (q_identifier, query))
                 fireEvent('media.restatus', media['_id'])
