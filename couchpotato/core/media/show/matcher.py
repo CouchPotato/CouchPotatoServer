@@ -107,6 +107,7 @@ class Episode(Base):
 
         return True
 
+
 class Season(Base):
     type = 'show.season'
 
@@ -121,7 +122,7 @@ class Season(Base):
             log.info2('Wrong: releases with identifier ranges are not supported yet')
             return False
 
-        required = fireEvent('media.identifier', media['library'], single = True)
+        required = fireEvent('library.identifier', media, single = True)
 
         if identifier != required:
             log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))
