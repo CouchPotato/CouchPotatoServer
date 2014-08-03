@@ -1,5 +1,5 @@
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import possibleTitles
+from couchpotato.core.helpers.variable import possibleTitles, checkQuality, checkCodec
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.matcher.base import MatcherBase
 from caper import Caper
@@ -27,7 +27,7 @@ class Matcher(MatcherBase):
         return self.caper.parse(name, parser)
 
     def match(self, release, media, quality):
-        match = fireEvent('matcher.parse', release['name'], single = True)
+        match = fireEvent('matcher.parse', release['name'].lower(), single = True)
 
         if len(match.chains) < 1:
             log.info2('Wrong: %s, unable to parse release name (no chains)', release['name'])
@@ -71,19 +71,102 @@ class Matcher(MatcherBase):
 
         return False
 
-    def correctQuality(self, chain, quality, quality_map):
-        if quality['identifier'] not in quality_map:
-            log.info2('Wrong: unknown preferred quality %s', quality['identifier'])
-            return False
+    def correctQuality(self, chain, quality):
+        release_video_info = {}
+        for link in chain.info['video']: 
+            release_video_info.update(link)
+        codec = checkCodec(release_video_info)
+        log.info('release_video_info: %s', release_video_info)
+        
+        hd, interlaced, pdtv, r720, r1080, rip, sd, tv, webrip = (False,) * 9
 
-        if 'video' not in chain.info:
-            log.info2('Wrong: no video tags found')
-            return False
+        # 720 Resolution
+        if checkQuality(release_video_info, 'resolution', ['720i', '720p']):
+            hd = True
+            r720 = True
 
-        video_tags = quality_map[quality['identifier']]
+        # 1080 resolution
+        elif checkQuality(release_video_info, 'resolution', ['1080i', '1080p']):
+            hd = True
+            r1080 = True
 
-        if not self.chainMatch(chain, 'video', video_tags):
-            log.info2('Wrong: %s tags not in chain', video_tags)
-            return False
+        # SD resolutions
+        elif checkQuality(release_video_info, 'resolution', ['480i', '480p', '576i', '576p']):
+            sd = True
 
-        return True
+        # default to sd for unknown resolution
+        else:
+            sd = True
+        
+        # check if interlaced
+        if checkQuality(release_video_info, 'resolution', ['480i', '576i', '720i', '1080i']):
+            interlaced = True
+        
+        # Sources
+        # Disc Rip        
+        if checkQuality(release_video_info, 'source', ['dvdrip', 'bdrip', 'brrip', 'bluray', 'hddvd', ['blu', 'ray'], ['hd', 'dvd']]):
+            rip = True
+
+        # TV Rip
+        elif checkQuality(release_video_info, 'source', ['dsr', 'hdtv', 'sdtv', 'tvrip']):
+            tv = True
+
+        # Web Rip
+        elif checkQuality(release_video_info, 'source', [['web', 'dl'], 'itunes']):
+            webrip = True
+
+        if checkQuality(release_video_info, 'source', ['pdtv']):
+            pdtv = True
+
+        # sdtv
+        if tv and (codec in ['h264', ['h', '264'], 'xvid', 'x264']) and not hd:
+            if quality['identifier'] == 'sdtv':
+                return True
+
+        elif tv and (codec in ['xvid', 'x264']) and not hd and not pdtv:
+            if quality['identifier'] == 'sdtv':
+                return True
+
+        # sd_dvd
+        elif (rip or (codec in ['xvid', 'divx', 'x264'])) and not hd:
+            if quality['identifier'] == 'sd_dvd':
+                return True
+        
+        # hdtv
+        elif r720 and tv and (codec == 'x264') and not webrip and not pdtv:
+            if quality['identifier'] == 'hdtv':
+                return True
+
+        # raw_hdtv
+        elif ((r720 or (r1080 and interlaced)) and (codec in ['mpeg2', ['mpeg', '2']])) or (r1080 and tv and codec in ['h264', ['h', '264']]):
+            if quality['identifier'] == 'raw_hdtv':
+                return True
+        
+        # hdtv_1080p
+        elif r1080 and not interlaced and tv and (codec == 'x264'):
+            if quality['identifier'] == 'hdtv_1080p':
+                return True
+        
+        # webdl_720p
+        elif r720 and webrip and not interlaced:
+            if quality['identifier'] == 'webdl_720p':
+                return True
+
+        # webdl_1080p
+        elif r1080 and webrip and not interlaced:
+            if quality['identifier'] == 'webdl_1080p':
+                return True
+
+        # bluray_720p
+        elif r720 and rip and not interlaced:
+            if quality['identifier'] == 'bluray_720p':
+                return True
+
+        # bluray_1080p
+        elif r1080 and rip and not interlaced:
+            if quality['identifier'] == 'bluray_1080p':
+                return True
+
+        else:
+            log.info('unknown quality')
+        return False

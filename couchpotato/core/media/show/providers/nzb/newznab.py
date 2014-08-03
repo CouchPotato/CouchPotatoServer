@@ -34,16 +34,15 @@ class Season(SeasonProvider, Base):
 
 class Episode(EpisodeProvider, Base):
 
-    def buildUrl(self, media, api_key):
-        search_title = fireEvent('media.search_query', media['show'], include_identifier = False, single = True)
-        identifier = fireEvent('media.identifier', media, single = True)
+    def buildUrl(self, media, host):
+        related = fireEvent('library.related', media, single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': search_title,
-            'season': identifier['season'],
-            'ep': identifier['episode'],
-            'apikey': api_key,
+            'apikey': host['api_key'],
+            'q': related['show']['title'],
+            'season': related['season']['info']['number'],
+            'ep': media['info']['number'],
             'extended': 1
         })
 

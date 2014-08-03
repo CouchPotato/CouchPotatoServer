@@ -34,23 +34,25 @@ class QualityPlugin(Plugin):
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]},
 
-        # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
-        # BluRay
+        # TODO this is temporary. Some of the filesizes and extensions might not be correct.
+        # 1080P BLURAY
         {'identifier': 'bluray_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        # 720P BLURAY
         {'identifier': 'bluray_720p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BDRip
-        {'identifier': 'bdrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bdrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BRRip
-        {'identifier': 'brrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'brrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # WEB-DL
-        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_480p', 'hd': True, 'size': (100, 5000), 'label': 'WEB-DL - 480p', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        # 1080P WEB-DL
+        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'm4v']},      
+        # 720P WEB-DL
+        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'm4v']},
+        # 1080P HDTV
+        {'identifier': 'hdtv_1080p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        # RAW-HDTV
+        {'identifier': 'raw_hdtv', 'hd': True, 'size': (800, 5000), 'label': 'RAW-HDTV', 'alternative': [], 'allow': [], 'ext':['mpg', 'mpeg', 'm2v', 'avi']},
         # HDTV
-        {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
+        {'identifier': 'hdtv', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'alternative': [], 'allow': [], 'ext':['mpg', 'mpeg', 'm2v', 'avi']},
+        # SDDVD
+        {'identifier': 'sd_dvd', 'hd': False, 'size': (100, 1000), 'label': 'SDDVD', 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
+        # SDTV
+        {'identifier': 'sdtv', 'hd': False, 'size': (100, 1000), 'label': 'SDTV', 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {

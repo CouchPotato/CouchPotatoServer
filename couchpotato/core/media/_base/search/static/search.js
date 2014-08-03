@@ -11,7 +11,7 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input', {
-					'placeholder': 'Search & add a new media',
+					'placeholder': 'Search & add new media',
 					'events': {
 						'input': self.keyup.bind(self),
 						'paste': self.keyup.bind(self),

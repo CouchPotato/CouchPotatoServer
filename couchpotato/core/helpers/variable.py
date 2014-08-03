@@ -388,3 +388,22 @@ def find(func, iterable):
             return item
 
     return None
+
+
+def checkQuality(check, keyname, namelist):
+    try:
+        if check[keyname] in namelist:
+            return True
+        else:
+            return False
+    except KeyError:
+        return False
+
+
+def checkCodec(check):
+    try:
+        codec = check['codec']
+        return codec
+
+    except KeyError:
+        return
