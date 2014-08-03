@@ -55,7 +55,7 @@ class Library(LibraryBase):
         )
 
     def related(self, media):
-        result = {media['type']: media}
+        result = {self.key(media['type']): media}
 
         db = get_db()
         cur = media
@@ -63,9 +63,17 @@ class Library(LibraryBase):
         while cur and cur.get('parent_id'):
             cur = db.get('id', cur['parent_id'])
 
-            parts = cur['type'].split('.')
+            result[self.key(cur['type'])] = cur
 
-            result[parts[-1]] = cur
+        children = db.get_many('media_children', media['_id'], with_doc = True)
+
+        for item in children:
+            key = self.key(item['doc']['type']) + 's'
+
+            if key not in result:
+                result[key] = []
+
+            result[key].append(item['doc'])
 
         return result
 
@@ -94,8 +102,7 @@ class Library(LibraryBase):
 
         # Build children arrays
         for item in items:
-            parts = item['doc']['type'].split('.')
-            key = parts[-1] + 's'
+            key = self.key(item['doc']['type']) + 's'
 
             if key not in result:
                 result[key] = {}
@@ -115,3 +122,7 @@ class Library(LibraryBase):
         result['releases'] = fireEvent('release.for_media', result['_id'], single = True)
 
         return result
+
+    def key(self, media_type):
+        parts = media_type.split('.')
+        return parts[-1]
