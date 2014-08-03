@@ -54,36 +54,26 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
         fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['_id'], data = True, message = 'Searching for "%s"' % show_title)
 
-        media = self.extendShow(media)
+        show_tree = fireEvent('library.tree', media, single = True)
 
         db = get_db()
 
         profile = db.get('id', media['profile_id'])
         quality_order = fireEvent('quality.order', single = True)
 
-        seasons = media.get('seasons', {})
-        for sx in seasons:
+        for season in show_tree.get('seasons', []):
+            if not season.get('info'):
+                continue
 
-            # Skip specials for now TODO: set status for specials to skipped by default
-            if sx == 0: continue
+            # Skip specials (and seasons missing 'number') for now
+            # TODO: set status for specials to skipped by default
+            if not season['info'].get('number'):
+                continue
 
-            season = seasons.get(sx)
+            # Check if full season can be downloaded
+            fireEvent('show.season.searcher.single', season, profile, quality_order, search_protocols, manual)
 
-            # Check if full season can be downloaded TODO: add
-            season_success = fireEvent('show.season.searcher.single', season, media, profile)
-
-            # Do each episode seperately
-            if not season_success:
-                episodes = season.get('episodes', {})
-                for ex in episodes:
-                    episode = episodes.get(ex)
-
-                    fireEvent('show.episode.searcher.single', episode, season, media, profile, quality_order, search_protocols)
-
-                    # TODO
-                    return
-
-            # TODO
+            # TODO (testing) only snatch one season
             return
 
         fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['_id'], data = True)

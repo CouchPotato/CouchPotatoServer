@@ -47,21 +47,9 @@ var Episodes = new Class({
 
     createSeason: function(season) {
         var self = this,
-            title = '';
+            s = new Season(self.show, self.options, season);
 
-        if(season.info.number) {
-            title = 'Season ' + season.info.number;
-        } else {
-            // Season 0 / Specials
-            title = 'Specials';
-        }
-
-        season['el'] = new Element('div', {
-            'class': 'item head',
-            'id': 'season_'+season._id
-        }).adopt(
-            new Element('span.name', {'text': title})
-        ).inject(self.episodes_container);
+        $(s).inject(self.episodes_container);
     },
 
     createEpisode: function(episode){

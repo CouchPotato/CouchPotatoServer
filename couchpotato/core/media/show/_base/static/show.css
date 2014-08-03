@@ -616,7 +616,7 @@
 				.shows .options .table .item:nth-child(even) {
 					background: rgba(255,255,255,0.05);
 				}
-				.shows .options .table .item:not(.head):hover {
+				.shows .options .table .item:not(.head):not(.data):hover {
 					background: rgba(255,255,255,0.03);
 				}
 
@@ -717,6 +717,10 @@
                     transition: all .6s cubic-bezier(0.9,0,0.1,1);
                 }
 
+                .shows .list .episodes .item.data {
+                    background: none;
+                }
+
                     .shows .list .episodes .item.data span.episode {
                         width: 40px;
                         padding: 0 10px;
@@ -733,6 +737,31 @@
                     .shows .list .episodes .item.data span.quality {
                         bottom: auto;
                     }
+
+                .shows .list .episodes .item.season:hover {
+                    background: none !important;
+                }
+
+                .shows .list .episodes .item.season .data {
+                    padding-top: 4px;
+                    padding-bottom: 4px;
+                    height: auto;
+
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+
+                    .shows .list .episodes .item.season .data span.name {
+                        width: 400px;
+                    }
+
+                    .shows .list .episodes .item.season .data span.quality {
+                        opacity: 0.6;
+                    }
+
+                        .shows .list .episodes .item.season:hover .data span.quality {
+                            opacity: 1;
+                        }
 
                 .shows .list .episodes .episode-options {
                     display: block;
@@ -765,16 +794,44 @@
                         width: 85px;
                     }
 
-                .shows .list .episodes .episode-actions {
+                .shows .list .episodes .item-actions {
                     position: absolute;
                     width: auto;
                     right: 0;
-                    top: 0;
+
+                    display: none;
+                    opacity: 0;
 
                     border-left: none;
                 }
 
-                    .shows .list .show .episodes .episode-actions .refresh {
+                .shows .list .episodes .item:hover .item-actions {
+                    display: inline-block;
+                    opacity: 1;
+                }
+
+                    .shows .list .episodes .item:hover .item-action {
+                        opacity: 0.6;
+                    }
+
+                    .shows .list .episodes .item .item-action {
+                        display: inline-block;
+                        height: 22px;
+                        min-width: 33px;
+
+                        line-height: 26px;
+                        text-align: center;
+                        font-size: 13px;
+
+                        margin-left: 1px;
+                        padding: 0 5px;
+                    }
+
+                    .shows .list .episodes .item .item-action:hover {
+                        opacity: 1;
+                    }
+
+                    .shows .list .show .episodes .refresh {
                         color: #cbeecc;
                     }
 

@@ -1,4 +1,4 @@
-var Episode = new Class({
+var Season = new Class({
 
     Extends: BlockBase,
 
@@ -14,7 +14,7 @@ var Episode = new Class({
 
         self.profile = self.show.profile;
 
-        self.el = new Element('div.item.episode').adopt(
+        self.el = new Element('div.item.season').adopt(
             self.detail = new Element('div.item.data')
         );
 
@@ -24,12 +24,10 @@ var Episode = new Class({
     create: function(){
         var self = this;
 
-        self.detail.set('id', 'episode_'+self.data._id);
+        self.detail.set('id', 'season_'+self.data._id);
 
         self.detail.adopt(
-            new Element('span.episode', {'text': (self.data.info.number || 0)}),
             new Element('span.name', {'text': self.getTitle()}),
-            new Element('span.firstaired', {'text': self.data.info.firstaired}),
 
             self.quality = new Element('span.quality', {
                 'events': {
@@ -102,10 +100,11 @@ var Episode = new Class({
 
         var title = '';
 
-        if(self.data.info.titles && self.data.info.titles.length > 0) {
-            title = self.data.info.titles[0];
+        if(self.data.info.number) {
+            title = 'Season ' + self.data.info.number;
         } else {
-            title = 'Episode ' + self.data.info.number;
+            // Season 0 / Specials
+            title = 'Specials';
         }
 
         return title;
