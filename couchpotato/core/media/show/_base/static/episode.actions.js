@@ -2,7 +2,7 @@ var EpisodeAction = new Class({
 
     Implements: [Options],
 
-    class_name: 'action icon2',
+    class_name: 'item-action icon2',
 
     initialize: function(episode, options){
         var self = this;
