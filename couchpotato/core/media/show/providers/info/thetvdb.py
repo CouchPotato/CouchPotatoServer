@@ -12,7 +12,6 @@ from couchpotato.core.media.show.providers.base import ShowProvider
 from tvdb_api import tvdb_exceptions
 from tvdb_api.tvdb_api import Tvdb, Show
 
-
 log = CPLog(__name__)
 
 autoload = 'TheTVDb'
@@ -26,8 +25,6 @@ class TheTVDb(ShowProvider):
     # TODO: Expose apikey in setting so it can be changed by user
 
     def __init__(self):
-        addEvent('info.search', self.search, priority = 1)
-        addEvent('show.search', self.search, priority = 1)
         addEvent('show.info', self.getShowInfo, priority = 1)
         addEvent('season.info', self.getSeasonInfo, priority = 1)
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
@@ -43,57 +40,6 @@ class TheTVDb(ShowProvider):
     def _setup(self):
         self.tvdb = Tvdb(**self.tvdb_api_parms)
         self.valid_languages = self.tvdb.config['valid_languages']
-
-    def search(self, q, limit = 12, language = 'en'):
-        ''' Find show by name
-        show = {    'id': 74713,
-                    'language': 'en',
-                    'lid': 7,
-                    'seriesid': '74713',
-                    'seriesname': u'Breaking Bad',}
-        '''
-
-        if self.isDisabled():
-            return False
-
-        if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
-            self.tvdb_api_parms['language'] = language
-            self._setup()
-
-        query = q
-        #query = simplifyString(query)
-        cache_key = 'thetvdb.cache.search.%s.%s' % (query, limit)
-        results = self.getCache(cache_key)
-
-        if not results:
-            log.debug('Searching for show: %s', q)
-
-            raw = None
-            try:
-                raw = self.tvdb.search(query)
-            except (tvdb_exceptions.tvdb_error, IOError), e:
-                log.error('Failed searching TheTVDB for "%s": %s', (query, traceback.format_exc()))
-                return False
-
-            results = []
-            if raw:
-                try:
-                    nr = 0
-                    for show_info in raw:
-
-                        results.append(self._parseShow(show_info))
-                        nr += 1
-                        if nr == limit:
-                            break
-
-                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
-                    self.setCache(cache_key, results)
-                    return results
-                except (tvdb_exceptions.tvdb_error, IOError), e:
-                    log.error('Failed parsing TheTVDB for "%s": %s', (q, traceback.format_exc()))
-                    return False
-
-        return results
 
     def getShow(self, identifier = None):
         show = None
@@ -400,9 +346,9 @@ class TheTVDb(ShowProvider):
     def isDisabled(self):
         if self.conf('api_key') == '':
             log.error('No API key provided.')
-            True
+            return True
         else:
-            False
+            return False
 
 
 config = [{
