@@ -8,6 +8,7 @@ var QualityBase = new Class({
 
 		self.qualities = data.qualities;
 
+		self.profiles_list = null;
 		self.profiles = [];
 		Array.each(data.profiles, self.createProfilesClass.bind(self));
 
@@ -29,9 +30,14 @@ var QualityBase = new Class({
 	},
 
 	getQuality: function(identifier){
-		return this.qualities.filter(function(q){
-			return q.identifier == identifier;
-		}).pick();
+		try {
+			return this.qualities.filter(function(q){
+				return q.identifier == identifier;
+			}).pick();
+		}
+		catch(e){}
+
+		return {}
 	},
 
 	addSettings: function(){
@@ -101,14 +107,13 @@ var QualityBase = new Class({
 	createProfileOrdering: function(){
 		var self = this;
 
-		var profile_list;
 		self.settings.createGroup({
 			'label': 'Profile Defaults',
-			'description':  '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
+			'description': '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
 		}).adopt(
 			new Element('.ctrlHolder#profile_ordering').adopt(
 				new Element('label[text=Order]'),
-				profile_list = new Element('ul'),
+				self.profiles_list = new Element('ul'),
 				new Element('p.formHint', {
 					'html': 'Change the order the profiles are in the dropdown list. Uncheck to hide it completely.<br />First one will be default.'
 				})
@@ -128,7 +133,7 @@ var QualityBase = new Class({
 					'text': profile.data.label
 				}),
 				new Element('span.handle')
-			).inject(profile_list);
+			).inject(self.profiles_list);
 
 			new Form.Check(check);
 
@@ -136,7 +141,7 @@ var QualityBase = new Class({
 
 		// Sortable
 		var sorted_changed = false;
-		self.profile_sortable = new Sortables(profile_list, {
+		self.profile_sortable = new Sortables(self.profiles_list, {
 			'revert': true,
 			'handle': '.handle',
 			'opacity': 0.5,
@@ -158,7 +163,7 @@ var QualityBase = new Class({
 			ids = [],
 			hidden = [];
 
-		self.profile_sortable.list.getElements('li').each(function(el, nr){
+		self.profiles_list.getElements('li').each(function(el, nr){
 			ids.include(el.get('data-id'));
 			hidden[nr] = +!el.getElement('input[type=checkbox]').get('checked');
 		});

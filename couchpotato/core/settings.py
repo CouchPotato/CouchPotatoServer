@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import traceback
 import ConfigParser
 from hashlib import md5
 
@@ -72,15 +71,7 @@ class Settings(object):
         self.connectEvents()
 
     def databaseSetup(self):
-        from couchpotato import get_db
-
-        db = get_db()
-
-        try:
-            db.add_index(PropertyIndex(db.path, 'property'))
-        except:
-            self.log.debug('Index for properties already exists')
-            db.edit_index(PropertyIndex(db.path, 'property'))
+        fireEvent('database.setup_index', 'property', PropertyIndex)
 
     def parser(self):
         return self.p

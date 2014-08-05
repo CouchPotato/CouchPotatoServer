@@ -58,6 +58,7 @@ class Charts(Plugin):
             if catched_charts:
                 return catched_charts
 
+        charts = []
         try:
             self.update_in_progress = True
             charts = fireEvent('automation.get_chart_list', merge = True)

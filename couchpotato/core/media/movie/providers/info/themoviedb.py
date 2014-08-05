@@ -1,6 +1,6 @@
 import traceback
 
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog

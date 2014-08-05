@@ -5,7 +5,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import md5, getExt
+from couchpotato.core.helpers.variable import md5, getExt, isSubFolder
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -32,6 +32,8 @@ class FileManager(Plugin):
 
         fireEvent('schedule.interval', 'file.cleanup', self.cleanup, hours = 24)
 
+        addEvent('app.test', self.doSubfolderTest)
+
     def cleanup(self):
 
         # Wait a bit after starting before cleanup
@@ -49,8 +51,8 @@ class FileManager(Plugin):
                     files.extend(file_dict[x])
 
             for f in os.listdir(cache_dir):
-                if os.path.splitext(f.name)[1] in ['.png', '.jpg', '.jpeg']:
-                    file_path = os.path.join(cache_dir, f.name)
+                if os.path.splitext(f)[1] in ['.png', '.jpg', '.jpeg']:
+                    file_path = os.path.join(cache_dir, f)
                     if toUnicode(file_path) not in files:
                         os.remove(file_path)
         except:
@@ -76,3 +78,33 @@ class FileManager(Plugin):
 
         self.createFile(dest, filedata, binary = True)
         return dest
+
+    def doSubfolderTest(self):
+
+        tests = {
+            ('/test/subfolder', '/test/sub'): False,
+            ('/test/sub/folder', '/test/sub'): True,
+            ('/test/sub/folder', '/test/sub2'): False,
+            ('/sub/fold', '/test/sub/fold'): False,
+            ('/sub/fold', '/test/sub/folder'): False,
+            ('/opt/couchpotato', '/var/opt/couchpotato'): False,
+            ('/var/opt', '/var/opt/couchpotato'): False,
+            ('/CapItaLs/Are/OK', '/CapItaLs/Are/OK'): True,
+            ('/CapItaLs/Are/OK', '/CapItaLs/Are/OK2'): False,
+            ('/capitals/are/not/OK', '/capitals/are/NOT'): False,
+            ('\\\\Mounted\\Volume\\Test', '\\\\Mounted\\Volume'): True,
+            ('C:\\\\test\\path', 'C:\\\\test2'): False
+        }
+
+        failed = 0
+        for x in tests:
+            if isSubFolder(x[0], x[1]) is not tests[x]:
+                log.error('Failed subfolder test %s %s', x)
+                failed += 1
+
+        if failed > 0:
+            log.error('Subfolder test failed %s tests', failed)
+        else:
+            log.info('Subfolder test succeeded')
+
+        return failed == 0

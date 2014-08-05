@@ -1,6 +1,10 @@
+from datetime import timedelta
+from operator import itemgetter
+import time
 import traceback
 from string import ascii_lowercase
 
+from CodernityDB.database import RecordNotFound, RecordDeleted
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -8,7 +12,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex
+from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex, MediaTagIndex
 
 
 log = CPLog(__name__)
@@ -20,6 +24,7 @@ class MediaPlugin(MediaBase):
         'media': MediaIndex,
         'media_search_title': TitleSearchIndex,
         'media_status': MediaStatusIndex,
+        'media_tag': MediaTagIndex,
         'media_by_type': MediaTypeIndex,
         'media_title': TitleIndex,
         'media_startswith': StartsWithIndex,
@@ -80,6 +85,8 @@ class MediaPlugin(MediaBase):
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
+        addEvent('media.tag', self.tag)
+        addEvent('media.untag', self.unTag)
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -119,25 +126,30 @@ class MediaPlugin(MediaBase):
 
     def get(self, media_id):
 
-        db = get_db()
+        try:
+            db = get_db()
 
-        imdb_id = getImdb(str(media_id))
+            imdb_id = getImdb(str(media_id))
 
-        media = None
-        if imdb_id:
-            media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
-        else:
-            media = db.get('id', media_id)
+            if imdb_id:
+                media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
+            else:
+                media = db.get('id', media_id)
 
-        if media:
+            if media:
 
-            # Attach category
-            try: media['category'] = db.get('id', media.get('category_id'))
-            except: pass
+                # Attach category
+                try: media['category'] = db.get('id', media.get('category_id'))
+                except: pass
 
-            media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
+                media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
 
-        return media
+            return media
+
+        except (RecordNotFound, RecordDeleted):
+            log.error('Media with id "%s" not found', media_id)
+        except:
+            raise
 
     def getView(self, id = None, **kwargs):
 
@@ -155,8 +167,15 @@ class MediaPlugin(MediaBase):
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
+            for ms in db.get_many('media_status', s):
+                if with_doc:
+                    try:
+                        doc = db.get('id', ms['_id'])
+                        yield doc
+                    except RecordNotFound:
+                        log.debug('Record not found, skipping: %s', ms['_id'])
+                else:
+                    yield ms
 
     def withIdentifiers(self, identifiers, with_doc = False):
 
@@ -171,7 +190,7 @@ class MediaPlugin(MediaBase):
 
         log.debug('No media found with identifiers: %s', identifiers)
 
-    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
+    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, with_tags = None, starts_with = None, search = None):
 
         db = get_db()
 
@@ -182,6 +201,8 @@ class MediaPlugin(MediaBase):
             release_status = [release_status]
         if types and not isinstance(types, (list, tuple)):
             types = [types]
+        if with_tags and not isinstance(with_tags, (list, tuple)):
+            with_tags = [with_tags]
 
         # query media ids
         if types:
@@ -208,10 +229,16 @@ class MediaPlugin(MediaBase):
 
         # Add search filters
         if starts_with:
-            filter_by['starts_with'] = set()
             starts_with = toUnicode(starts_with.lower())[0]
             starts_with = starts_with if starts_with in ascii_lowercase else '#'
             filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
+
+        # Add tag filter
+        if with_tags:
+            filter_by['with_tags'] = set()
+            for tag in with_tags:
+                for x in db.get_many('media_tag', tag):
+                    filter_by['with_tags'].add(x['_id'])
 
         # Filter with search query
         if search:
@@ -265,6 +292,7 @@ class MediaPlugin(MediaBase):
             release_status = splitString(kwargs.get('release_status')),
             status_or = kwargs.get('status_or') is not None,
             limit_offset = kwargs.get('limit_offset'),
+            with_tags = splitString(kwargs.get('with_tags')),
             starts_with = kwargs.get('starts_with'),
             search = kwargs.get('search')
         )
@@ -383,16 +411,18 @@ class MediaPlugin(MediaBase):
                                 total_deleted += 1
                             new_media_status = 'done'
                         elif delete_from == 'manage':
-                            if release.get('status') == 'done':
+                            if release.get('status') == 'done' or media.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active') or (not new_media_status and delete_from == 'late'):
+                    if (total_releases == total_deleted and media['status'] != 'active') or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
                         media['status'] = new_media_status
                         db.update(media)
+
+                        fireEvent('media.untag', media['_id'], 'recent', single = True)
                     else:
                         fireEvent('media.restatus', media.get('_id'), single = True)
 
@@ -432,24 +462,75 @@ class MediaPlugin(MediaBase):
             if not m['profile_id']:
                 m['status'] = 'done'
             else:
-                move_to_wanted = True
+                m['status'] = 'active'
 
-                profile = db.get('id', m['profile_id'])
-                media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                try:
+                    profile = db.get('id', m['profile_id'])
+                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                    done_releases = [release for release in media_releases if release.get('status') == 'done']
 
-                for q_identifier in profile['qualities']:
-                    index = profile['qualities'].index(q_identifier)
+                    if done_releases:
+                        # Only look at latest added release
+                        release = sorted(done_releases, key = itemgetter('last_edit'), reverse = True)[0]
 
-                    for release in media_releases:
-                        if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
-                            move_to_wanted = False
+                        # Check if we are finished with the media
+                        if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
+                            m['status'] = 'done'
+                    elif previous_status == 'done':
+                        m['status'] = 'done'
 
-                m['status'] = 'active' if move_to_wanted else 'done'
+                except RecordNotFound:
+                    log.debug('Failed restatus, keeping previous: %s', traceback.format_exc())
+                    m['status'] = previous_status
 
             # Only update when status has changed
             if previous_status != m['status']:
                 db.update(m)
 
-            return True
+                # Tag media as recent
+                self.tag(media_id, 'recent', update_edited = True)
+
+            return m['status']
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
+
+    def tag(self, media_id, tag, update_edited = False):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            if update_edited:
+                m['last_edit'] = int(time.time())
+
+            tags = m.get('tags') or []
+            if tag not in tags:
+                tags.append(tag)
+                m['tags'] = tags
+                db.update(m)
+
+            return True
+        except:
+            log.error('Failed tagging: %s', traceback.format_exc())
+
+        return False
+
+    def unTag(self, media_id, tag):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            tags = m.get('tags') or []
+            if tag in tags:
+                new_tags = list(set(tags))
+                new_tags.remove(tag)
+
+                m['tags'] = new_tags
+                db.update(m)
+
+            return True
+        except:
+            log.error('Failed untagging: %s', traceback.format_exc())
+
+        return False

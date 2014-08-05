@@ -357,17 +357,39 @@
 				top: 30px;
 				clear: both;
 				bottom: 30px;
-				overflow: hidden;
 				position: absolute;
 			}
-				.movies .data:hover .description {
-					overflow: auto;
-				}
 				.movies.list_list .movie:not(.details_view) .info .description,
 				.movies.mass_edit_list .info .description,
 				.movies.thumbs_list .info .description {
 					display: none;
 				}
+
+		.movies .data .eta {
+			display: none;
+		}
+
+		.movies.details_list .data .eta {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			display: block;
+			min-height: 20px;
+			text-align: right;
+			font-style: italic;
+			opacity: .8;
+			font-size: 11px;
+		}
+
+			.movies.details_list .movie:hover .data .eta {
+				display: none;
+			}
+
+		.movies.thumbs_list .data .eta {
+			display: block;
+			position: absolute;
+			bottom: 40px;
+		}
 
 		.movies .data .quality {
 			position: absolute;

@@ -29,17 +29,21 @@ OS X:
 * Then do `python CouchPotatoServer/CouchPotato.py`
 * Your browser should open up, but if it doesn't go to `http://localhost:5050/`
 
-Linux (Ubuntu / Debian):
+Linux:
 
-* Install [GIT](http://git-scm.com/) with `apt-get install git-core`
+* (Ubuntu / Debian) Install [GIT](http://git-scm.com/) with `apt-get install git-core`
+* (Fedora / CentOS) Install [GIT](http://git-scm.com/) with `yum install git`
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
-* To run on boot copy the init script `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
-* Copy the default paths file `sudo cp CouchPotatoServer/init/ubuntu.default /etc/default/couchpotato`
-* Change the paths inside the default file `sudo nano /etc/default/couchpotato`
-* Make it executable `sudo chmod +x /etc/init.d/couchpotato`
-* Add it to defaults `sudo update-rc.d couchpotato defaults`
+* (Ubuntu / Debian) To run on boot copy the init script `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
+* (Ubuntu / Debian) Copy the default paths file `sudo cp CouchPotatoServer/init/ubuntu.default /etc/default/couchpotato`
+* (Ubuntu / Debian) Change the paths inside the default file `sudo nano /etc/default/couchpotato`
+* (Ubuntu / Debian) Make it executable `sudo chmod +x /etc/init.d/couchpotato`
+* (Ubuntu / Debian) Add it to defaults `sudo update-rc.d couchpotato defaults`
+* (systemd) To run on boot copy the systemd config `sudo cp CouchPotatoServer/init/couchpotato.fedora.service /etc/systemd/system/couchpotato.service`
+* (systemd) Update the systemd config file with your user and path to CouchPotato.py 
+* (systemd) Enable it at boot with `sudo systemctl enable couchpotato`
 * Open your browser and go to `http://localhost:5050/`
 
 

@@ -90,7 +90,7 @@ Page.Wizard = new Class({
 			self.parent(action, params);
 
 			self.addEvent('create', function(){
-				self.order();
+				self.orderGroups();
 			});
 
 			self.initialized = true;
@@ -106,7 +106,7 @@ Page.Wizard = new Class({
 			}).delay(1)
 	},
 
-	order: function(){
+	orderGroups: function(){
 		var self = this;
 
 		var form = self.el.getElement('.uniForm');

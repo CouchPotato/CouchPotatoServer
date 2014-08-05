@@ -25,6 +25,7 @@ class DownloaderBase(Provider):
     status_support = True
 
     torrent_sources = [
+        'https://zoink.it/torrent/%s.torrent',
         'http://torrage.com/torrent/%s.torrent',
         'https://torcache.net/torrent/%s.torrent',
     ]
@@ -71,6 +72,9 @@ class DownloaderBase(Provider):
         if self.isDisabled(manual, data):
             return
         return self.download(data = data, media = media, filedata = filedata)
+
+    def download(self, *args, **kwargs):
+        return False
 
     def _getAllDownloadStatus(self, download_ids):
         if self.isDisabled(manual = True, data = {}):

@@ -17,7 +17,7 @@ from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import getDataDir, tryInt
+from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
@@ -87,6 +87,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Do db stuff
     db_path = sp(os.path.join(data_dir, 'database'))
+    old_db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Remove database folder if both exists
+    if os.path.isdir(db_path) and os.path.isfile(old_db_path):
+        db = SuperThreadSafeDatabase(db_path)
+        db.open()
+        db.destroy()
 
     # Check if database exists
     db = SuperThreadSafeDatabase(db_path)
@@ -195,6 +202,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     log = CPLog(__name__)
     log.debug('Started with options %s', options)
 
+    # Check available space
+    try:
+        total_space, available_space = getFreeSpace(data_dir)
+        if available_space < 100:
+            log.error('Shutting down as CP needs some space to work. You\'ll get corrupted data otherwise. Only %sMB left', available_space)
+            return
+    except:
+        log.error('Failed getting diskspace: %s', traceback.format_exc())
+
     def customwarn(message, category, filename, lineno, file = None, line = None):
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
@@ -277,22 +293,23 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loop = IOLoop.current()
 
     # Reload hook
-    def test():
+    def reload_hook():
         fireEvent('app.shutdown')
-    add_reload_hook(test)
+    add_reload_hook(reload_hook)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
+    ssl_options = None
     if config['ssl_cert'] and config['ssl_key']:
-        server = HTTPServer(application, no_keep_alive = True, ssl_options = {
+        ssl_options = {
             'certfile': config['ssl_cert'],
             'keyfile': config['ssl_key'],
-        })
-    else:
-        server = HTTPServer(application, no_keep_alive = True)
+        }
+
+    server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
     try_restart = True
     restart_tries = 5
@@ -301,6 +318,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
             loop.start()
+            server.close_all_connections()
+            server.stop()
+            loop.close(all_fds = True)
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
@@ -314,6 +334,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                         continue
                     else:
                         return
+            except ValueError:
+                return
             except:
                 pass
 

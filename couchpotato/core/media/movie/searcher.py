@@ -58,13 +58,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def searchAllView(self, **kwargs):
 
-        fireEventAsync('movie.searcher.all')
+        fireEventAsync('movie.searcher.all', manual = True)
 
         return {
             'success': not self.in_progress
         }
 
-    def searchAll(self):
+    def searchAll(self, manual = False):
 
         if self.in_progress:
             log.info('Search already in progress')
@@ -91,7 +91,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 media = fireEvent('media.get', media_id, single = True)
 
                 try:
-                    self.single(media, search_protocols)
+                    self.single(media, search_protocols, manual = manual)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (getIdentifier(media), traceback.format_exc()))
                     fireEvent('movie.update_info', media_id)
@@ -109,7 +109,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         self.in_progress = False
 
-    def single(self, movie, search_protocols = None, manual = False):
+    def single(self, movie, search_protocols = None, manual = False, force_download = False):
 
         # Find out search type
         try:
@@ -120,7 +120,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if not movie['profile_id'] or (movie['status'] == 'done' and not manual):
             log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
+            fireEvent('media.restatus', movie['_id'], single = True)
             return
+
+        default_title = getTitle(movie)
+        if not default_title:
+            log.error('No proper info found for movie, removing it from library to stop it from causing more issues.')
+            fireEvent('media.delete', movie['_id'], single = True)
+            return
+
+        # Update media status and check if it is still not done (due to the stop searching after feature
+        if fireEvent('media.restatus', movie['_id'], single = True) == 'done':
+            log.debug('No better quality found, marking movie %s as done.', default_title)
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('movie.update_release_dates', movie['_id'], merge = True)
@@ -128,22 +139,27 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         found_releases = []
         previous_releases = movie.get('releases', [])
         too_early_to_search = []
-
-        default_title = getTitle(movie)
-        if not default_title:
-            log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
-            fireEvent('media.delete', movie['_id'], single = True)
-            return
+        outside_eta_results = 0
+        alway_search = self.conf('always_search')
+        ignore_eta = manual
+        total_result_count = 0
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
+
+        # Ignore eta once every 7 days
+        if not alway_search:
+            prop_name = 'last_ignored_eta.%s' % movie['_id']
+            last_ignored_eta = float(Env.prop(prop_name, default = 0))
+            if last_ignored_eta > time.time() - 604800:
+                ignore_eta = True
+                Env.prop(prop_name, value = time.time())
 
         db = get_db()
 
         profile = db.get('id', movie['profile_id'])
         ret = False
 
-        index = 0
-        for q_identifier in profile.get('qualities'):
+        for index, q_identifier in enumerate(profile.get('qualities', [])):
             quality_custom = {
                 'index': index,
                 'quality': q_identifier,
@@ -152,11 +168,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 '3d': profile['3d'][index] if profile.get('3d') else False
             }
 
-            index += 1
-
-            if not self.conf('always_search') and not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year']):
+            could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
+            if not alway_search and could_not_be_released:
                 too_early_to_search.append(q_identifier)
-                continue
+
+                # Skip release, if ETA isn't ignored
+                if not ignore_eta:
+                    continue
 
             has_better_quality = 0
 
@@ -173,18 +191,23 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Don't search for quality lower then already available.
             if has_better_quality > 0:
                 log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
-                fireEvent('media.restatus', movie['_id'])
+                fireEvent('media.restatus', movie['_id'], single = True)
                 break
 
             quality = fireEvent('quality.single', identifier = q_identifier, single = True)
-            log.info('Search for %s in %s', (default_title, quality['label']))
+            log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if alway_search or ignore_eta else ''))
 
             # Extend quality with profile customs
             quality['custom'] = quality_custom
 
             results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
-            if len(results) == 0:
+            results_count = len(results)
+            total_result_count += results_count
+            if results_count == 0:
                 log.debug('Nothing found for %s in %s', (default_title, quality['label']))
+
+            # Keep track of releases found outside ETA window
+            outside_eta_results += results_count if could_not_be_released else 0
 
             # Check if movie isn't deleted while searching
             if not fireEvent('media.get', movie.get('_id'), single = True):
@@ -193,8 +216,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             # Add them to this movie releases list
             found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
 
+            # Don't trigger download, but notify user of available releases
+            if could_not_be_released:
+                if results_count > 0:
+                    log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
+
             # Try find a valid result and download it
-            if fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
+            if (force_download or not could_not_be_released or alway_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -211,8 +239,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             if self.shuttingDown() or ret:
                 break
 
+        if total_result_count > 0:
+            fireEvent('media.tag', movie['_id'], 'recent', update_edited = True, single = True)
+
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+
+            if outside_eta_results > 0:
+                message = 'Found %s releases for "%s" before ETA. Select and download via the dashboard.' % (outside_eta_results, default_title)
+                log.info(message)
+
+                if not manual:
+                    fireEvent('media.available', message = message, data = {})
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
 
@@ -334,13 +372,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def tryNextReleaseView(self, media_id = None, **kwargs):
 
-        trynext = self.tryNextRelease(media_id, manual = True)
+        trynext = self.tryNextRelease(media_id, manual = True, force_download = True)
 
         return {
             'success': trynext
         }
 
-    def tryNextRelease(self, media_id, manual = False):
+    def tryNextRelease(self, media_id, manual = False, force_download = False):
 
         try:
             db = get_db()
@@ -352,7 +390,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             movie_dict = fireEvent('media.get', media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict))
-            self.single(movie_dict, manual = manual)
+            self.single(movie_dict, manual = manual, force_download = force_download)
 
             return True
 

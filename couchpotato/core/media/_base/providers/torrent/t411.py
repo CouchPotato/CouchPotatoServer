@@ -102,15 +102,14 @@ class Base(TorrentProvider):
                     for result in resultdiv.find_all('tr', recursive = False):
     
                         try:
-    
-                            categorie = result.find_all('td')[0].find_all('img')[0]['class']                        
+                            categorie = result.find_all('td')[0].find_all('a')[0]['href'][result.find_all('td')[0].find_all('a')[0]['href'].find('='):]
                             insert = 0
                         
-                            if categorie == ['cat-631']:
+                            if categorie == '=631':
                                 insert = 1
-                            if categorie == ['cat-455']:
+                            if categorie == '=455':
                                 insert = 1
-                            if categorie == ['cat-634']:
+                            if categorie == '=634':
                                 insert = 1
                          
                             if insert == 1 :

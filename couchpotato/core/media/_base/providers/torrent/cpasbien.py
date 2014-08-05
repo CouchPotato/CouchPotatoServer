@@ -116,7 +116,7 @@ class Base(TorrentProvider):
                         add = 1
                         
                         for verify_unit in verify:
-                            if (name.find(verify_unit) == -1) :
+                            if (name.lower().find(verify_unit.lower()) == -1) :
                                 add = 0
 
                         def extra_check(item):

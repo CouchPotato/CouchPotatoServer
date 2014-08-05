@@ -136,6 +136,21 @@ var Movie = new Class({
 
 		self.el.addClass('status_'+self.get('status'));
 
+		var eta = null,
+			eta_date = null,
+			now = Math.round(+new Date()/1000);
+
+		if(self.data.info.release_date)
+			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
+				if (timestamp > 0 && (eta == null || Math.abs(timestamp - now) < Math.abs(eta - now)))
+					eta = timestamp;
+			});
+
+		if(eta){
+			eta_date = new Date(eta * 1000);
+			eta_date = eta_date.toLocaleString('en-us', { month: "long" }) + ' ' + eta_date.getFullYear();
+		}
+
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox].inlay', {
 				'events': {
@@ -158,9 +173,13 @@ var Movie = new Class({
 							'text': self.data.info.year || 'n/a'
 						})
 					),
-					self.description = new Element('div.description', {
+					self.description = new Element('div.description.tiny_scroll', {
 						'text': self.data.info.plot
 					}),
+					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {
+						'text': eta_date,
+						'title': 'ETA'
+					}) : null,
 					self.quality = new Element('div.quality', {
 						'events': {
 							'click': function(e){

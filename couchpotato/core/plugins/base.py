@@ -157,7 +157,7 @@ class Plugin(object):
                                 os.rmdir(full_path)
                             except:
                                 if show_error:
-                                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+                                    log.info2('Couldn\'t remove directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
             os.rmdir(folder)
@@ -166,7 +166,7 @@ class Plugin(object):
                 log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, verify_ssl = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
         url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
@@ -263,7 +263,7 @@ class Plugin(object):
     def afterCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__), False)
 
-    def doShutdown(self):
+    def doShutdown(self, *args, **kwargs):
         self.shuttingDown(True)
         return True
 

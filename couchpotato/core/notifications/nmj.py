@@ -22,9 +22,10 @@ class NMJ(Notification):
 
     # noinspection PyMissingConstructor
     def __init__(self):
-        addEvent('renamer.after', self.addToLibrary)
         addApiView(self.testNotifyName(), self.test)
         addApiView('notify.nmj.auto_config', self.autoConfig)
+
+        addEvent('renamer.after', self.addToLibrary)
 
     def autoConfig(self, host = 'localhost', **kwargs):
 

@@ -51,6 +51,7 @@ class Base(TorrentProvider):
                     results_table = None
 
                     data_split = splitString(data, '<table')
+                    soup = None
                     for x in data_split:
                         soup = BeautifulSoup(x)
                         results_table = soup.find('table', attrs = {'class': 'koptekst'})
@@ -145,6 +146,7 @@ config = [{
             'name': 'ILoveTorrents',
             'description': 'Where the Love of Torrents is Born',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACPUlEQVR4AYWM0U9SbxjH3+v266I/oNvWZTfd2J1d0ZqbZEFwWrUImOKs4YwtumFKZvvlJJADR2TCQQlMPKg5NmpREgaekAPnBATKgmK1LqQlx6awHnZWF1Tr2Xfvvs+7z+dB0mlO7StpAh+M4S/2jbo3w8+xvJvlnSneEt+10zwer5ujNUOoChjALWFw5XOwdCAk/P57cGvPl+Oht0W7VJHN5NC1uW1BON4hGjXbwpVWMZhsy9v7sEIXAsDNYBXgdkEoIKyWD2CF8ut/aOXTZc/fBSgLWw1BgA4BDHOV0GkT90cBQpXahU5TFomsb38XhJC5/Tbh1P8c6rJlBeGfAeyMhUFwNVcs9lxV9Ot0dwmyd+mrNvRtbJ2fSPC6Z3Vsvub2z3sDFACAAYzk0+kUyxEkyfN7PopqNBro55A+P6yPKIrL5zF1HwjdeBJJCObIsZO79bo3sHhWhglo5WMV3mazuVPb4fLvSL8/FAkB1hK6rXQPwYhMyROK8VK5LAiH/jsMt0HQjxiN4/ePdoilllcqDyt3Mkg8mRBNbIhMb8RERkowQA/p76g0/UDDdCoNmDminM0qSK5vlpE5kugCHhNPxntwWmJPYTMZtYcFR6ABHQsVRlYLukVORaaULvqKI46keFSCv77kSPS6kxrPptLNDHgz16fWBtyxe6v5h08LUy+KI8ushqTPWWIX8Sg6b45IrGtyW6zXFb/hpQf9m3oqfWuB0fpSw0uZ4WB69En69uOk2rmO2V52PXj+A/mI4ESKpb2HAAAAAElFTkSuQmCC',
             'options': [
                 {
                     'name': 'enabled',

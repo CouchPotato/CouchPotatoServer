@@ -38,9 +38,18 @@ class ProfilePlugin(Plugin):
 
     def forceDefaults(self):
 
+        db = get_db()
+
+        # Fill qualities and profiles if they are empty somehow..
+        if db.count(db.all, 'profile') == 0:
+
+            if db.count(db.all, 'quality') == 0:
+                fireEvent('quality.fill', single = True)
+
+            self.fill()
+
         # Get all active movies without profile
         try:
-            db = get_db()
             medias = fireEvent('media.with_status', 'active', single = True)
 
             profile_ids = [x.get('_id') for x in self.all()]
@@ -79,6 +88,7 @@ class ProfilePlugin(Plugin):
                 'core': kwargs.get('core', False),
                 'qualities': [],
                 'wait_for': [],
+                'stop_after': [],
                 'finish': [],
                 '3d': []
             }
@@ -88,6 +98,7 @@ class ProfilePlugin(Plugin):
             for type in kwargs.get('types', []):
                 profile['qualities'].append(type.get('quality'))
                 profile['wait_for'].append(tryInt(kwargs.get('wait_for', 0)))
+                profile['stop_after'].append(tryInt(kwargs.get('stop_after', 0)))
                 profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
                 profile['3d'].append(tryInt(type.get('3d')))
                 order += 1
@@ -208,6 +219,7 @@ class ProfilePlugin(Plugin):
                     'qualities': profile.get('qualities'),
                     'finish': [],
                     'wait_for': [],
+                    'stop_after': [],
                     '3d': []
                 }
 
@@ -215,6 +227,7 @@ class ProfilePlugin(Plugin):
                 for q in profile.get('qualities'):
                     pro['finish'].append(True)
                     pro['wait_for'].append(0)
+                    pro['stop_after'].append(0)
                     pro['3d'].append(threed.pop() if threed else False)
 
                 db.insert(pro)

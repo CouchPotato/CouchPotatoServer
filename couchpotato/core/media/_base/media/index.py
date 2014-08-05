@@ -99,7 +99,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 
 
 class TitleIndex(TreeBasedIndex):
-    _version = 3
+    _version = 4
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -128,7 +128,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
                 title = title[len(prefix):]
                 break
 
-        return str(nr_prefix + title).ljust(32, '_')[:32]
+        return str(nr_prefix + title).ljust(32, ' ')[:32]
 
 
 class StartsWithIndex(TreeBasedIndex):
@@ -176,3 +176,24 @@ class MediaChildrenIndex(TreeBasedIndex):
         if data.get('_t') == 'media' and data.get('parent_id'):
             return data.get('parent_id'), None
 
+
+class MediaTagIndex(MultiTreeBasedIndex):
+    _version = 2
+
+    custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(MediaTagIndex, self).__init__(*args, **kwargs)
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'media' and data.get('tags') and len(data.get('tags', [])) > 0:
+
+            tags = set()
+            for tag in data.get('tags', []):
+                tags.add(self.make_key(tag))
+
+            return list(tags), None
+
+    def make_key(self, key):
+        return md5(key).hexdigest()

@@ -91,7 +91,7 @@ class Base(NZBProvider, RSS):
                     # Extract a password from the description
                     password = re.search('(?:' + self.passwords_regex + ')(?: *)(?:\:|\=)(?: *)(.*?)\<br\>|\n|$', description, flags = re.I).group(1)
                     if password:
-                        name = name + ' {{%s}}' % password.strip()
+                        name += ' {{%s}}' % password.strip()
                 except:
                     log.debug('Error getting details of "%s": %s', (name, traceback.format_exc()))
 
@@ -220,8 +220,9 @@ config = [{
             'description': 'Enable <a href="http://newznab.com/" target="_blank">NewzNab</a> such as <a href="https://nzb.su" target="_blank">NZB.su</a>, \
                 <a href="https://nzbs.org" target="_blank">NZBs.org</a>, <a href="http://dognzb.cr/" target="_blank">DOGnzb.cr</a>, \
                 <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a>, <a href="https://nzbgeek.info/" target="_blank">NZBGeek</a>, \
-                <a href="https://smackdownonyou.com" target="_blank">SmackDown</a>, <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>',
+                <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEVjhwD///86aRovd/sBAAAAMklEQVQI12NgAIPQUCCRmQkjssDEShiRuRIqwZqZGcDAGBrqANUhGgIkWAOABKMDxCAA24UK50b26SAAAAAASUVORK5CYII=',
             'options': [
                 {
                     'name': 'enabled',
@@ -230,30 +231,30 @@ config = [{
                 },
                 {
                     'name': 'use',
-                    'default': '0,0,0,0,0,0'
+                    'default': '0,0,0,0,0'
                 },
                 {
                     'name': 'host',
-                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
+                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://api.nzbgeek.info,https://www.nzbfinder.ws',
                     'description': 'The hostname of your newznab provider',
                 },
                 {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',
-                    'default': '0,0,0,0,0,0',
+                    'default': '0,0,0,0,0',
                     'description': 'Starting score for each release found via this provider.',
                 },
                 {
                     'name': 'custom_tag',
                     'advanced': True,
                     'label': 'Custom tag',
-                    'default': ',,,,,',
+                    'default': ',,,,',
                     'description': 'Add custom tags, for example add rls=1 to get only scene releases from nzbs.org',
                 },
                 {
                     'name': 'api_key',
-                    'default': ',,,,,',
+                    'default': ',,,,',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',

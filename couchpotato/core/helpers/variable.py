@@ -1,4 +1,5 @@
 import collections
+import ctypes
 import hashlib
 import os
 import platform
@@ -6,8 +7,9 @@ import random
 import re
 import string
 import sys
+import traceback
 
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp
 from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
@@ -290,9 +292,14 @@ def dictIsSubset(a, b):
     return all([k in b and b[k] == v for k, v in a.items()])
 
 
+# Returns True if sub_folder is the same as or inside base_folder
 def isSubFolder(sub_folder, base_folder):
-    # Returns True if sub_folder is the same as or inside base_folder
-    return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+    if base_folder and sub_folder:
+        base = sp(os.path.realpath(base_folder)) + os.path.sep
+        subfolder = sp(os.path.realpath(sub_folder)) + os.path.sep
+        return os.path.commonprefix([subfolder, base]) == base
+
+    return False
 
 
 # From SABNZBD
@@ -313,3 +320,63 @@ under_pat = re.compile(r'_([a-z])')
 
 def underscoreToCamel(name):
     return under_pat.sub(lambda x: x.group(1).upper(), name)
+
+
+def removePyc(folder, only_excess = True, show_logs = True):
+
+    folder = sp(folder)
+
+    for root, dirs, files in os.walk(folder):
+
+        pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
+        py_files = set(filter(lambda filename: filename.endswith('.py'), files))
+        excess_pyc_files = filter(lambda pyc_filename: pyc_filename[:-1] not in py_files, pyc_files) if only_excess else pyc_files
+
+        for excess_pyc_file in excess_pyc_files:
+            full_path = os.path.join(root, excess_pyc_file)
+            if show_logs: log.debug('Removing old PYC file: %s', full_path)
+            try:
+                os.remove(full_path)
+            except:
+                log.error('Couldn\'t remove %s: %s', (full_path, traceback.format_exc()))
+
+        for dir_name in dirs:
+            full_path = os.path.join(root, dir_name)
+            if len(os.listdir(full_path)) == 0:
+                try:
+                    os.rmdir(full_path)
+                except:
+                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+
+def getFreeSpace(directories):
+
+    single = not isinstance(directories, (tuple, list))
+    if single:
+        directories = [directories]
+
+    free_space = {}
+    for folder in directories:
+
+        size = None
+        if os.path.isdir(folder):
+            if os.name == 'nt':
+                _, total, free = ctypes.c_ulonglong(), ctypes.c_ulonglong(), \
+                                   ctypes.c_ulonglong()
+                if sys.version_info >= (3,) or isinstance(folder, unicode):
+                    fun = ctypes.windll.kernel32.GetDiskFreeSpaceExW #@UndefinedVariable
+                else:
+                    fun = ctypes.windll.kernel32.GetDiskFreeSpaceExA #@UndefinedVariable
+                ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
+                if ret == 0:
+                    raise ctypes.WinError()
+                return [total.value, free.value]
+            else:
+                s = os.statvfs(folder)
+                size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
+
+        if single: return size
+
+        free_space[folder] = size
+
+    return free_space

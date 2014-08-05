@@ -8,7 +8,7 @@ from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import requests
-from requests.packages.urllib3.exceptions import MaxRetryError
+from requests.packages.urllib3.exceptions import MaxRetryError, ConnectionError
 
 
 log = CPLog(__name__)
@@ -172,7 +172,7 @@ class XBMC(Notification):
                 # manually fake expected response array
                 return [{'result': 'Error'}]
 
-        except (MaxRetryError, requests.exceptions.Timeout):
+        except (MaxRetryError, requests.exceptions.Timeout, ConnectionError):
             log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
             return [{'result': 'Error'}]
         except:
@@ -208,7 +208,7 @@ class XBMC(Notification):
             log.debug('Returned from request %s: %s', (host, response))
 
             return response
-        except (MaxRetryError, requests.exceptions.Timeout):
+        except (MaxRetryError, requests.exceptions.Timeout, ConnectionError):
             log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
             return []
         except:
