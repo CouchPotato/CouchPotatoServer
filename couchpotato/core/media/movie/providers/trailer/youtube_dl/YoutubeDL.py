@@ -275,7 +275,7 @@ class YoutubeDL(object):
             return message
 
         assert hasattr(self, '_output_process')
-        assert type(message) == type('')
+        assert isinstance(message, compat_str)
         line_count = message.count('\n') + 1
         self._output_process.stdin.write((message + '\n').encode('utf-8'))
         self._output_process.stdin.flush()
@@ -303,7 +303,7 @@ class YoutubeDL(object):
 
     def to_stderr(self, message):
         """Print message to stderr."""
-        assert type(message) == type('')
+        assert isinstance(message, compat_str)
         if self.params.get('logger'):
             self.params['logger'].error(message)
         else:
@@ -717,6 +717,17 @@ class YoutubeDL(object):
             info_dict['playlist'] = None
             info_dict['playlist_index'] = None
 
+        thumbnails = info_dict.get('thumbnails')
+        if thumbnails:
+            thumbnails.sort(key=lambda t: (
+                t.get('width'), t.get('height'), t.get('url')))
+            for t in thumbnails:
+                if 'width' in t and 'height' in t:
+                    t['resolution'] = '%dx%d' % (t['width'], t['height'])
+
+        if thumbnails and 'thumbnail' not in info_dict:
+            info_dict['thumbnail'] = thumbnails[-1]['url']
+
         if 'display_id' not in info_dict and 'id' in info_dict:
             info_dict['display_id'] = info_dict['id']
 
@@ -838,7 +849,7 @@ class YoutubeDL(object):
         # Keep for backwards compatibility
         info_dict['stitle'] = info_dict['title']
 
-        if not 'format' in info_dict:
+        if 'format' not in info_dict:
             info_dict['format'] = info_dict['ext']
 
         reason = self._match_entry(info_dict)
@@ -982,11 +993,13 @@ class YoutubeDL(object):
                         fd = get_suitable_downloader(info)(self, self.params)
                         for ph in self._progress_hooks:
                             fd.add_progress_hook(ph)
+                        if self.params.get('verbose'):
+                            self.to_stdout('[debug] Invoking downloader on %r' % info.get('url'))
                         return fd.download(name, info)
                     if info_dict.get('requested_formats') is not None:
                         downloaded = []
                         success = True
-                        merger = FFmpegMergerPP(self)
+                        merger = FFmpegMergerPP(self, not self.params.get('keepvideo'))
                         if not merger._get_executable():
                             postprocessors = []
                             self.report_warning('You have requested multiple '
@@ -1184,6 +1197,10 @@ class YoutubeDL(object):
             if res:
                 res += ', '
             res += format_bytes(fdict['filesize'])
+        elif fdict.get('filesize_approx') is not None:
+            if res:
+                res += ', '
+            res += '~' + format_bytes(fdict['filesize_approx'])
         return res
 
     def list_formats(self, info_dict):
@@ -1217,14 +1234,18 @@ class YoutubeDL(object):
         if not self.params.get('verbose'):
             return
 
-        write_string(
+        if type('') is not compat_str:
+            # Python 2.6 on SLES11 SP1 (https://github.com/rg3/youtube-dl/issues/3326)
+            self.report_warning(
+                'Your Python is broken! Update to a newer and supported version')
+
+        encoding_str = (
             '[debug] Encodings: locale %s, fs %s, out %s, pref %s\n' % (
                 locale.getpreferredencoding(),
                 sys.getfilesystemencoding(),
                 sys.stdout.encoding,
-                self.get_encoding()),
-            encoding=None
-        )
+                self.get_encoding()))
+        write_string(encoding_str, encoding=None)
 
         self._write_string('[debug] youtube-dl version ' + __version__ + '\n')
         try:

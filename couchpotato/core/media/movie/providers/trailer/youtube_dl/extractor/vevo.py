@@ -16,7 +16,7 @@ class VevoIE(InfoExtractor):
     (currently used by MTVIE)
     """
     _VALID_URL = r'''(?x)
-        (?:https?://www\.vevo\.com/watch/(?:[^/]+/[^/]+/)?|
+        (?:https?://www\.vevo\.com/watch/(?:[^/]+/(?:[^/]+/)?)?|
            https?://cache\.vevo\.com/m/html/embed\.html\?video=|
            https?://videoplayer\.vevo\.com/embed/embedded\?videoId=|
            vevo:)
@@ -134,7 +134,13 @@ class VevoIE(InfoExtractor):
         video_id = mobj.group('id')
 
         json_url = 'http://videoplayer.vevo.com/VideoService/AuthenticateVideo?isrc=%s' % video_id
-        video_info = self._download_json(json_url, video_id)['video']
+        response = self._download_json(json_url, video_id)
+        video_info = response['video']
+
+        if not video_info:
+            if 'statusMessage' in response:
+                raise ExtractorError('%s said: %s' % (self.IE_NAME, response['statusMessage']), expected=True)
+            raise ExtractorError('Unable to extract videos')
 
         formats = self._formats_from_json(video_info)
 
@@ -171,6 +177,7 @@ class VevoIE(InfoExtractor):
             self._downloader.report_warning(
                 'Cannot download SMIL information, falling back to JSON ..')
 
+        self._sort_formats(formats)
         timestamp_ms = int(self._search_regex(
             r'/Date\((\d+)\)/', video_info['launchDate'], 'launch date'))
 

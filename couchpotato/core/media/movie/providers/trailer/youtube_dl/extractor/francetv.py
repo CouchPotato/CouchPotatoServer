@@ -19,17 +19,35 @@ class FranceTVBaseInfoExtractor(InfoExtractor):
             + video_id, video_id, 'Downloading XML config')
 
         manifest_url = info.find('videos/video/url').text
-        video_url = manifest_url.replace('manifest.f4m', 'index_2_av.m3u8')
-        video_url = video_url.replace('/z/', '/i/')
+        manifest_url = manifest_url.replace('/z/', '/i/')
+        
+        if manifest_url.startswith('rtmp'):
+            formats = [{'url': manifest_url, 'ext': 'flv'}]
+        else:
+            formats = []
+            available_formats = self._search_regex(r'/[^,]*,(.*?),k\.mp4', manifest_url, 'available formats')
+            for index, format_descr in enumerate(available_formats.split(',')):
+                format_info = {
+                    'url': manifest_url.replace('manifest.f4m', 'index_%d_av.m3u8' % index),
+                    'ext': 'mp4',
+                }
+                m_resolution = re.search(r'(?P<width>\d+)x(?P<height>\d+)', format_descr)
+                if m_resolution is not None:
+                    format_info.update({
+                        'width': int(m_resolution.group('width')),
+                        'height': int(m_resolution.group('height')),
+                    })
+                formats.append(format_info)
+
         thumbnail_path = info.find('image').text
 
-        return {'id': video_id,
-                'ext': 'flv' if video_url.startswith('rtmp') else 'mp4',
-                'url': video_url,
-                'title': info.find('titre').text,
-                'thumbnail': compat_urlparse.urljoin('http://pluzz.francetv.fr', thumbnail_path),
-                'description': info.find('synopsis').text,
-                }
+        return {
+            'id': video_id,
+            'title': info.find('titre').text,
+            'formats': formats,
+            'thumbnail': compat_urlparse.urljoin('http://pluzz.francetv.fr', thumbnail_path),
+            'description': info.find('synopsis').text,
+        }
 
 
 class PluzzIE(FranceTVBaseInfoExtractor):
@@ -48,24 +66,36 @@ class PluzzIE(FranceTVBaseInfoExtractor):
 
 class FranceTvInfoIE(FranceTVBaseInfoExtractor):
     IE_NAME = 'francetvinfo.fr'
-    _VALID_URL = r'https?://www\.francetvinfo\.fr/replay.*/(?P<title>.+)\.html'
+    _VALID_URL = r'https?://(?:www|mobile)\.francetvinfo\.fr/.*/(?P<title>.+)\.html'
 
-    _TEST = {
+    _TESTS = [{
         'url': 'http://www.francetvinfo.fr/replay-jt/france-3/soir-3/jt-grand-soir-3-lundi-26-aout-2013_393427.html',
-        'file': '84981923.mp4',
         'info_dict': {
+            'id': '84981923',
+            'ext': 'mp4',
             'title': 'Soir 3',
         },
         'params': {
             'skip_download': True,
         },
-    }
+    }, {
+        'url': 'http://www.francetvinfo.fr/elections/europeennes/direct-europeennes-regardez-le-debat-entre-les-candidats-a-la-presidence-de-la-commission_600639.html',
+        'info_dict': {
+            'id': 'EV_20019',
+            'ext': 'mp4',
+            'title': 'Débat des candidats à la Commission européenne',
+            'description': 'Débat des candidats à la Commission européenne',
+        },
+        'params': {
+            'skip_download': 'HLS (reqires ffmpeg)'
+        }
+    }]
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
         page_title = mobj.group('title')
         webpage = self._download_webpage(url, page_title)
-        video_id = self._search_regex(r'id-video=(\d+?)[@"]', webpage, 'video id')
+        video_id = self._search_regex(r'id-video=((?:[^0-9]*?_)?[0-9]+)[@"]', webpage, 'video id')
         return self._extract_video(video_id)
 
 
@@ -199,7 +229,7 @@ class GenerationQuoiIE(InfoExtractor):
 
 class CultureboxIE(FranceTVBaseInfoExtractor):
     IE_NAME = 'culturebox.francetvinfo.fr'
-    _VALID_URL = r'https?://culturebox\.francetvinfo\.fr/(?P<name>.*?)(\?|$)'
+    _VALID_URL = r'https?://(?:m\.)?culturebox\.francetvinfo\.fr/(?P<name>.*?)(\?|$)'
 
     _TEST = {
         'url': 'http://culturebox.francetvinfo.fr/einstein-on-the-beach-au-theatre-du-chatelet-146813',

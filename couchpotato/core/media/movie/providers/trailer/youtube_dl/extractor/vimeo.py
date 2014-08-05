@@ -18,6 +18,7 @@ from ..utils import (
     std_headers,
     unsmuggle_url,
     urlencode_postdata,
+    int_or_none,
 )
 
 
@@ -29,7 +30,7 @@ class VimeoBaseInfoExtractor(InfoExtractor):
         (username, password) = self._get_login_info()
         if username is None:
             if self._LOGIN_REQUIRED:
-                raise ExtractorError(u'No login info available, needed for using %s.' % self.IE_NAME, expected=True)
+                raise ExtractorError('No login info available, needed for using %s.' % self.IE_NAME, expected=True)
             return
         self.report_login()
         login_url = 'https://vimeo.com/log_in'
@@ -74,43 +75,65 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
                 "uploader_id": "user7108434",
                 "uploader": "Filippo Valsorda",
                 "title": "youtube-dl test video - \u2605 \" ' \u5e78 / \\ \u00e4 \u21ad \U0001d550",
+                "duration": 10,
             },
         },
         {
             'url': 'http://vimeopro.com/openstreetmapus/state-of-the-map-us-2013/video/68093876',
-            'file': '68093876.mp4',
             'md5': '3b5ca6aa22b60dfeeadf50b72e44ed82',
             'note': 'Vimeo Pro video (#1197)',
             'info_dict': {
+                'id': '68093876',
+                'ext': 'mp4',
                 'uploader_id': 'openstreetmapus',
                 'uploader': 'OpenStreetMap US',
                 'title': 'Andy Allan - Putting the Carto into OpenStreetMap Cartography',
+                'duration': 1595,
             },
         },
         {
             'url': 'http://player.vimeo.com/video/54469442',
-            'file': '54469442.mp4',
             'md5': '619b811a4417aa4abe78dc653becf511',
             'note': 'Videos that embed the url in the player page',
             'info_dict': {
-                'title': 'Kathy Sierra: Building the minimum Badass User, Business of Software',
+                'id': '54469442',
+                'ext': 'mp4',
+                'title': 'Kathy Sierra: Building the minimum Badass User, Business of Software 2012',
                 'uploader': 'The BLN & Business of Software',
                 'uploader_id': 'theblnbusinessofsoftware',
+                'duration': 3610,
             },
         },
         {
             'url': 'http://vimeo.com/68375962',
-            'file': '68375962.mp4',
             'md5': 'aaf896bdb7ddd6476df50007a0ac0ae7',
             'note': 'Video protected with password',
             'info_dict': {
+                'id': '68375962',
+                'ext': 'mp4',
                 'title': 'youtube-dl password protected test video',
                 'upload_date': '20130614',
                 'uploader_id': 'user18948128',
                 'uploader': 'Jaime Marquínez Ferrándiz',
+                'duration': 10,
             },
             'params': {
                 'videopassword': 'youtube-dl',
+            },
+        },
+        {
+            'url': 'http://vimeo.com/channels/keypeele/75629013',
+            'md5': '2f86a05afe9d7abc0b9126d229bbe15d',
+            'note': 'Video is freely available via original URL '
+                    'and protected with password when accessed via http://vimeo.com/75629013',
+            'info_dict': {
+                'id': '75629013',
+                'ext': 'mp4',
+                'title': 'Key & Peele: Terrorist Interrogation',
+                'description': 'md5:8678b246399b070816b12313e8b4eb5c',
+                'uploader_id': 'atencio',
+                'uploader': 'Peter Atencio',
+                'duration': 187,
             },
         },
         {
@@ -125,6 +148,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
                 'upload_date': '20131015',
                 'uploader_id': 'staff',
                 'uploader': 'Vimeo Staff',
+                'duration': 62,
             }
         },
     ]
@@ -143,14 +167,16 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         if password is None:
             raise ExtractorError('This video is protected by a password, use the --video-password option')
         token = self._search_regex(r'xsrft: \'(.*?)\'', webpage, 'login token')
-        data = compat_urllib_parse.urlencode({'password': password,
-                                              'token': token})
+        data = compat_urllib_parse.urlencode({
+            'password': password,
+            'token': token,
+        })
         # I didn't manage to use the password with https
         if url.startswith('https'):
-            pass_url = url.replace('https','http')
+            pass_url = url.replace('https', 'http')
         else:
             pass_url = url
-        password_request = compat_urllib_request.Request(pass_url+'/password', data)
+        password_request = compat_urllib_request.Request(pass_url + '/password', data)
         password_request.add_header('Content-Type', 'application/x-www-form-urlencoded')
         password_request.add_header('Cookie', 'xsrft=%s' % token)
         self._download_webpage(password_request, video_id,
@@ -185,8 +211,6 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         video_id = mobj.group('id')
         if mobj.group('pro') or mobj.group('player'):
             url = 'http://player.vimeo.com/video/' + video_id
-        else:
-            url = 'https://vimeo.com/' + video_id
 
         # Retrieve video webpage to extract further information
         request = compat_urllib_request.Request(url, None, headers)
@@ -257,8 +281,9 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
         # Extract video description
         video_description = None
         try:
-            video_description = get_element_by_attribute("itemprop", "description", webpage)
-            if video_description: video_description = clean_html(video_description)
+            video_description = get_element_by_attribute("class", "description_wrapper", webpage)
+            if video_description:
+                video_description = clean_html(video_description)
         except AssertionError as err:
             # On some pages like (http://player.vimeo.com/video/54469442) the
             # html tags are not closed, python 2.6 cannot handle it
@@ -266,6 +291,9 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
                 pass
             else:
                 raise
+
+        # Extract video duration
+        video_duration = int_or_none(config["video"].get("duration"))
 
         # Extract upload date
         video_upload_date = None
@@ -304,7 +332,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
                     file_info = {}
                 if video_url is None:
                     video_url = "http://player.vimeo.com/play_redirect?clip_id=%s&sig=%s&time=%s&quality=%s&codecs=%s&type=moogaloop_local&embed_location=" \
-                        %(video_id, sig, timestamp, quality, codec_name.upper())
+                        % (video_id, sig, timestamp, quality, codec_name.upper())
 
                 files[key].append({
                     'ext': codec_extension,
@@ -338,6 +366,7 @@ class VimeoIE(VimeoBaseInfoExtractor, SubtitlesInfoExtractor):
             'title': video_title,
             'thumbnail': video_thumbnail,
             'description': video_description,
+            'duration': video_duration,
             'formats': formats,
             'webpage_url': url,
             'view_count': view_count,
@@ -363,7 +392,7 @@ class VimeoChannelIE(InfoExtractor):
         video_ids = []
         for pagenum in itertools.count(1):
             webpage = self._download_webpage(
-                self._page_url(base_url, pagenum) ,list_id,
+                self._page_url(base_url, pagenum), list_id,
                 'Downloading page %s' % pagenum)
             video_ids.extend(re.findall(r'id="clip_(\d+?)"', webpage))
             if re.search(self._MORE_PAGES_INDICATOR, webpage, re.DOTALL) is None:
@@ -379,7 +408,7 @@ class VimeoChannelIE(InfoExtractor):
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
-        channel_id =  mobj.group('id')
+        channel_id = mobj.group('id')
         return self._extract_videos(channel_id, 'http://vimeo.com/channels/%s' % channel_id)
 
 

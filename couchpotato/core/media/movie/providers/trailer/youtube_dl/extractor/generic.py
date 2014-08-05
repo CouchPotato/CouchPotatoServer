@@ -260,7 +260,35 @@ class GenericIE(InfoExtractor):
                 'uploader': 'Spi0n',
             },
             'add_ie': ['Dailymotion'],
-        }
+        },
+        # YouTube embed
+        {
+            'url': 'http://www.badzine.de/ansicht/datum/2014/06/09/so-funktioniert-die-neue-englische-badminton-liga.html',
+            'info_dict': {
+                'id': 'FXRb4ykk4S0',
+                'ext': 'mp4',
+                'title': 'The NBL Auction 2014',
+                'uploader': 'BADMINTON England',
+                'uploader_id': 'BADMINTONEvents',
+                'upload_date': '20140603',
+                'description': 'md5:9ef128a69f1e262a700ed83edb163a73',
+            },
+            'add_ie': ['Youtube'],
+            'params': {
+                'skip_download': True,
+            }
+        },
+        # MTVSercices embed
+        {
+            'url': 'http://www.gametrailers.com/news-post/76093/north-america-europe-is-getting-that-mario-kart-8-mercedes-dlc-too',
+            'md5': '35727f82f58c76d996fc188f9755b0d5',
+            'info_dict': {
+                'id': '0306a69b-8adf-4fb5-aace-75f8e8cbfca9',
+                'ext': 'mp4',
+                'title': 'Review',
+                'description': 'Mario\'s life in the fast lane has never looked so good.',
+            },
+        },
     ]
 
     def report_download_webpage(self, video_id):
@@ -348,27 +376,35 @@ class GenericIE(InfoExtractor):
         if url.startswith('//'):
             return {
                 '_type': 'url',
-                'url': (
-                    'http:'
-                    if self._downloader.params.get('prefer_insecure', False)
-                    else 'https:') + url,
+                'url': self.http_scheme() + url,
             }
 
         parsed_url = compat_urlparse.urlparse(url)
         if not parsed_url.scheme:
             default_search = self._downloader.params.get('default_search')
             if default_search is None:
-                default_search = 'auto_warning'
+                default_search = 'fixup_error'
 
-            if default_search in ('auto', 'auto_warning'):
+            if default_search in ('auto', 'auto_warning', 'fixup_error'):
                 if '/' in url:
                     self._downloader.report_warning('The url doesn\'t specify the protocol, trying with http')
                     return self.url_result('http://' + url)
-                else:
+                elif default_search != 'fixup_error':
                     if default_search == 'auto_warning':
-                        self._downloader.report_warning(
-                            'Falling back to youtube search for  %s . Set --default-search to "auto" to suppress this warning.' % url)
+                        if re.match(r'^(?:url|URL)$', url):
+                            raise ExtractorError(
+                                'Invalid URL:  %r . Call youtube-dl like this:  youtube-dl -v "https://www.youtube.com/watch?v=BaW_jenozKc"  ' % url,
+                                expected=True)
+                        else:
+                            self._downloader.report_warning(
+                                'Falling back to youtube search for  %s . Set --default-search "auto" to suppress this warning.' % url)
                     return self.url_result('ytsearch:' + url)
+
+            if default_search in ('error', 'fixup_error'):
+                raise ExtractorError(
+                    ('%r is not a valid URL. '
+                     'Set --default-search "ytsearch" (or run  youtube-dl "ytsearch:%s" ) to search YouTube'
+                    ) % (url, url), expected=True)
             else:
                 assert ':' in default_search
                 return self.url_result(default_search + url)
@@ -476,8 +512,13 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded YouTube player
         matches = re.findall(r'''(?x)
-            (?:<iframe[^>]+?src=|embedSWF\(\s*)
-            (["\'])(?P<url>(?:https?:)?//(?:www\.)?youtube\.com/
+            (?:
+                <iframe[^>]+?src=|
+                <embed[^>]+?src=|
+                embedSWF\(?:\s*
+            )
+            (["\'])
+                (?P<url>(?:https?:)?//(?:www\.)?youtube\.com/
                 (?:embed|v)/.+?)
             \1''', webpage)
         if matches:
@@ -563,7 +604,7 @@ class GenericIE(InfoExtractor):
 
         # Look for embedded NovaMov-based player
         mobj = re.search(
-            r'''(?x)<iframe[^>]+?src=(["\'])
+            r'''(?x)<(?:pagespeed_)?iframe[^>]+?src=(["\'])
                     (?P<url>http://(?:(?:embed|www)\.)?
                         (?:novamov\.com|
                            nowvideo\.(?:ch|sx|eu|at|ag|co)|
@@ -584,6 +625,11 @@ class GenericIE(InfoExtractor):
         mobj = re.search(r'<iframe[^>]+?src=(["\'])(?P<url>https?://vk\.com/video_ext\.php.+?)\1', webpage)
         if mobj is not None:
             return self.url_result(mobj.group('url'), 'VK')
+
+        # Look for embedded ivi player
+        mobj = re.search(r'<embed[^>]+?src=(["\'])(?P<url>https?://(?:www\.)?ivi\.ru/video/player.+?)\1', webpage)
+        if mobj is not None:
+            return self.url_result(mobj.group('url'), 'Ivi')
 
         # Look for embedded Huffington Post player
         mobj = re.search(
@@ -636,6 +682,30 @@ class GenericIE(InfoExtractor):
         if smotri_url:
             return self.url_result(smotri_url, 'Smotri')
 
+        # Look for embeded soundcloud player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://(?:w\.)?soundcloud\.com/player[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url)
+
+        # Look for embedded vulture.com player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://video\.vulture\.com/[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url, ie='Vulture')
+
+        # Look for embedded mtvservices player
+        mobj = re.search(
+            r'<iframe src="(?P<url>https?://media\.mtvnservices\.com/embed/[^"]+)"',
+            webpage)
+        if mobj is not None:
+            url = unescapeHTML(mobj.group('url'))
+            return self.url_result(url, ie='MTVServicesEmbedded')
+
         # Start with something easy: JW Player in SWFObject
         found = re.findall(r'flashvars: [\'"](?:.*&)?file=(http[^\'"&]*)', webpage)
         if not found:
@@ -667,7 +737,7 @@ class GenericIE(InfoExtractor):
             # HTML5 video
             found = re.findall(r'(?s)<video[^<]*(?:>.*?<source.*?)? src="([^"]+)"', webpage)
         if not found:
-            found = re.findall(
+            found = re.search(
                 r'(?i)<meta\s+(?=(?:[a-z-]+="[^"]+"\s+)*http-equiv="refresh")'
                 r'(?:[a-z-]+="[^"]+"\s+)*?content="[0-9]{,2};url=\'([^\']+)\'"',
                 webpage)

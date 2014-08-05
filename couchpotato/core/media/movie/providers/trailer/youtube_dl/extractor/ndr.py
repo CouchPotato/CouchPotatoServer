@@ -4,7 +4,11 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import ExtractorError
+from ..utils import (
+    ExtractorError,
+    int_or_none,
+    qualities,
+)
 
 
 class NDRIE(InfoExtractor):
@@ -14,15 +18,15 @@ class NDRIE(InfoExtractor):
 
     _TESTS = [
         {
-            'url': 'http://www.ndr.de/fernsehen/sendungen/markt/markt7959.html',
-            'md5': 'e7a6079ca39d3568f4996cb858dd6708',
+            'url': 'http://www.ndr.de/fernsehen/media/dienordreportage325.html',
+            'md5': '4a4eeafd17c3058b65f0c8f091355855',
             'note': 'Video file',
             'info_dict': {
-                'id': '7959',
+                'id': '325',
                 'ext': 'mp4',
-                'title': 'Markt - die ganze Sendung',
-                'description': 'md5:af9179cf07f67c5c12dc6d9997e05725',
-                'duration': 2655,
+                'title': 'Blaue Bohnen aus Blocken',
+                'description': 'md5:190d71ba2ccddc805ed01547718963bc',
+                'duration': 1715,
             },
         },
         {
@@ -45,17 +49,16 @@ class NDRIE(InfoExtractor):
 
         page = self._download_webpage(url, video_id, 'Downloading page')
 
-        title = self._og_search_title(page)
+        title = self._og_search_title(page).strip()
         description = self._og_search_description(page)
+        if description:
+            description = description.strip()
 
-        mobj = re.search(
-            r'<div class="duration"><span class="min">(?P<minutes>\d+)</span>:<span class="sec">(?P<seconds>\d+)</span></div>',
-            page)
-        duration = int(mobj.group('minutes')) * 60 + int(mobj.group('seconds')) if mobj else None
+        duration = int_or_none(self._html_search_regex(r'duration: (\d+),\n', page, 'duration', fatal=False))
 
         formats = []
 
-        mp3_url = re.search(r'''{src:'(?P<audio>[^']+)', type:"audio/mp3"},''', page)
+        mp3_url = re.search(r'''\{src:'(?P<audio>[^']+)', type:"audio/mp3"},''', page)
         if mp3_url:
             formats.append({
                 'url': mp3_url.group('audio'),
@@ -64,13 +67,15 @@ class NDRIE(InfoExtractor):
 
         thumbnail = None
 
-        video_url = re.search(r'''3: {src:'(?P<video>.+?)\.hi\.mp4', type:"video/mp4"},''', page)
+        video_url = re.search(r'''3: \{src:'(?P<video>.+?)\.hi\.mp4', type:"video/mp4"},''', page)
         if video_url:
-            thumbnail = self._html_search_regex(r'(?m)title: "NDR PLAYER",\s*poster: "([^"]+)",',
-                page, 'thumbnail', fatal=False)
-            if thumbnail:
-                thumbnail = 'http://www.ndr.de' + thumbnail
-            for format_id in ['lo', 'hi', 'hq']:
+            thumbnails = re.findall(r'''\d+: \{src: "([^"]+)"(?: \|\| '[^']+')?, quality: '([^']+)'}''', page)
+            if thumbnails:
+                quality_key = qualities(['xs', 's', 'm', 'l', 'xl'])
+                largest = max(thumbnails, key=lambda thumb: quality_key(thumb[1]))
+                thumbnail = 'http://www.ndr.de' + largest[0]
+
+            for format_id in 'lo', 'hi', 'hq':
                 formats.append({
                     'url': '%s.%s.mp4' % (video_url.group('video'), format_id),
                     'format_id': format_id,
