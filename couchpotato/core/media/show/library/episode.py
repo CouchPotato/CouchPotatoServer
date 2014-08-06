@@ -60,7 +60,8 @@ class EpisodeLibraryPlugin(LibraryBase):
         #     identifier['episode'] = scene_map.get('episode_nr')
         # else:
         # Fallback to normal season/episode numbers
-        identifier['season'] = media['info'].get('season_number')
+        related = fireEvent('library.related', media, single = True)
+        identifier['season'] = related['season']['info']['number']
         identifier['episode'] = media['info'].get('number')
 
         # Cast identifiers to integers
