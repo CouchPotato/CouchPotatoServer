@@ -185,7 +185,7 @@ Block.Search.ShowItem = new Class({
 				self.category_select.show();
 				categories.each(function(category){
 					new Element('option', {
-						'value': category.data.id,
+						'value': category.data._id,
 						'text': category.data.label
 					}).inject(self.category_select);
 				});
@@ -198,8 +198,8 @@ Block.Search.ShowItem = new Class({
 
 			profiles.each(function(profile){
 				new Element('option', {
-					'value': profile.id ? profile.id : profile.data.id,
-					'text': profile.label ? profile.label : profile.data.label
+                    'value': profile.id ? profile.id : profile.data.id,
+                    'text': profile.label ? profile.label : profile.data.label
 				}).inject(self.profile_select)
 			});
 
