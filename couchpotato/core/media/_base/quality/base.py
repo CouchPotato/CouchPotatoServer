@@ -28,9 +28,11 @@ class QualityBase(Plugin):
 
     def __init__(self):
         addEvent('quality.pre_releases', self.preReleases)
+
+        addEvent('quality.get', self.get)
         addEvent('quality.all', self.all)
         addEvent('quality.reset_cache', self.resetCache)
-        addEvent('quality.single', self.single)
+
         addEvent('quality.fill', self.fill)
         addEvent('quality.isfinish', self.isFinish)
         addEvent('quality.ishigher', self.isHigher)
@@ -47,6 +49,11 @@ class QualityBase(Plugin):
             return
 
         return self.pre_releases
+
+    def get(self, identifier):
+        for q in self.qualities:
+            if identifier == q.get('identifier'):
+                return q
 
     def all(self, types = None):
         if types and self.type not in types:
@@ -70,23 +77,6 @@ class QualityBase(Plugin):
 
     def resetCache(self):
         self.cached_qualities = None
-
-    def single(self, identifier = ''):
-
-        db = get_db()
-        quality_dict = {}
-
-        quality = db.get('quality', identifier, with_doc = True)['doc']
-        if quality:
-            quality_dict = mergeDicts(self.getQuality(quality['identifier']), quality)
-
-        return quality_dict
-
-    def getQuality(self, identifier):
-
-        for q in self.qualities:
-            if identifier == q.get('identifier'):
-                return q
 
     def fill(self):
 

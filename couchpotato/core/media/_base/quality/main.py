@@ -2,7 +2,8 @@ import traceback
 
 from couchpotato import fireEvent, get_db, tryInt, CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.variable import splitString, mergeDicts
 from couchpotato.core.media._base.quality.index import QualityIndex
 from couchpotato.core.plugins.base import Plugin
 
@@ -15,6 +16,8 @@ class Quality(Plugin):
     }
 
     def __init__(self):
+        addEvent('quality.single', self.single)
+
         addApiView('quality.list', self.allView, docs = {
             'desc': 'List all available qualities',
             'params': {
@@ -27,6 +30,18 @@ class Quality(Plugin):
         })
 
         addApiView('quality.size.save', self.saveSize)
+
+    def single(self, identifier = ''):
+        db = get_db()
+        quality = db.get('quality', identifier, with_doc = True)['doc']
+
+        if quality:
+            return mergeDicts(
+                fireEvent('quality.get', quality['identifier'], single = True),
+                quality
+            )
+
+        return {}
 
     def allView(self, **kwargs):
 
