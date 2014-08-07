@@ -47,7 +47,7 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
             'result': fireEvent('%s.searcher.single' % self.getType(), media, single = True)
         }
 
-    def single(self, media, profile = None, quality_order = None, search_protocols = None, manual = False):
+    def single(self, media, profile = None, search_protocols = None, manual = False):
         db = get_db()
 
         related = fireEvent('library.related', media, single = True)
@@ -62,9 +62,6 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
         if not profile and related['show']['profile_id']:
             profile = db.get('id', related['show']['profile_id'])
-
-        if not quality_order:
-            quality_order = fireEvent('quality.order', single = True)
 
         # TODO: check episode status
         # TODO: check air date
@@ -93,8 +90,13 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
             # See if better quality is available
             for release in releases:
-                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
-                    has_better_quality += 1
+                if release['status'] not in ['available', 'ignored', 'failed']:
+                    is_higher = fireEvent('quality.ishigher', \
+                                          {'identifier': q_identifier, 'is_3d': quality_custom.get('3d', 0)}, \
+                                          {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, \
+                                          profile, single = True)
+                    if is_higher != 'higher':
+                        has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
