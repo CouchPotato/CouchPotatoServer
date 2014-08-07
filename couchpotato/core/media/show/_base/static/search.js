@@ -198,8 +198,8 @@ Block.Search.ShowItem = new Class({
 
 			profiles.each(function(profile){
 				new Element('option', {
-                    'value': profile.id ? profile.id : profile.data.id,
-                    'text': profile.label ? profile.label : profile.data.label
+					'value': profile.id ? profile.id : profile.data.id,
+					'text': profile.label ? profile.label : profile.data.label
 				}).inject(self.profile_select)
 			});
 
