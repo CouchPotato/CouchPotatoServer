@@ -66,7 +66,7 @@ def namePositionScore(nzb_name, movie_name):
     score = 0
 
     nzb_words = re.split('\W+', simplifyString(nzb_name))
-    qualities = fireEvent('quality.all', single = True)
+    qualities = fireEvent('quality.all', merge = True)
 
     try:
         nzb_name = re.search(r'([\'"])[^\1]*\1', nzb_name).group(0)

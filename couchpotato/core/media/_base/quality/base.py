@@ -3,55 +3,19 @@ import re
 
 from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
-from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.plugins.quality.index import QualityIndex
 
 
 log = CPLog(__name__)
 
 
-class QualityPlugin(Plugin):
+class QualityBase(Plugin):
 
-    _database = {
-        'quality': QualityIndex
-    }
-
-    qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
-        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
-        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p'], 'ext':[]},
-        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]},
-
-        # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
-        # BluRay
-        {'identifier': 'bluray_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bluray_720p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BDRip
-        {'identifier': 'bdrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bdrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BRRip
-        {'identifier': 'brrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'brrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # WEB-DL
-        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_480p', 'hd': True, 'size': (100, 5000), 'label': 'WEB-DL - 480p', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # HDTV
-        {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
-    ]
+    qualities = []
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
         'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
@@ -71,15 +35,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.ishigher', self.isHigher)
         addEvent('quality.isfinish', self.isFinish)
         addEvent('quality.fill', self.fill)
-
-        addApiView('quality.size.save', self.saveSize)
-        addApiView('quality.list', self.allView, docs = {
-            'desc': 'List all available qualities',
-            'return': {'type': 'object', 'example': """{
-            'success': True,
-            'list': array, qualities
-}"""}
-        })
+        addEvent('quality.reset_cache', self.resetCache)
 
         addEvent('app.initialize', self.fill, priority = 10)
 
@@ -99,12 +55,8 @@ class QualityPlugin(Plugin):
     def preReleases(self):
         return self.pre_releases
 
-    def allView(self, **kwargs):
-
-        return {
-            'success': True,
-            'list': self.all()
-        }
+    def resetCache(self):
+        self.cached_qualities = None
 
     def all(self):
 
@@ -140,28 +92,6 @@ class QualityPlugin(Plugin):
         for q in self.qualities:
             if identifier == q.get('identifier'):
                 return q
-
-    def saveSize(self, **kwargs):
-
-        try:
-            db = get_db()
-            quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
-
-            if quality:
-                quality['doc'][kwargs.get('value_type')] = tryInt(kwargs.get('value'))
-                db.update(quality['doc'])
-
-            self.cached_qualities = None
-
-            return {
-                'success': True
-            }
-        except:
-            log.error('Failed: %s', traceback.format_exc())
-
-        return {
-            'success': False
-        }
 
     def fill(self):
 
@@ -494,5 +424,3 @@ class QualityPlugin(Plugin):
             return True
         else:
             log.error('Quality test failed: %s out of %s succeeded', (correct, len(tests)))
-
-
