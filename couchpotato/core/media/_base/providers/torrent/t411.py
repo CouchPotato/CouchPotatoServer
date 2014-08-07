@@ -123,13 +123,11 @@ class Base(TorrentProvider):
                                     continue
                                 url = ('http://www.t411.me/torrents/download/?id=%s' % idt)
                                 detail_url = ('http://www.t411.me/torrents/?id=%s' % idt)
-    
+                                log.error('Failed parsing T411: %s',result)
+                                leecher = result.findAll('td')[8].text
                                 size = result.findAll('td')[5].text
                                 age = result.findAll('td')[4].text
                                 seeder = result.findAll('td')[7].text
-                                leecher = result.findAll('td')[8].text
-                                log.error('TEST: %s' % size)
-                                log.error('TEST: %s' % age)
         
                                 def extra_check(item):
                                     return True
@@ -158,11 +156,8 @@ class Base(TorrentProvider):
     def ageToDays(self, age_str):
         age = 0
         age_str = age_str.replace('&nbsp;', ' ')
-        log.error('TEST: %s' % age_str)
-
         regex = '(\d*.?\d+).(sec|heure|heures|jour|jours|semaine|semaines|mois|ans|an)+'
         matches = re.findall(regex, age_str)
-        log.error('TEST: %s' % str(matches))
         for match in matches:
             nr, size = match
             mult = 0
