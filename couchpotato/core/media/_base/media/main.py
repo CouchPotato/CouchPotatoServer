@@ -185,17 +185,15 @@ class MediaPlugin(MediaBase):
                     yield ms
 
     def withIdentifiers(self, identifiers, with_doc = False):
-
         db = get_db()
 
         for x in identifiers:
             try:
-                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
-                return media
+                return db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
             except:
                 pass
 
-        log.debug('No media found with identifiers: %s', identifiers)
+        return False
 
     def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, with_tags = None, starts_with = None, search = None):
 
