@@ -1,13 +1,11 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
+from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.helpers import namer_check
-from dateutil.parser import parse
 import cookielib
 import re
-import traceback
 import urllib2
 import urllib
 from StringIO import StringIO
@@ -109,8 +107,6 @@ class Base(TorrentProvider):
                     x=x+1
                     if (x > 1): 
                         #bypass first row because title only
-                        columns = row.find('td')                            
-                     
                         link = row.findAll('td')[1].find("a",  href=re.compile("torrent-details"))
                         if link:
                             new={}           

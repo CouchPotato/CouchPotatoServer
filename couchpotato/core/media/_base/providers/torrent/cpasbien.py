@@ -3,7 +3,6 @@ from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
-from dateutil.parser import parse
 import cookielib
 import re
 import traceback
@@ -98,11 +97,11 @@ class Base(TorrentProvider):
                             
                             html_detail = BeautifulSoup(data_detail)                                
                             url_tmp = html_detail.find_all('div', attrs = {'class':'download-torrent'})[0].find_all('a')[0]['href']    
-                            url_download = ('http://www.cpasbien.me%s' % url_tmp)
+                            url_download = ('http://www.cpasbien.pe%s' % url_tmp)
                         else:
                             tmp = result.find_all('td')[0].find_all('a')[0]['href']
                             tmp = tmp.split('/')[6].replace('.html','.torrent')
-                            url_download = ('http://www.cpasbien.me/_torrents/%s' % tmp)
+                            url_download = ('http://www.cpasbien.pe/_torrents/%s' % tmp)
 
 
 

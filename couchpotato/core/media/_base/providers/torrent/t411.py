@@ -4,7 +4,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.helpers import namer_check
-from dateutil.parser import parse
 import cookielib
 import re
 import traceback
