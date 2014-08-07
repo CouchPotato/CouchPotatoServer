@@ -99,10 +99,10 @@ class Base(TorrentProvider):
     
                     resultdiv = html.find('table', attrs = {'class':'results'}).find('tbody')
     
-                    for result in resultdiv.find_all('tr', recursive = False):
+                    for result in resultdiv.findAll('tr', recursive = False):
     
                         try:
-                            categorie = result.find_all('td')[0].find_all('a')[0]['href'][result.find_all('td')[0].find_all('a')[0]['href'].find('='):]
+                            categorie = result.findAll('td')[0].findAll('a')[0]['href'][result.findAll('td')[0].findAll('a')[0]['href'].find('='):]
                             insert = 0
                         
                             if categorie == '=631':
@@ -116,18 +116,18 @@ class Base(TorrentProvider):
                          
                                 new = {}
         
-                                idt = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
-                                name = result.find_all('td')[1].find_all('a')[0]['title']
+                                idt = result.findAll('td')[2].findAll('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
+                                name = result.findAll('td')[1].findAll('a')[0]['title']
                                 testname=namer_check.correctName(name,movie)
                                 if testname==0:
                                     continue
                                 url = ('http://www.t411.me/torrents/download/?id=%s' % idt)
                                 detail_url = ('http://www.t411.me/torrents/?id=%s' % idt)
     
-                                size = result.find_all('td')[5].text
-                                age = result.find_all('td')[4].text
-                                seeder = result.find_all('td')[7].text
-                                leecher = result.find_all('td')[8].text
+                                size = result.findAll('td')[5].text
+                                age = result.findAll('td')[4].text
+                                seeder = result.findAll('td')[7].text
+                                leecher = result.findAll('td')[8].text
                                 log.error('TEST: %s' % size)
                                 log.error('TEST: %s' % age)
         
