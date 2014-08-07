@@ -128,6 +128,8 @@ class Base(TorrentProvider):
                                 age = result.find_all('td')[4].text
                                 seeder = result.find_all('td')[7].text
                                 leecher = result.find_all('td')[8].text
+                                log.error('TEST: %s' % size)
+                                log.error('TEST: %s' % age)
         
                                 def extra_check(item):
                                     return True
@@ -156,9 +158,11 @@ class Base(TorrentProvider):
     def ageToDays(self, age_str):
         age = 0
         age_str = age_str.replace('&nbsp;', ' ')
+        log.error('TEST: %s' % age_str)
 
         regex = '(\d*.?\d+).(sec|heure|heures|jour|jours|semaine|semaines|mois|ans|an)+'
         matches = re.findall(regex, age_str)
+        log.error('TEST: %s' % str(matches))
         for match in matches:
             nr, size = match
             mult = 0
