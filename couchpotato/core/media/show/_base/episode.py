@@ -84,6 +84,8 @@ class Episode(MediaBase):
                 merge = True
             )
 
+            info['season_number'] = season.get('info', {}).get('number')
+
         identifiers = info.pop('identifiers', None) or identifiers
 
         # Update/create media
