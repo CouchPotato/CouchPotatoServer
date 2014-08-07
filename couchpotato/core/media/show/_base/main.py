@@ -78,8 +78,6 @@ class ShowBase(MediaBase):
             log.error('Failed adding media: %s', traceback.format_exc())
 
     def create(self, info, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
-        db = get_db()
-
         # Set default title
         def_title = self.getDefaultTitle(info)
 
@@ -106,29 +104,34 @@ class ShowBase(MediaBase):
         # Update media with info
         self.updateInfo(media, info)
 
-        new = False
-        try:
-            m = db.get('media', 'thetvdb-%s' % params.get('identifiers', {}).get('thetvdb'), with_doc = True)['doc']
-        except:
-            new = True
-            m = db.insert(media)
+        existing_show = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True)
+
+        db = get_db()
+
+        if existing_show:
+            s = existing_show['doc']
+            s.update(media)
+
+            show = db.update(s)
+        else:
+            show = db.insert(media)
 
         # Update dict to be usable
-        m.update(media)
+        show.update(media)
 
         added = True
         do_search = False
         search_after = search_after and self.conf('search_on_add', section = 'showsearcher')
         onComplete = None
 
-        if new:
+        if existing_show:
             if search_after:
-                onComplete = self.createOnComplete(m['_id'])
+                onComplete = self.createOnComplete(show['_id'])
 
             search_after = False
         elif force_readd:
             # Clean snatched history
-            for release in fireEvent('release.for_media', m['_id'], single = True):
+            for release in fireEvent('release.for_media', show['_id'], single = True):
                 if release.get('status') in ['downloaded', 'snatched', 'done']:
                     if params.get('ignore_previous', False):
                         release['status'] = 'ignored'
@@ -136,35 +139,35 @@ class ShowBase(MediaBase):
                     else:
                         fireEvent('release.delete', release['_id'], single = True)
 
-            m['profile_id'] = params.get('profile_id', default_profile.get('id'))
-            m['category_id'] = media.get('category_id')
-            m['last_edit'] = int(time.time())
+            show['profile_id'] = params.get('profile_id', default_profile.get('id'))
+            show['category_id'] = media.get('category_id')
+            show['last_edit'] = int(time.time())
 
             do_search = True
-            db.update(m)
+            db.update(show)
         else:
             params.pop('info', None)
             log.debug('Show already exists, not updating: %s', params)
             added = False
 
         # Create episodes
-        self.createEpisodes(m, seasons)
+        self.createEpisodes(show, seasons)
 
         # Trigger update info
         if added and update_after:
             # Do full update to get images etc
-            fireEventAsync('show.update_extras', m.copy(), info, store = True, on_complete = onComplete)
+            fireEventAsync('show.update_extras', show.copy(), info, store = True, on_complete = onComplete)
 
         # Remove releases
-        for rel in fireEvent('release.for_media', m['_id'], single = True):
+        for rel in fireEvent('release.for_media', show['_id'], single = True):
             if rel['status'] is 'available':
                 db.delete(rel)
 
         if do_search and search_after:
-            onComplete = self.createOnComplete(m['_id'])
+            onComplete = self.createOnComplete(show['_id'])
             onComplete()
 
-        return m, added
+        return show, added
 
     def createEpisodes(self, m, seasons_info):
         # Add Seasons
