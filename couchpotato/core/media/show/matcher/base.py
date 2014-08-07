@@ -1,18 +1,8 @@
-from couchpotato import CPLog
-from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato import fireEvent, CPLog, tryInt
+from couchpotato.core.event import addEvent
 from couchpotato.core.media._base.matcher.base import MatcherBase
-from couchpotato.core.media._base.providers.base import MultiProvider
 
 log = CPLog(__name__)
-
-autoload = 'ShowMatcher'
-
-
-class ShowMatcher(MultiProvider):
-
-    def getTypes(self):
-        return [Season, Episode]
 
 
 class Base(MatcherBase):
@@ -80,52 +70,3 @@ class Base(MatcherBase):
             identifier[key] = tryInt(value, value)
 
         return identifier
-
-
-class Episode(Base):
-    type = 'show.episode'
-
-    def correctIdentifier(self, chain, media):
-        identifier = self.getChainIdentifier(chain)
-        if not identifier:
-            log.info2('Wrong: release identifier is not valid (unsupported or missing identifier)')
-            return False
-
-        # TODO - Parse episode ranges from identifier to determine if they are multi-part episodes
-        if any([x in identifier for x in ['episode_from', 'episode_to']]):
-            log.info2('Wrong: releases with identifier ranges are not supported yet')
-            return False
-
-        required = fireEvent('library.identifier', media, single = True)
-
-        # TODO - Support air by date episodes
-        # TODO - Support episode parts
-
-        if identifier != required:
-            log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))
-            return False
-
-        return True
-
-
-class Season(Base):
-    type = 'show.season'
-
-    def correctIdentifier(self, chain, media):
-        identifier = self.getChainIdentifier(chain)
-        if not identifier:
-            log.info2('Wrong: release identifier is not valid (unsupported or missing identifier)')
-            return False
-
-        # TODO - Parse episode ranges from identifier to determine if they are season packs
-        if any([x in identifier for x in ['episode_from', 'episode_to']]):
-            log.info2('Wrong: releases with identifier ranges are not supported yet')
-            return False
-
-        required = fireEvent('library.identifier', media, single = True)
-
-        if identifier != required:
-            log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))
-            return False
-
-        return True
