@@ -1,9 +1,12 @@
+from couchpotato.core.event import addEvent
 from couchpotato.core.media._base.quality.base import QualityBase
 
 autoload = 'ShowQuality'
 
 
 class ShowQuality(QualityBase):
+    type = 'show'
+
     qualities = [
         # BluRay
         {'identifier': 'bluray_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
@@ -22,3 +25,14 @@ class ShowQuality(QualityBase):
         {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
         {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
     ]
+
+    def __init__(self):
+        super(ShowQuality, self).__init__()
+
+        addEvent('quality.guess', self.guess)
+
+    def guess(self, files, extra = None, size = None, types = None):
+        if types and self.type not in types:
+            return
+
+        raise NotImplementedError()
