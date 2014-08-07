@@ -136,8 +136,8 @@ class Base(TorrentProvider):
                                 new['name'] = name + ' french'
                                 new['url'] = url
                                 new['detail_url'] = detail_url
-                                new['size'] = self.parseSize(size)
-                                new['age'] = self.ageToDays(age)
+                                new['size'] = self.parseSize(str(size))
+                                new['age'] = self.ageToDays(str(age))
                                 new['seeders'] = tryInt(seeder)
                                 new['leechers'] = tryInt(leecher)
                                 new['extra_check'] = extra_check
@@ -157,16 +157,18 @@ class Base(TorrentProvider):
         age = 0
         age_str = age_str.replace('&nbsp;', ' ')
 
-        regex = '(\d*.?\d+).(sec|heure|jour|semaine|mois|ans)+'
+        regex = '(\d*.?\d+).(sec|heure|heures|jour|jours|semaine|semaines|mois|ans|an)+'
         matches = re.findall(regex, age_str)
         for match in matches:
             nr, size = match
-            mult = 1
-            if size == 'semaine':
+            mult = 0
+            if size in ('jour','jours'):
+                mult = 1
+            if size in ('semaine','semaines'):
                 mult = 7
             elif size == 'mois':
-                mult = 30.5
-            elif size == 'ans':
+                mult = 30
+            elif size in ('ans','an'):
                 mult = 365
 
             age += tryInt(nr) * mult
