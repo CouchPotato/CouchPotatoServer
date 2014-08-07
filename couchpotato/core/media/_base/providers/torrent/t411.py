@@ -99,7 +99,7 @@ class Base(TorrentProvider):
     
                     resultdiv = html.find('table', attrs = {'class':'results'}).find('tbody')
     
-                    for result in resultdiv.findAll('tr', recursive = False):
+                    for result in resultdiv.findAll('tr'):
     
                         try:
                             categorie = result.findAll('td')[0].findAll('a')[0]['href'][result.findAll('td')[0].findAll('a')[0]['href'].find('='):]
@@ -123,7 +123,6 @@ class Base(TorrentProvider):
                                     continue
                                 url = ('http://www.t411.me/torrents/download/?id=%s' % idt)
                                 detail_url = ('http://www.t411.me/torrents/?id=%s' % idt)
-                                log.error('Failed parsing T411: %s',result)
                                 leecher = result.findAll('td')[8].text
                                 size = result.findAll('td')[5].text
                                 age = result.findAll('td')[4].text
