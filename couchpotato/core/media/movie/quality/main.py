@@ -1,9 +1,19 @@
+import re
+
+from couchpotato import CPLog
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.variable import getExt, splitString, tryInt
 from couchpotato.core.media._base.quality.base import QualityBase
+
+log = CPLog(__name__)
 
 autoload = 'MovieQuality'
 
 
 class MovieQuality(QualityBase):
+    type = 'movie'
+
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
         {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
@@ -17,3 +27,260 @@ class MovieQuality(QualityBase):
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]},
     ]
+
+    def __init__(self):
+        super(MovieQuality, self).__init__()
+
+        addEvent('quality.guess', self.guess)
+
+        addEvent('app.test', self.doTest)
+
+    def guess(self, files, extra = None, size = None, types = None):
+        if types and self.type not in types:
+            return
+
+        if not extra: extra = {}
+
+        # Create hash for cache
+        cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
+        cached = self.getCache(cache_key)
+        if cached and len(extra) == 0:
+            return cached
+
+        qualities = self.all()
+
+        # Start with 0
+        score = {}
+        for quality in qualities:
+            score[quality.get('identifier')] = {
+                'score': 0,
+                '3d': {}
+            }
+
+        for cur_file in files:
+            words = re.split('\W+', cur_file.lower())
+            name_year = fireEvent('scanner.name_year', cur_file, file_name = cur_file, single = True)
+            threed_words = words
+            if name_year and name_year.get('name'):
+                split_name = splitString(name_year.get('name'), ' ')
+                threed_words = [x for x in words if x not in split_name]
+
+            for quality in qualities:
+                contains_score = self.containsTagScore(quality, words, cur_file)
+                threedscore = self.contains3D(quality, threed_words, cur_file) if quality.get('allow_3d') else (0, None)
+
+                self.calcScore(score, quality, contains_score, threedscore)
+
+        size_scores = []
+        for quality in qualities:
+
+            # Evaluate score based on size
+            size_score = self.guessSizeScore(quality, size = size)
+            loose_score = self.guessLooseScore(quality, extra = extra)
+
+            if size_score > 0:
+                size_scores.append(quality)
+
+            self.calcScore(score, quality, size_score + loose_score, penalty = False)
+
+        # Add additional size score if only 1 size validated
+        if len(size_scores) == 1:
+            self.calcScore(score, size_scores[0], 10, penalty = False)
+        del size_scores
+
+        # Return nothing if all scores are <= 0
+        has_non_zero = 0
+        for s in score:
+            if score[s]['score'] > 0:
+                has_non_zero += 1
+
+        if not has_non_zero:
+            return None
+
+        heighest_quality = max(score, key = lambda p: score[p]['score'])
+        if heighest_quality:
+            for quality in qualities:
+                if quality.get('identifier') == heighest_quality:
+                    quality['is_3d'] = False
+                    if score[heighest_quality].get('3d'):
+                        quality['is_3d'] = True
+                    return self.setCache(cache_key, quality)
+
+        return None
+
+    def containsTagScore(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+        score = 0
+
+        extension = words[-1]
+        words = words[:-1]
+
+        points = {
+            'identifier': 10,
+            'label': 10,
+            'alternative': 9,
+            'tags': 9,
+            'ext': 3,
+            }
+
+        # Check alt and tags
+        for tag_type in ['identifier', 'alternative', 'tags', 'label']:
+            qualities = quality.get(tag_type, [])
+            qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
+
+            for alt in qualities:
+                if isinstance(alt, tuple):
+                    if len(set(words) & set(alt)) == len(alt):
+                        log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
+                        score += points.get(tag_type)
+
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in words:
+                    log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
+                    score += points.get(tag_type) / 2
+
+            if list(set(qualities) & set(words)):
+                log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
+                score += points.get(tag_type)
+
+        # Check extention
+        for ext in quality.get('ext', []):
+            if ext == extension:
+                log.debug('Found %s with .%s extension in %s', (quality['identifier'], ext, cur_file))
+                score += points['ext']
+
+        return score
+
+    def contains3D(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+
+        for key in self.threed_tags:
+            tags = self.threed_tags.get(key, [])
+
+            for tag in tags:
+                if isinstance(tag, tuple):
+                    if len(set(words) & set(tag)) == len(tag):
+                        log.debug('Found %s in %s', (tag, cur_file))
+                        return 1, key
+                elif tag in words:
+                    log.debug('Found %s in %s', (tag, cur_file))
+                    return 1, key
+
+        return 0, None
+
+    def guessLooseScore(self, quality, extra = None):
+
+        score = 0
+
+        if extra:
+
+            # Check width resolution, range 20
+            if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
+                log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
+                score += 5
+
+            # Check height resolution, range 20
+            if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
+                log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height'), extra.get('resolution_height', 0)))
+                score += 5
+
+            if quality.get('identifier') == 'dvdrip' and 480 <= extra.get('resolution_width', 0) <= 720:
+                log.debug('Add point for correct dvdrip resolutions')
+                score += 1
+
+        return score
+
+
+    def guessSizeScore(self, quality, size = None):
+
+        score = 0
+
+        if size:
+
+            if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
+                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
+                score += 5
+            else:
+                score -= 5
+
+        return score
+
+    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = True):
+
+        score[quality['identifier']]['score'] += add_score
+
+        threedscore, threedtag = threedscore
+        if threedscore and threedtag:
+            if threedscore not in score[quality['identifier']]['3d']:
+                score[quality['identifier']]['3d'][threedtag] = 0
+
+            score[quality['identifier']]['3d'][threedtag] += threedscore
+
+        # Set order for allow calculation (and cache)
+        if not self.cached_order:
+            self.cached_order = {}
+            for q in self.qualities:
+                self.cached_order[q.get('identifier')] = self.qualities.index(q)
+
+        if penalty and add_score != 0:
+            for allow in quality.get('allow', []):
+                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+
+            # Give panelty for all lower qualities
+            for q in self.qualities[self.order.index(quality.get('identifier'))+1:]:
+                if score.get(q.get('identifier')):
+                    score[q.get('identifier')]['score'] -= 1
+
+    def doTest(self):
+
+        tests = {
+            'Movie Name (1999)-DVD-Rip.avi': {'size': 700, 'quality': 'dvdrip'},
+            'Movie Name 1999 720p Bluray.mkv': {'size': 4200, 'quality': '720p'},
+            'Movie Name 1999 BR-Rip 720p.avi': {'size': 1000, 'quality': 'brrip'},
+            'Movie Name 1999 720p Web Rip.avi': {'size': 1200, 'quality': 'scr'},
+            'Movie Name 1999 Web DL.avi': {'size': 800, 'quality': 'brrip'},
+            'Movie.Name.1999.1080p.WEBRip.H264-Group': {'size': 1500, 'quality': 'scr'},
+            'Movie.Name.1999.DVDRip-Group': {'size': 750, 'quality': 'dvdrip'},
+            'Movie.Name.1999.DVD-Rip-Group': {'size': 700, 'quality': 'dvdrip'},
+            'Movie.Name.1999.DVD-R-Group': {'size': 4500, 'quality': 'dvdr'},
+            'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': {'size': 5500, 'quality': '720p'},
+            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': {'size': 8500, 'extra': {'resolution_width': 1920, 'resolution_height': 1080} , 'quality': '1080p'},
+            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': {'size': 8000, 'quality': '1080p'},
+            'Movie.Name.2013.BR-Disk-Group.iso': {'size': 48000, 'quality': 'bd50'},
+            'Movie.Name.2013.2D+3D.BR-Disk-Group.iso': {'size': 52000, 'quality': 'bd50', 'is_3d': True},
+            'Movie.Rising.Name.Girl.2011.NTSC.DVD9-GroupDVD': {'size': 7200, 'quality': 'dvdr'},
+            'Movie Name (2013) 2D + 3D': {'size': 49000, 'quality': 'bd50', 'is_3d': True},
+            'Movie Monuments 2013 BrRip 1080p': {'size': 1800, 'quality': 'brrip'},
+            'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
+            'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True},
+            '/volume1/Public/3D/Moviename/Moviename (2009).3D.SBS.ts': {'size': 7500, 'quality': '1080p', 'is_3d': True},
+            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 5500, 'quality': '1080p'},
+            '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
+            'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
+            'Moviename 2014 720p HDCAM XviD DualAudio': {'size': 4000, 'quality': 'cam'},
+            'Moviename (2014) - 720p CAM x264': {'size': 2250, 'quality': 'cam'},
+            'Movie Name (2014).mp4': {'size': 750, 'quality': 'brrip'},
+            'Moviename.2014.720p.R6.WEB-DL.x264.AC3-xyz': {'size': 750, 'quality': 'r5'},
+            'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 750, 'quality': 'cam'},
+            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'}
+        }
+
+        correct = 0
+        for name in tests:
+            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
+            success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
+            if not success:
+                log.error('%s failed check, thinks it\'s "%s" expecting "%s"', (name,
+                                                                                test_quality.get('identifier') + (' 3D' if test_quality.get('is_3d') else ''),
+                                                                                tests[name]['quality'] + (' 3D' if tests[name].get('is_3d') else '')
+                ))
+
+            correct += success
+
+        if correct == len(tests):
+            log.info('Quality test successful')
+            return True
+        else:
+            log.error('Quality test failed: %s out of %s succeeded', (correct, len(tests)))

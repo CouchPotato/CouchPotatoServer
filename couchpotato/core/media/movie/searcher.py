@@ -276,13 +276,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        contains_other = fireEvent('searcher.contains_other_quality', nzb, movie_year = media['info']['year'], preferred_quality = preferred_quality, single = True)
+        contains_other = fireEvent('searcher.contains_other_quality', nzb, movie_year = media['info']['year'], preferred_quality = preferred_quality, types = [self._type], single = True)
         if contains_other != False:
             log.info2('Wrong: %s, looking for %s, found %s', (nzb['name'], quality['label'], [x for x in contains_other] if contains_other else 'no quality'))
             return False
 
         # Contains lower quality string
-        if not fireEvent('searcher.correct_3d', nzb, preferred_quality = preferred_quality, single = True):
+        if not fireEvent('searcher.correct_3d', nzb, preferred_quality = preferred_quality, types = [self._type], single = True):
             log.info2('Wrong: %s, %slooking for %s in 3D', (nzb['name'], ('' if preferred_quality['custom'].get('3d') else 'NOT '), quality['label']))
             return False
 

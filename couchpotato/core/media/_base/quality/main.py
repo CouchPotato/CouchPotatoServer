@@ -2,6 +2,7 @@ import traceback
 
 from couchpotato import fireEvent, get_db, tryInt, CPLog
 from couchpotato.api import addApiView
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.media._base.quality.index import QualityIndex
 from couchpotato.core.plugins.base import Plugin
 
@@ -16,6 +17,9 @@ class Quality(Plugin):
     def __init__(self):
         addApiView('quality.list', self.allView, docs = {
             'desc': 'List all available qualities',
+            'params': {
+                'type': {'type': 'string', 'desc': 'Media type to filter on.'},
+            },
             'return': {'type': 'object', 'example': """{
             'success': True,
             'list': array, qualities
@@ -28,7 +32,11 @@ class Quality(Plugin):
 
         return {
             'success': True,
-            'list': fireEvent('quality.all', merge = True)
+            'list': fireEvent(
+                'quality.all',
+                types = splitString(kwargs.get('type')),
+                merge = True
+            )
         }
 
     def saveSize(self, **kwargs):
