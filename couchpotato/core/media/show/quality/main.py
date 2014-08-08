@@ -7,23 +7,47 @@ autoload = 'ShowQuality'
 class ShowQuality(QualityBase):
     type = 'show'
 
+    properties = {
+        'codec': [
+            {'identifier': 'mp2',     'label': 'MPEG-2/H.262',     'value': ['mpeg2']},
+            {'identifier': 'mp4-asp', 'label': 'MPEG-4 ASP',       'value': ['divx', 'xvid']},
+            {'identifier': 'mp4-avc', 'label': 'MPEG-4 AVC/H.264', 'value': ['avc', 'h264', 'x264']},
+        ],
+        'container': [
+            {'identifier': 'avi',     'label': 'AVI',                 'ext': ['avi']},
+            {'identifier': 'mov',     'label': 'QuickTime Movie',     'ext': ['mov']},
+            {'identifier': 'mpeg-4',  'label': 'MPEG-4',              'ext': ['m4v', 'mp4']},
+            {'identifier': 'mpeg-ts', 'label': 'MPEG-TS',             'ext': ['m2ts', 'ts']},
+            {'identifier': 'mkv',     'label': 'Matroska',            'ext': ['mkv']},
+            {'identifier': 'wmv',     'label': 'Windows Media Video', 'ext': ['wmv']}
+        ],
+        'resolution': [
+            # TODO interlaced resolutions (auto-fill these options?)
+            {'identifier':  '480p', 'width':  853, 'height':  480},
+            {'identifier':  '576p', 'width': 1024, 'height':  576},
+            {'identifier':  '720p', 'width': 1280, 'height':  720},
+            {'identifier': '1080p', 'width': 1920, 'height': 1080},
+        ],
+        'source': [
+            {'identifier': 'cam',      'label': 'Cam',      'value': ['camrip', 'hdcam']},
+            {'identifier': 'hdtv',     'label': 'HDTV',     'value': ['hdtv']},
+            {'identifier': 'screener', 'label': 'Screener', 'value': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr']},
+            {'identifier': 'web',      'label': 'Web',      'value': ['webrip', ('web', 'rip'), 'webdl', ('web', 'dl')]}
+        ]
+    }
+
     qualities = [
-        # BluRay
-        {'identifier': 'bluray_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bluray_720p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BDRip
-        {'identifier': 'bdrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bdrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BRRip
-        {'identifier': 'brrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'brrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # WEB-DL
-        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_480p', 'hd': True, 'size': (100, 5000), 'label': 'WEB-DL - 480p', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # HDTV
-        {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
+        # TODO sizes will need to be adjusted for season packs
+
+        # resolutions
+        {'identifier': '1080p',    'label': '1080p',    'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['1080p']},
+        {'identifier': '720p',     'label': '720p',     'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['720p']},
+
+        # sources
+        {'identifier': 'cam',      'label': 'Cam',      'size': (800, 5000), 'source': ['cam']},
+        {'identifier': 'hdtv',     'label': 'HDTV',     'size': (800, 5000), 'source': ['hdtv']},
+        {'identifier': 'screener', 'label': 'Screener', 'size': (800, 5000), 'source': ['screener']},
+        {'identifier': 'web',      'label': 'Web',      'size': (800, 5000), 'source': ['web']},
     ]
 
     def __init__(self):
