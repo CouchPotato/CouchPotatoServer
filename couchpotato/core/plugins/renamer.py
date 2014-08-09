@@ -579,7 +579,7 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
+                        self.moveFile(src, dst, looks_like_torrent = self.downloadIsTorrent(release_download) or not self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed renaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
@@ -768,10 +768,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return False
 
-    def moveFile(self, old, dest, forcemove = False):
+    def moveFile(self, old, dest, looks_like_torrent = True):
         dest = sp(dest)
         try:
-            if forcemove or self.conf('file_action') not in ['copy', 'link']:
+            if self.conf('file_action') == 'move' or self.conf('only_copy_torrents') and not looks_like_torrent:
                 try:
                     shutil.move(old, dest)
                 except:
@@ -1341,6 +1341,14 @@ config = [{
                     'description': ('<strong>Link</strong>, <strong>Copy</strong> or <strong>Move</strong> after download completed.',
                                     'Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy. It is perfered to use link when downloading torrents as it will save you space, while still beeing able to seed.'),
                     'advanced': True,
+                },
+                {
+                    'name': 'only_copy_torrents',
+                    'label': 'Only Copy Torrents',
+                    'description': ('Only copy/link files that came from torrents (not NZBs).', 'This isn\'t 100% accurate so if you run into issues with torrent files being moved instead copied/linked, make sure this option is disabled.'),
+                    'default': False,
+                    'type': 'bool',
+                    'advanced': True
                 },
                 {
                     'advanced': True,
