@@ -98,7 +98,7 @@ def namePositionScore(nzb_name, movie_name):
                 found_quality = quality['identifier']
 
             # Alt in words
-            for alt in quality['alternative']:
+            for alt in quality.get('alternative', []):
                 if alt in nzb_words:
                     found_quality = alt
                     break

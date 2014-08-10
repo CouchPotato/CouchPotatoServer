@@ -121,7 +121,7 @@ class MovieQuality(QualityBase):
             'alternative': 9,
             'tags': 9,
             'ext': 3,
-            }
+        }
 
         # Check alt and tags
         for tag_type in ['identifier', 'alternative', 'tags', 'label']:

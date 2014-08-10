@@ -12,10 +12,11 @@ log = CPLog(__name__)
 
 
 class QualityBase(Plugin):
-
     type = None
 
+    properties = {}
     qualities = []
+
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
         'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
@@ -77,6 +78,23 @@ class QualityBase(Plugin):
             self.cached_qualities = temp
 
         return temp
+
+    def expand(self, quality):
+        for key, options in self.properties.items():
+            if key not in quality:
+                continue
+
+            quality[key] = [self.getProperty(key, identifier) for identifier in quality[key]]
+
+        return quality
+
+    def getProperty(self, key, identifier):
+        if key not in self.properties:
+            return
+
+        for item in self.properties[key]:
+            if item.get('identifier') == identifier:
+                return item
 
     def resetCache(self):
         self.cached_qualities = None

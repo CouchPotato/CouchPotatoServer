@@ -21,7 +21,6 @@ class Matcher(MatcherBase):
         addEvent('matcher.construct_from_raw', self.constructFromRaw)
 
         addEvent('matcher.correct_title', self.correctTitle)
-        addEvent('matcher.correct_quality', self.correctQuality)
 
     def parse(self, name, parser='scene'):
         return self.caper.parse(name, parser)
@@ -70,20 +69,3 @@ class Matcher(MatcherBase):
                     return True
 
         return False
-
-    def correctQuality(self, chain, quality, quality_map):
-        if quality['identifier'] not in quality_map:
-            log.info2('Wrong: unknown preferred quality %s', quality['identifier'])
-            return False
-
-        if 'video' not in chain.info:
-            log.info2('Wrong: no video tags found')
-            return False
-
-        video_tags = quality_map[quality['identifier']]
-
-        if not self.chainMatch(chain, 'video', video_tags):
-            log.info2('Wrong: %s tags not in chain', video_tags)
-            return False
-
-        return True

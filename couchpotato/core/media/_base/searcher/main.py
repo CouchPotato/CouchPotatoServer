@@ -90,13 +90,7 @@ class Searcher(SearcherBase):
         found = {}
 
         # Try guessing via quality tags
-        guess = fireEvent(
-            'quality.guess',
-            files = [nzb.get('name')],
-            size = nzb.get('size', None),
-            types = types,
-            single = True
-        )
+        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), types = types, single = True)
 
         if guess:
             found[guess['identifier']] = True
@@ -118,7 +112,7 @@ class Searcher(SearcherBase):
                 found['dvdrip'] = True
 
         # Allow other qualities
-        for allowed in preferred_quality.get('allow'):
+        for allowed in preferred_quality.get('allow', []):
             if found.get(allowed):
                 del found[allowed]
 
