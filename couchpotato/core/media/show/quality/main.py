@@ -23,10 +23,11 @@ class ShowQuality(QualityBase):
         ],
         'resolution': [
             # TODO interlaced resolutions (auto-fill these options?)
+            {'identifier':    'sd'},
             {'identifier':  '480p', 'width':  853, 'height':  480},
             {'identifier':  '576p', 'width': 1024, 'height':  576},
             {'identifier':  '720p', 'width': 1280, 'height':  720},
-            {'identifier': '1080p', 'width': 1920, 'height': 1080},
+            {'identifier': '1080p', 'width': 1920, 'height': 1080}
         ],
         'source': [
             {'identifier': 'cam',      'label': 'Cam',      'value': ['camrip', 'hdcam']},
