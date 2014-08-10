@@ -259,14 +259,46 @@ class YarrProvider(Provider):
         if quality.get('custom'):
             want_3d = quality['custom'].get('3d')
 
-        for ids, qualities in self.cat_ids:
-            if identifier in qualities or (want_3d and '3d' in qualities):
+        for ids, value in self.cat_ids:
+            if self.categoryMatch(value, quality, identifier, want_3d):
                 return ids
 
         if self.cat_backup_id:
             return [self.cat_backup_id]
 
         return []
+
+    def categoryMatch(self, value, quality, identifier, want_3d):
+        if type(value) is list:
+            # Basic identifier matching
+            if identifier in value:
+                return True
+
+            if want_3d and '3d' in value:
+                return True
+
+            return False
+
+        if type(value) is dict:
+            # Property matching
+            for key in ['codec', 'resolution', 'source']:
+                if key not in quality:
+                    continue
+
+                for required in quality.get(key):
+                    # Ensure category contains property list
+                    if key not in value:
+                        return False
+
+                    # Ensure required property is in category
+                    if required not in value[key]:
+                        return False
+
+            # Valid
+            return True
+
+        # Unknown failure
+        return False
 
 
 class ResultList(list):

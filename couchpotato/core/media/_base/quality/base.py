@@ -50,7 +50,10 @@ class QualityBase(Plugin):
 
         return self.pre_releases
 
-    def get(self, identifier):
+    def get(self, identifier, types = None):
+        if types and self.type not in types:
+            return
+
         for q in self.qualities:
             if identifier == q.get('identifier'):
                 return q

@@ -90,7 +90,14 @@ class Searcher(SearcherBase):
         found = {}
 
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), types = types, single = True)
+        guess = fireEvent(
+            'quality.guess',
+            files = [nzb.get('name')],
+            size = nzb.get('size', None),
+            types = types,
+            single = True
+        )
+
         if guess:
             found[guess['identifier']] = True
 

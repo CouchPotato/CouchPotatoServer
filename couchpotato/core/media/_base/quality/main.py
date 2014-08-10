@@ -31,13 +31,18 @@ class Quality(Plugin):
 
         addApiView('quality.size.save', self.saveSize)
 
-    def single(self, identifier = ''):
+    def single(self, identifier = '', types = None):
         db = get_db()
         quality = db.get('quality', identifier, with_doc = True)['doc']
 
         if quality:
             return mergeDicts(
-                fireEvent('quality.get', quality['identifier'], single = True),
+                fireEvent(
+                    'quality.get',
+                    quality['identifier'],
+                    types = types,
+                    single = True
+                ),
                 quality
             )
 
