@@ -102,7 +102,7 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
             if has_better_quality is 0:
 
                 log.info('Searching for %s in %s', (query, q_identifier))
-                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+                quality = fireEvent('quality.single', identifier = q_identifier, types = ['show'], single = True)
                 quality['custom'] = quality_custom
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
@@ -144,6 +144,14 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
         # Check for required and ignored words
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
+            return False
+
+        preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
+
+        # Contains lower quality string
+        contains_other = fireEvent('searcher.contains_other_quality', release, preferred_quality = preferred_quality, types = [self._type], single = True)
+        if contains_other != False:
+            log.info2('Wrong: %s, looking for %s, found %s', (release['name'], quality['label'], [x for x in contains_other] if contains_other else 'no quality'))
             return False
 
         # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)
