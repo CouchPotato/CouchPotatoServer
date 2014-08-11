@@ -47,8 +47,8 @@ class ShowQuality(QualityBase):
         # TODO sizes will need to be adjusted for season packs
 
         # resolutions
-        {'identifier': '1080p',    'label': '1080p',    'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['1080p']},
-        {'identifier': '720p',     'label': '720p',     'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['720p']},
+        {'identifier': '1080p',    'label': '1080p',    'size': (1000, 25000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['1080p']},
+        {'identifier': '720p',     'label': '720p',     'size': (1000, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['720p']},
         {'identifier': '480p',     'label': '480p',     'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['480p']},
 
         # sources
@@ -80,6 +80,40 @@ class ShowQuality(QualityBase):
             return cached
 
         qualities = self.all()
+
+        # Score files against each quality
+        score = self.score(files, qualities = qualities)
+
+        if score is None:
+            return None
+
+        # Return nothing if all scores are <= 0
+        has_non_zero = 0
+        for s in score:
+            if score[s]['score'] > 0:
+                has_non_zero += 1
+
+        if not has_non_zero:
+            return None
+
+        heighest_quality = max(score, key = lambda p: score[p]['score'])
+        if heighest_quality:
+            for quality in qualities:
+                if quality.get('identifier') == heighest_quality:
+                    quality['is_3d'] = False
+                    if score[heighest_quality].get('3d'):
+                        quality['is_3d'] = True
+                    return self.setCache(cache_key, quality)
+
+        return None
+
+    def score(self, files, qualities = None, types = None):
+        if types and self.type not in types:
+            return None
+
+        if not qualities:
+            qualities = self.all()
+
         qualities_expanded = [self.expand(q.copy()) for q in qualities]
 
         # Start with 0
@@ -104,25 +138,7 @@ class ShowQuality(QualityBase):
 
                 self.calcScore(score, quality, property_score)
 
-        # Return nothing if all scores are <= 0
-        has_non_zero = 0
-        for s in score:
-            if score[s]['score'] > 0:
-                has_non_zero += 1
-
-        if not has_non_zero:
-            return None
-
-        heighest_quality = max(score, key = lambda p: score[p]['score'])
-        if heighest_quality:
-            for quality in qualities:
-                if quality.get('identifier') == heighest_quality:
-                    quality['is_3d'] = False
-                    if score[heighest_quality].get('3d'):
-                        quality['is_3d'] = True
-                    return self.setCache(cache_key, quality)
-
-        return None
+        return score
 
     def propertyScore(self, quality, chain):
         score = 0
@@ -131,14 +147,11 @@ class ShowQuality(QualityBase):
 
         for key in ['codec', 'resolution', 'source']:
             if key not in quality:
+                # No specific property required
+                score += 5
                 continue
 
-            available = [
-                tuple([y.lower() for y in x])
-                if isinstance(x, list)
-                else x.lower()
-                for x in info.get(key, [])
-            ]
+            available = list(self.getInfo(info, key))
             found = False
 
             for property in quality[key]:
@@ -150,9 +163,16 @@ class ShowQuality(QualityBase):
                     break
 
             if not found:
-                log.info2('Couldn\'t find any match in %s in the %s property for "%s" quality', (available, key, quality['identifier']))
+                score -= 10
 
         return score
+
+    def getInfo(self, info, key):
+        for value in info.get(key, []):
+            if isinstance(value, list):
+                yield tuple([x.lower() for x in value])
+            else:
+                yield value.lower()
 
     def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = True):
         score[quality['identifier']]['score'] += add_score
