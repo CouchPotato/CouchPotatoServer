@@ -280,6 +280,10 @@ class YarrProvider(Provider):
             return False
 
         if type(value) is dict:
+            if not value:
+                # Wildcard category
+                return True
+
             # Property matching
             for key in ['codec', 'resolution', 'source']:
                 if key not in quality:
