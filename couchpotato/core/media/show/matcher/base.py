@@ -6,26 +6,6 @@ log = CPLog(__name__)
 
 
 class Base(MatcherBase):
-
-    # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
-    quality_map = {
-        'bluray_1080p': {'resolution': ['1080p'], 'source': ['bluray']},
-        'bluray_720p': {'resolution': ['720p'], 'source': ['bluray']},
-
-        'bdrip_1080p': {'resolution': ['1080p'], 'source': ['BDRip']},
-        'bdrip_720p': {'resolution': ['720p'], 'source': ['BDRip']},
-
-        'brrip_1080p': {'resolution': ['1080p'], 'source': ['BRRip']},
-        'brrip_720p': {'resolution': ['720p'], 'source': ['BRRip']},
-
-        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl', ['web', 'dl']]},
-        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl', ['web', 'dl']]},
-        'webdl_480p': {'resolution': ['480p'], 'source': ['webdl', ['web', 'dl']]},
-
-        'hdtv_720p': {'resolution': ['720p'], 'source': ['hdtv']},
-        'hdtv_sd': {'resolution': ['480p', None], 'source': ['hdtv']},
-    }
-
     def __init__(self):
         super(Base, self).__init__()
 

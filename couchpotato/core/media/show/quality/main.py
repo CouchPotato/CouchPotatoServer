@@ -49,6 +49,7 @@ class ShowQuality(QualityBase):
         # resolutions
         {'identifier': '1080p',    'label': '1080p',    'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['1080p']},
         {'identifier': '720p',     'label': '720p',     'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['720p']},
+        {'identifier': '480p',     'label': '480p',     'size': (800, 5000), 'codec': ['mp4-avc'], 'container': ['mpeg-ts', 'mkv'], 'resolution': ['480p']},
 
         # sources
         {'identifier': 'cam',      'label': 'Cam',      'size': (800, 5000), 'source': ['cam']},
@@ -76,7 +77,6 @@ class ShowQuality(QualityBase):
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
         cached = self.getCache(cache_key)
         if cached and len(extra) == 0:
-            log.debug('returning cache: %s', cached)
             return cached
 
         qualities = self.all()
@@ -137,7 +137,7 @@ class ShowQuality(QualityBase):
                 tuple([y.lower() for y in x])
                 if isinstance(x, list)
                 else x.lower()
-                for x in info[key]
+                for x in info.get(key, [])
             ]
             found = False
 

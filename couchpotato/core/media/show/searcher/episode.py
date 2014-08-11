@@ -133,8 +133,7 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
             log.info2('Too early to search for %s, %s', (too_early_to_search, query))
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
-        if media.get('type') != 'show.episode':
-            return
+        if media.get('type') != 'show.episode': return
 
         retention = Env.setting('retention', section = 'nzb')
 

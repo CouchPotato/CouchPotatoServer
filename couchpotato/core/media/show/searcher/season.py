@@ -166,6 +166,14 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
 
+        preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
+
+        # Contains lower quality string
+        contains_other = fireEvent('searcher.contains_other_quality', release, preferred_quality = preferred_quality, types = [self._type], single = True)
+        if contains_other != False:
+            log.info2('Wrong: %s, looking for %s, found %s', (release['name'], quality['label'], [x for x in contains_other] if contains_other else 'no quality'))
+            return False
+
         # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)
         match = fireEvent('matcher.match', release, media, quality, single = True)
         if match:
