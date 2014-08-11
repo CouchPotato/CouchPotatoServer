@@ -184,14 +184,25 @@ class MediaPlugin(MediaBase):
                 else:
                     yield ms
 
-    def withIdentifiers(self, identifiers, with_doc = False):
+    def withIdentifiers(self, identifiers, with_doc = False, types = None):
+        if types and not with_doc:
+            raise ValueError("Unable to filter types without with_doc = True")
+
         db = get_db()
 
         for x in identifiers:
-            try:
-                return db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
-            except:
-                pass
+            items = db.get_many('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
+
+            if not items:
+                # No items found, move to next identifier
+                continue
+
+            for item in items:
+                if types and item['doc'].get('type') not in types:
+                    # Type doesn't match request, move to next item
+                    continue
+
+                return item
 
         return False
 
