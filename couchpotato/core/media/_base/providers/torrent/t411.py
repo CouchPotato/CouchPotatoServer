@@ -25,6 +25,8 @@ class Base(TorrentProvider):
 
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
+    cj = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 
     class NotLoggedInHTTPError(urllib2.HTTPError):
         def __init__(self, url, code, msg, headers, fp):
@@ -89,17 +91,15 @@ class Base(TorrentProvider):
                 time.sleep(timetosleep)
             URL = self.urls['search']+searchString
                 
-            data = self.getHTMLData(URL)
-    
-            if data:
-                      
-                try:
-                    html = BeautifulSoup(data)
-    
-                    resultdiv = html.find('table', attrs = {'class':'results'}).find('tbody')
-    
+            r = self.opener.open(URL)   
+            soup = BeautifulSoup( r, "html.parser" )
+            log.error('Failed parsing soup: %s', str(soup))
+            resultdiv = soup.find('table', attrs = {'class':'results'}).find('tbody')
+            log.error('Failed parsing div: %s', str(resultdiv))
+            if resultdiv:
+                try:   
                     for result in resultdiv.findAll('tr'):
-    
+                        log.error('Failed parsing T411: %s', result)
                         try:
                             categorie = result.findAll('td')[0].findAll('a')[0]['href'][result.findAll('td')[0].findAll('a')[0]['href'].find('='):]
                             insert = 0
@@ -174,9 +174,7 @@ class Base(TorrentProvider):
 
     def login(self):
 
-        cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
-        opener = urllib2.build_opener(cookieprocessor, Base.PTPHTTPRedirectHandler())
-        opener.addheaders = [
+        self.opener.addheaders = [
             ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko)'),
             ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
             ('Accept-Language', 'fr-fr,fr;q=0.5'),
@@ -187,14 +185,14 @@ class Base(TorrentProvider):
         ]
 
         try:
-            response = opener.open('http://www.t411.me/users/login/', self.getLoginParams())
+            response = self.opener.open('http://www.t411.me/users/login/', self.getLoginParams())
         except urllib2.URLError as e:
             log.error('Login to T411 failed: %s' % e)
             return False
 
         if response.getcode() == 200:
             log.debug('Login HTTP T411 status 200; seems successful')
-            self.last_login_check = opener
+            self.last_login_check = self.opener
             return True
         else:
             log.error('Login to T411 failed: returned code %d' % response.getcode())
