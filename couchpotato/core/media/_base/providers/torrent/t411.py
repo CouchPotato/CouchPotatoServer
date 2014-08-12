@@ -93,13 +93,13 @@ class Base(TorrentProvider):
                 
             r = self.opener.open(URL)   
             soup = BeautifulSoup( r, "html.parser" )
-            log.error('Failed parsing soup: %s', str(soup))
-            resultdiv = soup.find('table', attrs = {'class':'results'}).find('tbody')
-            log.error('Failed parsing div: %s', str(resultdiv))
+            if soup.find('table', attrs = {'class':'results'}):
+                resultdiv = soup.find('table', attrs = {'class':'results'}).find('tbody')
+            else:
+                continue
             if resultdiv:
                 try:   
                     for result in resultdiv.findAll('tr'):
-                        log.error('Failed parsing T411: %s', result)
                         try:
                             categorie = result.findAll('td')[0].findAll('a')[0]['href'][result.findAll('td')[0].findAll('a')[0]['href'].find('='):]
                             insert = 0
