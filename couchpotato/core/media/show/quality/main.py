@@ -143,6 +143,9 @@ class ShowQuality(QualityBase):
     def propertyScore(self, quality, chain):
         score = 0
 
+        if 'video' not in chain.info:
+            return 0
+
         info = fireEvent('matcher.flatten_info', chain.info['video'], single = True)
 
         for key in ['codec', 'resolution', 'source']:
