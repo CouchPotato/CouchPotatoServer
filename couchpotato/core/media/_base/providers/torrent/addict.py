@@ -138,8 +138,14 @@ class Base(TorrentProvider):
                             results.append(new)
                  
     def ageToDays(self, age_str):
-        from_dt = datetime.datetime.strptime(age_str[9:11]+'-'+age_str[12:14]+'-'+age_str[15:], "%d-%m-%Y")
-        to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%Y")
+        try:
+            from_dt = datetime.datetime.strptime(age_str[9:11]+'-'+age_str[12:14]+'-'+age_str[15:], "%d-%m-%Y")
+        except:
+            from_dt = datetime.datetime.strptime(age_str[9:11]+'-'+age_str[12:14]+'-'+age_str[15:], "%m-%d-%Y")
+        try:
+            to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%Y")
+        except:
+            to_dt = datetime.datetime.strptime(time.strftime("%x"), "%m/%d/%Y")
         timedelta = to_dt - from_dt
         diff_day = timedelta.days
         return tryInt(diff_day)

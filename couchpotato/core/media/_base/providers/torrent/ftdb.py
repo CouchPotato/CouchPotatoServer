@@ -130,8 +130,14 @@ class Base(TorrentProvider):
         elif 'hier' in age_str.lower():
             return tryInt('1')
         else:
-            from_dt = datetime.datetime.strptime(age_str[0:2]+'-'+self.littonum(age_str[3:6])+'-'+age_str[7:11], "%d-%m-%Y")
-            to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%Y")
+            try:
+                from_dt = datetime.datetime.strptime(age_str[0:2]+'-'+self.littonum(age_str[3:6])+'-'+age_str[7:11], "%d-%m-%Y")
+            except:
+                from_dt = datetime.datetime.strptime(age_str[0:2]+'-'+self.littonum(age_str[3:6])+'-'+age_str[7:11], "%m-%d-%Y")
+            try:
+                to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%Y")
+            except:
+                to_dt = datetime.datetime.strptime(time.strftime("%x"), "%m/%d/%Y")
             timedelta = to_dt - from_dt
             diff_day = timedelta.days
             return tryInt(diff_day)
