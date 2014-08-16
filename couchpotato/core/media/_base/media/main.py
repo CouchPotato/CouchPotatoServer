@@ -415,7 +415,7 @@ class MediaPlugin(MediaBase):
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if (total_releases == total_deleted and media['status'] != 'active') or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
+                    if (total_releases == total_deleted) or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
