@@ -1,7 +1,7 @@
 from httplib import HTTPSConnection
 
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 
@@ -27,9 +27,9 @@ class Pushover(Notification):
             'sound': self.conf('sound'),
         }
 
-        if data and data.get('identifier'):
+        if data and getIdentifier(data):
             api_data.update({
-                'url': toUnicode('http://www.imdb.com/title/%s/' % data['identifier']),
+                'url': toUnicode('http://www.imdb.com/title/%s/' % getIdentifier(data)),
                 'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 

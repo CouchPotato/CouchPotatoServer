@@ -241,7 +241,7 @@ Running on: ...\n\
 						'href': 'https://github.com/RuudBurger/CouchPotatoServer/blob/develop/contributing.md'
 					}),
 					new Element('span', {
-						'text': ' before posting, then copy the text below'
+						'text': ' before posting (kittens die if you don\'t), then copy the text below.'
 					})
 				),
 				textarea = new Element('textarea', {

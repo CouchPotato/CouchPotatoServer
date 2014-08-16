@@ -4,22 +4,24 @@
 	<head>
 	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
 		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
-		
+
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
 		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
-		
+
 		<script type="text/javascript">
-			
+
 			window.addEvent('domready', function(){
 				new Form.Check($('remember_me'));
 			});
-			
+
 		</script>
 
 		<title>CouchPotato</title>

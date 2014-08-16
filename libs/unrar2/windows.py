@@ -174,7 +174,7 @@ class PassiveReader:
     def __init__(self, usercallback = None):
         self.buf = []
         self.ucb = usercallback
-    
+
     def _callback(self, msg, UserData, P1, P2):
         if msg == UCM_PROCESSDATA:
             data = (ctypes.c_char*P2).from_address(P1).raw
@@ -183,7 +183,7 @@ class PassiveReader:
             else:
                 self.buf.append(data)
         return 1
-    
+
     def get_result(self):
         return ''.join(self.buf)
 
@@ -197,10 +197,10 @@ class RarInfoIterator(object):
             raise IncorrectRARPassword
         self.arc.lockStatus = "locked"
         self.arc.needskip = False
-        
+
     def __iter__(self):
         return self
-        
+
     def next(self):
         if self.index>0:
             if self.arc.needskip:
@@ -208,9 +208,9 @@ class RarInfoIterator(object):
             self.res = RARReadHeaderEx(self.arc._handle, ctypes.byref(self.headerData))
 
         if self.res:
-            raise StopIteration 
+            raise StopIteration
         self.arc.needskip = True
-        
+
         data = {}
         data['index'] = self.index
         data['filename'] = self.headerData.FileName
@@ -224,7 +224,7 @@ class RarInfoIterator(object):
         self.index += 1
         return data
 
-            
+
     def __del__(self):
         self.arc.lockStatus = "finished"
 
@@ -237,7 +237,7 @@ def generate_password_provider(password):
 
 class RarFileImplementation(object):
 
-    def init(self, password=None):
+    def init(self, password=None, custom_path = None):
         self.password = password
         archiveData = RAROpenArchiveDataEx(ArcNameW=self.archiveName, OpenMode=RAR_OM_EXTRACT)
         self._handle = RAROpenArchiveEx(ctypes.byref(archiveData))
@@ -254,9 +254,9 @@ class RarFileImplementation(object):
 
         if password:
             RARSetPassword(self._handle, password)
-            
+
         self.lockStatus = "ready"
-            
+
 
 
     def destruct(self):
@@ -287,7 +287,7 @@ class RarFileImplementation(object):
                 self.needskip = False
                 res.append((info, reader.get_result()))
         return res
-        
+
 
     def extract(self,  checker, path, withSubpath, overwrite):
         res = []
@@ -300,7 +300,7 @@ class RarFileImplementation(object):
                         fn = os.path.split(fn)[-1]
                     target = os.path.join(path, fn)
                 else:
-                    raise DeprecationWarning, "Condition callbacks returning strings are deprecated and only supported in Windows"                    
+                    raise DeprecationWarning, "Condition callbacks returning strings are deprecated and only supported in Windows"
                     target = checkres
                 if overwrite or (not os.path.exists(target)):
                     tmpres = RARProcessFile(self._handle, RAR_EXTRACT, None, target)

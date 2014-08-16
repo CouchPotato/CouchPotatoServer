@@ -240,7 +240,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 break
 
         if total_result_count > 0:
-            fireEvent('media.tag', movie['_id'], 'recent', single = True)
+            fireEvent('media.tag', movie['_id'], 'recent', update_edited = True, single = True)
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
