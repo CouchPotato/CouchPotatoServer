@@ -44,15 +44,15 @@ class MediaPlugin(MediaBase):
             'desc': 'List media',
             'params': {
                 'type': {'type': 'string', 'desc': 'Media type to filter on.'},
-                'status': {'type': 'array or csv', 'desc': 'Filter movie by status. Example:"active,done"'},
-                'release_status': {'type': 'array or csv', 'desc': 'Filter movie by status of its releases. Example:"snatched,available"'},
-                'limit_offset': {'desc': 'Limit and offset the movie list. Examples: "50" or "50,30"'},
-                'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all movies starting with the letter "a"'},
-                'search': {'desc': 'Search movie title'},
+                'status': {'type': 'array or csv', 'desc': 'Filter media by status. Example:"active,done"'},
+                'release_status': {'type': 'array or csv', 'desc': 'Filter media by status of its releases. Example:"snatched,available"'},
+                'limit_offset': {'desc': 'Limit and offset the media list. Examples: "50" or "50,30"'},
+                'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all media starting with the letter "a"'},
+                'search': {'desc': 'Search media title'},
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'empty': bool, any movies returned or not,
+    'empty': bool, any media returned or not,
     'media': array, media found,
 }"""}
         })
@@ -313,7 +313,21 @@ class MediaPlugin(MediaBase):
 
         for media_type in fireEvent('media.types', merge = True):
             tempList = lambda media_type = media_type, *args, **kwargs : self.listView(type = media_type, **kwargs)
-            addApiView('%s.list' % media_type, tempList)
+            addApiView('%s.list' % media_type, tempList, docs = {
+                'desc': 'List media',
+                'params': {
+                    'status': {'type': 'array or csv', 'desc': 'Filter ' + media_type + ' by status. Example:"active,done"'},
+                    'release_status': {'type': 'array or csv', 'desc': 'Filter ' + media_type + ' by status of its releases. Example:"snatched,available"'},
+                    'limit_offset': {'desc': 'Limit and offset the ' + media_type + ' list. Examples: "50" or "50,30"'},
+                    'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all ' + media_type + 's starting with the letter "a"'},
+                    'search': {'desc': 'Search ' + media_type + ' title'},
+                },
+                'return': {'type': 'object', 'example': """{
+        'success': True,
+        'empty': bool, any """ + media_type + """s returned or not,
+        'media': array, media found,
+    }"""}
+            })
 
     def availableChars(self, types = None, status = None, release_status = None):
 
@@ -450,7 +464,13 @@ class MediaPlugin(MediaBase):
 
         for media_type in fireEvent('media.types', merge = True):
             tempDelete = lambda media_type = media_type, *args, **kwargs : self.deleteView(type = media_type, **kwargs)
-            addApiView('%s.delete' % media_type, tempDelete)
+            addApiView('%s.delete' % media_type, tempDelete, docs = {
+            'desc': 'Delete a ' + media_type + ' from the wanted list',
+            'params': {
+                'id': {'desc': 'Media ID(s) you want to delete.', 'type': 'int (comma separated)'},
+                'delete_from': {'desc': 'Delete ' + media_type + ' from this page', 'type': 'string: all (default), wanted, manage'},
+            }
+        })
 
     def restatus(self, media_id):
 
