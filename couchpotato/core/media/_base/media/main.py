@@ -312,8 +312,7 @@ class MediaPlugin(MediaBase):
     def addSingleListView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempList(*args, **kwargs):
-                return self.listView(types = media_type, **kwargs)
+            tempList = lambda media_type = media_type, *args, **kwargs : self.listView(type = media_type, **kwargs)
             addApiView('%s.list' % media_type, tempList)
 
     def availableChars(self, types = None, status = None, release_status = None):
@@ -381,8 +380,7 @@ class MediaPlugin(MediaBase):
     def addSingleCharView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempChar(*args, **kwargs):
-                return self.charView(types = media_type, **kwargs)
+            tempChar = lambda media_type = media_type, *args, **kwargs : self.charView(type = media_type, **kwargs)
             addApiView('%s.available_chars' % media_type, tempChar)
 
     def delete(self, media_id, delete_from = None):
@@ -451,8 +449,7 @@ class MediaPlugin(MediaBase):
     def addSingleDeleteView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempDelete(*args, **kwargs):
-                return self.deleteView(types = media_type, *args, **kwargs)
+            tempDelete = lambda media_type = media_type, *args, **kwargs : self.deleteView(type = media_type, **kwargs)
             addApiView('%s.delete' % media_type, tempDelete)
 
     def restatus(self, media_id):
