@@ -59,7 +59,7 @@ class Putiodownload(DownloaderBase):
        files = client.File.list()
        delete = self.conf('detele_file')
        downloaddir = self.conf('download_dir')
-       tempdownloaddir = '/export/nas/Downloads/incomplete'
+       tempdownloaddir = self.conf('tempdownload_dir') 
        for f in files:
            if str(f.id) == str(kwargs.get('file_id')):
                # Need to read this in from somewhere
@@ -109,6 +109,12 @@ config = [{
                     'name': 'download_dir',
                     'label': 'Download Directory',
                     'description': 'The Directory to download files to, does nothing if you don\'t select download',
+		    'default': '/',
+                },
+		{
+                    'name': 'tempdownload_dir',
+                    'label': 'Temporary Download Directory',
+                    'description': 'The Temporary Directory to download files to, does nothing if you don\'t select download',
 		    'default': '/',
                 },
                 {
