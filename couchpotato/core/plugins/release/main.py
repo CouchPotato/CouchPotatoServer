@@ -234,8 +234,9 @@ class Release(Plugin):
         db = get_db()
 
         try:
-            rel = db.get('id', id, with_doc = True)
-            self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
+            if id:
+                rel = db.get('id', id, with_doc = True)
+                self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
 
             return {
                 'success': True
@@ -364,7 +365,7 @@ class Release(Plugin):
         let_through = False
         filtered_results = []
 
-        # If a single release comes through the "wait for", let through all
+        # Filter out ignored and other releases we don't want
         for rel in results:
 
             if rel['status'] in ['ignored', 'failed']:
@@ -379,6 +380,11 @@ class Release(Plugin):
                 log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
                 continue
 
+            if 'seeders' in rel and rel.get('seeders') <= 0:
+                log.info('Ignored, no seeders: %s', (rel['name']))
+                continue
+
+            # If a single release comes through the "wait for", let through all
             rel['wait_for'] = False
             if quality_custom.get('index') != 0 and quality_custom.get('wait_for', 0) > 0 and rel.get('age') <= quality_custom.get('wait_for', 0):
                 rel['wait_for'] = True

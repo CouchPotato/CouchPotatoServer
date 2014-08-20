@@ -31,6 +31,7 @@ class Transmission(DownloaderBase):
             return False
 
         self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
+        return self.trpc
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

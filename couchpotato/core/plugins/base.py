@@ -157,7 +157,7 @@ class Plugin(object):
                                 os.rmdir(full_path)
                             except:
                                 if show_error:
-                                    log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+                                    log.info2('Couldn\'t remove directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
             os.rmdir(folder)

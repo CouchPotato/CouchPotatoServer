@@ -807,7 +807,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 if os.name == 'nt' and self.conf('ntfs_permission'):
                     os.popen('icacls "' + dest + '"* /reset /T')
             except:
-                log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
+                log.debug('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
             raise
