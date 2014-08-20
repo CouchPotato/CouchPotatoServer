@@ -18,6 +18,7 @@ class ShowBase(MediaBase):
 
     def __init__(self):
         super(ShowBase, self).__init__()
+        self.initType()
 
         addApiView('show.add', self.addView, docs = {
             'desc': 'Add new show to the wanted list',
