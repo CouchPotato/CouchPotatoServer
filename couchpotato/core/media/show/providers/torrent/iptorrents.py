@@ -9,29 +9,20 @@ autoload = 'IPTorrents'
 
 
 class IPTorrents(MultiProvider):
-
     def getTypes(self):
         return [Season, Episode]
 
 
 class Season(SeasonProvider, Base):
-
-    # TODO come back to this later, a better quality system needs to be created
     cat_ids = [
-        ([65], [
-            'bluray_1080p', 'bluray_720p',
-            'bdrip_1080p', 'bdrip_720p',
-            'brrip_1080p', 'brrip_720p',
-            'webdl_1080p', 'webdl_720p', 'webdl_480p',
-            'hdtv_720p', 'hdtv_sd'
-        ]),
+        ([65], {}),
     ]
 
 
 class Episode(EpisodeProvider, Base):
-
-    # TODO come back to this later, a better quality system needs to be created
     cat_ids = [
-        ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-        ([4, 78, 79], ['hdtv_sd'])
+        ([4],  {'codec': ['mp4-asp'], 'resolution': ['sd'],            'source': ['hdtv', 'web']}),
+        ([5],  {'codec': ['mp4-avc'], 'resolution': ['720p', '1080p'], 'source': ['hdtv', 'web']}),
+        ([78], {'codec': ['mp4-avc'], 'resolution': ['480p'],          'source': ['hdtv', 'web']}),
+        ([79], {'codec': ['mp4-avc'], 'resolution': ['sd'],            'source': ['hdtv', 'web']})
     ]

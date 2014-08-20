@@ -37,7 +37,7 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
     def searchAll(self, manual = False):
         pass
 
-    def single(self, media, profile = None, quality_order = None, search_protocols = None, manual = False):
+    def single(self, media, profile = None, search_protocols = None, manual = False):
         db = get_db()
 
         related = fireEvent('library.related', media, single = True)
@@ -53,9 +53,6 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
         if not profile and related['show']['profile_id']:
             profile = db.get('id', related['show']['profile_id'])
 
-        if not quality_order:
-            quality_order = fireEvent('quality.order', single = True)
-
         # Find 'active' episodes
         episodes = related['episodes']
         episodes_active = []
@@ -68,7 +65,7 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
 
         if len(episodes_active) == len(episodes):
             # All episodes are 'active', try and search for full season
-            if self.search(media, profile, quality_order, search_protocols):
+            if self.search(media, profile, search_protocols):
                 # Success, end season search
                 return True
             else:
@@ -76,14 +73,14 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
 
         # Search for each episode individually
         for episode in episodes_active:
-            fireEvent('show.episode.searcher.single', episode, profile, quality_order, search_protocols, manual)
+            fireEvent('show.episode.searcher.single', episode, profile, search_protocols, manual)
 
             # TODO (testing) only grab one episode
             return True
 
         return True
 
-    def search(self, media, profile, quality_order, search_protocols):
+    def search(self, media, profile, search_protocols):
         # TODO: check episode status
         # TODO: check air date
         #if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
@@ -111,8 +108,13 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
 
             # See if better quality is available
             for release in releases:
-                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
-                    has_better_quality += 1
+                if release['status'] not in ['available', 'ignored', 'failed']:
+                    is_higher = fireEvent('quality.ishigher', \
+                                          {'identifier': q_identifier, 'is_3d': quality_custom.get('3d', 0)}, \
+                                          {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, \
+                                          profile, single = True)
+                    if is_higher != 'higher':
+                        has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
@@ -162,6 +164,14 @@ class SeasonSearcher(SearcherBase, ShowTypeBase):
 
         # Check for required and ignored words
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
+            return False
+
+        preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
+
+        # Contains lower quality string
+        contains_other = fireEvent('searcher.contains_other_quality', release, preferred_quality = preferred_quality, types = [self._type], single = True)
+        if contains_other != False:
+            log.info2('Wrong: %s, looking for %s, found %s', (release['name'], quality['label'], [x for x in contains_other] if contains_other else 'no quality'))
             return False
 
         # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)

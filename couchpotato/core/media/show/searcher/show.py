@@ -59,7 +59,6 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
         db = get_db()
 
         profile = db.get('id', media['profile_id'])
-        quality_order = fireEvent('quality.order', single = True)
 
         for season in show_tree.get('seasons', []):
             if not season.get('info'):
@@ -71,7 +70,7 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
                 continue
 
             # Check if full season can be downloaded
-            fireEvent('show.season.searcher.single', season, profile, quality_order, search_protocols, manual)
+            fireEvent('show.season.searcher.single', season, profile, search_protocols, manual)
 
             # TODO (testing) only snatch one season
             return
