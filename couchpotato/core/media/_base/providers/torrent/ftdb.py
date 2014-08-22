@@ -137,7 +137,16 @@ class Base(TorrentProvider):
             try:
                 to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%Y")
             except:
-                to_dt = datetime.datetime.strptime(time.strftime("%x"), "%m/%d/%Y")
+                try:
+                    to_dt = datetime.datetime.strptime(time.strftime("%x"), "%m/%d/%Y")
+                except:
+                    try:
+                        to_dt = datetime.datetime.strptime(time.strftime("%x"), "%m/%d/%y")
+                    except:
+                        try:
+                            to_dt = datetime.datetime.strptime(time.strftime("%x"), "%d/%m/%y")
+                        except:
+                            return tryInt('0')
             timedelta = to_dt - from_dt
             diff_day = timedelta.days
             return tryInt(diff_day)
