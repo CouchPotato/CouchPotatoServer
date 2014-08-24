@@ -2,6 +2,7 @@ from __future__ import with_statement
 import os
 import traceback
 import putio
+import shutil
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
