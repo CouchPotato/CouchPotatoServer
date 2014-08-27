@@ -847,12 +847,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaces = [
             ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '), (' \\\\', '\\\\'), (' /', '/'),
-            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'), ('([\s\.\,\_\-\/\\]$)', ''),
+            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
         ]
 
         for r in replaces:
             reg, replace_with = r
             string = re.sub(reg, replace_with, string)
+
+        string = string.rstrip(',_-/\\ ')
 
         return string
 
