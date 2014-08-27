@@ -49,9 +49,9 @@ class Base(TorrentProvider):
 
                     torrent_name = torrent.getText()
 
-                    torrent_size = self.parseSize(all_cells[7].getText())
-                    torrent_seeders = tryInt(all_cells[9].getText())
-                    torrent_leechers = tryInt(all_cells[10].getText())
+                    torrent_size = self.parseSize(all_cells[8].getText())
+                    torrent_seeders = tryInt(all_cells[10].getText())
+                    torrent_leechers = tryInt(all_cells[11].getText())
                     torrent_url = self.urls['baseurl'] % download['href']
                     torrent_detail_url = self.urls['baseurl'] % torrent['href']
 
