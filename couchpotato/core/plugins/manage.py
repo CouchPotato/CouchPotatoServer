@@ -219,7 +219,7 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
-                fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
+                fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
 

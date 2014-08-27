@@ -65,10 +65,13 @@ class MediaBase(Plugin):
 
         return def_title or 'UNKNOWN'
 
-    def getPoster(self, image_urls, existing_files):
-        image_type = 'poster'
+    def getPoster(self, media, image_urls):
+        if 'files' not in media:
+            media['files'] = {}
 
-        # Remove non-existing files
+        existing_files = media['files']
+
+        image_type = 'poster'
         file_type = 'image_%s' % image_type
 
         # Make existing unique

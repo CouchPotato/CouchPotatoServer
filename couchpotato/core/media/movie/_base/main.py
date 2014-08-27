@@ -46,7 +46,7 @@ class MovieBase(MovieTypeBase):
         })
 
         addEvent('movie.add', self.add)
-        addEvent('movie.update_info', self.updateInfo)
+        addEvent('movie.update', self.update)
         addEvent('movie.update_release_dates', self.updateReleaseDate)
 
     def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
@@ -172,7 +172,7 @@ class MovieBase(MovieTypeBase):
             # Trigger update info
             if added and update_after:
                 # Do full update to get images etc
-                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
+                fireEventAsync('movie.update', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in fireEvent('release.for_media', m['_id'], single = True):
@@ -256,7 +256,7 @@ class MovieBase(MovieTypeBase):
             'success': False,
         }
 
-    def updateInfo(self, media_id = None, identifier = None, default_title = None, extended = False):
+    def update(self, media_id = None, identifier = None, default_title = None, extended = False):
         """
         Update movie information inside media['doc']['info']
 
@@ -312,37 +312,11 @@ class MovieBase(MovieTypeBase):
                 media['title'] = def_title
 
             # Files
-            images = info.get('images', [])
-            media['files'] = media.get('files', {})
-            for image_type in ['poster']:
+            image_urls = info.get('images', [])
 
-                # Remove non-existing files
-                file_type = 'image_%s' % image_type
-                existing_files = list(set(media['files'].get(file_type, [])))
-                for ef in media['files'].get(file_type, []):
-                    if not os.path.isfile(ef):
-                        existing_files.remove(ef)
-
-                # Replace new files list
-                media['files'][file_type] = existing_files
-                if len(existing_files) == 0:
-                    del media['files'][file_type]
-
-                # Loop over type
-                for image in images.get(image_type, []):
-                    if not isinstance(image, (str, unicode)):
-                        continue
-
-                    if file_type not in media['files'] or len(media['files'].get(file_type, [])) == 0:
-                        file_path = fireEvent('file.download', url = image, single = True)
-                        if file_path:
-                            media['files'][file_type] = [file_path]
-                            break
-                    else:
-                        break
+            self.getPoster(media, image_urls)
 
             db.update(media)
-
             return media
         except:
             log.error('Failed update media: %s', traceback.format_exc())
@@ -363,7 +337,7 @@ class MovieBase(MovieTypeBase):
             media = db.get('id', media_id)
 
             if not media.get('info'):
-                media = self.updateInfo(media_id)
+                media = self.update(media_id)
                 dates = media.get('info', {}).get('release_date')
             else:
                 dates = media.get('info').get('release_date')

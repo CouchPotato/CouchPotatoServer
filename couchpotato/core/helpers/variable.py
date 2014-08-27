@@ -380,3 +380,11 @@ def getFreeSpace(directories):
         free_space[folder] = size
 
     return free_space
+
+
+def find(func, iterable):
+    for item in iterable:
+        if func(item):
+            return item
+
+    return None
