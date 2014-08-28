@@ -187,14 +187,15 @@ class QualityPlugin(Plugin):
 
         return False
 
-    def guess(self, files, extra = None, size = None):
+    def guess(self, files, extra = None, size = None, use_cache = True):
         if not extra: extra = {}
 
         # Create hash for cache
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
-        cached = self.getCache(cache_key)
-        if cached and len(extra) == 0:
-            return cached
+        if use_cache:
+            cached = self.getCache(cache_key)
+            if cached and len(extra) == 0:
+                return cached
 
         qualities = self.all()
 
@@ -234,7 +235,7 @@ class QualityPlugin(Plugin):
 
         # Add additional size score if only 1 size validated
         if len(size_scores) == 1:
-            self.calcScore(score, size_scores[0], 10, penalty = False)
+            self.calcScore(score, size_scores[0], 8, penalty = False)
         del size_scores
 
         # Return nothing if all scores are <= 0
@@ -259,7 +260,7 @@ class QualityPlugin(Plugin):
 
     def containsTagScore(self, quality, words, cur_file = ''):
         cur_file = ss(cur_file)
-        score = 0
+        score = 0.0
 
         extension = words[-1]
         words = words[:-1]
@@ -267,7 +268,7 @@ class QualityPlugin(Plugin):
         points = {
             'identifier': 10,
             'label': 10,
-            'alternative': 9,
+            'alternative': 10,
             'tags': 9,
             'ext': 3,
         }
@@ -285,7 +286,7 @@ class QualityPlugin(Plugin):
 
                 if isinstance(alt, (str, unicode)) and ss(alt.lower()) in words:
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                    score += points.get(tag_type) / 2
+                    score += points.get(tag_type)
 
             if list(set(qualities) & set(words)):
                 log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
@@ -374,9 +375,9 @@ class QualityPlugin(Plugin):
             for allow in quality.get('allow', []):
                 score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
 
-            # Give panelty for all lower qualities
-            for q in self.qualities[self.order.index(quality.get('identifier'))+1:]:
-                if score.get(q.get('identifier')):
+            # Give panelty for all other qualities
+            for q in self.qualities:
+                if quality.get('identifier') != q.get('identifier') and score.get(q.get('identifier')):
                     score[q.get('identifier')]['score'] -= 1
 
     def isFinish(self, quality, profile, release_age = 0):
@@ -456,12 +457,15 @@ class QualityPlugin(Plugin):
             'Movie Name (2014).mp4': {'size': 750, 'quality': 'brrip'},
             'Moviename.2014.720p.R6.WEB-DL.x264.AC3-xyz': {'size': 750, 'quality': 'r5'},
             'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 750, 'quality': 'cam'},
-            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'}
+            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'},
+            # 'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7500, 'quality': 'brrip'},
+            'Movie.Name.2014.HDCam.Chinese.Subs-ReleaseGroup': {'size': 15000, 'quality': 'cam'},
+            'Movie Name 2014 HQ DVDRip X264 AC3 (bla)': {'size': 0, 'quality': 'dvdrip'},
         }
 
         correct = 0
         for name in tests:
-            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
+            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None), use_cache = False) or {}
             success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
                 log.error('%s failed check, thinks it\'s "%s" expecting "%s"', (name,
