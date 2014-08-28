@@ -23,10 +23,9 @@ class FanartTV(MovieProvider):
     def __init__(self):
         addEvent('movie.info', self.getArt, priority = 1)
 
-    def getArt(self, identifier = None, **kwargs):
+    def getArt(self, identifier = None, extended = True, **kwargs):
 
-        log.debug("Getting Extra Artwork from Fanart.tv...")
-        if not identifier:
+        if not identifier or not extended:
             return {}
 
         images = {}
