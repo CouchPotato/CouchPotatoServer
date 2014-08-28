@@ -47,6 +47,8 @@ class Bluray(Automation, RSS):
                                 if page_year > 0 and page_year < self.getMinimal('year'):
                                     brk = True
                             except:
+                                log.error('Failed determining page year: %s', traceback.format_exc())
+                                brk = True
                                 break
 
                     if brk:
