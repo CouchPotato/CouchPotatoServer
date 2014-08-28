@@ -35,7 +35,6 @@ class Base(TorrentMagnetProvider):
         'http://kickassto.come.in',
         'http://katproxy.ws',
         'http://kickass.bitproxy.eu',
-        'http://kickass.to.prx.websiteproxy.co.uk',
         'http://katph.eu',
         'http://kickassto.come.in',
     ]
