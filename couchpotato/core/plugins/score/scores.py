@@ -33,33 +33,43 @@ name_scores = [
 def nameScore(name, year, preferred_words):
     """ Calculate score for words in the NZB name """
 
-    score = 0
-    name = name.lower()
+    try:
+        score = 0
+        name = name.lower()
 
-    # give points for the cool stuff
-    for value in name_scores:
-        v = value.split(':')
-        add = int(v.pop())
-        if v.pop() in name:
-            score += add
+        # give points for the cool stuff
+        for value in name_scores:
+            v = value.split(':')
+            add = int(v.pop())
+            if v.pop() in name:
+                score += add
 
-    # points if the year is correct
-    if str(year) in name:
-        score += 5
+        # points if the year is correct
+        if str(year) in name:
+            score += 5
 
-    # Contains preferred word
-    nzb_words = re.split('\W+', simplifyString(name))
-    score += 100 * len(list(set(nzb_words) & set(preferred_words)))
+        # Contains preferred word
+        nzb_words = re.split('\W+', simplifyString(name))
+        score += 100 * len(list(set(nzb_words) & set(preferred_words)))
 
-    return score
+        return score
+    except:
+        log.error('Failed doing nameScore: %s', traceback.format_exc())
+
+    return 0
 
 
 def nameRatioScore(nzb_name, movie_name):
-    nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
-    movie_words = re.split('\W+', simplifyString(movie_name))
+    try:
+        nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
+        movie_words = re.split('\W+', simplifyString(movie_name))
 
-    left_over = set(nzb_words) - set(movie_words)
-    return 10 - len(left_over)
+        left_over = set(nzb_words) - set(movie_words)
+        return 10 - len(left_over)
+    except:
+        log.error('Failed doing nameRatioScore: %s', traceback.format_exc())
+
+    return 0
 
 
 def namePositionScore(nzb_name, movie_name):
@@ -134,38 +144,53 @@ def providerScore(provider):
 
 def duplicateScore(nzb_name, movie_name):
 
-    nzb_words = re.split('\W+', simplifyString(nzb_name))
-    movie_words = re.split('\W+', simplifyString(movie_name))
+    try:
+        nzb_words = re.split('\W+', simplifyString(nzb_name))
+        movie_words = re.split('\W+', simplifyString(movie_name))
 
-    # minus for duplicates
-    duplicates = [x for i, x in enumerate(nzb_words) if nzb_words[i:].count(x) > 1]
+        # minus for duplicates
+        duplicates = [x for i, x in enumerate(nzb_words) if nzb_words[i:].count(x) > 1]
 
-    return len(list(set(duplicates) - set(movie_words))) * -4
+        return len(list(set(duplicates) - set(movie_words))) * -4
+    except:
+        log.error('Failed doing duplicateScore: %s', traceback.format_exc())
+
+    return 0
 
 
 def partialIgnoredScore(nzb_name, movie_name, ignored_words):
 
-    nzb_name = nzb_name.lower()
-    movie_name = movie_name.lower()
+    try:
+        nzb_name = nzb_name.lower()
+        movie_name = movie_name.lower()
 
-    score = 0
-    for ignored_word in ignored_words:
-        if ignored_word in nzb_name and ignored_word not in movie_name:
-            score -= 5
+        score = 0
+        for ignored_word in ignored_words:
+            if ignored_word in nzb_name and ignored_word not in movie_name:
+                score -= 5
 
-    return score
+        return score
+    except:
+        log.error('Failed doing partialIgnoredScore: %s', traceback.format_exc())
+
+    return 0
 
 
 def halfMultipartScore(nzb_name):
 
-    wrong_found = 0
-    for nr in [1, 2, 3, 4, 5, 'i', 'ii', 'iii', 'iv', 'v', 'a', 'b', 'c', 'd', 'e']:
-        for wrong in ['cd', 'part', 'dis', 'disc', 'dvd']:
-            if '%s%s' % (wrong, nr) in nzb_name.lower():
-                wrong_found += 1
+    try:
+        wrong_found = 0
+        for nr in [1, 2, 3, 4, 5, 'i', 'ii', 'iii', 'iv', 'v', 'a', 'b', 'c', 'd', 'e']:
+            for wrong in ['cd', 'part', 'dis', 'disc', 'dvd']:
+                if '%s%s' % (wrong, nr) in nzb_name.lower():
+                    wrong_found += 1
 
-    if wrong_found == 1:
-        return -30
+        if wrong_found == 1:
+            return -30
+
+        return 0
+    except:
+        log.error('Failed doing halfMultipartScore: %s', traceback.format_exc())
 
     return 0
 
