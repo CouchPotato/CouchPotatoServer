@@ -24,7 +24,7 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://www.dieroschtibay.org',
+        'https://dieroschtibay.org',
         'https://thebay.al',
         'https://thepiratebay.se',
         'http://thepiratebay.se.net',
