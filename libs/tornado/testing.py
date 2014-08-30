@@ -70,8 +70,8 @@ def get_unused_port():
     only that a series of get_unused_port calls in a single process return
     distinct ports.
 
-    **Deprecated**.  Use bind_unused_port instead, which is guaranteed
-    to find an unused port.
+    .. deprecated::
+       Use bind_unused_port instead, which is guaranteed to find an unused port.
     """
     global _next_port
     port = _next_port
@@ -459,7 +459,7 @@ def gen_test(func=None, timeout=None):
        The ``timeout`` argument and ``ASYNC_TEST_TIMEOUT`` environment
        variable.
 
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
        The wrapper now passes along ``*args, **kwargs`` so it can be used
        on functions with arguments.
     """

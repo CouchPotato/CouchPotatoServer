@@ -3,18 +3,17 @@
 `WebSockets <http://dev.w3.org/html5/websockets/>`_ allow for bidirectional
 communication between the browser and server.
 
-.. warning::
+WebSockets are supported in the current versions of all major browsers,
+although older versions that do not support WebSockets are still in use
+(refer to http://caniuse.com/websockets for details).
 
-   The WebSocket protocol was recently finalized as `RFC 6455
-   <http://tools.ietf.org/html/rfc6455>`_ and is not yet supported in
-   all browsers.  Refer to http://caniuse.com/websockets for details
-   on compatibility.  In addition, during development the protocol
-   went through several incompatible versions, and some browsers only
-   support older versions.  By default this module only supports the
-   latest version of the protocol, but optional support for an older
-   version (known as "draft 76" or "hixie-76") can be enabled by
-   overriding `WebSocketHandler.allow_draft76` (see that method's
-   documentation for caveats).
+This module implements the final version of the WebSocket protocol as
+defined in `RFC 6455 <http://tools.ietf.org/html/rfc6455>`_.  Certain
+browser versions (notably Safari 5.x) implemented an earlier draft of
+the protocol (known as "draft 76") and are not compatible with this module.
+
+.. versionchanged:: 4.0
+   Removed support for the draft 76 protocol version.
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
@@ -22,11 +21,9 @@ from __future__ import absolute_import, division, print_function, with_statement
 
 import base64
 import collections
-import functools
 import hashlib
 import os
 import struct
-import time
 import tornado.escape
 import tornado.web
 
@@ -38,7 +35,7 @@ from tornado.iostream import StreamClosedError
 from tornado.log import gen_log, app_log
 from tornado import simple_httpclient
 from tornado.tcpclient import TCPClient
-from tornado.util import bytes_type, unicode_type, _websocket_mask
+from tornado.util import bytes_type, _websocket_mask
 
 try:
     from urllib.parse import urlparse # py2
@@ -108,6 +105,21 @@ class WebSocketHandler(tornado.web.RequestHandler):
       };
 
     This script pops up an alert box that says "You said: Hello, world".
+
+    Web browsers allow any site to open a websocket connection to any other,
+    instead of using the same-origin policy that governs other network
+    access from javascript.  This can be surprising and is a potential
+    security hole, so since Tornado 4.0 `WebSocketHandler` requires
+    applications that wish to receive cross-origin websockets to opt in
+    by overriding the `~WebSocketHandler.check_origin` method (see that
+    method's docs for details).  Failure to do so is the most likely
+    cause of 403 errors when making a websocket connection.
+
+    When using a secure websocket connection (``wss://``) with a self-signed
+    certificate, the connection from a browser may fail because it wants
+    to show the "accept this certificate" dialog but has nowhere to show it.
+    You must first visit a regular HTML page using the same certificate
+    to accept it before the websocket connection will succeed.
     """
     def __init__(self, application, request, **kwargs):
         tornado.web.RequestHandler.__init__(self, application, request,
@@ -115,22 +127,17 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.ws_connection = None
         self.close_code = None
         self.close_reason = None
+        self.stream = None
 
     @tornado.web.asynchronous
     def get(self, *args, **kwargs):
         self.open_args = args
         self.open_kwargs = kwargs
 
-        self.stream = self.request.connection.detach()
-        self.stream.set_close_callback(self.on_connection_close)
-
         # Upgrade header should be present and should be equal to WebSocket
         if self.request.headers.get("Upgrade", "").lower() != 'websocket':
-            self.stream.write(tornado.escape.utf8(
-                "HTTP/1.1 400 Bad Request\r\n\r\n"
-                "Can \"Upgrade\" only to \"WebSocket\"."
-            ))
-            self.stream.close()
+            self.set_status(400)
+            self.finish("Can \"Upgrade\" only to \"WebSocket\".")
             return
 
         # Connection header should be upgrade. Some proxy servers/load balancers
@@ -138,11 +145,8 @@ class WebSocketHandler(tornado.web.RequestHandler):
         headers = self.request.headers
         connection = map(lambda s: s.strip().lower(), headers.get("Connection", "").split(","))
         if 'upgrade' not in connection:
-            self.stream.write(tornado.escape.utf8(
-                "HTTP/1.1 400 Bad Request\r\n\r\n"
-                "\"Connection\" must be \"Upgrade\"."
-            ))
-            self.stream.close()
+            self.set_status(400)
+            self.finish("\"Connection\" must be \"Upgrade\".")
             return
 
         # Handle WebSocket Origin naming convention differences
@@ -159,18 +163,15 @@ class WebSocketHandler(tornado.web.RequestHandler):
         # according to check_origin. When the origin is None, we assume it
         # did not come from a browser and that it can be passed on.
         if origin is not None and not self.check_origin(origin):
-            self.stream.write(tornado.escape.utf8(
-                "HTTP/1.1 403 Cross Origin Websockets Disabled\r\n\r\n"
-            ))
-            self.stream.close()
+            self.set_status(403)
+            self.finish("Cross origin websockets not allowed")
             return
+
+        self.stream = self.request.connection.detach()
+        self.stream.set_close_callback(self.on_connection_close)
 
         if self.request.headers.get("Sec-WebSocket-Version") in ("7", "8", "13"):
             self.ws_connection = WebSocketProtocol13(self)
-            self.ws_connection.accept_connection()
-        elif (self.allow_draft76() and
-              "Sec-WebSocket-Version" not in self.request.headers):
-            self.ws_connection = WebSocketProtocol76(self)
             self.ws_connection.accept_connection()
         else:
             self.stream.write(tornado.escape.utf8(
@@ -245,7 +246,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         phrase was supplied, these values will be available as the attributes
         ``self.close_code`` and ``self.close_reason``.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
 
            Added ``close_code`` and ``close_reason`` attributes.
         """
@@ -263,10 +264,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         closing.  These values are made available to the client, but are
         not otherwise interpreted by the websocket protocol.
 
-        The ``code`` and ``reason`` arguments are ignored in the "draft76"
-        protocol version.
-
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
 
            Added the ``code`` and ``reason`` arguments.
         """
@@ -292,7 +290,20 @@ class WebSocketHandler(tornado.web.RequestHandler):
         browsers, since WebSockets are allowed to bypass the usual same-origin
         policies and don't use CORS headers.
 
-        .. versionadded:: 3.3
+        To accept all cross-origin traffic (which was the default prior to
+        Tornado 4.0), simply override this method to always return true::
+
+            def check_origin(self, origin):
+                return True
+
+        To allow connections from any subdomain of your site, you might
+        do something like::
+
+            def check_origin(self, origin):
+                parsed_origin = urllib.parse.urlparse(origin)
+                return parsed_origin.netloc.endswith(".mydomain.com")
+
+        .. versionadded:: 4.0
         """
         parsed_origin = urlparse(origin)
         origin = parsed_origin.netloc
@@ -302,21 +313,6 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
         # Check to see that origin matches host directly, including ports
         return origin == host
-
-    def allow_draft76(self):
-        """Override to enable support for the older "draft76" protocol.
-
-        The draft76 version of the websocket protocol is disabled by
-        default due to security concerns, but it can be enabled by
-        overriding this method to return True.
-
-        Connections using the draft76 protocol do not support the
-        ``binary=True`` flag to `write_message`.
-
-        Support for the draft76 protocol is deprecated and will be
-        removed in a future version of Tornado.
-        """
-        return False
 
     def set_nodelay(self, value):
         """Set the no-delay flag for this stream.
@@ -334,29 +330,6 @@ class WebSocketHandler(tornado.web.RequestHandler):
         """
         self.stream.set_nodelay(value)
 
-    def get_websocket_scheme(self):
-        """Return the url scheme used for this request, either "ws" or "wss".
-
-        This is normally decided by HTTPServer, but applications
-        may wish to override this if they are using an SSL proxy
-        that does not provide the X-Scheme header as understood
-        by HTTPServer.
-
-        Note that this is only used by the draft76 protocol.
-        """
-        return "wss" if self.request.protocol == "https" else "ws"
-
-    def async_callback(self, callback, *args, **kwargs):
-        """Obsolete - catches exceptions from the wrapped function.
-
-        This function is normally unncecessary thanks to
-        `tornado.stack_context`.
-        """
-        return self.ws_connection.async_callback(callback, *args, **kwargs)
-
-    def _not_supported(self, *args, **kwargs):
-        raise Exception("Method not supported for Web Sockets")
-
     def on_connection_close(self):
         if self.ws_connection:
             self.ws_connection.on_connection_close()
@@ -364,9 +337,17 @@ class WebSocketHandler(tornado.web.RequestHandler):
             self.on_close()
 
 
+def _wrap_method(method):
+    def _disallow_for_websocket(self, *args, **kwargs):
+        if self.stream is None:
+            method(self, *args, **kwargs)
+        else:
+            raise RuntimeError("Method not supported for Web Sockets")
+    return _disallow_for_websocket
 for method in ["write", "redirect", "set_header", "send_error", "set_cookie",
                "set_status", "flush", "finish"]:
-    setattr(WebSocketHandler, method, WebSocketHandler._not_supported)
+    setattr(WebSocketHandler, method,
+            _wrap_method(getattr(WebSocketHandler, method)))
 
 
 class WebSocketProtocol(object):
@@ -379,23 +360,17 @@ class WebSocketProtocol(object):
         self.client_terminated = False
         self.server_terminated = False
 
-    def async_callback(self, callback, *args, **kwargs):
-        """Wrap callbacks with this if they are used on asynchronous requests.
+    def _run_callback(self, callback, *args, **kwargs):
+        """Runs the given callback with exception handling.
 
-        Catches exceptions properly and closes this WebSocket if an exception
-        is uncaught.
+        On error, aborts the websocket connection and returns False.
         """
-        if args or kwargs:
-            callback = functools.partial(callback, *args, **kwargs)
-
-        def wrapper(*args, **kwargs):
-            try:
-                return callback(*args, **kwargs)
-            except Exception:
-                app_log.error("Uncaught exception in %s",
-                              self.request.path, exc_info=True)
-                self._abort()
-        return wrapper
+        try:
+            callback(*args, **kwargs)
+        except Exception:
+            app_log.error("Uncaught exception in %s",
+                          self.request.path, exc_info=True)
+            self._abort()
 
     def on_connection_close(self):
         self._abort()
@@ -406,174 +381,6 @@ class WebSocketProtocol(object):
         self.server_terminated = True
         self.stream.close()  # forcibly tear down the connection
         self.close()  # let the subclass cleanup
-
-
-class WebSocketProtocol76(WebSocketProtocol):
-    """Implementation of the WebSockets protocol, version hixie-76.
-
-    This class provides basic functionality to process WebSockets requests as
-    specified in
-    http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-76
-    """
-    def __init__(self, handler):
-        WebSocketProtocol.__init__(self, handler)
-        self.challenge = None
-        self._waiting = None
-
-    def accept_connection(self):
-        try:
-            self._handle_websocket_headers()
-        except ValueError:
-            gen_log.debug("Malformed WebSocket request received")
-            self._abort()
-            return
-
-        scheme = self.handler.get_websocket_scheme()
-
-        # draft76 only allows a single subprotocol
-        subprotocol_header = ''
-        subprotocol = self.request.headers.get("Sec-WebSocket-Protocol", None)
-        if subprotocol:
-            selected = self.handler.select_subprotocol([subprotocol])
-            if selected:
-                assert selected == subprotocol
-                subprotocol_header = "Sec-WebSocket-Protocol: %s\r\n" % selected
-
-        # Write the initial headers before attempting to read the challenge.
-        # This is necessary when using proxies (such as HAProxy), which
-        # need to see the Upgrade headers before passing through the
-        # non-HTTP traffic that follows.
-        self.stream.write(tornado.escape.utf8(
-            "HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
-            "Upgrade: WebSocket\r\n"
-            "Connection: Upgrade\r\n"
-            "Server: TornadoServer/%(version)s\r\n"
-            "Sec-WebSocket-Origin: %(origin)s\r\n"
-            "Sec-WebSocket-Location: %(scheme)s://%(host)s%(uri)s\r\n"
-            "%(subprotocol)s"
-            "\r\n" % (dict(
-                version=tornado.version,
-                origin=self.request.headers["Origin"],
-                scheme=scheme,
-                host=self.request.host,
-                uri=self.request.uri,
-                subprotocol=subprotocol_header))))
-        self.stream.read_bytes(8, self._handle_challenge)
-
-    def challenge_response(self, challenge):
-        """Generates the challenge response that's needed in the handshake
-
-        The challenge parameter should be the raw bytes as sent from the
-        client.
-        """
-        key_1 = self.request.headers.get("Sec-Websocket-Key1")
-        key_2 = self.request.headers.get("Sec-Websocket-Key2")
-        try:
-            part_1 = self._calculate_part(key_1)
-            part_2 = self._calculate_part(key_2)
-        except ValueError:
-            raise ValueError("Invalid Keys/Challenge")
-        return self._generate_challenge_response(part_1, part_2, challenge)
-
-    def _handle_challenge(self, challenge):
-        try:
-            challenge_response = self.challenge_response(challenge)
-        except ValueError:
-            gen_log.debug("Malformed key data in WebSocket request")
-            self._abort()
-            return
-        self._write_response(challenge_response)
-
-    def _write_response(self, challenge):
-        self.stream.write(challenge)
-        self.async_callback(self.handler.open)(*self.handler.open_args, **self.handler.open_kwargs)
-        self._receive_message()
-
-    def _handle_websocket_headers(self):
-        """Verifies all invariant- and required headers
-
-        If a header is missing or have an incorrect value ValueError will be
-        raised
-        """
-        fields = ("Origin", "Host", "Sec-Websocket-Key1",
-                  "Sec-Websocket-Key2")
-        if not all(map(lambda f: self.request.headers.get(f), fields)):
-            raise ValueError("Missing/Invalid WebSocket headers")
-
-    def _calculate_part(self, key):
-        """Processes the key headers and calculates their key value.
-
-        Raises ValueError when feed invalid key."""
-        # pyflakes complains about variable reuse if both of these lines use 'c'
-        number = int(''.join(c for c in key if c.isdigit()))
-        spaces = len([c2 for c2 in key if c2.isspace()])
-        try:
-            key_number = number // spaces
-        except (ValueError, ZeroDivisionError):
-            raise ValueError
-        return struct.pack(">I", key_number)
-
-    def _generate_challenge_response(self, part_1, part_2, part_3):
-        m = hashlib.md5()
-        m.update(part_1)
-        m.update(part_2)
-        m.update(part_3)
-        return m.digest()
-
-    def _receive_message(self):
-        self.stream.read_bytes(1, self._on_frame_type)
-
-    def _on_frame_type(self, byte):
-        frame_type = ord(byte)
-        if frame_type == 0x00:
-            self.stream.read_until(b"\xff", self._on_end_delimiter)
-        elif frame_type == 0xff:
-            self.stream.read_bytes(1, self._on_length_indicator)
-        else:
-            self._abort()
-
-    def _on_end_delimiter(self, frame):
-        if not self.client_terminated:
-            self.async_callback(self.handler.on_message)(
-                frame[:-1].decode("utf-8", "replace"))
-        if not self.client_terminated:
-            self._receive_message()
-
-    def _on_length_indicator(self, byte):
-        if ord(byte) != 0x00:
-            self._abort()
-            return
-        self.client_terminated = True
-        self.close()
-
-    def write_message(self, message, binary=False):
-        """Sends the given message to the client of this Web Socket."""
-        if binary:
-            raise ValueError(
-                "Binary messages not supported by this version of websockets")
-        if isinstance(message, unicode_type):
-            message = message.encode("utf-8")
-        assert isinstance(message, bytes_type)
-        self.stream.write(b"\x00" + message + b"\xff")
-
-    def write_ping(self, data):
-        """Send ping frame."""
-        raise ValueError("Ping messages not supported by this version of websockets")
-
-    def close(self, code=None, reason=None):
-        """Closes the WebSocket connection."""
-        if not self.server_terminated:
-            if not self.stream.closed():
-                self.stream.write("\xff\x00")
-            self.server_terminated = True
-        if self.client_terminated:
-            if self._waiting is not None:
-                self.stream.io_loop.remove_timeout(self._waiting)
-            self._waiting = None
-            self.stream.close()
-        elif self._waiting is None:
-            self._waiting = self.stream.io_loop.add_timeout(
-                time.time() + 5, self._abort)
 
 
 class WebSocketProtocol13(WebSocketProtocol):
@@ -645,7 +452,8 @@ class WebSocketProtocol13(WebSocketProtocol):
             "%s"
             "\r\n" % (self._challenge_response(), subprotocol_header)))
 
-        self.async_callback(self.handler.open)(*self.handler.open_args, **self.handler.open_kwargs)
+        self._run_callback(self.handler.open, *self.handler.open_args,
+                           **self.handler.open_kwargs)
         self._receive_frame()
 
     def _write_frame(self, fin, opcode, data):
@@ -803,10 +611,10 @@ class WebSocketProtocol13(WebSocketProtocol):
             except UnicodeDecodeError:
                 self._abort()
                 return
-            self.async_callback(self.handler.on_message)(decoded)
+            self._run_callback(self.handler.on_message, decoded)
         elif opcode == 0x2:
             # Binary data
-            self.async_callback(self.handler.on_message)(data)
+            self._run_callback(self.handler.on_message, data)
         elif opcode == 0x8:
             # Close
             self.client_terminated = True
@@ -820,7 +628,7 @@ class WebSocketProtocol13(WebSocketProtocol):
             self._write_frame(True, 0xA, data)
         elif opcode == 0xA:
             # Pong
-            self.async_callback(self.handler.on_pong)(data)
+            self._run_callback(self.handler.on_pong, data)
         else:
             self._abort()
 
@@ -885,7 +693,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
 
         .. versionadded:: 3.2
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
 
            Added the ``code`` and ``reason`` arguments.
         """
@@ -893,10 +701,12 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             self.protocol.close(code, reason)
             self.protocol = None
 
-    def _on_close(self):
+    def on_connection_close(self):
+        if not self.connect_future.done():
+            self.connect_future.set_exception(StreamClosedError())
         self.on_message(None)
-        self.resolver.close()
-        super(WebSocketClientConnection, self)._on_close()
+        self.tcp_client.close()
+        super(WebSocketClientConnection, self).on_connection_close()
 
     def _on_http_response(self, response):
         if not self.connect_future.done():
@@ -925,7 +735,12 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             self._timeout = None
 
         self.stream = self.connection.detach()
-        self.stream.set_close_callback(self._on_close)
+        self.stream.set_close_callback(self.on_connection_close)
+        # Once we've taken over the connection, clear the final callback
+        # we set on the http request.  This deactivates the error handling
+        # in simple_httpclient that would otherwise interfere with our
+        # ability to see exceptions.
+        self.final_callback = None
 
         self.connect_future.set_result(self)
 

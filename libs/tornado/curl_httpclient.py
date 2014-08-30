@@ -51,18 +51,6 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         self._fds = {}
         self._timeout = None
 
-        try:
-            self._socket_action = self._multi.socket_action
-        except AttributeError:
-            # socket_action is found in pycurl since 7.18.2 (it's been
-            # in libcurl longer than that but wasn't accessible to
-            # python).
-            gen_log.warning("socket_action method missing from pycurl; "
-                            "falling back to socket_all. Upgrading "
-                            "libcurl and pycurl will improve performance")
-            self._socket_action = \
-                lambda fd, action: self._multi.socket_all()
-
         # libcurl has bugs that sometimes cause it to not report all
         # relevant file descriptors and timeouts to TIMERFUNCTION/
         # SOCKETFUNCTION.  Mitigate the effects of such bugs by
@@ -87,7 +75,6 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         for curl in self._curls:
             curl.close()
         self._multi.close()
-        self._closed = True
         super(CurlAsyncHTTPClient, self).close()
 
     def fetch_impl(self, request, callback):
@@ -143,7 +130,7 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
             action |= pycurl.CSELECT_OUT
         while True:
             try:
-                ret, num_handles = self._socket_action(fd, action)
+                ret, num_handles = self._multi.socket_action(fd, action)
             except pycurl.error as e:
                 ret = e.args[0]
             if ret != pycurl.E_CALL_MULTI_PERFORM:
@@ -156,7 +143,7 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
             self._timeout = None
             while True:
                 try:
-                    ret, num_handles = self._socket_action(
+                    ret, num_handles = self._multi.socket_action(
                         pycurl.SOCKET_TIMEOUT, 0)
                 except pycurl.error as e:
                     ret = e.args[0]
@@ -224,11 +211,6 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
                         "callback": callback,
                         "curl_start_time": time.time(),
                     }
-                    # Disable IPv6 to mitigate the effects of this bug
-                    # on curl versions <= 7.21.0
-                    # http://sourceforge.net/tracker/?func=detail&aid=3017819&group_id=976&atid=100976
-                    if pycurl.version_info()[2] <= 0x71500:  # 7.21.0
-                        curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
                     _curl_setup_request(curl, request, curl.info["buffer"],
                                         curl.info["headers"])
                     self._multi.add_handle(curl)
@@ -350,7 +332,7 @@ def _curl_setup_request(curl, request, buffer, headers):
         curl.setopt(pycurl.USERAGENT, "Mozilla/5.0 (compatible; pycurl)")
     if request.network_interface:
         curl.setopt(pycurl.INTERFACE, request.network_interface)
-    if request.use_gzip:
+    if request.decompress_response:
         curl.setopt(pycurl.ENCODING, "gzip,deflate")
     else:
         curl.setopt(pycurl.ENCODING, "none")
@@ -384,7 +366,6 @@ def _curl_setup_request(curl, request, buffer, headers):
     if request.allow_ipv6 is False:
         # Curl behaves reasonably when DNS resolution gives an ipv6 address
         # that we can't reach, so allow ipv6 unless the user asks to disable.
-        # (but see version check in _process_queue above)
         curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
     else:
         curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_WHATEVER)
@@ -474,7 +455,7 @@ def _curl_header_callback(headers, header_line):
         try:
             (__, __, reason) = httputil.parse_response_start_line(header_line)
             header_line = "X-Http-Reason: %s" % reason
-        except httputil.HTTPInputException:
+        except httputil.HTTPInputError:
             return
     if not header_line:
         return
