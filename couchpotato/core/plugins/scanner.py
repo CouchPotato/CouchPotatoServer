@@ -11,7 +11,6 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
 import enzyme
@@ -457,6 +456,7 @@ class Scanner(Plugin):
                 meta = self.getMeta(cur_file)
 
                 try:
+                    data['titles'] = meta.get('titles', [])
                     data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
                     data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
                     data['audio_channels'] = meta.get('audio_channels', 2.0)
@@ -527,16 +527,33 @@ class Scanner(Plugin):
             try: ac = self.audio_codec_map.get(p.audio[0].codec)
             except: pass
 
+            # Find title in video headers
+            titles = []
+
+            try:
+                if p.title and self.findYear(p.title):
+                    titles.append(ss(p.title))
+            except:
+                log.error('Failed getting title from meta: %s', traceback.format_exc())
+
+            for video in p.video:
+                try:
+                    if video.title and self.findYear(video.title):
+                        titles.append(ss(video.title))
+                except:
+                    log.error('Failed getting title from meta: %s', traceback.format_exc())
+
             return {
+                'titles': list(set(titles)),
                 'video': vc,
                 'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
                 'audio_channels': p.audio[0].channels,
             }
-        except ParseError:
+        except enzyme.exceptions.ParseError:
             log.debug('Failed to parse meta for %s', filename)
-        except NoParserError:
+        except enzyme.exceptions.NoParserError:
             log.debug('No parser found for %s', filename)
         except:
             log.debug('Failed parsing %s', filename)
