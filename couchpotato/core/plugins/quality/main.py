@@ -1,3 +1,4 @@
+from math import fabs, ceil
 import traceback
 import re
 
@@ -6,7 +7,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
@@ -22,17 +23,17 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
-        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
-        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p'], 'ext':[]},
-        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]}
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'median_size': 40000, 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'median_size': 10000, 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'median_size': 5500, 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'median_size': 2000, 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'median_size': 4500, 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'median_size': 1500, 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
+        {'identifier': 'scr', 'size': (600, 1600), 'median_size': 700, 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
+        {'identifier': 'r5', 'size': (600, 1000), 'median_size': 700, 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p'], 'ext':[]},
+        {'identifier': 'tc', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p'], 'ext':[]},
+        {'identifier': 'ts', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
+        {'identifier': 'cam', 'size': (600, 1000), 'median_size': 700, 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
@@ -330,7 +331,7 @@ class QualityPlugin(Plugin):
             # Check width resolution, range 20
             if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
                 log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
-                score += 5
+                score += 10
 
             # Check height resolution, range 20
             if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
@@ -350,9 +351,22 @@ class QualityPlugin(Plugin):
 
         if size:
 
-            if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
-                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
-                score += 5
+            size = tryFloat(size)
+            size_min = tryFloat(quality['size_min'])
+            size_max = tryFloat(quality['size_max'])
+
+            if size_min <= size <= size_max:
+                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], size_min, size, size_max))
+
+                proc_range = size_max - size_min
+                size_diff = size - size_min
+                size_proc = (size_diff / proc_range)
+
+                median_diff = quality['median_size'] - size_min
+                media_proc = (median_diff / proc_range)
+
+                max_points = 10
+                score += ceil(max_points - (fabs(size_proc - media_proc) * max_points))
             else:
                 score -= 5
 
@@ -449,10 +463,12 @@ class QualityPlugin(Plugin):
             'Movie Monuments 2013 BrRip 1080p': {'size': 1800, 'quality': 'brrip'},
             'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
             'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
-            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
-            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2012)/Movie Monuments.mkv': {'size': 5500, 'quality': '720p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2012)/Movie Monuments Full-OU.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 10000, 'quality': '1080p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 10000, 'quality': '1080p', 'is_3d': True},
             '/volume1/Public/3D/Moviename/Moviename (2009).3D.SBS.ts': {'size': 7500, 'quality': '1080p', 'is_3d': True},
-            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 5500, 'quality': '1080p'},
+            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 7500, 'quality': '1080p'},
             '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
@@ -465,6 +481,10 @@ class QualityPlugin(Plugin):
             # 'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7500, 'quality': 'brrip'},
             'Movie.Name.2014.HDCam.Chinese.Subs-ReleaseGroup': {'size': 15000, 'quality': 'cam'},
             'Movie Name 2014 HQ DVDRip X264 AC3 (bla)': {'size': 0, 'quality': 'dvdrip'},
+            'Movie Name1 (2012).mkv': {'size': 4500, 'quality': '720p'},
+            'Movie Name (2013).mkv': {'size': 8500, 'quality': '1080p'},
+            'Movie Name (2014).mkv': {'size': 4500, 'quality': '720p', 'extra': {'titles': ['Movie Name 2014 720p Bluray']}},
+            'Movie Name (2015).mkv': {'size': 500, 'quality': '1080p', 'extra': {'resolution_width': 1920}},
         }
 
         correct = 0
