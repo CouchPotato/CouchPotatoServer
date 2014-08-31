@@ -207,6 +207,10 @@ class QualityPlugin(Plugin):
                 '3d': {}
             }
 
+        # Use metadata titles as extra check
+        if extra and extra.get('titles'):
+            files.extend(extra.get('titles'))
+
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
             name_year = fireEvent('scanner.name_year', cur_file, file_name = cur_file, single = True)
