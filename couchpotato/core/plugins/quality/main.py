@@ -224,7 +224,7 @@ class QualityPlugin(Plugin):
                 contains_score = self.containsTagScore(quality, words, cur_file)
                 threedscore = self.contains3D(quality, threed_words, cur_file) if quality.get('allow_3d') else (0, None)
 
-                self.calcScore(score, quality, contains_score, threedscore)
+                self.calcScore(score, quality, contains_score, threedscore, penalty = contains_score)
 
         size_scores = []
         for quality in qualities:
@@ -236,11 +236,11 @@ class QualityPlugin(Plugin):
             if size_score > 0:
                 size_scores.append(quality)
 
-            self.calcScore(score, quality, size_score + loose_score, penalty = False)
+            self.calcScore(score, quality, size_score + loose_score)
 
         # Add additional size score if only 1 size validated
         if len(size_scores) == 1:
-            self.calcScore(score, size_scores[0], 8, penalty = False)
+            self.calcScore(score, size_scores[0], 8)
         del size_scores
 
         # Return nothing if all scores are <= 0
@@ -271,11 +271,11 @@ class QualityPlugin(Plugin):
         words = words[:-1]
 
         points = {
-            'identifier': 10,
-            'label': 10,
-            'alternative': 10,
-            'tags': 9,
-            'ext': 3,
+            'identifier': 20,
+            'label': 20,
+            'alternative': 20,
+            'tags': 11,
+            'ext': 5,
         }
 
         # Check alt and tags
@@ -363,16 +363,16 @@ class QualityPlugin(Plugin):
                 size_proc = (size_diff / proc_range)
 
                 median_diff = quality['median_size'] - size_min
-                media_proc = (median_diff / proc_range)
+                median_proc = (median_diff / proc_range)
 
-                max_points = 10
-                score += ceil(max_points - (fabs(size_proc - media_proc) * max_points))
+                max_points = 8
+                score += ceil(max_points - (fabs(size_proc - median_proc) * max_points))
             else:
                 score -= 5
 
         return score
 
-    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = True):
+    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = 0):
 
         score[quality['identifier']]['score'] += add_score
 
@@ -391,7 +391,7 @@ class QualityPlugin(Plugin):
 
         if penalty and add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+                score[allow]['score'] -= ((penalty * 2) if self.cached_order[allow] < self.cached_order[quality['identifier']] else penalty) * 2
 
             # Give panelty for all other qualities
             for q in self.qualities:
@@ -485,6 +485,7 @@ class QualityPlugin(Plugin):
             'Movie Name (2013).mkv': {'size': 8500, 'quality': '1080p'},
             'Movie Name (2014).mkv': {'size': 4500, 'quality': '720p', 'extra': {'titles': ['Movie Name 2014 720p Bluray']}},
             'Movie Name (2015).mkv': {'size': 500, 'quality': '1080p', 'extra': {'resolution_width': 1920}},
+            'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
         }
 
         correct = 0
