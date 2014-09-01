@@ -65,7 +65,7 @@ class Release(Plugin):
         log.debug('Removing releases from dashboard')
 
         now = time.time()
-        week = 262080
+        week = 604800
 
         db = get_db()
 
