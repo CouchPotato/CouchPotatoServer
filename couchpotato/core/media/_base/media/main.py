@@ -313,7 +313,6 @@ class MediaPlugin(MediaBase):
 
         for media_type in fireEvent('media.types', merge = True):
             tempList = lambda *args, **kwargs : self.listView(type = media_type, **kwargs)
-            print tempList
             addApiView('%s.list' % media_type, tempList, docs = {
                 'desc': 'List media',
                 'params': {
