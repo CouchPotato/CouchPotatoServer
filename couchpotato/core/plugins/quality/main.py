@@ -478,7 +478,7 @@ class QualityPlugin(Plugin):
             'Moviename.2014.720p.R6.WEB-DL.x264.AC3-xyz': {'size': 750, 'quality': 'r5'},
             'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 750, 'quality': 'cam'},
             'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'},
-            # 'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7500, 'quality': 'brrip'},
+            'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7000, 'quality': 'brrip'},
             'Movie.Name.2014.HDCam.Chinese.Subs-ReleaseGroup': {'size': 15000, 'quality': 'cam'},
             'Movie Name 2014 HQ DVDRip X264 AC3 (bla)': {'size': 0, 'quality': 'dvdrip'},
             'Movie Name1 (2012).mkv': {'size': 4500, 'quality': '720p'},
