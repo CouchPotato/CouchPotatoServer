@@ -35,8 +35,7 @@ Here is a simple "Hello, world" example app::
         application.listen(8888)
         tornado.ioloop.IOLoop.instance().start()
 
-See the :doc:`Tornado overview <overview>` for more details and a good getting
-started guide.
+See the :doc:`guide` for additional information.
 
 Thread-safety notes
 -------------------
@@ -48,6 +47,7 @@ not thread-safe.  In particular, methods such as
 you use multiple threads it is important to use `.IOLoop.add_callback`
 to transfer control back to the main thread before finishing the
 request.
+
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
@@ -820,7 +820,7 @@ class RequestHandler(object):
         if another flush occurs before the previous flush's callback
         has been run, the previous callback will be discarded.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
            Now returns a `.Future` if no callback is given.
         """
         chunk = b"".join(self._write_buffer)
@@ -943,26 +943,7 @@ class RequestHandler(object):
         ``kwargs["exc_info"]``.  Note that this exception may not be
         the "current" exception for purposes of methods like
         ``sys.exc_info()`` or ``traceback.format_exc``.
-
-        For historical reasons, if a method ``get_error_html`` exists,
-        it will be used instead of the default ``write_error`` implementation.
-        ``get_error_html`` returned a string instead of producing output
-        normally, and had different semantics for exception handling.
-        Users of ``get_error_html`` are encouraged to convert their code
-        to override ``write_error`` instead.
         """
-        if hasattr(self, 'get_error_html'):
-            if 'exc_info' in kwargs:
-                exc_info = kwargs.pop('exc_info')
-                kwargs['exception'] = exc_info[1]
-                try:
-                    # Put the traceback into sys.exc_info()
-                    raise_exc_info(exc_info)
-                except Exception:
-                    self.finish(self.get_error_html(status_code, **kwargs))
-            else:
-                self.finish(self.get_error_html(status_code, **kwargs))
-            return
         if self.settings.get("serve_traceback") and "exc_info" in kwargs:
             # in debug mode, try to send a traceback
             self.set_header('Content-Type', 'text/plain')
@@ -1147,14 +1128,15 @@ class RequestHandler(object):
             else:
                 # Treat unknown versions as not present instead of failing.
                 return None, None, None
-        elif len(cookie) == 32:
+        else:
             version = 1
-            token = binascii.a2b_hex(utf8(cookie))
+            try:
+                token = binascii.a2b_hex(utf8(cookie))
+            except (binascii.Error, TypeError):
+                token = utf8(cookie)
             # We don't have a usable timestamp in older versions.
             timestamp = int(time.time())
             return (version, token, timestamp)
-        else:
-            return None, None, None
 
     def check_xsrf_cookie(self):
         """Verifies that the ``_xsrf`` cookie matches the ``_xsrf`` argument.
@@ -1241,27 +1223,6 @@ class RequestHandler(object):
             base = ""
 
         return base + get_url(self.settings, path, **kwargs)
-
-    def async_callback(self, callback, *args, **kwargs):
-        """Obsolete - catches exceptions from the wrapped function.
-
-        This function is unnecessary since Tornado 1.1.
-        """
-        if callback is None:
-            return None
-        if args or kwargs:
-            callback = functools.partial(callback, *args, **kwargs)
-
-        def wrapper(*args, **kwargs):
-            try:
-                return callback(*args, **kwargs)
-            except Exception as e:
-                if self._headers_written:
-                    app_log.error("Exception after headers written",
-                                  exc_info=True)
-                else:
-                    self._handle_request_exception(e)
-        return wrapper
 
     def require_setting(self, name, feature="this feature"):
         """Raises an exception if the given app setting is not defined."""
@@ -1405,6 +1366,11 @@ class RequestHandler(object):
             " (" + self.request.remote_ip + ")"
 
     def _handle_request_exception(self, e):
+        if isinstance(e, Finish):
+            # Not an error; just finish the request without logging.
+            if not self._finished:
+                self.finish()
+            return
         self.log_exception(*sys.exc_info())
         if self._finished:
             # Extra errors after the request has been finished should
@@ -1662,7 +1628,7 @@ class Application(httputil.HTTPServerConnectionDelegate):
                  **settings):
         if transforms is None:
             self.transforms = []
-            if settings.get("gzip"):
+            if settings.get("compress_response") or settings.get("gzip"):
                 self.transforms.append(GZipContentEncoding)
         else:
             self.transforms = transforms
@@ -1959,6 +1925,9 @@ class HTTPError(Exception):
     `RequestHandler.send_error` since it automatically ends the
     current function.
 
+    To customize the response sent with an `HTTPError`, override
+    `RequestHandler.write_error`.
+
     :arg int status_code: HTTP status code.  Must be listed in
         `httplib.responses <http.client.responses>` unless the ``reason``
         keyword argument is given.
@@ -1985,6 +1954,25 @@ class HTTPError(Exception):
             return message + " (" + (self.log_message % self.args) + ")"
         else:
             return message
+
+
+class Finish(Exception):
+    """An exception that ends the request without producing an error response.
+
+    When `Finish` is raised in a `RequestHandler`, the request will end
+    (calling `RequestHandler.finish` if it hasn't already been called),
+    but the outgoing response will not be modified and the error-handling
+    methods (including `RequestHandler.write_error`) will not be called.
+
+    This can be a more convenient way to implement custom error pages
+    than overriding ``write_error`` (especially in library code)::
+
+        if self.current_user is None:
+            self.set_status(401)
+            self.set_header('WWW-Authenticate', 'Basic realm="something"')
+            raise Finish()
+    """
+    pass
 
 
 class MissingArgumentError(HTTPError):
@@ -2367,7 +2355,7 @@ class StaticFileHandler(RequestHandler):
 
         .. versionadded:: 3.1
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
            This method is now always called, instead of only when
            partial results are requested.
         """
@@ -2514,9 +2502,9 @@ class FallbackHandler(RequestHandler):
 class OutputTransform(object):
     """A transform modifies the result of an HTTP request (e.g., GZip encoding)
 
-    A new transform instance is created for every request. See the
-    GZipContentEncoding example below if you want to implement a
-    new Transform.
+    Applications are not expected to create their own OutputTransforms
+    or interact with them directly; the framework chooses which transforms
+    (if any) to apply.
     """
     def __init__(self, request):
         pass
@@ -2533,7 +2521,7 @@ class GZipContentEncoding(OutputTransform):
 
     See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11
 
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
         Now compresses all mime types beginning with ``text/``, instead
         of just a whitelist. (the whitelist is still used for certain
         non-text mime types).
@@ -2767,7 +2755,7 @@ class URLSpec(object):
           in the regex will be passed in to the handler's get/post/etc
           methods as arguments.
 
-        * ``handler_class``: `RequestHandler` subclass to be invoked.
+        * ``handler``: `RequestHandler` subclass to be invoked.
 
         * ``kwargs`` (optional): A dictionary of additional arguments
           to be passed to the handler's constructor.

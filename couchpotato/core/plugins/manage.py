@@ -165,7 +165,7 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
-                                            release_id = release['_id'] if already_used.get('last_edit', 0) < release.get('last_edit', 0) else already_used['_id']
+                                            release_id = release['_id'] if already_used.get('last_edit', 0) > release.get('last_edit', 0) else already_used['_id']
                                             if release_id not in deleted_releases:
                                                 fireEvent('release.delete', release_id, single = True)
                                                 deleted_releases.append(release_id)
@@ -219,7 +219,7 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
-                fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
+                fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
 

@@ -74,7 +74,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         self.in_progress = True
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
 
-        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', with_doc = False, single = True)]
+        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', 'movie', single = True)]
         random.shuffle(medias)
 
         total = len(medias)
@@ -94,7 +94,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     self.single(media, search_protocols, manual = manual)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (getIdentifier(media), traceback.format_exc()))
-                    fireEvent('movie.update_info', media_id)
+                    fireEvent('movie.update', media_id)
                 except:
                     log.error('Search failed for %s: %s', (getIdentifier(media), traceback.format_exc()))
 

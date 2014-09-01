@@ -159,7 +159,7 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = (self.data.files && self.data.files.image_poster) ? new Element('img', {
+			self.thumbnail = (self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0) ? new Element('img', {
 				'class': 'type_image poster',
 				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
 			}): null,

@@ -66,7 +66,9 @@ class CoreNotifier(Notification):
         fireEvent('schedule.interval', 'core.clean_messages', self.cleanMessages, seconds = 15, single = True)
 
         addEvent('app.load', self.clean)
-        addEvent('app.load', self.checkMessages)
+
+        if not Env.get('dev'):
+            addEvent('app.load', self.checkMessages)
 
         self.messages = []
         self.listeners = []

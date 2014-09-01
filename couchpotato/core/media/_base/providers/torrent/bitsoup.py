@@ -22,6 +22,9 @@ class Base(TorrentProvider):
     http_time_between_calls = 1  # Seconds
     only_tables_tags = SoupStrainer('table')
 
+    torrent_name_cell = 1
+    torrent_download_cell = 2
+
     def _searchOnTitle(self, title, movie, quality, results):
 
         url = self.urls['search'] % self.buildUrl(title, movie, quality)
@@ -40,8 +43,8 @@ class Base(TorrentProvider):
 
                     all_cells = result.find_all('td')
 
-                    torrent = all_cells[1].find('a')
-                    download = all_cells[3].find('a')
+                    torrent = all_cells[self.torrent_name_cell].find('a')
+                    download = all_cells[self.torrent_download_cell].find('a')
 
                     torrent_id = torrent['href']
                     torrent_id = torrent_id.replace('details.php?id=', '')
