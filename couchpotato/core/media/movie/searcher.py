@@ -74,7 +74,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         self.in_progress = True
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
 
-        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', 'movie', single = True)]
+        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', types = 'movie', with_doc = False, single = True)]
         random.shuffle(medias)
 
         total = len(medias)
