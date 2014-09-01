@@ -190,6 +190,7 @@ class Manage(Plugin):
 
             delete_me = {}
 
+            # noinspection PyTypeChecker
             for folder in self.in_progress:
                 if self.in_progress[folder]['to_go'] <= 0:
                     delete_me[folder] = True
