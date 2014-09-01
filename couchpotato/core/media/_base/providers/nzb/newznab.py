@@ -187,7 +187,7 @@ class Base(NZBProvider, RSS):
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
-            if e.code == 503:
+            if e.response.status_code == 503:
                 response = e.read().lower()
                 if 'maximum api' in response or 'download limit' in response:
                     if not self.limits_reached.get(host):

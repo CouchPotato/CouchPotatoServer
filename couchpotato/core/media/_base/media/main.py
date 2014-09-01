@@ -1,5 +1,4 @@
 from datetime import timedelta
-from operator import itemgetter
 import time
 import traceback
 from string import ascii_lowercase
@@ -313,7 +312,7 @@ class MediaPlugin(MediaBase):
     def addSingleListView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            tempList = lambda media_type = media_type, *args, **kwargs : self.listView(type = media_type, **kwargs)
+            tempList = lambda *args, **kwargs : self.listView(type = media_type, **kwargs)
             addApiView('%s.list' % media_type, tempList, docs = {
                 'desc': 'List media',
                 'params': {
@@ -395,7 +394,7 @@ class MediaPlugin(MediaBase):
     def addSingleCharView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            tempChar = lambda media_type = media_type, *args, **kwargs : self.charView(type = media_type, **kwargs)
+            tempChar = lambda *args, **kwargs : self.charView(type = media_type, **kwargs)
             addApiView('%s.available_chars' % media_type, tempChar)
 
     def delete(self, media_id, delete_from = None):
@@ -464,7 +463,7 @@ class MediaPlugin(MediaBase):
     def addSingleDeleteView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            tempDelete = lambda media_type = media_type, *args, **kwargs : self.deleteView(type = media_type, **kwargs)
+            tempDelete = lambda *args, **kwargs : self.deleteView(type = media_type, **kwargs)
             addApiView('%s.delete' % media_type, tempDelete, docs = {
             'desc': 'Delete a ' + media_type + ' from the wanted list',
             'params': {

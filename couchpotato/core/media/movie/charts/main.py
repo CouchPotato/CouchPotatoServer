@@ -1,6 +1,5 @@
 import time
 
-from couchpotato import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent,fireEvent

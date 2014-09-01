@@ -65,7 +65,7 @@ class Release(Plugin):
         log.debug('Removing releases from dashboard')
 
         now = time.time()
-        week = 262080
+        week = 604800
 
         db = get_db()
 
@@ -95,7 +95,7 @@ class Release(Plugin):
         del media_exist
 
         # get movies last_edit more than a week ago
-        medias = fireEvent('media.with_status', 'done', single = True)
+        medias = fireEvent('media.with_status', ['done','active'], single = True)
 
         for media in medias:
             if media.get('last_edit', 0) > (now - week):
@@ -111,7 +111,8 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignored')
 
-            fireEvent('media.untag', media.get('_id'), 'recent', single = True)
+            if 'recent' in media.get('tags', []):
+                fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
     def add(self, group, update_info = True, update_id = None):
 
