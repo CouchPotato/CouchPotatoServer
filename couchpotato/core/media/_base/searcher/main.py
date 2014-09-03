@@ -129,7 +129,11 @@ class Searcher(SearcherBase):
         # Try guessing via quality tags
         guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
 
-        return threed == guess.get('is_3d')
+        if guess:
+            return threed == guess.get('is_3d')
+        # If no quality guess, assume not 3d
+        else:
+            return threed == False
 
     def correctYear(self, haystack, year, year_range):
 
