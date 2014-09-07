@@ -482,6 +482,8 @@ class QualityPlugin(Plugin):
             'Movie Name (2014).mkv': {'size': 4500, 'quality': '720p', 'extra': {'titles': ['Movie Name 2014 720p Bluray']}},
             'Movie Name (2015).mkv': {'size': 500, 'quality': '1080p', 'extra': {'resolution_width': 1920}},
             'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
+            'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
+            'Movie Name.2014.720p Web-Dl Aac2.0 h264-ReleaseGroup': {'size': 3800, 'quality': 'brrip'},
         }
 
         correct = 0
