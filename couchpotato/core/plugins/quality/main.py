@@ -484,6 +484,7 @@ class QualityPlugin(Plugin):
             'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
             'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
             'Movie Name.2014.720p Web-Dl Aac2.0 h264-ReleaseGroup': {'size': 3800, 'quality': 'brrip'},
+            'Movie Name.2014.720p.WEBRip.x264.AC3-MAJESTiC': {'size': 3000, 'quality': 'scr'},
         }
 
         correct = 0
