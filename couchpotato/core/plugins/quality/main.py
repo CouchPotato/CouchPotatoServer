@@ -293,10 +293,6 @@ class QualityPlugin(Plugin):
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     score += points.get(tag_type)
 
-            if list(set(qualities) & set(words)):
-                log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                score += points.get(tag_type)
-
         # Check extention
         for ext in quality.get('ext', []):
             if ext == extension:
