@@ -258,10 +258,6 @@ class MediaPlugin(MediaBase):
         for x in filter_by:
             media_ids = [n for n in media_ids if n in filter_by[x]]
 
-        total_count = len(media_ids)
-        if total_count == 0:
-            return 0, []
-
         offset = 0
         limit = -1
         if limit_offset:
@@ -287,11 +283,30 @@ class MediaPlugin(MediaBase):
             media_ids.remove(media_id)
             if len(media_ids) == 0 or len(medias) == limit: break
 
-        return total_count, medias
+        # Sort media by type and return result            
+        result = {}
+
+        # Create keys for media types we are listing
+        if types:
+            for media_type in types:
+                result['%ss' % media_type] = []
+        else:
+            for media_type in fireEvent('media.types', merge = True):
+                result['%ss' % media_type] = []
+
+        total_count = len(medias)
+
+        if total_count == 0:
+            return 0, result
+
+        for kind in medias:
+            result['%ss' % kind['type']].append(kind)
+
+        return total_count, result
 
     def listView(self, **kwargs):
 
-        total_movies, movies = self.list(
+        total_count, result = self.list(
             types = splitString(kwargs.get('type')),
             status = splitString(kwargs.get('status')),
             release_status = splitString(kwargs.get('release_status')),
@@ -302,12 +317,12 @@ class MediaPlugin(MediaBase):
             search = kwargs.get('search')
         )
 
-        return {
-            'success': True,
-            'empty': len(movies) == 0,
-            'total': total_movies,
-            'movies': movies,
-        }
+        results = result
+        results['success'] = True
+        results['empty'] = len(result) == 0
+        results['total'] = total_count
+
+        return results
 
     def addSingleListView(self):
 

@@ -575,8 +575,8 @@ var ShowList = new Class({
 					self.el.setStyle('min-height', null);
 				}
 
-				self.store(json.movies);
-				self.addMovies(json.movies, json.total || json.movies.length);
+				self.store(json.shows);
+				self.addMovies(json.shows, json.total || json.shows.length);
 				if(self.scrollspy) {
 					self.load_more.set('text', 'load more movies');
 					self.scrollspy.start();
