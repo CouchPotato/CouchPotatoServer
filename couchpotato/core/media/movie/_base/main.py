@@ -179,6 +179,9 @@ class MovieBase(MovieTypeBase):
                     db.delete(rel)
 
             movie_dict = fireEvent('media.get', m['_id'], single = True)
+            if not movie_dict:
+                log.debug('Failed adding media, can\'t find it anymore')
+                return False
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])

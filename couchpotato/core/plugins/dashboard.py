@@ -1,5 +1,6 @@
 import random as rndm
 import time
+from CodernityDB.database import RecordDeleted
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -58,7 +59,11 @@ class Dashboard(Plugin):
                 rndm.shuffle(active_ids)
 
             for media_id in active_ids:
-                media = db.get('id', media_id)
+                try:
+                    media = db.get('id', media_id)
+                except RecordDeleted:
+                    log.debug('Record already deleted: %s', media_id)
+                    continue
 
                 pp = profile_pre.get(media.get('profile_id'))
                 if not pp: continue

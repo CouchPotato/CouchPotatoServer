@@ -282,6 +282,10 @@ class MediaPlugin(MediaBase):
 
             media = fireEvent('media.get', media_id, single = True)
 
+            # Skip if no media has been found
+            if not media:
+                continue
+
             # Merge releases with movie dict
             medias.append(media)
 
