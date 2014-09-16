@@ -271,6 +271,10 @@ class MovieBase(MovieTypeBase):
         if self.shuttingDown():
             return
 
+        lock_key = 'media.get.%s' % media_id if media_id else identifier
+        self.acquireLock(lock_key)
+
+        media = {}
         try:
             db = get_db()
 
@@ -319,11 +323,11 @@ class MovieBase(MovieTypeBase):
             self.getPoster(media, image_urls)
 
             db.update(media)
-            return media
         except:
             log.error('Failed update media: %s', traceback.format_exc())
 
-        return {}
+        self.releaseLock(lock_key)
+        return media
 
     def updateReleaseDate(self, media_id):
         """
