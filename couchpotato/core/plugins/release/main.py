@@ -70,27 +70,44 @@ class Release(Plugin):
         db = get_db()
 
         # Get (and remove) parentless releases
-        releases = db.all('release', with_doc = True)
+        releases = db.all('release', with_doc = False)
         media_exist = []
+        reindex = 0
         for release in releases:
             if release.get('key') in media_exist:
                 continue
 
             try:
+
+                try:
+                    doc = db.get('id', release.get('_id'))
+                except RecordDeleted:
+                    reindex += 1
+                    continue
+
                 db.get('id', release.get('key'))
                 media_exist.append(release.get('key'))
 
                 try:
-                    if release['doc'].get('status') == 'ignore':
-                        release['doc']['status'] = 'ignored'
-                        db.update(release['doc'])
+                    if doc.get('status') == 'ignore':
+                        doc['status'] = 'ignored'
+                        db.update(doc)
                 except:
                     log.error('Failed fixing mis-status tag: %s', traceback.format_exc())
+            except ValueError:
+                log.debug('Deleted corrupted document "%s": %s', (release.get('key'), traceback.format_exc(0)))
+                corrupted = db.get('id', release.get('key'), with_storage = False)
+                db._delete_id_index(corrupted.get('_id'), corrupted.get('_rev'), None)
+                reindex += 1
             except RecordDeleted:
-                db.delete(release['doc'])
-                log.debug('Deleted orphaned release: %s', release['doc'])
+                db.delete(doc)
+                log.debug('Deleted orphaned release: %s', doc)
+                reindex += 1
             except:
                 log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        if reindex > 0:
+            db.reindex()
 
         del media_exist
 
