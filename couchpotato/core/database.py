@@ -32,6 +32,7 @@ class Database(object):
 
         addEvent('database.setup.after', self.startup_compact)
         addEvent('database.setup_index', self.setupIndex)
+        addEvent('database.delete_corrupted', self.deleteCorrupted)
 
         addEvent('app.migrate', self.migrate)
         addEvent('app.after_shutdown', self.close)
@@ -146,6 +147,17 @@ class Database(object):
             results[key].append(document)
 
         return results
+
+    def deleteCorrupted(self, _id, traceback_error = ''):
+
+        db = self.getDB()
+
+        try:
+            log.debug('Deleted corrupted document "%s": %s', (_id, traceback_error))
+            corrupted = db.get('id', _id, with_storage = False)
+            db._delete_id_index(corrupted.get('_id'), corrupted.get('_rev'), None)
+        except:
+            log.debug('Failed deleting corrupted: %s', traceback.format_exc())
 
     def reindex(self, **kwargs):
 

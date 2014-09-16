@@ -178,8 +178,10 @@ class MediaPlugin(MediaBase):
                             continue
 
                         yield doc
-                    except RecordNotFound:
+                    except (RecordDeleted, RecordNotFound):
                         log.debug('Record not found, skipping: %s', ms['_id'])
+                    except (ValueError, EOFError):
+                        fireEvent('database.delete_corrupted', ms.get('_id'), traceback_error = traceback.format_exc(0))
                 else:
                     yield ms
 
