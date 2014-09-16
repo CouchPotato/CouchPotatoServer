@@ -579,7 +579,10 @@ class Database(object):
                             continue
 
                         for f in release_files:
-                            rfile = all_files[f.get('file_id')]
+                            rfile = all_files.get(f.get('file_id'))
+                            if not rfile:
+                                continue
+
                             file_type = type_by_id.get(rfile.get('type_id')).get('identifier')
 
                             if not release['files'].get(file_type):
