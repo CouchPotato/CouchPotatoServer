@@ -155,9 +155,14 @@ class CoreNotifier(Notification):
             n = {
                 '_t': 'notification',
                 'time': int(time.time()),
-                'message': toUnicode(message),
-                'data': data
+                'message': toUnicode(message)
             }
+
+            if data.get('sticky'):
+                n['sticky'] = True
+            if data.get('important'):
+                n['important'] = True
+
             db.insert(n)
 
             self.frontend(type = listener, data = n)
