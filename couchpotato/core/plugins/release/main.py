@@ -116,7 +116,7 @@ class Release(Plugin):
             if media.get('last_edit', 0) > (now - week):
                 continue
 
-            for rel in fireEvent('release.for_media', media['_id'], single = True):
+            for rel in self.forMedia(media['_id']):
 
                 # Remove all available releases
                 if rel['status'] in ['available']:
