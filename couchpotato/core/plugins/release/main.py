@@ -543,11 +543,15 @@ class Release(Plugin):
     def forMedia(self, media_id):
 
         db = get_db()
-        raw_releases = list(db.get_many('release', media_id, with_doc = True))
+        raw_releases = db.get_many('release', media_id)
 
         releases = []
         for r in raw_releases:
-            releases.append(r['doc'])
+            try:
+                doc = db.get('id', r.get('_id'))
+                releases.append(doc)
+            except RecordDeleted:
+                pass
 
         releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
 
