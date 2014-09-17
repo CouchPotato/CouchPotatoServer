@@ -95,9 +95,7 @@ class Release(Plugin):
                 except:
                     log.error('Failed fixing mis-status tag: %s', traceback.format_exc())
             except ValueError:
-                log.debug('Deleted corrupted document "%s": %s', (release.get('key'), traceback.format_exc(0)))
-                corrupted = db.get('id', release.get('key'), with_storage = False)
-                db._delete_id_index(corrupted.get('_id'), corrupted.get('_rev'), None)
+                fireEvent('database.delete_corrupted', release.get('key'), traceback_error = traceback.format_exc(0))
                 reindex += 1
             except RecordDeleted:
                 db.delete(doc)
@@ -112,7 +110,7 @@ class Release(Plugin):
         del media_exist
 
         # get movies last_edit more than a week ago
-        medias = fireEvent('media.with_status', ['done','active'], single = True)
+        medias = fireEvent('media.with_status', ['done', 'active'], single = True)
 
         for media in medias:
             if media.get('last_edit', 0) > (now - week):
