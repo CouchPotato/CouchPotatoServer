@@ -90,9 +90,15 @@ class MediaPlugin(MediaBase):
 
     # Wrongly tagged media files
     def cleanupFaults(self):
-        medias = fireEvent('media.with_status', 'ignored', with_doc = False, single = True)
+        medias = fireEvent('media.with_status', 'ignored', single = True) or []
+
+        db = get_db()
         for media in medias:
-            self.restatus(media.get('_id'), tag_recent = False)
+            try:
+                media['status'] = 'done'
+                db.update(media)
+            except:
+                pass
 
     def refresh(self, id = '', **kwargs):
         handlers = []
