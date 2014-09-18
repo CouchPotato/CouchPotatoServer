@@ -92,7 +92,7 @@ class MediaPlugin(MediaBase):
     def cleanupFaults(self):
         medias = fireEvent('media.with_status', 'ignored', with_doc = False, single = True)
         for media in medias:
-            self.restatus(media.get('_id'), restatus = False)
+            self.restatus(media.get('_id'), tag_recent = False)
 
     def refresh(self, id = '', **kwargs):
         handlers = []
