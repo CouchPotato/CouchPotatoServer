@@ -77,6 +77,7 @@ class MediaPlugin(MediaBase):
         addEvent('app.load', self.addSingleListView, priority = 100)
         addEvent('app.load', self.addSingleCharView, priority = 100)
         addEvent('app.load', self.addSingleDeleteView, priority = 100)
+        addEvent('app.load', self.cleanupFaults)
 
         addEvent('media.get', self.get)
         addEvent('media.with_status', self.withStatus)
@@ -86,6 +87,12 @@ class MediaPlugin(MediaBase):
         addEvent('media.restatus', self.restatus)
         addEvent('media.tag', self.tag)
         addEvent('media.untag', self.unTag)
+
+    # Wrongly tagged media files
+    def cleanupFaults(self):
+        medias = fireEvent('media.with_status', 'ignored', with_doc = False, single = True)
+        for media in medias:
+            self.restatus(media.get('_id'))
 
     def refresh(self, id = '', **kwargs):
         handlers = []
