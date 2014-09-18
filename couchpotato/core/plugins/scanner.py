@@ -694,7 +694,7 @@ class Scanner(Plugin):
 
     def removeCPTag(self, name):
         try:
-            return re.sub(self.cp_imdb, '', name)
+            return re.sub(self.cp_imdb, '', name).strip()
         except:
             pass
         return name
