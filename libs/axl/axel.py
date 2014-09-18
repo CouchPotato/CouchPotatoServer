@@ -235,11 +235,11 @@ class Event(object):
                         self.error_handler(sys.exc_info())
                 finally:
 
-                    if not self.asynchronous:
-                        self.queue.task_done()
-
                     if order_lock:
                         order_lock.release()
+
+                    if not self.asynchronous:
+                        self.queue.task_done()
 
                     if self.queue.empty():
                         raise Empty
