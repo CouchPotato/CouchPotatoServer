@@ -1,3 +1,4 @@
+import threading
 from urllib import quote
 from urlparse import urlparse
 import glob
@@ -34,6 +35,8 @@ class Plugin(object):
 
     _needs_shutdown = False
     _running = None
+
+    _locks = {}
 
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
     http_last_use = {}
@@ -198,6 +201,7 @@ class Plugin(object):
                 del self.http_failed_disabled[host]
 
         self.wait(host)
+        status_code = None
         try:
 
             kwargs = {
@@ -212,6 +216,7 @@ class Plugin(object):
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
             response = r.request(method, url, **kwargs)
 
+            status_code = response.status_code
             if response.status_code == requests.codes.ok:
                 data = response.content
             else:
@@ -224,6 +229,11 @@ class Plugin(object):
 
             # Save failed requests by hosts
             try:
+
+                # To many requests
+                if status_code == 429:
+                    self.http_failed_request[host] = time.time()
+
                 if not self.http_failed_request.get(host):
                     self.http_failed_request[host] = 1
                 else:
@@ -255,7 +265,7 @@ class Plugin(object):
 
             if wait > 0:
                 log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
-                time.sleep(wait)
+                time.sleep(min(wait, 30))
 
     def beforeCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
@@ -393,3 +403,19 @@ class Plugin(object):
 
     def isEnabled(self):
         return self.conf(self.enabled_option) or self.conf(self.enabled_option) is None
+
+    def acquireLock(self, key):
+
+        lock = self._locks.get(key)
+        if not lock:
+            self._locks[key] = threading.RLock()
+
+        log.debug('Acquiring lock: %s', key)
+        self._locks.get(key).acquire()
+
+    def releaseLock(self, key):
+
+        lock = self._locks.get(key)
+        if lock:
+            log.debug('Releasing lock: %s', key)
+            self._locks.get(key).release()

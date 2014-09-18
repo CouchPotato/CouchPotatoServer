@@ -150,8 +150,7 @@ class MovieBase(MovieTypeBase):
                 for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
-                            release['status'] = 'ignored'
-                            db.update(release)
+                            fireEvent('release.update_status', m['_id'], status = 'ignored')
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 
@@ -179,6 +178,9 @@ class MovieBase(MovieTypeBase):
                     db.delete(rel)
 
             movie_dict = fireEvent('media.get', m['_id'], single = True)
+            if not movie_dict:
+                log.debug('Failed adding media, can\'t find it anymore')
+                return False
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])
@@ -268,6 +270,10 @@ class MovieBase(MovieTypeBase):
         if self.shuttingDown():
             return
 
+        lock_key = 'media.get.%s' % media_id if media_id else identifier
+        self.acquireLock(lock_key)
+
+        media = {}
         try:
             db = get_db()
 
@@ -316,11 +322,11 @@ class MovieBase(MovieTypeBase):
             self.getPoster(media, image_urls)
 
             db.update(media)
-            return media
         except:
             log.error('Failed update media: %s', traceback.format_exc())
 
-        return {}
+        self.releaseLock(lock_key)
+        return media
 
     def updateReleaseDate(self, media_id):
         """

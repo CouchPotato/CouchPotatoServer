@@ -3,6 +3,7 @@ import threading
 import time
 import traceback
 import uuid
+from CodernityDB.database import RecordDeleted
 
 from couchpotato import get_db
 from couchpotato.api import addApiView, addNonBlockApiView
@@ -155,9 +156,14 @@ class CoreNotifier(Notification):
             n = {
                 '_t': 'notification',
                 'time': int(time.time()),
-                'message': toUnicode(message),
-                'data': data
+                'message': toUnicode(message)
             }
+
+            if data.get('sticky'):
+                n['sticky'] = True
+            if data.get('important'):
+                n['important'] = True
+
             db.insert(n)
 
             self.frontend(type = listener, data = n)
@@ -265,11 +271,16 @@ class CoreNotifier(Notification):
         if init:
             db = get_db()
 
-            notifications = db.all('notification', with_doc = True)
+            notifications = db.all('notification')
 
             for n in notifications:
-                if n['doc'].get('time') > (time.time() - 604800):
-                    messages.append(n['doc'])
+
+                try:
+                    doc = db.get('id', n.get('_id'))
+                    if doc.get('time') > (time.time() - 604800):
+                        messages.append(doc)
+                except RecordDeleted:
+                    pass
 
         return {
             'success': True,

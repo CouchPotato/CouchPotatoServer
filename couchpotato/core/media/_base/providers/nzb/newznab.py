@@ -187,11 +187,12 @@ class Base(NZBProvider, RSS):
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
-            if e.response.status_code == 503:
+            sc = e.response.status_code
+            if sc in [503, 429]:
                 response = e.read().lower()
-                if 'maximum api' in response or 'download limit' in response:
+                if sc == 429 or 'maximum api' in response or 'download limit' in response:
                     if not self.limits_reached.get(host):
-                        log.error('Limit reached for newznab provider: %s', host)
+                        log.error('Limit reached / to many requests for newznab provider: %s', host)
                     self.limits_reached[host] = time.time()
                     return 'try_next'
 

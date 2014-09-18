@@ -70,38 +70,53 @@ class Release(Plugin):
         db = get_db()
 
         # Get (and remove) parentless releases
-        releases = db.all('release', with_doc = True)
+        releases = db.all('release', with_doc = False)
         media_exist = []
+        reindex = 0
         for release in releases:
             if release.get('key') in media_exist:
                 continue
 
             try:
+
+                try:
+                    doc = db.get('id', release.get('_id'))
+                except RecordDeleted:
+                    reindex += 1
+                    continue
+
                 db.get('id', release.get('key'))
                 media_exist.append(release.get('key'))
 
                 try:
-                    if release['doc'].get('status') == 'ignore':
-                        release['doc']['status'] = 'ignored'
-                        db.update(release['doc'])
+                    if doc.get('status') == 'ignore':
+                        doc['status'] = 'ignored'
+                        db.update(doc)
                 except:
                     log.error('Failed fixing mis-status tag: %s', traceback.format_exc())
+            except ValueError:
+                fireEvent('database.delete_corrupted', release.get('key'), traceback_error = traceback.format_exc(0))
+                reindex += 1
             except RecordDeleted:
-                db.delete(release['doc'])
-                log.debug('Deleted orphaned release: %s', release['doc'])
+                db.delete(doc)
+                log.debug('Deleted orphaned release: %s', doc)
+                reindex += 1
             except:
                 log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        if reindex > 0:
+            db.reindex()
 
         del media_exist
 
         # get movies last_edit more than a week ago
-        medias = fireEvent('media.with_status', ['done','active'], single = True)
+        medias = fireEvent('media.with_status', ['done', 'active'], single = True)
 
         for media in medias:
             if media.get('last_edit', 0) > (now - week):
                 continue
 
-            for rel in fireEvent('release.for_media', media['_id'], single = True):
+            for rel in self.forMedia(media['_id']):
 
                 # Remove all available releases
                 if rel['status'] in ['available']:
@@ -528,11 +543,15 @@ class Release(Plugin):
     def forMedia(self, media_id):
 
         db = get_db()
-        raw_releases = list(db.get_many('release', media_id, with_doc = True))
+        raw_releases = db.get_many('release', media_id)
 
         releases = []
         for r in raw_releases:
-            releases.append(r['doc'])
+            try:
+                doc = db.get('id', r.get('_id'))
+                releases.append(doc)
+            except RecordDeleted:
+                pass
 
         releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
 

@@ -89,6 +89,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             for media_id in medias:
 
                 media = fireEvent('media.get', media_id, single = True)
+                if not media: continue
 
                 try:
                     self.single(media, search_protocols, manual = manual)
@@ -381,16 +382,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
     def tryNextRelease(self, media_id, manual = False, force_download = False):
 
         try:
-            db = get_db()
-            rels = fireEvent('media.with_status', ['snatched', 'done'], single = True)
+
+            rels = fireEvent('release.for_media', media_id, single = True)
 
             for rel in rels:
-                rel['status'] = 'ignored'
-                db.update(rel)
+                if rel.get('status') in ['snatched', 'done']:
+                    fireEvent('release.update_status', rel.get('_id'), status = 'ignored')
 
-            movie_dict = fireEvent('media.get', media_id, single = True)
-            log.info('Trying next release for: %s', getTitle(movie_dict))
-            self.single(movie_dict, manual = manual, force_download = force_download)
+            media = fireEvent('media.get', media_id, single = True)
+            if media:
+                log.info('Trying next release for: %s', getTitle(media))
+                self.single(media, manual = manual, force_download = force_download)
 
             return True
 
