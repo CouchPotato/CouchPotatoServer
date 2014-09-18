@@ -379,7 +379,7 @@ class MediaPlugin(MediaBase):
             if x['_id'] in media_ids:
                 chars.add(x['key'])
 
-            if len(chars) == 25:
+            if len(chars) == 27:
                 break
 
         return list(chars)
