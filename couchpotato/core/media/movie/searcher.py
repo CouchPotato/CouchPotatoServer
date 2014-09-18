@@ -382,12 +382,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
     def tryNextRelease(self, media_id, manual = False, force_download = False):
 
         try:
+
             db = get_db()
-            rels = fireEvent('media.with_status', ['snatched', 'done'], single = True)
+            rels = fireEvent('release.for_media', media_id, single = True)
 
             for rel in rels:
-                rel['status'] = 'ignored'
-                db.update(rel)
+                if rel.get('status') in ['snatched', 'done']:
+                    rel['status'] = 'ignored'
+                    db.update(rel)
 
             media = fireEvent('media.get', media_id, single = True)
             if media:
