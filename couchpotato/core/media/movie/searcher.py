@@ -383,13 +383,11 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         try:
 
-            db = get_db()
             rels = fireEvent('release.for_media', media_id, single = True)
 
             for rel in rels:
                 if rel.get('status') in ['snatched', 'done']:
-                    rel['status'] = 'ignored'
-                    db.update(rel)
+                    fireEvent('release.update_status', rel.get('_id'), status = 'ignored')
 
             media = fireEvent('media.get', media_id, single = True)
             if media:

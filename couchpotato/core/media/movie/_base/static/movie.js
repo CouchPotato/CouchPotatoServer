@@ -54,13 +54,21 @@ var Movie = new Class({
 		// Reload when releases have updated
 		self.global_events['release.update_status'] = function(notification){
 			var data = notification.data;
-			if(data && self.data._id == data.movie_id){
+			if(data && self.data._id == data.media_id){
 
 				if(!self.data.releases)
 					self.data.releases = [];
 
-				self.data.releases.push({'quality': data.quality, 'status': data.status});
-				self.updateReleases();
+				var updated = false;
+				self.data.releases.each(function(release){
+					if(release._id == data._id){
+						release['status'] = data.status;
+						updated = true;
+					}
+				});
+
+				if(updated)
+					self.updateReleases();
 			}
 		};
 

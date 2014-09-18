@@ -115,8 +115,15 @@ MA.Release = new Class({
 
 			self.releases = null;
 			if(self.options_container){
-				self.options_container.destroy();
-				self.options_container = null;
+				// Releases are currently displayed
+				if(self.options_container.isDisplayed()){
+					self.options_container.destroy();
+					self.createReleases();
+				}
+				else {
+					self.options_container.destroy();
+					self.options_container = null;
+				}
 			}
 		});
 
@@ -131,10 +138,10 @@ MA.Release = new Class({
 
 	},
 
-	createReleases: function(){
+	createReleases: function(refresh){
 		var self = this;
 
-		if(!self.options_container){
+		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(
 				self.release_container = new Element('div.releases.table')
 			);
