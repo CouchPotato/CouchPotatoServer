@@ -19,6 +19,7 @@ from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
+from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
@@ -173,6 +174,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     for logger_name in ['gntp']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+    # Disable SSL warning
+    disable_warnings()
 
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
