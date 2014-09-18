@@ -1,6 +1,7 @@
 import shutil
 
 from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent, fireEventAsync
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
@@ -25,6 +26,7 @@ class PutIO(DownloaderBase):
 
         addApiView('downloader.putio.auth_url', self.getAuthorizationUrl)
         addApiView('downloader.putio.credentials', self.getCredentials)
+        addEvent('putio.download', self.putioDownloader)
 
         return super(PutIO, self).__init__()
 
@@ -57,24 +59,18 @@ class PutIO(DownloaderBase):
     def getAuthorizationUrl(self, host = None, **kwargs):
         callback_url = cleanHost(host) + '%sdownloader.putio.credentials/' % (Env.get('api_base').lstrip('/'))
         log.info('callback_url is %s', callback_url)
-        #I can't figure out how to pass this into getCredentials so I'm saving it here
-        self.apicallhost = host;
-        oauth = pio.AuthHelper(client_id=self.client_id,client_secret=self.client_secret,redirect_uri=callback_url)
-        resp = oauth.authentication_url
-        log.info ('reps is %s,', resp)
+        target_url = "http://sabnzbd.dumaresq.ca/index.cgi?target=" + callback_url
+        log.info('target_url is %s', target_url)
         return { 
             'success': True,
-            'url': resp,
+            'url': target_url,
         }
 
 
     def getCredentials(self, **kwargs):
-        code = kwargs.get('code')
-        log.info('getCredentials Called with code: %s', code)
-        callback_url = cleanHost(self.apicallhost)  + '%sdownloader.putio.credentials/' % (Env.get('api_base').lstrip('/'))
-        log.info('callback is %s',callback_url)
-        oauth = pio.AuthHelper(client_id=self.client_id,client_secret=self.client_secret,redirect_uri=callback_url)
-        oauth_token = oauth.get_access_token(code)
+        oauth_token = kwargs.get('oauth')
+        if not oauth_token:
+          return 'redirect', Env.get('web_base') + 'settigs/downloaders/'
         log.info('oauth_token is: %s', oauth_token)
         self.conf('oauth_token', value = oauth_token);
         return 'redirect', Env.get('web_base') + 'settings/downloaders/'
@@ -102,17 +98,16 @@ class PutIO(DownloaderBase):
         # Check "getFromPutio" progress
         return release_downloads
 
-    def getFromPutio(self, **kwargs):
-
-        log.info('Put.io Download has been called')
+    def putioDownloader(self, fid):
+        log.info('Put.io Real downloader called with file_id: %s',fid)
         client = pio.Client(self.conf('oauth_token'))
+        log.debug('About to get file List')
         files = client.File.list()
-
+        log.debug('File list is %s',files)
         tempdownloaddir = self.conf('tempdownload_dir')
         downloaddir = self.conf('download_dir')
-
         for f in files:
-            if str(f.id) == str(kwargs.get('file_id')):
+            if str(f.id) == str(fid):
                 # Need to read this in from somewhere
                 client.File.download(f, dest = tempdownloaddir, delete_after_download = self.conf('delete_file'))
                 shutil.move(tempdownloaddir + "/" + str(f.name), downloaddir)
@@ -120,3 +115,17 @@ class PutIO(DownloaderBase):
         # Mark status of file_id as "done" here for getAllDownloadStatus
 
         return True
+
+    def getFromPutio(self, **kwargs):
+        # This needs some checking so that we don't download the same file multiple times.
+        # This needs to have a way to query if the download is still going
+        # would be nice to be albe to check how much is downloaded and report that.
+        file_id = str(kwargs.get('file_id'))
+        log.info('Put.io Download has been called file_id is %s', file_id)
+        fireEventAsync('putio.download',fid = file_id)
+        # Mark status of file_id as "done" here for getAllDownloadStatus
+
+        return {
+            'success': True,
+        }
+
