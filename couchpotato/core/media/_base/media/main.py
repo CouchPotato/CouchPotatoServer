@@ -92,7 +92,7 @@ class MediaPlugin(MediaBase):
     def cleanupFaults(self):
         medias = fireEvent('media.with_status', 'ignored', with_doc = False, single = True)
         for media in medias:
-            self.restatus(media.get('_id'))
+            self.restatus(media.get('_id'), restatus = False)
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -485,7 +485,7 @@ class MediaPlugin(MediaBase):
             }
         })
 
-    def restatus(self, media_id):
+    def restatus(self, media_id, tag_recent = True):
 
         try:
             db = get_db()
@@ -524,7 +524,8 @@ class MediaPlugin(MediaBase):
                 db.update(m)
 
                 # Tag media as recent
-                self.tag(media_id, 'recent', update_edited = True)
+                if tag_recent:
+                    self.tag(media_id, 'recent', update_edited = True)
 
             return m['status']
         except:
