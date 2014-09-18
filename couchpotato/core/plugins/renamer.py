@@ -344,6 +344,9 @@ class Renamer(Plugin):
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
                         replacements['original_folder'] = fireEvent('scanner.remove_cptag', group['dirname'], single = True)
 
+                        if not replacements['original_folder'] or len(replacements['original_folder']) == 0:
+                            replacements['original_folder'] = replacements['original']
+
                         # Extension
                         replacements['ext'] = getExt(current_file)
 
