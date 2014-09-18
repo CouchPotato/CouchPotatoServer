@@ -231,8 +231,9 @@ class Plugin(object):
             try:
 
                 # To many requests
-                if status_code == 429:
-                    self.http_failed_request[host] = time.time()
+                if status_code in [429]:
+                    self.http_failed_request[host] = 1
+                    self.http_failed_disabled[host] = time.time()
 
                 if not self.http_failed_request.get(host):
                     self.http_failed_request[host] = 1

@@ -526,7 +526,7 @@ class Renamer(Plugin):
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything
-                    break
+                    continue
 
                 log.debug('Removing leftover files')
                 for current_file in group['files']['leftover']:
