@@ -1,4 +1,4 @@
-import shutil
+import datetime
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEventAsync
@@ -18,6 +18,7 @@ class PutIO(DownloaderBase):
     status_support = True
     client_id = '1575'
     client_secret = '132qbpseq1ymwn83wus4'
+    downloadingList = []
 
     def __init__(self):
         addApiView('downloader.putio.getfrom', self.getFromPutio, docs = {
@@ -27,7 +28,6 @@ class PutIO(DownloaderBase):
         addApiView('downloader.putio.auth_url', self.getAuthorizationUrl)
         addApiView('downloader.putio.credentials', self.getCredentials)
         addEvent('putio.download', self.putioDownloader)
-
         return super(PutIO, self).__init__()
 
     def download(self, data = None, media = None, filedata = None):
@@ -82,19 +82,34 @@ class PutIO(DownloaderBase):
         log.debug(transfers);
         release_downloads = ReleaseDownloadList(self)
         for t in transfers:
-           if t.status == "COMPLETED" and self.conf('download') == False :
-              status = 'completed'
-           else:
-              #status = t.status.lower()
-              status = 'busy'
-           release_downloads.append({
-                 'id' : t.id,
-                 'name': t.name,
-                 'status': status,
-                 'timeleft': t.estimated_time,
-           })
+           if t.id in ids:
+              log.debug('id is %s', t.id)
+              log.debug('P.Status is %s',t.id)
+              log.debug('downloading list is %s', self.downloadingList)
+              if t.status == "COMPLETED" and self.conf('download') == False :
+                 status = 'completed'
+              # This is Ugly but if we are set to download, and the thing is complete, we need to check the dowlading status
+              # Becuase putio changed the IDs the only thing we can check is the name.  
+              elif t.status == "COMPLETED" and self.conf('download') == True:
+                status = 'busy'
+                # This is not ideal, right now if we are downloading anything we can't mark anything as completed
+                # The name and ID don't match currently so I can't use those...
+                if not self.downloadingList:
+                  now = datetime.datetime.now()
+                  log.debug ('now is %s', now)
+                  log.debug ('t.finished_at is %s',t.finished_at)
+                  if (now - t.finished_at) > datetime.timedelta(5,0):
+                    status = 'completed'
+              else:
+                 status = 'busy'
+              release_downloads.append({
+                    'id' : t.id,
+                    'name': t.name,
+                    'status': status,
+                    'timeleft': t.estimated_time,
+              })
             
-        log.info(release_downloads)
+              log.debug(release_downloads)
         # Check "getFromPutio" progress
         return release_downloads
 
@@ -104,28 +119,25 @@ class PutIO(DownloaderBase):
         log.debug('About to get file List')
         files = client.File.list()
         log.debug('File list is %s',files)
-        tempdownloaddir = self.conf('tempdownload_dir')
         downloaddir = self.conf('download_dir')
         for f in files:
             if str(f.id) == str(fid):
-                # Need to read this in from somewhere
-                client.File.download(f, dest = tempdownloaddir, delete_after_download = self.conf('delete_file'))
-                shutil.move(tempdownloaddir + "/" + str(f.name), downloaddir)
-
-        # Mark status of file_id as "done" here for getAllDownloadStatus
+                client.File.download(f, dest = downloaddir, delete_after_download = self.conf('delete_file'))
+                # Once the download is complete we need to remove it from the running list.
+                self.downloadingList.remove(fid)
 
         return True
 
     def getFromPutio(self, **kwargs):
-        # This needs some checking so that we don't download the same file multiple times.
-        # This needs to have a way to query if the download is still going
-        # would be nice to be albe to check how much is downloaded and report that.
         file_id = str(kwargs.get('file_id'))
         log.info('Put.io Download has been called file_id is %s', file_id)
-        fireEventAsync('putio.download',fid = file_id)
-        # Mark status of file_id as "done" here for getAllDownloadStatus
-
+        if file_id not in self.downloadingList:
+           self.downloadingList.append(file_id)
+           fireEventAsync('putio.download',fid = file_id)
+           return {
+               'success': True,
+           }
         return {
-            'success': True,
-        }
+            'success': False,
+        } 
 
