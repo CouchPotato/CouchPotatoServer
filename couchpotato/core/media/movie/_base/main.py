@@ -150,7 +150,7 @@ class MovieBase(MovieTypeBase):
                 for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
-                            fireEvent('release.update_status', m['_id'], status = 'ignored')
+                            fireEvent('release.update_status', release['_id'], status = 'ignored')
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 
