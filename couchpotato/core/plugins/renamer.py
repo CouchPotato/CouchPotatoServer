@@ -266,7 +266,7 @@ class Renamer(Plugin):
                         category_label = category['label']
 
                         if category['destination'] and len(category['destination']) > 0 and category['destination'] != 'None':
-                            destination = category['destination']
+                            destination = sp(category['destination'])
                             log.debug('Setting category destination for "%s": %s' % (media_title, destination))
                         else:
                             log.debug('No category destination found for "%s"' % media_title)
@@ -368,6 +368,9 @@ class Renamer(Plugin):
                         # Seperator replace
                         if separator:
                             final_file_name = final_file_name.replace(' ', separator)
+
+                        final_folder_name = ss(final_folder_name)
+                        final_file_name = ss(final_file_name)
 
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
