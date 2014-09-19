@@ -802,9 +802,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     log.debug('Couldn\'t hardlink file "%s" to "%s". Symlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
                     shutil.copy(old, dest)
                     try:
-                        symlink(dest, old + '.link')
+                        old_link = '%s.link' % sp(old)
+                        symlink(dest, old_link)
                         os.unlink(old)
-                        os.rename(old + '.link', old)
+                        os.rename(old_link, old)
                     except:
                         log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
 
