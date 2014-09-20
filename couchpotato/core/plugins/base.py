@@ -146,21 +146,17 @@ class Plugin(object):
         folder = sp(folder)
 
         for item in os.listdir(folder):
-            full_folder = os.path.join(folder, item)
+            full_folder = sp(os.path.join(folder, item))
 
             if not only_clean or (item in only_clean and os.path.isdir(full_folder)):
 
-                for root, dirs, files in os.walk(full_folder):
+                for subfolder, dirs, files in os.walk(full_folder, topdown = False):
 
-                    for dir_name in dirs:
-                        full_path = os.path.join(root, dir_name)
-
-                        if len(os.listdir(full_path)) == 0:
-                            try:
-                                os.rmdir(full_path)
-                            except:
-                                if show_error:
-                                    log.info2('Couldn\'t remove directory %s: %s', (full_path, traceback.format_exc()))
+                    try:
+                        os.rmdir(subfolder)
+                    except:
+                        if show_error:
+                            log.info2('Couldn\'t remove directory %s: %s', (subfolder, traceback.format_exc()))
 
         try:
             os.rmdir(folder)

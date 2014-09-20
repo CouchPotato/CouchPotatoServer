@@ -555,9 +555,9 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and \
+                        if parent_dir not in delete_folders and os.path.isdir(parent_dir) and \
                                 not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
-                                not isSubFolder(parent_dir, base_folder):
+                                isSubFolder(parent_dir, base_folder):
 
                             delete_folders.append(parent_dir)
 
@@ -566,6 +566,7 @@ class Renamer(Plugin):
                     self.tagRelease(group = group, tag = 'failed_remove')
 
             # Delete leftover folder from older releases
+            delete_folders = sorted(delete_folders, key = len, reverse = True)
             for delete_folder in delete_folders:
                 try:
                     self.deleteEmptyFolder(delete_folder, show_error = False)
@@ -620,8 +621,9 @@ class Renamer(Plugin):
                     group_folder = sp(os.path.join(base_folder, os.path.relpath(group['parentdir'], base_folder).split(os.path.sep)[0]))
 
                 try:
-                    log.info('Deleting folder: %s', group_folder)
-                    self.deleteEmptyFolder(group_folder)
+                    if self.conf('cleanup') or self.conf('move_leftover'):
+                        log.info('Deleting folder: %s', group_folder)
+                        self.deleteEmptyFolder(group_folder)
                 except:
                     log.error('Failed removing %s: %s', (group_folder, traceback.format_exc()))
 
