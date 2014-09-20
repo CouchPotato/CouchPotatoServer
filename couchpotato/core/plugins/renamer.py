@@ -579,7 +579,6 @@ class Renamer(Plugin):
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
-                    log.info('Renaming "%s" to "%s"', (src, dst))
 
                     # Create dir
                     self.makeDir(os.path.dirname(dst))
@@ -785,6 +784,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             if move_type not in ['copy', 'link']:
                 try:
+                    log.info('Moving "%s" to "%s"', (old, dest))
                     shutil.move(old, dest)
                 except:
                     if os.path.exists(dest):
@@ -793,8 +793,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     else:
                         raise
             elif move_type == 'copy':
+                log.info('Copying "%s" to "%s"', (old, dest))
                 shutil.copy(old, dest)
             else:
+                log.info('Linking "%s" to "%s"', (old, dest))
                 # First try to hardlink
                 try:
                     log.debug('Hardlinking file "%s" to "%s"...', (old, dest))
