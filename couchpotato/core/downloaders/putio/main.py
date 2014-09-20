@@ -1,5 +1,3 @@
-import datetime
-
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEventAsync
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
@@ -7,6 +5,7 @@ from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import api as pio
+import datetime
 
 log = CPLog(__name__)
 
@@ -18,7 +17,7 @@ class PutIO(DownloaderBase):
     status_support = True
     downloadingList = []
     # This is the location on the Internet of the Oauth helper server
-    oauthServerURL = "http://sabnzb.dumaresq.ca/index.cgi"
+    oauthServerURL = "http://sabnzbd.dumaresq.ca/index.cgi"
 
 
     def __init__(self):
@@ -39,8 +38,7 @@ class PutIO(DownloaderBase):
         url = data.get('url')
 
         client = pio.Client(self.conf('oauth_token'))
-
-        # Need to constuct a the API url a better way.
+        # It might be possible to call getFromPutio from the renamer if we can then we don't need to do this.
         # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
@@ -59,11 +57,12 @@ class PutIO(DownloaderBase):
             log.info('Failed to get file listing, check OAUTH_TOKEN')
             return False
 
+
     def getAuthorizationUrl(self, host = None, **kwargs):
         callback_url = cleanHost(host) + '%sdownloader.putio.credentials/' % (Env.get('api_base').lstrip('/'))
-        log.info('callback_url is %s', callback_url)
-        target_url = oauthServerURL + "?target=" + callback_url
-        log.info('target_url is %s', target_url)
+        log.debug('callback_url is %s', callback_url)
+        target_url = self.oauthServerURL + "?target=" + callback_url
+        log.debug('target_url is %s', target_url)
         return { 
             'success': True,
             'url': target_url,
@@ -71,10 +70,11 @@ class PutIO(DownloaderBase):
 
 
     def getCredentials(self, **kwargs):
-        oauth_token = kwargs.get('oauth')
-        if not oauth_token:
-          return 'redirect', Env.get('web_base') + 'settigs/downloaders/'
-        log.info('oauth_token is: %s', oauth_token)
+        try:
+            oauth_token = kwargs.get('oauth')
+        except:
+            return 'redirect', Env.get('web_base') + 'settigs/downloaders/'
+        log.debug('oauth_token is: %s', oauth_token)
         self.conf('oauth_token', value = oauth_token);
         return 'redirect', Env.get('web_base') + 'settings/downloaders/'
 
@@ -86,37 +86,33 @@ class PutIO(DownloaderBase):
         log.debug(transfers);
         release_downloads = ReleaseDownloadList(self)
         for t in transfers:
-           if t.id in ids:
-              log.debug('downloading list is %s', self.downloadingList)
-              if t.status == "COMPLETED" and self.conf('download') == False :
-                 status = 'completed'
-              # So check if we are trying to download something
-              elif t.status == "COMPLETED" and self.conf('download') == True:
-                # Assume we are done
-                status = 'completed'
-                # This is not ideal, right now if we are downloading anything we can't mark anything as completed
-                # The name and ID don't match currently so I can't use those...
-                if not self.downloadingList:
-                  now = datetime.datetime.utcnow()
-                  date_time = datetime.datetime.strptime(t.finished_at,"%Y-%m-%dT%H:%M:%S")
-                  # We need to make sure a race condition didn't happen
-                  if (now - date_time) < datetime.timedelta(minutes=5):
-                     #5 minutes haven't passed so we wait
-                    status = 'busy'
+            if t.id in ids:
+                log.debug('downloading list is %s', self.downloadingList)
+                if t.status == "COMPLETED" and self.conf('download') == False :
+                    status = 'completed'
+                # So check if we are trying to download something
+                elif t.status == "COMPLETED" and self.conf('download') == True:
+                      # Assume we are done
+                      status = 'completed'
+                      if not self.downloadingList:
+                          now = datetime.datetime.utcnow()
+                          date_time = datetime.datetime.strptime(t.finished_at,"%Y-%m-%dT%H:%M:%S")
+                          # We need to make sure a race condition didn't happen
+                          if (now - date_time) < datetime.timedelta(minutes=5):
+                              # 5 minutes haven't passed so we wait
+                              status = 'busy'
+                      else:
+                          # If we have the file_id in the downloadingList mark it as busy
+                          if str(t.file_id) in self.downloadingList:
+                              status = 'busy'
                 else:
-                   # If we have the file_id in the downloadingList mark it as busy
-                   if str(t.file_id) in self.downloadingList:
-                      status = 'busy'
-              else:
-                 status = 'busy'
-              release_downloads.append({
+                    status = 'busy'
+                release_downloads.append({
                     'id' : t.id,
                     'name': t.name,
                     'status': status,
                     'timeleft': t.estimated_time,
-              })
-            
-              log.debug(release_downloads)
+                })
         return release_downloads
 
 
@@ -136,14 +132,19 @@ class PutIO(DownloaderBase):
 
 
     def getFromPutio(self, **kwargs):
-        file_id = str(kwargs.get('file_id'))
+        try:
+            file_id = str(kwargs.get('file_id'))
+        except:
+            return {
+                'success' : False,
+            }
         log.info('Put.io Download has been called file_id is %s', file_id)
         if file_id not in self.downloadingList:
-           self.downloadingList.append(file_id)
-           fireEventAsync('putio.download',fid = file_id)
-           return {
+            self.downloadingList.append(file_id)
+            fireEventAsync('putio.download',fid = file_id)
+            return {
                'success': True,
-           }
+            }
         return {
             'success': False,
         } 
