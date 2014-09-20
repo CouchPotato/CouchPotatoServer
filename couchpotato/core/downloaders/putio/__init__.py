@@ -51,12 +51,6 @@ config = [{
                     'description': 'The Directory to download files to, does nothing if you don\'t select download',
                 },
                 {
-                    'name': 'tempdownload_dir',
-                    'type': 'directory',
-                    'label': 'Temporary Download Directory',
-                    'description': 'The Temporary Directory to download files to, does nothing if you don\'t select download',
-                },
-                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',

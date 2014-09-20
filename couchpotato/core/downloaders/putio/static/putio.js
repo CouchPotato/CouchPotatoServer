@@ -26,10 +26,10 @@ var PutIODownloader = new Class({
 			 	(putio_set > 0) ?
 			 		[
 						self.unregister = new Element('a.button.red', {
-							'text': 'Unregister "'+fieldset.getElement('input[name*=screen_name]').get('value')+'"',
+							'text': 'Unregister "'+fieldset.getElement('input[name*=oauth_token]').get('value')+'"',
 							'events': {
 								'click': function(){
-									fieldset.getElements('input[type=text]').set('value', '').fireEvent('change');
+									fieldset.getElements('input[name*=oauth_token]').set('value', '').fireEvent('change');
 
 									self.unregister.destroy();
 									self.unregister_or.destroy();

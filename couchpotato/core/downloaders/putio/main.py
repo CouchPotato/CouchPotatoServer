@@ -1,9 +1,11 @@
-import shutil
-
 from couchpotato.api import addApiView
-from couchpotato.core._base.downloader.main import DownloaderBase
+from couchpotato.core.event import addEvent, fireEventAsync
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
 import api as pio
+import datetime
 
 log = CPLog(__name__)
 
@@ -12,16 +14,21 @@ autoload = 'Putiodownload'
 
 class PutIO(DownloaderBase):
     protocol = ['torrent', 'torrent_magnet']
-    status_support = False
+    status_support = True
+    downloadingList = []
+    # This is the location on the Internet of the Oauth helper server
+    oauthServerURL = "http://sabnzbd.dumaresq.ca/index.cgi"
+
 
     def __init__(self):
         addApiView('downloader.putio.getfrom', self.getFromPutio, docs = {
             'desc': 'Allows you to download file from prom Put.io',
         })
-
         addApiView('downloader.putio.auth_url', self.getAuthorizationUrl)
-
+        addApiView('downloader.putio.credentials', self.getCredentials)
+        addEvent('putio.download', self.putioDownloader)
         return super(PutIO, self).__init__()
+
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -31,16 +38,15 @@ class PutIO(DownloaderBase):
         url = data.get('url')
 
         client = pio.Client(self.conf('oauth_token'))
-
-        # Need to constuct a the API url a better way.
+        # It might be possible to call getFromPutio from the renamer if we can then we don't need to do this.
+        # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
-            callbackurl = 'http://' + self.conf('callback_host') + '/' + self.conf('url_base',
-                                                                                   section = 'core') + '/api/' + self.conf(
-                'api_key', section = 'core') + '/downloader.putiodownload.getfrom/'
-        client.Transfer.add_url(url, callback_url = callbackurl)
+            callbackurl = 'http://' + self.conf('callback_host') + '/' + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/')) 
+        resp = client.Transfer.add_url(url, callback_url = callbackurl)
+        log.debug('resp is %s', resp.id);
+        return self.downloadReturnId(resp.id) 
 
-        return True
 
     def test(self):
         try:
@@ -51,37 +57,95 @@ class PutIO(DownloaderBase):
             log.info('Failed to get file listing, check OAUTH_TOKEN')
             return False
 
-    def getAuthorizationUrl(self):
-        # See notification/twitter
-        pass
 
-    def getCredentials(self):
-        # Save oauth_token here to settings
-        pass
+    def getAuthorizationUrl(self, host = None, **kwargs):
+        callback_url = cleanHost(host) + '%sdownloader.putio.credentials/' % (Env.get('api_base').lstrip('/'))
+        log.debug('callback_url is %s', callback_url)
+        target_url = self.oauthServerURL + "?target=" + callback_url
+        log.debug('target_url is %s', target_url)
+        return { 
+            'success': True,
+            'url': target_url,
+        }
+
+
+    def getCredentials(self, **kwargs):
+        try:
+            oauth_token = kwargs.get('oauth')
+        except:
+            return 'redirect', Env.get('web_base') + 'settigs/downloaders/'
+        log.debug('oauth_token is: %s', oauth_token)
+        self.conf('oauth_token', value = oauth_token);
+        return 'redirect', Env.get('web_base') + 'settings/downloaders/'
+
 
     def getAllDownloadStatus(self, ids):
-        # See other downloaders for examples
-
-        # Check putio for status
-
-        # Check "getFromPutio" progress
-        pass
-
-    def getFromPutio(self, **kwargs):
-
-        log.info('Put.io Download has been called')
+	log.debug('Checking putio download status.')
         client = pio.Client(self.conf('oauth_token'))
+        transfers = client.Transfer.list()
+        log.debug(transfers);
+        release_downloads = ReleaseDownloadList(self)
+        for t in transfers:
+            if t.id in ids:
+                log.debug('downloading list is %s', self.downloadingList)
+                if t.status == "COMPLETED" and self.conf('download') == False :
+                    status = 'completed'
+                # So check if we are trying to download something
+                elif t.status == "COMPLETED" and self.conf('download') == True:
+                      # Assume we are done
+                      status = 'completed'
+                      if not self.downloadingList:
+                          now = datetime.datetime.utcnow()
+                          date_time = datetime.datetime.strptime(t.finished_at,"%Y-%m-%dT%H:%M:%S")
+                          # We need to make sure a race condition didn't happen
+                          if (now - date_time) < datetime.timedelta(minutes=5):
+                              # 5 minutes haven't passed so we wait
+                              status = 'busy'
+                      else:
+                          # If we have the file_id in the downloadingList mark it as busy
+                          if str(t.file_id) in self.downloadingList:
+                              status = 'busy'
+                else:
+                    status = 'busy'
+                release_downloads.append({
+                    'id' : t.id,
+                    'name': t.name,
+                    'status': status,
+                    'timeleft': t.estimated_time,
+                })
+        return release_downloads
+
+
+    def putioDownloader(self, fid):
+        log.info('Put.io Real downloader called with file_id: %s',fid)
+        client = pio.Client(self.conf('oauth_token'))
+        log.debug('About to get file List')
         files = client.File.list()
-
-        tempdownloaddir = self.conf('tempdownload_dir')
         downloaddir = self.conf('download_dir')
-
         for f in files:
-            if str(f.id) == str(kwargs.get('file_id')):
-                # Need to read this in from somewhere
-                client.File.download(f, dest = tempdownloaddir, delete_after_download = self.conf('delete_file'))
-                shutil.move(tempdownloaddir + "/" + str(f.name), downloaddir)
-
-        # Mark status of file_id as "done" here for getAllDownloadStatus
+            if str(f.id) == str(fid):
+                client.File.download(f, dest = downloaddir, delete_after_download = self.conf('delete_file'))
+                # Once the download is complete we need to remove it from the running list.
+                self.downloadingList.remove(fid)
 
         return True
+
+
+    def getFromPutio(self, **kwargs):
+        try:
+            file_id = str(kwargs.get('file_id'))
+        except:
+            return {
+                'success' : False,
+            }
+        log.info('Put.io Download has been called file_id is %s', file_id)
+        if file_id not in self.downloadingList:
+            self.downloadingList.append(file_id)
+            fireEventAsync('putio.download',fid = file_id)
+            return {
+               'success': True,
+            }
+        return {
+            'success': False,
+        } 
+
