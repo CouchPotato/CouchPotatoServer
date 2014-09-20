@@ -92,15 +92,21 @@ class PutIO(DownloaderBase):
                  status = 'completed'
               # So check if we are trying to download something
               elif t.status == "COMPLETED" and self.conf('download') == True:
-                status = 'busy'
+                # Assume we are done
+                status = 'completed'
                 # This is not ideal, right now if we are downloading anything we can't mark anything as completed
                 # The name and ID don't match currently so I can't use those...
                 if not self.downloadingList:
                   now = datetime.datetime.utcnow()
                   date_time = datetime.datetime.strptime(t.finished_at,"%Y-%m-%dT%H:%M:%S")
                   # We need to make sure a race condition didn't happen
-                  if (now - date_time) > datetime.timedelta(minutes=5):
-                    status = 'completed'
+                  if (now - date_time) < datetime.timedelta(minutes=5):
+                     #5 minutes haven't passed so we wait
+                    status = 'busy'
+                else:
+                   # If we have the file_id in the downloadingList mark it as busy
+                   if str(t.file_id) in self.downloadingList:
+                      status = 'busy'
               else:
                  status = 'busy'
               release_downloads.append({
@@ -119,7 +125,6 @@ class PutIO(DownloaderBase):
         client = pio.Client(self.conf('oauth_token'))
         log.debug('About to get file List')
         files = client.File.list()
-        log.debug('File list is %s',files)
         downloaddir = self.conf('download_dir')
         for f in files:
             if str(f.id) == str(fid):
