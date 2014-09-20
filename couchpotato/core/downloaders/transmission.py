@@ -30,7 +30,7 @@ class Transmission(DownloaderBase):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
+        self.trpc = TransmissionRPC('https' if self.conf('https') else 'http', host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
         return self.trpc
 
     def download(self, data = None, media = None, filedata = None):
@@ -162,11 +162,11 @@ class Transmission(DownloaderBase):
 class TransmissionRPC(object):
 
     """TransmissionRPC lite library"""
-    def __init__(self, host = 'localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
+    def __init__(self, proto = 'https', host = 'localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
 
         super(TransmissionRPC, self).__init__()
 
-        self.url = 'http://' + host + ':' + str(port) + '/' + rpc_url + '/rpc'
+        self.url = proto + '://' + host + ':' + str(port) + '/' + rpc_url + '/rpc'
         self.tag = 0
         self.session_id = 0
         self.session = {}
@@ -276,6 +276,12 @@ config = [{
                     'name': 'host',
                     'default': 'localhost:9091',
                     'description': 'Hostname with port. Usually <strong>localhost:9091</strong>',
+                },
+                {
+                    'name': 'https',
+                    'type': 'bool',
+                    'default': False,
+                    'advanced': True,
                 },
                 {
                     'name': 'rpc_url',
