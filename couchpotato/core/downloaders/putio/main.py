@@ -16,19 +16,20 @@ autoload = 'Putiodownload'
 class PutIO(DownloaderBase):
     protocol = ['torrent', 'torrent_magnet']
     status_support = True
-    client_id = '1575'
-    client_secret = '132qbpseq1ymwn83wus4'
     downloadingList = []
+    # This is the location on the Internet of the Oauth helper server
+    oauthServerURL = "http://sabnzb.dumaresq.ca/index.cgi"
+
 
     def __init__(self):
         addApiView('downloader.putio.getfrom', self.getFromPutio, docs = {
             'desc': 'Allows you to download file from prom Put.io',
         })
-
         addApiView('downloader.putio.auth_url', self.getAuthorizationUrl)
         addApiView('downloader.putio.credentials', self.getCredentials)
         addEvent('putio.download', self.putioDownloader)
         return super(PutIO, self).__init__()
+
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -40,12 +41,14 @@ class PutIO(DownloaderBase):
         client = pio.Client(self.conf('oauth_token'))
 
         # Need to constuct a the API url a better way.
+        # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
             callbackurl = 'http://' + self.conf('callback_host') + '/' + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/')) 
         resp = client.Transfer.add_url(url, callback_url = callbackurl)
         log.debug('resp is %s', resp.id);
         return self.downloadReturnId(resp.id) 
+
 
     def test(self):
         try:
@@ -59,7 +62,7 @@ class PutIO(DownloaderBase):
     def getAuthorizationUrl(self, host = None, **kwargs):
         callback_url = cleanHost(host) + '%sdownloader.putio.credentials/' % (Env.get('api_base').lstrip('/'))
         log.info('callback_url is %s', callback_url)
-        target_url = "http://sabnzbd.dumaresq.ca/index.cgi?target=" + callback_url
+        target_url = oauthServerURL + "?target=" + callback_url
         log.info('target_url is %s', target_url)
         return { 
             'success': True,
@@ -75,6 +78,7 @@ class PutIO(DownloaderBase):
         self.conf('oauth_token', value = oauth_token);
         return 'redirect', Env.get('web_base') + 'settings/downloaders/'
 
+
     def getAllDownloadStatus(self, ids):
 	log.debug('Checking putio download status.')
         client = pio.Client(self.conf('oauth_token'))
@@ -83,22 +87,19 @@ class PutIO(DownloaderBase):
         release_downloads = ReleaseDownloadList(self)
         for t in transfers:
            if t.id in ids:
-              log.debug('id is %s', t.id)
-              log.debug('P.Status is %s',t.id)
               log.debug('downloading list is %s', self.downloadingList)
               if t.status == "COMPLETED" and self.conf('download') == False :
                  status = 'completed'
-              # This is Ugly but if we are set to download, and the thing is complete, we need to check the dowlading status
-              # Becuase putio changed the IDs the only thing we can check is the name.  
+              # So check if we are trying to download something
               elif t.status == "COMPLETED" and self.conf('download') == True:
                 status = 'busy'
                 # This is not ideal, right now if we are downloading anything we can't mark anything as completed
                 # The name and ID don't match currently so I can't use those...
                 if not self.downloadingList:
-                  now = datetime.datetime.now()
-                  log.debug ('now is %s', now)
-                  log.debug ('t.finished_at is %s',t.finished_at)
-                  if (now - t.finished_at) > datetime.timedelta(5,0):
+                  now = datetime.datetime.utcnow()
+                  date_time = datetime.datetime.strptime(t.finished_at,"%Y-%m-%dT%H:%M:%S")
+                  # We need to make sure a race condition didn't happen
+                  if (now - date_time) > datetime.timedelta(minutes=5):
                     status = 'completed'
               else:
                  status = 'busy'
@@ -110,8 +111,8 @@ class PutIO(DownloaderBase):
               })
             
               log.debug(release_downloads)
-        # Check "getFromPutio" progress
         return release_downloads
+
 
     def putioDownloader(self, fid):
         log.info('Put.io Real downloader called with file_id: %s',fid)
@@ -127,6 +128,7 @@ class PutIO(DownloaderBase):
                 self.downloadingList.remove(fid)
 
         return True
+
 
     def getFromPutio(self, **kwargs):
         file_id = str(kwargs.get('file_id'))
