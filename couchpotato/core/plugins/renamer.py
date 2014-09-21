@@ -10,7 +10,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -585,6 +585,10 @@ class Renamer(Plugin):
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
+
+                    if dst in group['renamed_files']:
+                        log.error('File "%s" already exists, adding random string at the end to prevent data loss', dst)
+                        dst = '%s.random-%s' % (dst, randomString())
 
                     # Create dir
                     self.makeDir(os.path.dirname(dst))
