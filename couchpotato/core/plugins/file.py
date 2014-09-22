@@ -64,6 +64,9 @@ class FileManager(Plugin):
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = None):
         if not urlopen_kwargs: urlopen_kwargs = {}
 
+        # Return response object to stream download
+        urlopen_kwargs['stream'] = True
+
         if not dest:  # to Cache
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
