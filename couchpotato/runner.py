@@ -152,7 +152,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         os.mkdir(python_cache)
 
     session = requests.Session()
-    session.max_redirects = 1
+    session.max_redirects = 5
 
     # Register environment settings
     Env.set('app_dir', sp(base_path))
