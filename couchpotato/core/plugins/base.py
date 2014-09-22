@@ -222,7 +222,7 @@ class Plugin(object):
                 'timeout': timeout,
                 'files': files,
                 'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
-                'stream': stream
+                'stream': stream,
             }
             method = 'post' if len(data) > 0 or files else 'get'
 

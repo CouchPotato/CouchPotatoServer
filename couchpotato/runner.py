@@ -151,12 +151,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not os.path.exists(python_cache):
         os.mkdir(python_cache)
 
+    session = requests.Session()
+    session.max_redirects = 1
+
     # Register environment settings
     Env.set('app_dir', sp(base_path))
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('http_opener', requests.Session())
+    Env.set('http_opener', session)
     Env.set('cache_dir', cache_dir)
     Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)
