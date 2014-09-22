@@ -10,7 +10,8 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier, randomString
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, \
+    getIdentifier, randomString, getFreeSpace, getSize
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -279,6 +280,7 @@ class Renamer(Plugin):
                     except:
                         log.error('Failed getting category label: %s', traceback.format_exc())
 
+
                 # Find subtitle for renaming
                 group['before_rename'] = []
                 fireEvent('renamer.before', group)
@@ -545,6 +547,13 @@ class Renamer(Plugin):
                     if self.conf('cleanup') and not self.conf('move_leftover') and \
                             (not keep_original or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
+
+            total_space, available_space = getFreeSpace(destination)
+            renaming_size = getSize(rename_files.keys())
+            if renaming_size > available_space:
+                log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
+                self.tagRelease(group = group, tag = 'not_enough_space')
+                continue
 
             # Remove files
             delete_folders = []
