@@ -1,21 +1,14 @@
 from base64 import b64encode
-import re
-from urllib2 import URLError
+import os
 from uuid import uuid4
 import hashlib
-import httplib
-import json
-import os
-import socket
-import ssl
-import sys
-import time
 import traceback
-import urllib2
+
+from requests import HTTPError
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import tryUrlencode, sp
-from couchpotato.core.helpers.variable import cleanHost, randomString
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 
 
@@ -36,14 +29,11 @@ class NZBVortex(DownloaderBase):
 
         # Send the nzb
         try:
-            nzb_id = '%s-%s' % (self.cpTag(media), randomString())
-            nzb_filename = self.createFileName(data, filedata, media)
-            nzb_filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', nzb_filename)
-            nzb_filename = '%s%s.nzb' % (nzb_filename[0:-4], nzb_id)
+            nzb_filename = self.createFileName(data, filedata, media, unique_tag = True)
             response = self.call('nzb/add', files = {'file': (nzb_filename, filedata, 'application/octet-stream')})
 
             if response and response.get('result', '').lower() == 'ok':
-                return self.downloadReturnId(nzb_id)
+                return self.downloadReturnId(nzb_filename)
 
             log.error('Something went wrong sending the NZB file. Response: %s', response)
             return False
@@ -65,7 +55,8 @@ class NZBVortex(DownloaderBase):
 
         release_downloads = ReleaseDownloadList(self)
         for nzb in raw_statuses.get('nzbs', []):
-            if nzb['id'] in ids:
+            nzb_id = os.path.basename(nzb['nzbFileName'])
+            if nzb_id in ids:
 
                 # Check status
                 status = 'busy'
@@ -75,7 +66,8 @@ class NZBVortex(DownloaderBase):
                     status = 'failed'
 
                 release_downloads.append({
-                    'id': nzb['id'],
+                    'temp_id': nzb['id'],
+                    'id': nzb_id,
                     'name': nzb['uiTitle'],
                     'status': status,
                     'original_status': nzb['state'],
@@ -90,7 +82,7 @@ class NZBVortex(DownloaderBase):
         log.info('%s failed downloading, deleting...', release_download['name'])
 
         try:
-            self.call('nzb/%s/cancel' % release_download['id'])
+            self.call('nzb/%s/cancel' % release_download['temp_id'])
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
             return False
@@ -132,15 +124,16 @@ class NZBVortex(DownloaderBase):
 
         params = tryUrlencode(parameters)
 
-        url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api/' + call
+        url = cleanHost(self.conf('host')) + 'api/' + call
 
         try:
-            data = self.getJsonData('%s?%s' % (url, params), *args, **kwargs)
+            data = self.getJsonData('%s%s' % (url, '?' + params if params else ''), *args, cache_timeout = 0, show_error = False, **kwargs)
 
             if data:
                 return data
-        except URLError as e:
-            if hasattr(e, 'code') and e.code == 403:
+        except HTTPError as e:
+            sc = e.response.status_code
+            if sc == 403:
                 # Try login and do again
                 if not is_repeat:
                     self.login()
@@ -156,13 +149,12 @@ class NZBVortex(DownloaderBase):
 
         if not self.api_level:
 
-            url = cleanHost(self.conf('host')) + 'api/app/apilevel'
-
             try:
-                data = self.urlopen(url, show_error = False)
-                self.api_level = float(json.loads(data).get('apilevel'))
-            except URLError as e:
-                if hasattr(e, 'code') and e.code == 403:
+                data = self.call('app/apilevel', auth = False)
+                self.api_level = float(data.get('apilevel'))
+            except HTTPError as e:
+                sc = e.response.status_code
+                if sc == 403:
                     log.error('This version of NZBVortex isn\'t supported. Please update to 2.8.6 or higher')
                 else:
                     log.error('NZBVortex doesn\'t seem to be running or maybe the remote option isn\'t enabled yet: %s', traceback.format_exc(1))
@@ -172,29 +164,6 @@ class NZBVortex(DownloaderBase):
     def isEnabled(self, manual = False, data = None):
         if not data: data = {}
         return super(NZBVortex, self).isEnabled(manual, data) and self.getApiLevel()
-
-
-class HTTPSConnection(httplib.HTTPSConnection):
-    def __init__(self, *args, **kwargs):
-        httplib.HTTPSConnection.__init__(self, *args, **kwargs)
-
-    def connect(self):
-        sock = socket.create_connection((self.host, self.port), self.timeout)
-        if sys.version_info < (2, 6, 7):
-            if hasattr(self, '_tunnel_host'):
-                self.sock = sock
-                self._tunnel()
-        else:
-            if self._tunnel_host:
-                self.sock = sock
-                self._tunnel()
-
-        self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version = ssl.PROTOCOL_TLSv1)
-
-
-class HTTPSHandler(urllib2.HTTPSHandler):
-    def https_open(self, req):
-        return self.do_open(HTTPSConnection, req)
 
 
 config = [{
@@ -216,15 +185,8 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:4321',
-                    'description': 'Hostname with port. Usually <strong>localhost:4321</strong>',
-                },
-                {
-                    'name': 'ssl',
-                    'default': 1,
-                    'type': 'bool',
-                    'advanced': True,
-                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
+                    'default': 'https://localhost:4321',
+                    'description': 'Hostname with port. Usually <strong>https://localhost:4321</strong>',
                 },
                 {
                     'name': 'api_key',
