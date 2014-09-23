@@ -192,7 +192,7 @@ class Plugin(object):
         host = '%s%s' % (parsed_url.hostname, (':' + str(parsed_url.port) if parsed_url.port else ''))
 
         headers['Referer'] = headers.get('Referer', '%s://%s' % (parsed_url.scheme, host))
-        headers['Host'] = headers.get('Host', host)
+        headers['Host'] = headers.get('Host', None)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
         headers['Connection'] = headers.get('Connection', 'keep-alive')
