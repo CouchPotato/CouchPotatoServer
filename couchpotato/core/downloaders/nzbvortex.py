@@ -1,4 +1,5 @@
 from base64 import b64encode
+import re
 from urllib2 import URLError
 from uuid import uuid4
 import hashlib
@@ -14,7 +15,7 @@ import urllib2
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import tryUrlencode, sp
-from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.helpers.variable import cleanHost, randomString
 from couchpotato.core.logger import CPLog
 
 
@@ -35,13 +36,17 @@ class NZBVortex(DownloaderBase):
 
         # Send the nzb
         try:
+            nzb_id = '%s-%s' % (self.cpTag(media), randomString())
             nzb_filename = self.createFileName(data, filedata, media)
-            self.call('nzb/add', files = {'file': (nzb_filename, filedata)})
+            nzb_filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', nzb_filename)
+            nzb_filename = '%s%s.nzb' % (nzb_filename[0:-4], nzb_id)
+            response = self.call('nzb/add', files = {'file': (nzb_filename, filedata, 'application/octet-stream')})
 
-            time.sleep(10)
-            raw_statuses = self.call('nzb')
-            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if os.path.basename(nzb['nzbFileName']) == nzb_filename][0]
-            return self.downloadReturnId(nzb_id)
+            if response and response.get('result', '').lower() == 'ok':
+                return self.downloadReturnId(nzb_id)
+
+            log.error('Something went wrong sending the NZB file. Response: %s', response)
+            return False
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
@@ -114,7 +119,7 @@ class NZBVortex(DownloaderBase):
         log.error('Login failed, please check you api-key')
         return False
 
-    def call(self, call, parameters = None, repeat = False, auth = True, *args, **kwargs):
+    def call(self, call, parameters = None, is_repeat = False, auth = True, *args, **kwargs):
 
         # Login first
         if not parameters: parameters = {}
@@ -130,16 +135,16 @@ class NZBVortex(DownloaderBase):
         url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api/' + call
 
         try:
-            data = self.urlopen('%s?%s' % (url, params), *args, **kwargs)
+            data = self.getJsonData('%s?%s' % (url, params), *args, **kwargs)
 
             if data:
-                return json.loads(data)
+                return data
         except URLError as e:
             if hasattr(e, 'code') and e.code == 403:
                 # Try login and do again
-                if not repeat:
+                if not is_repeat:
                     self.login()
-                    return self.call(call, parameters = parameters, repeat = True, **kwargs)
+                    return self.call(call, parameters = parameters, is_repeat = True, **kwargs)
 
             log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
         except:
