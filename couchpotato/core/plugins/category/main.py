@@ -27,7 +27,7 @@ class CategoryPlugin(Plugin):
             'desc': 'List all available categories',
             'return': {'type': 'object', 'example': """{
             'success': True,
-            'list': array, categories
+            'categories': array, categories
 }"""}
         })
 

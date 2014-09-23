@@ -27,6 +27,10 @@ class MovieBase(MovieTypeBase):
 
         addApiView('movie.add', self.addView, docs = {
             'desc': 'Add new movie to the wanted list',
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'movie': object
+}"""},
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
