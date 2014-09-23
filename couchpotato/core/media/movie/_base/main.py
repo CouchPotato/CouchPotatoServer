@@ -27,6 +27,10 @@ class MovieBase(MovieTypeBase):
 
         addApiView('movie.add', self.addView, docs = {
             'desc': 'Add new movie to the wanted list',
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'movie': object
+}"""},
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
@@ -150,7 +154,7 @@ class MovieBase(MovieTypeBase):
                 for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
-                            fireEvent('release.update_status', m['_id'], status = 'ignored')
+                            fireEvent('release.update_status', release['_id'], status = 'ignored')
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 

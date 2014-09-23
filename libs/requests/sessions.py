@@ -532,7 +532,11 @@ class Session(SessionRedirectMixin):
         if not isinstance(request, PreparedRequest):
             raise ValueError('You can only send PreparedRequests.')
 
+        redirect_count = 0
         while request.url in self.redirect_cache:
+            redirect_count += 1
+            if redirect_count > self.max_redirects:
+                raise TooManyRedirects
             request.url = self.redirect_cache.get(request.url)
 
         # Set up variables needed for resolve_redirects and dispatching of hooks

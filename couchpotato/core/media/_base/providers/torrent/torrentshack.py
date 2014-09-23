@@ -42,6 +42,7 @@ class Base(TorrentProvider):
 
                     link = result.find('span', attrs = {'class': 'torrent_name_link'}).parent
                     url = result.find('td', attrs = {'class': 'torrent_td'}).find('a')
+                    tds = result.find_all('td')
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),
@@ -49,8 +50,8 @@ class Base(TorrentProvider):
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
                         'size': self.parseSize(result.find_all('td')[5].string),
-                        'seeders': tryInt(result.find_all('td')[7].string),
-                        'leechers': tryInt(result.find_all('td')[8].string),
+                        'seeders': tryInt(tds[len(tds)-2].string),
+                        'leechers': tryInt(tds[len(tds)-1].string),
                     })
 
             except:

@@ -9,6 +9,7 @@ import traceback
 import warnings
 import re
 import tarfile
+import shutil
 
 from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
@@ -108,14 +109,19 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
         for root, dirs, files in os.walk(backup_path):
-            for backup_file in sorted(files):
-                ints = re.findall('\d+', backup_file)
+            # Only consider files being a direct child of the backup_path
+            if root == backup_path:
+                for backup_file in sorted(files):
+                    ints = re.findall('\d+', backup_file)
 
-                # Delete non zip files
-                if len(ints) != 1:
-                    os.remove(os.path.join(backup_path, backup_file))
-                else:
-                    existing_backups.append((int(ints[0]), backup_file))
+                    # Delete non zip files
+                    if len(ints) != 1:
+                        os.remove(os.path.join(root, backup_file))
+                    else:
+                        existing_backups.append((int(ints[0]), backup_file))
+            else:
+                # Delete stray directories.
+                shutil.rmtree(root)
 
         # Remove all but the last 5
         for eb in existing_backups[:-backup_count]:
@@ -145,12 +151,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not os.path.exists(python_cache):
         os.mkdir(python_cache)
 
+    session = requests.Session()
+    session.max_redirects = 5
+
     # Register environment settings
     Env.set('app_dir', sp(base_path))
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('http_opener', requests.Session())
+    Env.set('http_opener', session)
     Env.set('cache_dir', cache_dir)
     Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)

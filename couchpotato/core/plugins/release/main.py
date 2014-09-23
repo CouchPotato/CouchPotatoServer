@@ -8,7 +8,7 @@ from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, sp
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
@@ -380,6 +380,7 @@ class Release(Plugin):
         wait_for = False
         let_through = False
         filtered_results = []
+        minimum_seeders = tryInt(Env.setting('minimum_seeders', section = 'torrent', default = 1))
 
         # Filter out ignored and other releases we don't want
         for rel in results:
@@ -396,8 +397,8 @@ class Release(Plugin):
                 log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
                 continue
 
-            if 'seeders' in rel and rel.get('seeders') <= 0:
-                log.info('Ignored, no seeders: %s', (rel['name']))
+            if 'seeders' in rel and rel.get('seeders') < minimum_seeders:
+                log.info('Ignored, not enough seeders, has %s needs %s: %s', (rel.get('seeders'), minimum_seeders, rel['name']))
                 continue
 
             # If a single release comes through the "wait for", let through all

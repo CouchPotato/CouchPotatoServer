@@ -382,6 +382,28 @@ def getFreeSpace(directories):
     return free_space
 
 
+def getSize(paths):
+
+    single = not isinstance(paths, (tuple, list))
+    if single:
+        paths = [paths]
+
+    total_size = 0
+    for path in paths:
+        path = sp(path)
+
+        if os.path.isdir(path):
+            total_size = 0
+            for dirpath, _, filenames in os.walk(path):
+                for f in filenames:
+                    total_size += os.path.getsize(sp(os.path.join(dirpath, f)))
+
+        elif os.path.isfile(path):
+            total_size += os.path.getsize(path)
+
+    return total_size / 1048576 # MB
+
+
 def find(func, iterable):
     for item in iterable:
         if func(item):

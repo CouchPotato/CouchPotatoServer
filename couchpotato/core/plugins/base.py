@@ -121,15 +121,31 @@ class Plugin(object):
         if os.path.exists(path):
             log.debug('%s already exists, overwriting file with new version', path)
 
-        try:
-            f = open(path, 'w+' if not binary else 'w+b')
-            f.write(content)
-            f.close()
-            os.chmod(path, Env.getPermission('file'))
-        except:
-            log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
-            if os.path.isfile(path):
-                os.remove(path)
+        write_type = 'w+' if not binary else 'w+b'
+
+        # Stream file using response object
+        if isinstance(content, requests.models.Response):
+
+            # Write file to temp
+            with open('%s.tmp' % path, write_type) as f:
+                for chunk in content.iter_content(chunk_size = 1048576):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+                        f.flush()
+
+            # Rename to destination
+            os.rename('%s.tmp' % path, path)
+
+        else:
+            try:
+                f = open(path, write_type)
+                f.write(content)
+                f.close()
+                os.chmod(path, Env.getPermission('file'))
+            except:
+                log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
+                if os.path.isfile(path):
+                    os.remove(path)
 
     def makeDir(self, path):
         path = sp(path)
@@ -146,21 +162,17 @@ class Plugin(object):
         folder = sp(folder)
 
         for item in os.listdir(folder):
-            full_folder = os.path.join(folder, item)
+            full_folder = sp(os.path.join(folder, item))
 
             if not only_clean or (item in only_clean and os.path.isdir(full_folder)):
 
-                for root, dirs, files in os.walk(full_folder):
+                for subfolder, dirs, files in os.walk(full_folder, topdown = False):
 
-                    for dir_name in dirs:
-                        full_path = os.path.join(root, dir_name)
-
-                        if len(os.listdir(full_path)) == 0:
-                            try:
-                                os.rmdir(full_path)
-                            except:
-                                if show_error:
-                                    log.info2('Couldn\'t remove directory %s: %s', (full_path, traceback.format_exc()))
+                    try:
+                        os.rmdir(subfolder)
+                    except:
+                        if show_error:
+                            log.info2('Couldn\'t remove directory %s: %s', (subfolder, traceback.format_exc()))
 
         try:
             os.rmdir(folder)
@@ -169,7 +181,7 @@ class Plugin(object):
                 log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, stream = False):
         url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
@@ -210,6 +222,7 @@ class Plugin(object):
                 'timeout': timeout,
                 'files': files,
                 'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
+                'stream': stream,
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
@@ -218,7 +231,7 @@ class Plugin(object):
 
             status_code = response.status_code
             if response.status_code == requests.codes.ok:
-                data = response.content
+                data = response if stream else response.content
             else:
                 response.raise_for_status()
 
