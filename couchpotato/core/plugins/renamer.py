@@ -596,7 +596,7 @@ class Renamer(Plugin):
                     dst = rename_files[src]
 
                     if dst in group['renamed_files']:
-                        log.error('File "%s" already exists, adding random string at the end to prevent data loss', dst)
+                        log.error('File "%s" already renamed once, adding random string at the end to prevent data loss', dst)
                         dst = '%s.random-%s' % (dst, randomString())
 
                     # Create dir
@@ -797,6 +797,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         dest = sp(dest)
         try:
 
+            if os.path.exists(dest):
+                raise Exception('Destination "%s" already exists' % dest)
+
             move_type = self.conf('file_action')
             if use_default:
                 move_type = self.conf('default_file_action')
@@ -806,10 +809,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     log.info('Moving "%s" to "%s"', (old, dest))
                     shutil.move(old, dest)
                 except:
-                    if os.path.exists(dest):
+                    exists = os.path.exists(dest)
+                    if exists and os.path.getsize(old) == os.path.getsize(dest):
                         log.error('Successfully moved file "%s", but something went wrong: %s', (dest, traceback.format_exc()))
                         os.unlink(old)
                     else:
+                        # remove faultly copied file
+                        if exists:
+                            os.unlink(dest)
                         raise
             elif move_type == 'copy':
                 log.info('Copying "%s" to "%s"', (old, dest))
@@ -1219,7 +1226,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 except Exception as e:
                     log.error('Failed moving left over file %s to %s: %s %s', (leftoverfile, move_to, e, traceback.format_exc()))
                     # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
-                    if os.path.isfile(move_to):
+                    if os.path.isfile(move_to) and os.path.getsize(leftoverfile) == os.path.getsize(move_to):
                         if cleanup:
                             log.info('Deleting left over file %s instead...', leftoverfile)
                             os.unlink(leftoverfile)
