@@ -30,7 +30,10 @@ class NZBVortex(DownloaderBase):
         # Send the nzb
         try:
             nzb_filename = self.createFileName(data, filedata, media, unique_tag = True)
-            response = self.call('nzb/add', files = {'file': (nzb_filename, filedata, 'application/octet-stream')})
+            response = self.call('nzb/add', files = {'file': (nzb_filename, filedata, 'application/octet-stream')}, parameters = {
+                'name': nzb_filename,
+                'groupname': self.conf('group')
+            })
 
             if response and response.get('result', '').lower() == 'ok':
                 return self.downloadReturnId(nzb_filename)
@@ -191,6 +194,11 @@ config = [{
                 {
                     'name': 'api_key',
                     'label': 'Api Key',
+                },
+                {
+                    'name': 'group',
+                    'label': 'Group',
+                    'description': 'The group CP places the nzb in. Make sure to create it in NZBVortex.',
                 },
                 {
                     'name': 'manual',
