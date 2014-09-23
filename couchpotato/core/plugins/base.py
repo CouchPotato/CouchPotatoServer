@@ -11,7 +11,8 @@ import traceback
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier, \
+    randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
@@ -346,9 +347,9 @@ class Plugin(object):
         Env.get('cache').set(cache_key_md5, value, timeout)
         return value
 
-    def createNzbName(self, data, media):
+    def createNzbName(self, data, media, unique_tag = False):
         release_name = data.get('name')
-        tag = self.cpTag(media)
+        tag = self.cpTag(media, unique_tag = unique_tag)
 
         # Check if password is filename
         name_password = scanForPassword(data.get('name'))
@@ -361,18 +362,24 @@ class Plugin(object):
         max_length = 127 - len(tag)  # Some filesystems don't support 128+ long filenames
         return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
 
-    def createFileName(self, data, filedata, media):
-        name = self.createNzbName(data, media)
+    def createFileName(self, data, filedata, media, unique_tag = False):
+        name = self.createNzbName(data, media, unique_tag = unique_tag)
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
 
-    def cpTag(self, media):
-        if Env.setting('enabled', 'renamer'):
-            identifier = getIdentifier(media)
-            return '.cp(' + identifier + ')' if identifier else ''
+    def cpTag(self, media, unique_tag = False):
 
-        return ''
+        identifier = getIdentifier(media) or ''
+        unique_tag = ', ' + randomString() if unique_tag else ''
+
+        tag = '.cp('
+        tag += identifier
+        tag += ', ' if unique_tag and identifier else ''
+        tag += randomString() if unique_tag else ''
+        tag += ')'
+
+        return tag if len(tag) > 7 else ''
 
     def checkFilesChanged(self, files, unchanged_for = 60):
         now = time.time()

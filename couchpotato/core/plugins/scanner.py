@@ -120,7 +120,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$'  #*a.mkv
     ]
 
-    cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
+    cp_imdb = '\.cp\((?P<id>tt[0-9]+),?\s?(?P<random>[A-Za-z0-9]+)?\)'
 
     def __init__(self):
 
@@ -492,7 +492,7 @@ class Scanner(Plugin):
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
-        filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        filename = re.sub(self.cp_imdb, '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
         if data['quality'].get('is_3d', 0):
