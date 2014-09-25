@@ -119,6 +119,8 @@ class Transmission(DownloaderBase):
                     status = 'failed'
                 elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                     status = 'completed'
+                elif torrent['status'] == 16 and torrent['percentDone'] == 1: # Transmission status 16 is for "Stopped". So ewe need to detect a download as completed evern if it is stopped but percent done is 100
+                    status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
 
