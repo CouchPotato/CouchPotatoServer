@@ -17,6 +17,7 @@ class Trakt(Notification):
     }
 
     listen_to = ['movie.snatched']
+    enabled_option = 'notification_enabled'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
