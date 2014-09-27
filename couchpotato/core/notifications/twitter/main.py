@@ -37,7 +37,7 @@ class Twitter(Notification):
 
         log.debug('Data in notification is %s', data['identifier'])
 
-        message = '%s%s' % ('http://www.imdb.com/title/' + data['identifier'] + ' - ' if data['identifier'] else '', message)
+        message = '%s%s' % (message,' - http://www.imdb.com/title/' + data['identifier'] if data['identifier'] else '')
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('access_token_key'), self.conf('access_token_secret'))
 
@@ -63,11 +63,19 @@ class Twitter(Notification):
                 update_message = '[%s] %s' % (self.default_title, message)
                 if len(update_message) > 140:
                     if mention_tag:
-                        api.PostUpdate(update_message[:135 - len(mention_tag)] + ('%s 1/2 ' % mention_tag))
-                        api.PostUpdate(update_message[135 - len(mention_tag):] + ('%s 2/2 ' % mention_tag))
+                        if update_message.find(" - http://www.imdb.com/title/") < 141 and update_message.find(" - http://www.imdb.com/title/") > 0:
+                            api.PostUpdate(update_message[:update_message.find(" - http://www.imdb.com/title/") - len(mention_tag)] + ('%s 1/2 ' % mention_tag))
+                            api.PostUpdate(update_message[update_message.find(" - http://www.imdb.com/title/") - len(mention_tag):] + ('%s 2/2 ' % mention_tag))
+                        else:
+                            api.PostUpdate(update_message[:135 - len(mention_tag)] + ('%s 1/2 ' % mention_tag))
+                            api.PostUpdate(update_message[135 - len(mention_tag):] + ('%s 2/2 ' % mention_tag))
                     else:
-                        api.PostUpdate(update_message[:135] + ' 1/2')
-                        api.PostUpdate(update_message[135:] + ' 2/2')
+                        if update_message.find(" - http://www.imdb.com/title/") < 141 and update_message.find(" - http://www.imdb.com/title/") > 0:
+                            api.PostUpdate(update_message[:update_message.find(" - http://www.imdb.com/title/")] + ' 1/2')
+                            api.PostUpdate(update_message[update_message.find(" - http://www.imdb.com/title/"):] + ' 2/2')
+                        else:
+                            api.PostUpdate(update_message[:135] + ' 1/2')
+                            api.PostUpdate(update_message[135:] + ' 2/2')
                 else:
                     api.PostUpdate(update_message)
         except Exception as e:
