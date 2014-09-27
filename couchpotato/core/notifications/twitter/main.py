@@ -35,6 +35,10 @@ class Twitter(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
+        log.debug('Data in notification is %s', data['identifier'])
+
+        message = '%s%s' % ('http://www.imdb.com/title/' + data['identifier'] + ' - ' if data['identifier'] else '', message)
+
         api = Api(self.consumer_key, self.consumer_secret, self.conf('access_token_key'), self.conf('access_token_secret'))
 
         direct_message = self.conf('direct_message')
