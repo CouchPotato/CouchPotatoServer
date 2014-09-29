@@ -377,9 +377,6 @@ class Renamer(Plugin):
                         if separator:
                             final_file_name = final_file_name.replace(' ', separator)
 
-                        final_folder_name = ss(final_folder_name)
-                        final_file_name = ss(final_file_name)
-
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
                             found = False
@@ -878,7 +875,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')
-        return replaced.replace(' ', ' ' if not sep else sep)
+        return ss(replaced.replace(' ', ' ' if not sep else sep))
 
     def replaceDoubles(self, string):
 
