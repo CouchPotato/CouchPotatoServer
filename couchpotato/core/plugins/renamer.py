@@ -220,7 +220,7 @@ class Renamer(Plugin):
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
 
-        cd_keys = ['<cd>','<cd_nr>']
+        cd_keys = ['<cd>','<cd_nr>', '<original>']
         if not any(x in folder_name for x in cd_keys) and not any(x in file_name for x in cd_keys):
             log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file.'
                       'Force adding it')
@@ -376,9 +376,6 @@ class Renamer(Plugin):
                         # Seperator replace
                         if separator:
                             final_file_name = final_file_name.replace(' ', separator)
-
-                        final_folder_name = ss(final_folder_name)
-                        final_file_name = ss(final_file_name)
 
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
@@ -878,7 +875,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')
-        return replaced.replace(' ', ' ' if not sep else sep)
+        return ss(replaced.replace(' ', ' ' if not sep else sep))
 
     def replaceDoubles(self, string):
 
