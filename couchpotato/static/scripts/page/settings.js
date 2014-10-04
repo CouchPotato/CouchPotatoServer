@@ -560,11 +560,19 @@ Option.Password = new Class({
 	create: function(){
 		var self = this;
 
-		self.parent();
-		self.input.set('type', 'password');
+		self.el.adopt(
+			self.createLabel(),
+			self.input = new Element('input.inlay', {
+				'type': 'text',
+				'name': self.postName(),
+				'value': self.getSettingValue() ? '********' : '',
+				'placeholder': self.getPlaceholder()
+			})
+		);
 
 		self.input.addEvent('focus', function(){
-			self.input.set('value', '')
+			self.input.set('value', '');
+			self.input.set('type', 'password');
 		})
 
 	}
