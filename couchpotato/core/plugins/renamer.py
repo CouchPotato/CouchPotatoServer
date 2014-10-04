@@ -541,12 +541,13 @@ class Renamer(Plugin):
                             (not keep_original or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
 
-            total_space, available_space = getFreeSpace(destination)
-            renaming_size = getSize(rename_files.keys())
-            if renaming_size > available_space:
-                log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
-                self.tagRelease(group = group, tag = 'not_enough_space')
-                continue
+            if self.conf('check_space'):
+                total_space, available_space = getFreeSpace(destination)
+                renaming_size = getSize(rename_files.keys())
+                if renaming_size > available_space:
+                    log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
+                    self.tagRelease(group = group, tag = 'not_enough_space')
+                    continue
 
             # Remove files
             delete_folders = []
@@ -1388,6 +1389,14 @@ config = [{
                     'name': 'foldersep',
                     'label': 'Folder-Separator',
                     'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
+                },
+                {
+                    'name': 'check_space',
+                    'label': 'Check space',
+                    'default': True,
+                    'type': 'bool',
+                    'description': ('Check if there\'s enough available space to rename the files', 'Disable when the filesystem doesn\'t return the proper value'),
+                    'advanced': True,
                 },
                 {
                     'name': 'default_file_action',
