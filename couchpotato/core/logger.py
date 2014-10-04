@@ -59,15 +59,12 @@ class CPLog(object):
         msg = ss(msg)
 
         try:
-            msg = msg % replace_tuple
-        except:
-            try:
-                if isinstance(replace_tuple, tuple):
-                    msg = msg % tuple([ss(x) for x in list(replace_tuple)])
-                else:
-                    msg = msg % ss(replace_tuple)
-            except Exception as e:
-                self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, e))
+            if isinstance(replace_tuple, tuple):
+                msg = msg % tuple([ss(x) for x in list(replace_tuple)])
+            else:
+                msg = msg % ss(replace_tuple)
+        except Exception as e:
+            self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, e))
 
         self.setup()
         if not self.is_develop:
