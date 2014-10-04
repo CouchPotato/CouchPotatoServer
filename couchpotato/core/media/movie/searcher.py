@@ -55,6 +55,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if self.conf('run_on_launch'):
             addEvent('app.load', self.searchAll)
+        addEvent('app.load', self.searchAll)
 
     def searchAllView(self, **kwargs):
 
@@ -141,17 +142,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         previous_releases = movie.get('releases', [])
         too_early_to_search = []
         outside_eta_results = 0
-        alway_search = self.conf('always_search')
+        always_search = self.conf('always_search')
         ignore_eta = manual
         total_result_count = 0
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
         # Ignore eta once every 7 days
-        if not alway_search:
+        if not always_search:
             prop_name = 'last_ignored_eta.%s' % movie['_id']
             last_ignored_eta = float(Env.prop(prop_name, default = 0))
-            if last_ignored_eta > time.time() - 604800:
+            if last_ignored_eta < time.time() - 604800:
                 ignore_eta = True
                 Env.prop(prop_name, value = time.time())
 
@@ -170,7 +171,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             }
 
             could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
-            if not alway_search and could_not_be_released:
+            if not always_search and could_not_be_released:
                 too_early_to_search.append(q_identifier)
 
                 # Skip release, if ETA isn't ignored
@@ -196,7 +197,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 break
 
             quality = fireEvent('quality.single', identifier = q_identifier, single = True)
-            log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if alway_search or ignore_eta else ''))
+            log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if always_search or ignore_eta else ''))
 
             # Extend quality with profile customs
             quality['custom'] = quality_custom
@@ -223,7 +224,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
             # Try find a valid result and download it
-            if (force_download or not could_not_be_released or alway_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
+            if (force_download or not could_not_be_released or always_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
