@@ -55,7 +55,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if self.conf('run_on_launch'):
             addEvent('app.load', self.searchAll)
-        addEvent('app.load', self.searchAll)
 
     def searchAllView(self, **kwargs):
 
