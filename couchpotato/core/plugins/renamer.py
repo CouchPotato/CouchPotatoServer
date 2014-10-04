@@ -373,10 +373,6 @@ class Renamer(Plugin):
                         elif file_type is 'nfo':
                             final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
 
-                        # Seperator replace
-                        if separator:
-                            final_file_name = final_file_name.replace(' ', separator)
-
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
                             found = False
