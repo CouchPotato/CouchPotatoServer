@@ -51,20 +51,6 @@ var Charts = new Class({
 
 	},
 
-	show: function(){
-		var self = this;
-
-		self.el.show();
-
-		if(!self.shown_once){
-			self.api_request = Api.request('charts.view', {
-				'onComplete': self.fill.bind(self)
-			});
-
-			self.shown_once = true;
-		}
-	},
-
 	fill: function(json){
 
 		var self = this;
@@ -167,6 +153,24 @@ var Charts = new Class({
 
 		self.fireEvent('loaded');
 
+	},
+
+	show: function(){
+		var self = this;
+
+		self.el.show();
+
+		if(!self.shown_once){
+			self.api_request = Api.request('charts.view', {
+				'onComplete': self.fill.bind(self)
+			});
+
+			self.shown_once = true;
+		}
+	},
+
+	hide: function(){
+		this.el.hide();
 	},
 
 	afterAdded: function(m){
