@@ -370,14 +370,16 @@ class Plugin(object):
 
     def cpTag(self, media, unique_tag = False):
 
-        identifier = getIdentifier(media) or ''
-        unique_tag = ', ' + randomString() if unique_tag else ''
+        tag = ''
+        if Env.setting('enabled', 'renamer') or unique_tag:
+            identifier = getIdentifier(media) or ''
+            unique_tag = ', ' + randomString() if unique_tag else ''
 
-        tag = '.cp('
-        tag += identifier
-        tag += ', ' if unique_tag and identifier else ''
-        tag += randomString() if unique_tag else ''
-        tag += ')'
+            tag = '.cp('
+            tag += identifier
+            tag += ', ' if unique_tag and identifier else ''
+            tag += randomString() if unique_tag else ''
+            tag += ')'
 
         return tag if len(tag) > 7 else ''
 
