@@ -218,7 +218,7 @@ Page.Home = new Class({
                 self.el_toggle_menu_charts.removeClass('active');
                 break;
             case 'charts':
-                if($(self.charts)) $(self.charts).show();
+                if($(self.charts)) self.charts.show();
                 self.el_toggle_menu_charts.addClass('active');
                 if($(self.suggestion_list)) $(self.suggestion_list).hide();
                 self.el_toggle_menu_suggestions.removeClass('active');
