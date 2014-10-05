@@ -61,6 +61,8 @@ class CPLog(object):
         try:
             if isinstance(replace_tuple, tuple):
                 msg = msg % tuple([ss(x) for x in list(replace_tuple)])
+            elif isinstance(replace_tuple, dict):
+                msg = msg % dict((k, ss(v)) for k, v in replace_tuple.iteritems())
             else:
                 msg = msg % ss(replace_tuple)
         except Exception as e:
