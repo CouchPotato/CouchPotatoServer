@@ -95,7 +95,7 @@ class MediaBase(Plugin):
             if file_type not in existing_files or len(existing_files.get(file_type, [])) == 0:
                 file_path = fireEvent('file.download', url = image, single = True)
                 if file_path:
-                    existing_files[file_type] = [file_path]
+                    existing_files[file_type] = [toUnicode(file_path)]
                     break
             else:
                 break
