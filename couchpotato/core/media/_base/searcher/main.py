@@ -192,8 +192,12 @@ class Searcher(SearcherBase):
 
         req_match = 0
         for req_set in required_words:
-            req = splitString(req_set, '&')
-            req_match += len(list(set(rel_words) & set(req))) == len(req)
+            if len(req_set) >= 2 and (req_set[:1] + req_set[-1:]) == '//':
+                if re.search(req_set[1:-1], rel_name):
+                    req_match += 1
+            else:
+                req = splitString(req_set, '&')
+                req_match += len(list(set(rel_words) & set(req))) == len(req)
 
         if len(required_words) > 0 and req_match == 0:
             log.info2('Wrong: Required word missing: %s', rel_name)
@@ -206,8 +210,12 @@ class Searcher(SearcherBase):
 
         ignored_match = 0
         for ignored_set in ignored_words:
-            ignored = splitString(ignored_set, '&')
-            ignored_match += len(list(set(rel_words) & set(ignored))) == len(ignored)
+            if len(ignored_set) >= 2 and (ignored_set[:1] + ignored_set[-1:]) == '//':
+                if re.search(ignored_set[1:-1], rel_name):
+                    ignored_match += 1
+            else:
+                ignored = splitString(ignored_set, '&')
+                ignored_match += len(list(set(rel_words) & set(ignored))) == len(ignored)
 
         if len(ignored_words) > 0 and ignored_match:
             log.info2("Wrong: '%s' contains 'ignored words'", rel_name)
