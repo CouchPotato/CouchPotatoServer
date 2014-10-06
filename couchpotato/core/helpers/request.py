@@ -28,7 +28,7 @@ def getParams(params):
 
             for item in nested:
                 if item is nested[-1]:
-                    current[item] = toUnicode(urllib.unquote(value))
+                    current[item] = toUnicode(urllib.parse.unquote(value))
                 else:
                     try:
                         current[item]
@@ -37,7 +37,7 @@ def getParams(params):
 
                     current = current[item]
         else:
-            temp[param] = toUnicode(urllib.unquote(value))
+            temp[param] = toUnicode(urllib.parse.unquote(value))
             if temp[param].lower() in ['true', 'false']:
                 temp[param] = temp[param].lower() != 'false'
 

@@ -3,6 +3,7 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.variable import mergeDicts, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+import six
 
 log = CPLog(__name__)
 
@@ -30,7 +31,7 @@ class Search(Plugin):
     def search(self, q = '', types = None, **kwargs):
 
         # Make sure types is the correct instance
-        if isinstance(types, (str, unicode)):
+        if isinstance(types, six.string_types):
             types = [types]
         elif isinstance(types, (list, tuple, set)):
             types = list(types)

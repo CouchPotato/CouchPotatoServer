@@ -12,6 +12,7 @@ from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
 from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex, MediaTagIndex
+import six
 
 
 log = CPLog(__name__)
@@ -280,7 +281,7 @@ class MediaPlugin(MediaBase):
         offset = 0
         limit = -1
         if limit_offset:
-            splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
+            splt = splitString(limit_offset) if isinstance(limit_offset, six.string_types) else limit_offset
             limit = tryInt(splt[0])
             offset = tryInt(0 if len(splt) is 1 else splt[1])
 

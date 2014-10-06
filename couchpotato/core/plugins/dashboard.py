@@ -8,6 +8,7 @@ from couchpotato.core.helpers.database import RecordDeleted
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+import six
 
 
 log = CPLog(__name__)
@@ -41,7 +42,7 @@ class Dashboard(Plugin):
         # Add limit
         limit = 12
         if limit_offset:
-            splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
+            splt = splitString(limit_offset) if isinstance(limit_offset, six.string_types) else limit_offset
             limit = tryInt(splt[0])
 
         # Get all active medias

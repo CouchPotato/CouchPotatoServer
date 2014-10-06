@@ -89,7 +89,7 @@ class MediaBase(Plugin):
 
         # Loop over type
         for image in image_urls.get(image_type, []):
-            if not isinstance(image, (str, unicode)):
+            if not isinstance(image, six.string_types):
                 continue
 
             if file_type not in existing_files or len(existing_files.get(file_type, [])) == 0:

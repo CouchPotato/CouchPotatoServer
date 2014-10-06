@@ -7,6 +7,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, tryFloat, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
+import six
 
 
 log = CPLog(__name__)
@@ -72,7 +73,7 @@ class OMDBAPI(MovieProvider):
         try:
 
             try:
-                if isinstance(movie, (str, unicode)):
+                if isinstance(movie, six.string_types):
                     movie = json.loads(movie)
             except ValueError:
                 log.info('No proper json to decode')
