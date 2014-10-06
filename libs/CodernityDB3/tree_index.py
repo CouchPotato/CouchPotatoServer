@@ -632,6 +632,10 @@ class IU_TreeBasedIndex(Index):
         return buffer_start, (buffer_start + tree_buffer_size)
 
     def _find_first_key_occurence_in_node(self, node_start, key, nr_of_elements):
+
+        if isinstance(key, str):
+            key = key.encode()
+
         if nr_of_elements == 1:
             return self._find_key_in_node_with_one_element(key, node_start, mode=MODE_FIRST)
         else:
@@ -1914,14 +1918,29 @@ class IU_TreeBasedIndex(Index):
     def get(self, key):
         ## print("------", type(key)) # TODO
         ## print(self) # TODO
+
+        # Fix types
+        if isinstance(key, str):
+            key = key.encode()
+
         k = self.make_key(key)
         ## print("K:" * 10, k) # TODO
         return self._find_key(k)
 
     def get_many(self, key, limit=1, offset=0):
+        # Fix types
+        if isinstance(key, str):
+            key = key.encode()
         return self._find_key_many(self.make_key(key), limit, offset)
 
     def get_between(self, start, end, limit=1, offset=0, inclusive_start=True, inclusive_end=True):
+
+        # Fix types
+        if isinstance(start, str):
+            start = start.encode()
+        if isinstance(end, str):
+            end = end.encode()
+
         if start is None:
             end = self.make_key(end)
             if inclusive_end:

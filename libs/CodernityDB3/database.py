@@ -952,8 +952,8 @@ you should check index code.""" % (index.name, ex), RuntimeWarning)
             storage = ind.storage
             data = storage.get(start, size, status)
         else:
-
             data = {}
+
         if with_doc and index_name != 'id':
             storage = ind.storage
             doc = self.get('id', l_key, False)
@@ -966,6 +966,7 @@ you should check index code.""" % (index.name, ex), RuntimeWarning)
             data['_rev'] = _unk
         else:
             data['key'] = _unk
+
         return data
 
     def get_many(self, index_name, key=None, limit=-1, offset=0, with_doc=False, with_storage=True, start=None, end=None, **kwargs):
@@ -1010,6 +1011,8 @@ you should check index code.""" % (index.name, ex), RuntimeWarning)
                 else:
                     data = {}
                 doc_id = ind_data[0]
+                doc_id = doc_id.decode()
+
                 if with_doc:
                     doc = self.get('id', doc_id, False)
                     if data:
@@ -1045,13 +1048,15 @@ you should check index code.""" % (index.name, ex), RuntimeWarning)
             except StopIteration:
                 break
             else:
+                doc_id = doc_id.decode()
+
                 if index_name == 'id':
                     if with_storage and size:
                         data = storage.get(start, size, status)
                     else:
                         data = {}
                     data['_id'] = doc_id
-                    data['_rev'] = unk
+                    data['_rev'] = unk.decode()
                 else:
                     data = {}
                     if with_storage and size:
