@@ -3,12 +3,20 @@ import traceback
 
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-import xmpp
+from six import PY3
 
 
 log = CPLog(__name__)
 
-autoload = 'Xmpp'
+try:
+    import xmpp
+    autoload = 'Xmpp'
+except:
+    if PY3:
+        from couchpotato.core.helpers.py3 import NotSupported
+        raise NotSupported
+    else:
+        raise
 
 
 class Xmpp(Notification):
