@@ -1,5 +1,5 @@
 from __future__ import with_statement
-import ConfigParser
+
 from hashlib import md5
 
 from couchpotato.api import addApiView
@@ -166,7 +166,7 @@ class Settings(object):
         return values
 
     def save(self):
-        with open(self.file, 'wb') as configfile:
+        with open(self.file, 'w') as configfile:
             self.p.write(configfile)
 
         self.log.debug('Saved settings')
