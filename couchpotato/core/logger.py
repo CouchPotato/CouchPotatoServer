@@ -1,5 +1,6 @@
 import logging
 import re
+import traceback
 
 
 class CPLog(object):
@@ -54,19 +55,19 @@ class CPLog(object):
 
     def safeMessage(self, msg, replace_tuple = ()):
 
-        from couchpotato.core.helpers.encoding import ss, toUnicode
+        from couchpotato.core.helpers.encoding import ss, toUTF8
 
-        msg = ss(msg)
+        msg = toUTF8(msg)
 
         try:
             if isinstance(replace_tuple, tuple):
-                msg = msg % tuple([ss(x) if not isinstance(x, (int, float)) else x for x in list(replace_tuple)])
+                msg = msg % tuple([toUTF8(x) for x in list(replace_tuple)])
             elif isinstance(replace_tuple, dict):
-                msg = msg % dict((k, ss(v)) for k, v in replace_tuple.iteritems())
+                msg = msg % dict((k, toUTF8(v)) for k, v in replace_tuple.iteritems())
             else:
-                msg = msg % ss(replace_tuple)
-        except Exception as e:
-            self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, e))
+                msg = msg % toUTF8(replace_tuple)
+        except:
+            self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, traceback.format_exc()))
 
         self.setup()
         if not self.is_develop:
@@ -83,4 +84,4 @@ class CPLog(object):
             except:
                 pass
 
-        return toUnicode(msg)
+        return toUTF8(msg)

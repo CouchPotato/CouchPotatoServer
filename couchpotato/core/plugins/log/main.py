@@ -1,9 +1,9 @@
+import codecs
 import os
 import re
 import traceback
 
 from couchpotato.api import addApiView
-from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -103,9 +103,8 @@ class Logging(Plugin):
             if not os.path.isfile(path):
                 break
 
-            f = open(path, 'r')
-            log_content = toUnicode(f.read())
-            raw_lines = self.toList(log_content)
+            f = codecs.open(path, 'r', 'utf-8')
+            raw_lines = self.toList(f.read())
             raw_lines.reverse()
 
             brk = False
@@ -131,7 +130,7 @@ class Logging(Plugin):
 
     def toList(self, log_content = ''):
 
-        logs_raw = toUnicode(log_content).split('[0m\n')
+        logs_raw = log_content.split('[0m\n')
 
         logs = []
         for log_line in logs_raw:

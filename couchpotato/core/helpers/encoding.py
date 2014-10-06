@@ -47,6 +47,17 @@ def toUnicode(original, *args):
         ascii_text = str(original).encode('string_escape')
         return toUnicode(ascii_text)
 
+def toUTF8(original):
+    try:
+        if isinstance(original, str) and len(original) > 0:
+            # Try to detect
+            detected = detect(original)
+            return original.decode(detected.get('encoding')).encode('utf-8')
+        else:
+            return original
+    except:
+        #log.error('Failed encoding to UTF8: %s', traceback.format_exc())
+        raise
 
 def ss(original, *args):
 
