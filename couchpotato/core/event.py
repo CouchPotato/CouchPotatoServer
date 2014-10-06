@@ -102,7 +102,7 @@ def fireEvent(name, *args, **kwargs):
             # Fire
             result = e(*args, **kwargs)
 
-        result_keys = result.keys()
+        result_keys = list(result.keys())
         result_keys.sort(key = natsortKey)
 
         if options['single'] and not options['merge']:

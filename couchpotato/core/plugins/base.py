@@ -231,7 +231,11 @@ class Plugin(object):
 
             status_code = response.status_code
             if response.status_code == requests.codes.ok:
-                data = response if stream else response.content
+                if stream:
+                    data = response
+                else:
+                    data = response.content
+                    data = data.decode(response.encoding)
             else:
                 response.raise_for_status()
 

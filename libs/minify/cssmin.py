@@ -4,7 +4,6 @@
 # `cssmin.py` - A Python port of the YUI CSS compressor.
 
 
-from StringIO import StringIO # The pure-Python StringIO supports unicode.
 import re
 
 
@@ -52,7 +51,7 @@ def remove_unnecessary_whitespace(css):
 
         """
         Prevents 'p :link' from becoming 'p:link'.
-        
+
         Translates 'p :link' into 'p ___PSEUDOCLASSCOLON___link'; this is
         translated back again later.
         """
