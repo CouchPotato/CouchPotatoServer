@@ -3,10 +3,10 @@ import os
 import time
 import traceback
 
-from CodernityDB.database import RecordDeleted, RecordNotFound
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.database import RecordDeleted, RecordNotFound
 from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog

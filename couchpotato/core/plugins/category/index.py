@@ -1,4 +1,4 @@
-from CodernityDB.tree_index import TreeBasedIndex
+from couchpotato.core.helpers.database import TreeBasedIndex
 
 
 class CategoryIndex(TreeBasedIndex):

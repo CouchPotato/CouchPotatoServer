@@ -1,9 +1,9 @@
 import copy
 import traceback
 
-from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.database import RecordNotFound
 from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin

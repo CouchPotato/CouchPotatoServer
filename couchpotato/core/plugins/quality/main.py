@@ -2,10 +2,10 @@ from math import fabs, ceil
 import traceback
 import re
 
-from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.database import RecordNotFound
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString, tryFloat
 from couchpotato.core.logger import CPLog

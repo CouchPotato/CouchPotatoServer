@@ -2,9 +2,9 @@ from __future__ import with_statement
 import ConfigParser
 from hashlib import md5
 
-from CodernityDB.hash_index import HashIndex
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.database import HashIndex
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 

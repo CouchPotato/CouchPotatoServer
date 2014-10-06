@@ -1,14 +1,14 @@
 from string import ascii_letters
 from hashlib import md5
+from couchpotato.core.helpers.database import MultiTreeBasedIndex, TreeBasedIndex
 
-from CodernityDB.tree_index import MultiTreeBasedIndex, TreeBasedIndex
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 
 class MediaIndex(MultiTreeBasedIndex):
     _version = 3
 
-    custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
+    custom_header = """from couchpotato.core.helpers.database import MultiTreeBasedIndex"""
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -62,10 +62,11 @@ class MediaTypeIndex(TreeBasedIndex):
 
 
 class TitleSearchIndex(MultiTreeBasedIndex):
-    _version = 1
+    _version = 2
 
-    custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex
-from itertools import izip
+    custom_header = """from couchpotato.core.helpers.database import MultiTreeBasedIndex
+try: from itertools import izip
+except: izip = zip
 from couchpotato.core.helpers.encoding import simplifyString"""
 
     def __init__(self, *args, **kwargs):
@@ -101,7 +102,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 class TitleIndex(TreeBasedIndex):
     _version = 4
 
-    custom_header = """from CodernityDB.tree_index import TreeBasedIndex
+    custom_header = """from couchpotato.core.helpers.database import TreeBasedIndex
 from string import ascii_letters
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
 
@@ -134,7 +135,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
 class StartsWithIndex(TreeBasedIndex):
     _version = 3
 
-    custom_header = """from CodernityDB.tree_index import TreeBasedIndex
+    custom_header = """from couchpotato.core.helpers.database import TreeBasedIndex
 from string import ascii_letters
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
 
@@ -180,7 +181,7 @@ class MediaChildrenIndex(TreeBasedIndex):
 class MediaTagIndex(MultiTreeBasedIndex):
     _version = 2
 
-    custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
+    custom_header = """from couchpotato.core.helpers.database import MultiTreeBasedIndex"""
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'

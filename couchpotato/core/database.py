@@ -3,12 +3,12 @@ import os
 import time
 import traceback
 from sqlite3 import OperationalError
+from CodernityDB3.index import Index
 
-from CodernityDB.database import RecordNotFound
-from CodernityDB.index import IndexException, IndexNotFoundException, IndexConflict
 from couchpotato import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.database import IndexException, IndexNotFoundException, IndexConflict, RecordNotFound
 from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import getImdb, tryInt, randomString
 

@@ -1,10 +1,10 @@
-from CodernityDB.tree_index import TreeBasedIndex
+from couchpotato.core.helpers.database import TreeBasedIndex
 
 
 class NotificationIndex(TreeBasedIndex):
     _version = 1
 
-    custom_header = """from CodernityDB.tree_index import TreeBasedIndex
+    custom_header = """from couchpotato.core.helpers.database import TreeBasedIndex
 import time"""
 
     def __init__(self, *args, **kwargs):
@@ -22,7 +22,7 @@ import time"""
 class NotificationUnreadIndex(TreeBasedIndex):
     _version = 1
 
-    custom_header = """from CodernityDB.tree_index import TreeBasedIndex
+    custom_header = """from couchpotato.core.helpers.database import TreeBasedIndex
 import time"""
 
     def __init__(self, *args, **kwargs):

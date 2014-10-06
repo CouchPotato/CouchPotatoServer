@@ -3,11 +3,11 @@ import threading
 import time
 import traceback
 import uuid
-from CodernityDB.database import RecordDeleted
 
 from couchpotato import get_db
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.database import RecordDeleted
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog

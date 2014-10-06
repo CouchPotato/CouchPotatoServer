@@ -1,6 +1,5 @@
 from hashlib import md5
-
-from CodernityDB.hash_index import HashIndex
+from couchpotato.core.helpers.database import HashIndex
 
 
 class QualityIndex(HashIndex):
