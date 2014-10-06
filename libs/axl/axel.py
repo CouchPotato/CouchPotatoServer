@@ -12,7 +12,8 @@
 # Source: http://pypi.python.org/pypi/axel
 # Docs:   http://packages.python.org/axel
 
-from Queue import Empty, Queue
+from six.moves.queue import Queue, Empty
+
 import hashlib
 import sys
 import threading
