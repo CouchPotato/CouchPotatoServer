@@ -1,11 +1,11 @@
 from string import ascii_letters, digits
-from urllib import quote_plus
 import os
 import re
 import traceback
 import unicodedata
 
 from chardet import detect
+from six.moves import urllib
 from couchpotato.core.logger import CPLog
 import six
 
@@ -16,7 +16,7 @@ log = CPLog(__name__)
 def toSafeString(original):
     valid_chars = "-_.() %s%s" % (ascii_letters, digits)
     cleaned_filename = unicodedata.normalize('NFKD', toUnicode(original)).encode('ASCII', 'ignore')
-    valid_string = ''.join(c for c in cleaned_filename if c in valid_chars)
+    valid_string = ''.join(list(six.unichr(c) for c in cleaned_filename if six.unichr(c) in valid_chars))
     return ' '.join(valid_string.split())
 
 
@@ -29,7 +29,7 @@ def simplifyString(original):
 
 def toUnicode(original, *args):
     try:
-        if isinstance(original, unicode):
+        if isinstance(original, six.text_type):
             return original
         else:
             try:
@@ -49,7 +49,7 @@ def toUnicode(original, *args):
 
 def toUTF8(original):
     try:
-        if isinstance(original, str) and len(original) > 0:
+        if isinstance(original, six.binary_type) and len(original) > 0:
             # Try to detect
             detected = detect(original)
             return original.decode(detected.get('encoding')).encode('utf-8')
@@ -63,11 +63,16 @@ def ss(original, *args):
 
     u_original = toUnicode(original, *args)
     try:
-        from couchpotato.environment import Env
-        return u_original.encode(Env.get('encoding'))
+        if isinstance(u_original, six.text_type):
+            u_original = u_original.encode('unicode_escape')
+        else:
+            u_original = u_original
+
+        return six.u(u_original)
     except Exception as e:
         log.debug('Failed ss encoding char, force UTF8: %s', e)
         try:
+            from couchpotato.environment import Env
             return u_original.encode(Env.get('encoding'), 'replace')
         except:
             return u_original.encode('utf-8', 'replace')
@@ -83,7 +88,7 @@ def sp(path, *args):
     if os.path.sep == '/' and '\\' in path:
         path = '/' + path.replace(':', '').replace('\\', '/')
 
-    path = os.path.normpath(ss(path, *args))
+    path = os.path.normpath(path)
 
     # Remove any trailing path separators
     if path != os.path.sep:
@@ -125,14 +130,15 @@ def stripAccents(s):
 def tryUrlencode(s):
     new = six.u('')
     if isinstance(s, dict):
-        for key, value in s.items():
+        for key, value in list(s.items()):
             new += six.u('&%s=%s') % (key, tryUrlencode(value))
 
         return new[1:]
     else:
         for letter in ss(s):
+            letter = six.unichr(letter)
             try:
-                new += quote_plus(letter)
+                new += urllib.parse.quote_plus(letter)
             except:
                 new += letter
 

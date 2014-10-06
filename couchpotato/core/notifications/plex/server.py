@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from urlparse import urlparse
+from six.moves import urllib
 import traceback
 
 from couchpotato.core.helpers.variable import cleanHost
@@ -106,7 +106,7 @@ class PlexServer(object):
     def createHost(self, host, port = None):
 
         h = cleanHost(host)
-        p = urlparse(h)
+        p = urllib.urlparse(h)
         h = h.rstrip('/')
 
         if port and not p.port:

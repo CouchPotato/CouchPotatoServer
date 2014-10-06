@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from six.moves import urllib
 import re
 import traceback
 
@@ -45,7 +45,7 @@ class Base(TorrentProvider):
                         results.append({
                             'id': torrent.get('torrent_id'),
                             'protocol': 'torrent' if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')) else 'torrent_magnet',
-                            'provider_extra': urlparse(host['host']).hostname or host['host'],
+                            'provider_extra': urllib.urlparse(host['host']).hostname or host['host'],
                             'name': toUnicode(torrent.get('release_name')),
                             'url': torrent.get('download_url'),
                             'detail_url': torrent.get('details_url'),

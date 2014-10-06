@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from six.moves import urllib
 import time
 import traceback
 import re
@@ -97,7 +97,7 @@ class Base(NZBProvider, RSS):
 
             results.append({
                 'id': nzb_id,
-                'provider_extra': urlparse(host['host']).hostname or host['host'],
+                'provider_extra': urllib.urlparse(host['host']).hostname or host['host'],
                 'name': toUnicode(name),
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
@@ -175,7 +175,7 @@ class Base(NZBProvider, RSS):
         return '&apikey=%s' % host['api_key']
 
     def download(self, url = '', nzb_id = ''):
-        host = urlparse(url).hostname
+        host = urllib.urlparse(url).hostname
 
         if self.limits_reached.get(host):
             # Try again in 3 hours

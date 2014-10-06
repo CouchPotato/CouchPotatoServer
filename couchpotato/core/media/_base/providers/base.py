@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from six.moves import urllib
 import json
 import re
 import time
@@ -50,7 +50,7 @@ class Provider(Plugin):
         if Env.get('dev'): return True
 
         now = time.time()
-        host = urlparse(test_url).hostname
+        host = urllib.urlparse(test_url).hostname
 
         if self.last_available_check.get(host) < now - 900:
             self.last_available_check[host] = now
@@ -219,7 +219,7 @@ class YarrProvider(Provider):
             if provider and provider == self.getName():
                 return self
 
-            hostname = urlparse(url).hostname
+            hostname = urllib.urlparse(url).hostname
             if host and hostname in host:
                 return self
             else:

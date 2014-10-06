@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from six.moves import urllib
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
@@ -34,7 +34,7 @@ class UserscriptBase(Plugin):
 
     def belongsTo(self, url):
 
-        host = urlparse(url).hostname
+        host = urllib.urlparse(url).hostname
         host_split = host.split('.')
         if len(host_split) > 2:
             host = host[len(host_split[0]):]

@@ -1,7 +1,7 @@
 from base64 import b16encode, b32decode
 from datetime import timedelta
 from hashlib import sha1
-from urlparse import urlparse
+from six.moves import urllib
 import os
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
@@ -62,7 +62,7 @@ class rTorrent(DownloaderBase):
         if self.conf('ssl') and url.startswith('httprpc://'):
             url = url.replace('httprpc://', 'httprpc+https://')
 
-        parsed = urlparse(url)
+        parsed = urllib.urlparse(url)
 
         # rpc_url is only used on http/https scgi pass-through
         if parsed.scheme in ['http', 'https']:

@@ -1,6 +1,5 @@
 import threading
-from urllib import quote
-from urlparse import urlparse
+from six.moves import urllib
 import glob
 import inspect
 import os.path
@@ -183,13 +182,13 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, stream = False):
-        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+        url = urllib.parse.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
 
         # Fill in some headers
-        parsed_url = urlparse(url)
+        parsed_url = urllib.parse.urlparse(url)
         host = '%s%s' % (parsed_url.hostname, (':' + str(parsed_url.port) if parsed_url.port else ''))
 
         headers['Referer'] = headers.get('Referer', '%s://%s' % (parsed_url.scheme, host))

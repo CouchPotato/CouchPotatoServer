@@ -132,7 +132,7 @@ class Loader(object):
             return False
         try:
             # Load single file plugin
-            if isinstance(module.autoload, (str, unicode)):
+            if isinstance(module.autoload, (six.string_types, six.text_type)):
                 getattr(module, module.autoload)()
             # Load folder plugin
             else:

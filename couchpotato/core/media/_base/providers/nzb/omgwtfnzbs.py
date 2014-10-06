@@ -1,4 +1,4 @@
-from urlparse import urlparse, parse_qs
+from six.moves import urllib
 import time
 
 from couchpotato.core.event import fireEvent
@@ -52,7 +52,7 @@ class Base(NZBProvider, RSS):
         for nzb in nzbs:
 
             enclosure = self.getElement(nzb, 'enclosure').attrib
-            nzb_id = parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0]
+            nzb_id = urllib.parse_qs(urllib.urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0]
 
             results.append({
                 'id': nzb_id,

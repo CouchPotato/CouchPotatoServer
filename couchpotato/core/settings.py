@@ -6,7 +6,9 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.database import HashIndex
 from couchpotato.core.helpers.encoding import toUnicode
+from six.moves import configparser
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
+import six
 
 
 class Settings(object):
@@ -62,7 +64,7 @@ class Settings(object):
     def setFile(self, config_file):
         self.file = config_file
 
-        self.p = ConfigParser.RawConfigParser()
+        self.p = configparser.RawConfigParser()
         self.p.read(config_file)
 
         from couchpotato.core.logger import CPLog
@@ -148,7 +150,10 @@ class Settings(object):
             return tryFloat(self.p.get(section, option))
 
     def getUnicode(self, section, option):
-        value = self.p.get(section, option).decode('unicode_escape')
+        value = self.p.get(section, option)
+        if six.PY2:
+            value = value.decode('unicode_escape')
+
         return toUnicode(value).strip()
 
     def getValues(self):
