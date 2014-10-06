@@ -45,7 +45,7 @@ from .element import (
 
 # The very first thing we do is give a useful error if someone is
 # running this code under Python 3 without converting it.
-syntax_error = u'You are trying to run the Python 2 version of Beautiful Soup under Python 3. This will not work. You need to convert the code, either by installing it (`python setup.py install`) or by running 2to3 (`2to3 -w bs4`).'
+syntax_error = 'You are trying to run the Python 2 version of Beautiful Soup under Python 3. This will not work. You need to convert the code, either by installing it (`python setup.py install`) or by running 2to3 (`2to3 -w bs4`).'
 
 class BeautifulSoup(Tag):
     """
@@ -69,7 +69,7 @@ class BeautifulSoup(Tag):
     like HTML's <br> tag), call handle_starttag and then
     handle_endtag.
     """
-    ROOT_TAG_NAME = u'[document]'
+    ROOT_TAG_NAME = '[document]'
 
     # If the end-user gives no indication which tree builder they
     # want, look for one with these features.
@@ -135,12 +135,12 @@ class BeautifulSoup(Tag):
             "fromEncoding", "from_encoding")
 
         if len(kwargs) > 0:
-            arg = kwargs.keys().pop()
+            arg = list(kwargs.keys()).pop()
             raise TypeError(
                 "__init__() got an unexpected keyword argument '%s'" % arg)
 
         if builder is None:
-            if isinstance(features, basestring):
+            if isinstance(features, str):
                 features = [features]
             if features is None or len(features) == 0:
                 features = self.DEFAULT_BUILDER_FEATURES
@@ -164,7 +164,7 @@ class BeautifulSoup(Tag):
             # involving passing non-markup to Beautiful Soup.
             # Beautiful Soup will still parse the input as markup,
             # just in case that's what the user really wants.
-            if (isinstance(markup, unicode)
+            if (isinstance(markup, str)
                 and not os.path.supports_unicode_filenames):
                 possible_filename = markup.encode("utf8")
             else:
@@ -172,7 +172,7 @@ class BeautifulSoup(Tag):
             is_file = False
             try:
                 is_file = os.path.exists(possible_filename)
-            except Exception, e:
+            except Exception as e:
                 # This is almost certainly a problem involving
                 # characters not valid in filenames on this
                 # system. Just let it go.
@@ -184,7 +184,7 @@ class BeautifulSoup(Tag):
                 # TODO: This is ugly but I couldn't get it to work in
                 # Python 3 otherwise.
                 if ((isinstance(markup, bytes) and not b' ' in markup)
-                    or (isinstance(markup, unicode) and not u' ' in markup)):
+                    or (isinstance(markup, str) and not ' ' in markup)):
                     warnings.warn(
                         '"%s" looks like a URL. Beautiful Soup is not an HTTP client. You should probably use an HTTP client to get the document behind the URL, and feed that document to Beautiful Soup.' % markup)
 
@@ -259,7 +259,7 @@ class BeautifulSoup(Tag):
 
     def endData(self, containerClass=NavigableString):
         if self.current_data:
-            current_data = u''.join(self.current_data)
+            current_data = ''.join(self.current_data)
             # If whitespace is not preserved, and this string contains
             # nothing but ASCII spaces, replace it with a single space
             # or newline.
@@ -367,9 +367,9 @@ class BeautifulSoup(Tag):
             encoding_part = ''
             if eventual_encoding != None:
                 encoding_part = ' encoding="%s"' % eventual_encoding
-            prefix = u'<?xml version="1.0"%s?>\n' % encoding_part
+            prefix = '<?xml version="1.0"%s?>\n' % encoding_part
         else:
-            prefix = u''
+            prefix = ''
         if not pretty_print:
             indent_level = None
         else:
@@ -403,4 +403,4 @@ class FeatureNotFound(ValueError):
 if __name__ == '__main__':
     import sys
     soup = BeautifulSoup(sys.stdin)
-    print soup.prettify()
+    print(soup.prettify())
