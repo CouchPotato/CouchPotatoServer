@@ -3,6 +3,7 @@ import sys
 import traceback
 
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.py3 import NotSupported
 from couchpotato.core.logger import CPLog
 from importhelper import import_module
 import six
@@ -162,6 +163,8 @@ class Loader(object):
     def loadModule(self, name):
         try:
             return import_module(name)
+        except NotSupported:
+            log.error('Module "%s" is not supported in Python 3', name)
         except ImportError:
             log.debug('Skip loading module plugin %s: %s', (name, traceback.format_exc()))
             return None
