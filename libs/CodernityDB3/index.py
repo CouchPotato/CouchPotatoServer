@@ -106,7 +106,7 @@ class Index(object):
     def _fix_params(self):
         self.buckets.seek(0)
         props = marshal.loads(self.buckets.read(self._start_ind))
-        for k, v in props.items():
+        for k, v in list(props.items()):
             self.__dict__[k] = v
         self.buckets.seek(0, 2)
 

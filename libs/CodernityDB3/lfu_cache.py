@@ -45,7 +45,7 @@ def cache1lvl(maxsize=100):
             except KeyError:
                 if len(cache) == maxsize:
                     for k, _ in nsmallest(maxsize // 10 or 1,
-                                          iter(use_count.items()),
+                                          iter(list(use_count.items())),
                                           key=itemgetter(1)):
                         del cache[k], use_count[k]
                 cache[key] = user_function(key, *args, **kwargs)
@@ -76,8 +76,8 @@ def cache1lvl(maxsize=100):
 
 
 def twolvl_iterator(dict):
-    for k, v in dict.items():
-        for kk, vv in v.items():
+    for k, v in list(dict.items()):
+        for kk, vv in list(v.items()):
             yield k, kk, vv
 
 

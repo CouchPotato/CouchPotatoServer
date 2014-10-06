@@ -232,7 +232,7 @@ class Database(object):
                 name = s[0][2:]
                 c = s[1][2:]
                 comented = ['\n\n#SIMPLIFIED CODE']
-                list(map(lambda x: comented.append("#" + x), new_index.splitlines()))
+                list([comented.append("#" + x) for x in new_index.splitlines()])
                 comented.append('#SIMPLIFIED CODE END\n\n')
 
                 s = header_for_indexes(
@@ -1198,7 +1198,7 @@ you should check index code.""" % (index.name, ex), RuntimeWarning)
             raise IndexNotFoundException("Index doesn't exist")
 
         props = {}
-        for key, value in db_index.__dict__.items():
+        for key, value in list(db_index.__dict__.items()):
             if not isinstance(value, collections.Callable):  # not using inspect etc...
                 props[key] = value
 

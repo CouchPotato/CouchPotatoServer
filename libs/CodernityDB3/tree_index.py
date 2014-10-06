@@ -1646,7 +1646,7 @@ class IU_TreeBasedIndex(Index):
     def delete(self, doc_id, key, start=0, size=0):
         containing_leaf_start, element_index = self._find_key_to_update(
             key, doc_id)[:2]
-        print(containing_leaf_start, element_index)
+        print((containing_leaf_start, element_index))
         self._delete_element(containing_leaf_start, element_index)
 
         self._find_key.delete(key)

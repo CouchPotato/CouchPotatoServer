@@ -82,31 +82,31 @@ class ShardedIndex(Index):
         return getattr(self.shards[self.last_used], name)
 
     def open_index(self):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             curr.open_index()
 
     def create_index(self):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             curr.create_index()
 
     def destroy(self):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             curr.destroy()
 
     def compact(self):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             curr.compact()
 
     def reindex(self):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             curr.reindex()
 
     def all(self, *args, **kwargs):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             for now in curr.all(*args, **kwargs):
                 yield now
 
     def get_many(self, *args, **kwargs):
-        for curr in self.shards.values():
+        for curr in list(self.shards.values()):
             for now in curr.get_many(*args, **kwargs):
                 yield now

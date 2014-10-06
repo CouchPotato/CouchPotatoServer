@@ -96,14 +96,14 @@ class SafeDatabase(Database):
         with self.close_open_lock:
             self.close_open_lock.acquire()
             res = super(SafeDatabase, self).initialize(*args, **kwargs)
-            for name in self.indexes_names.keys():
+            for name in list(self.indexes_names.keys()):
                 self.indexes_locks[name] = cdb_environment['rlock_obj']()
             return res
 
     def open(self, *args, **kwargs):
         with self.close_open_lock:
             res = super(SafeDatabase, self).open(*args, **kwargs)
-            for name in self.indexes_names.keys():
+            for name in list(self.indexes_names.keys()):
                 self.indexes_locks[name] = cdb_environment['rlock_obj']()
                 self.__patch_index(name)
             return res
@@ -111,7 +111,7 @@ class SafeDatabase(Database):
     def create(self, *args, **kwargs):
         with self.close_open_lock:
             res = super(SafeDatabase, self).create(*args, **kwargs)
-            for name in self.indexes_names.keys():
+            for name in list(self.indexes_names.keys()):
                 self.indexes_locks[name] = cdb_environment['rlock_obj']()
                 self.__patch_index(name)
             return res
