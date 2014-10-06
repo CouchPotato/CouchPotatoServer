@@ -14,6 +14,7 @@ class Env(object):
     ''' Environment variables '''
     _app = None
     _encoding = 'UTF-8'
+    _fs_encoding = 'UTF-8'
     _debug = False
     _dev = False
     _settings = Settings()

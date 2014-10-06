@@ -86,6 +86,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         encoding = 'UTF-8'
 
     Env.set('encoding', encoding)
+    Env.set('fs_encoding', sys.getfilesystemencoding())
 
     # Do db stuff
     db_path = sp(os.path.join(data_dir, 'database'))
