@@ -1,8 +1,16 @@
-from .main import Twitter
+from six import PY3
 
+try:
+    from .main import Twitter
 
-def autoload():
-    return Twitter()
+    def autoload():
+        return Twitter()
+except:
+    if PY3:
+        from couchpotato.core.helpers.py3 import NotSupported
+        raise NotSupported
+    else:
+        raise
 
 config = [{
     'name': 'twitter',
