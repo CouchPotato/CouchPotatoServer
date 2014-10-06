@@ -1,11 +1,11 @@
 import traceback
+import time
 
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
-import tmdb3
 
 log = CPLog(__name__)
 
@@ -13,15 +13,24 @@ autoload = 'TheMovieDb'
 
 
 class TheMovieDb(MovieProvider):
-    MAX_EXTRATHUMBS = 4
+
+    http_time_between_calls = .3
+
+    configuration = {
+        'images': {
+            'secure_base_url': 'https://image.tmdb.org/t/p/',
+        },
+    }
 
     def __init__(self):
         addEvent('movie.info', self.getInfo, priority = 3)
         addEvent('movie.info_by_tmdb', self.getInfo)
+        addEvent('app.load', self.config)
 
-        # Configure TMDB settings
-        tmdb3.set_key(self.conf('api_key'))
-        tmdb3.set_cache('null')
+    def config(self):
+        configuration = self.request('configuration')
+        if configuration:
+            self.configuration = configuration
 
     def search(self, q, limit = 12):
         """ Find movie by name """
@@ -31,14 +40,19 @@ class TheMovieDb(MovieProvider):
 
         search_string = simplifyString(q)
         cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
-        results = self.getCache(cache_key)
+        results = None #self.getCache(cache_key)
 
         if not results:
             log.debug('Searching for movie: %s', q)
 
             raw = None
             try:
-                raw = tmdb3.searchMovie(search_string)
+
+                #name_year = fireEvent('scanner.name_year', q, single = True)
+
+                raw = self.request('search/movie', {
+                    'query': q
+                }, return_key = 'results')
             except:
                 log.error('Failed searching TMDB for "%s": %s', (search_string, traceback.format_exc()))
 
@@ -69,39 +83,27 @@ class TheMovieDb(MovieProvider):
         if not identifier:
             return {}
 
-        cache_key = 'tmdb.cache.%s%s' % (identifier, '.ex' if extended else '')
-        result = self.getCache(cache_key)
-
-        if not result:
-            try:
-                log.debug('Getting info: %s', cache_key)
-                # noinspection PyArgumentList
-                movie = tmdb3.Movie(identifier)
-                try: exists = movie.title is not None
-                except: exists = False
-
-                if exists:
-                    result = self.parseMovie(movie, extended = extended)
-                    self.setCache(cache_key, result)
-                else:
-                    result = {}
-            except:
-                log.error('Failed getting info for %s: %s', (identifier, traceback.format_exc()))
+        result = self.parseMovie({
+            'id': identifier
+        }, extended = extended)
 
         return result
 
     def parseMovie(self, movie, extended = True):
 
-        cache_key = 'tmdb.cache.%s%s' % (movie.id, '.ex' if extended else '')
-        movie_data = self.getCache(cache_key)
+        cache_key = 'tmdb.cache.%s%s' % (movie.get('id'), '.ex' if extended else '')
+        movie_data = None #self.getCache(cache_key)
 
         if not movie_data:
+
+            # Full data
+            movie = self.request('movie/%s' % movie.get('id'))
 
             # Images
             poster = self.getImage(movie, type = 'poster', size = 'w154')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
-            extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original', n = self.MAX_EXTRATHUMBS, skipfirst = True)
+            extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original')
 
             images = {
                 'poster': [poster] if poster else [],
@@ -114,39 +116,43 @@ class TheMovieDb(MovieProvider):
 
             # Genres
             try:
-                genres = [genre.name for genre in movie.genres]
+                genres = [genre.get('name') for genre in movie.get('genres', [])]
             except:
                 genres = []
 
             # 1900 is the same as None
-            year = str(movie.releasedate or '')[:4]
-            if not movie.releasedate or year == '1900' or year.lower() == 'none':
+            year = str(movie.get('release_date') or '')[:4]
+            if not movie.get('release_date') or year == '1900' or year.lower() == 'none':
                 year = None
 
             # Gather actors data
             actors = {}
             if extended:
-                for cast_item in movie.cast:
+
+                # Full data
+                cast = self.request('movie/%s/casts' % movie.get('id'), return_key = 'cast')
+
+                for cast_item in cast:
                     try:
-                        actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
-                        images['actors'][toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                        actors[toUnicode(cast_item.get('name'))] = toUnicode(cast_item.get('character'))
+                        images['actors'][toUnicode(cast_item.get('name'))] = self.getImage(cast_item, type = 'profile', size = 'original')
                     except:
                         log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
 
             movie_data = {
                 'type': 'movie',
                 'via_tmdb': True,
-                'tmdb_id': movie.id,
-                'titles': [toUnicode(movie.title)],
-                'original_title': movie.originaltitle,
+                'tmdb_id': movie.get('id'),
+                'titles': [toUnicode(movie.get('title'))],
+                'original_title': movie.get('original_title'),
                 'images': images,
-                'imdb': movie.imdb,
-                'runtime': movie.runtime,
-                'released': str(movie.releasedate),
+                'imdb': movie.get('imdb_id'),
+                'runtime': movie.get('runtime'),
+                'released': str(movie.get('release_date')),
                 'year': tryInt(year, None),
-                'plot': movie.overview,
+                'plot': movie.get('overview'),
                 'genres': genres,
-                'collection': getattr(movie.collection, 'name', None),
+                'collection': getattr(movie.get('belongs_to_collection'), 'name', None),
                 'actor_roles': actors
             }
 
@@ -157,8 +163,12 @@ class TheMovieDb(MovieProvider):
                 movie_data['titles'].append(movie_data['original_title'])
 
             if extended:
-                for alt in movie.alternate_titles:
-                    alt_name = alt.title
+
+                # Full data
+                alternate_titles = self.request('movie/%s/alternative_titles' % movie.get('id'), return_key = 'titles')
+
+                for alt in alternate_titles:
+                    alt_name = alt.get('title')
                     if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
                         movie_data['titles'].append(alt_name)
 
@@ -171,35 +181,37 @@ class TheMovieDb(MovieProvider):
 
         image_url = ''
         try:
-            image_url = getattr(movie, type).geturl(size = size)
+            path = movie.get('%s_path' % type)
+            image_url = '%s%s%s' % (self.configuration['images']['secure_base_url'], size, path)
         except:
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_url
 
-    def getMultImages(self, movie, type = 'backdrops', size = 'original', n = -1, skipfirst = False):
-        """
-        If n < 0, return all images.  Otherwise return n images.
-        If n > len(getattr(movie, type)), then return all images.
-        If skipfirst is True, then it will skip getattr(movie, type)[0].  This
-        is because backdrops[0] is typically backdrop.
-        """
+    def getMultImages(self, movie, type = 'backdrops', size = 'original'):
 
         image_urls = []
         try:
-            images = getattr(movie, type)
-            if n < 0 or n > len(images):
-                num_images = len(images)
-            else:
-                num_images = n
 
-            for i in range(int(skipfirst), num_images + int(skipfirst)):
-                image_urls.append(images[i].geturl(size = size))
+            # Full data
+            images = self.request('movie/%s/images' % movie.get('id'), return_key = type)
+            for image in images[1:5]:
+                image_urls.append(self.getImage(image, 'file', size))
 
         except:
-            log.debug('Failed getting %i %s.%s for "%s"', (n, type, size, ss(str(movie))))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_urls
+
+    def request(self, call = '', params = {}, return_key = None):
+        params = tryUrlencode(params)
+        url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
+        data = self.getJsonData(url, cache_timeout = 0)
+
+        if data and return_key and data.get(return_key):
+            data = data.get(return_key)
+
+        return data
 
     def isDisabled(self):
         if self.conf('api_key') == '':
