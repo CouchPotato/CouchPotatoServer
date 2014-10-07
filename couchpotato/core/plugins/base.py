@@ -279,7 +279,7 @@ class Plugin(object):
             wait = (last_use - now) + self.http_time_between_calls
 
             if wait > 0:
-                log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
+                log.debug('Waiting for %s, %d seconds', (self.getName(), max(1, wait)))
                 time.sleep(min(wait, 30))
 
     def beforeCall(self, handler):
