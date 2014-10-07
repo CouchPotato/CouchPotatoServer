@@ -78,12 +78,14 @@ class Transmission(DownloaderBase):
             log.error('Failed sending torrent to Transmission')
             return False
 
+        data = remote_torrent.get('torrent-added') or remote_torrent.get('torrent-duplicate')
+
         # Change settings of added torrents
         if torrent_params:
-            self.trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
+            self.trpc.set_torrent(data['hashString'], torrent_params)
 
         log.info('Torrent sent to Transmission successfully.')
-        return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
+        return self.downloadReturnId(data['hashString'])
 
     def test(self):
         if self.connect() and self.trpc.get_session():
