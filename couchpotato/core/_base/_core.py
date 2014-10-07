@@ -181,13 +181,13 @@ class Core(Plugin):
         return '%sapi/%s' % (self.createBaseUrl(), Env.setting('api_key'))
 
     def version(self):
-        ver = fireEvent('updater.info', single = True)
+        ver = fireEvent('updater.info', single = True) or {'version': {}}
 
         if os.name == 'nt': platf = 'windows'
         elif 'Darwin' in platform.platform(): platf = 'osx'
         else: platf = 'linux'
 
-        return '%s - %s-%s - v2' % (platf, ver.get('version')['type'], ver.get('version')['hash'])
+        return '%s - %s-%s - v2' % (platf, ver.get('version').get('type') or 'unknown', ver.get('version').get('hash') or 'unknown')
 
     def versionView(self, **kwargs):
         return {
