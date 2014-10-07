@@ -1,8 +1,7 @@
 import traceback
-import time
 
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss, tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode, ss, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
@@ -14,7 +13,7 @@ autoload = 'TheMovieDb'
 
 class TheMovieDb(MovieProvider):
 
-    http_time_between_calls = .3
+    http_time_between_calls = .35
 
     configuration = {
         'images': {
@@ -23,6 +22,8 @@ class TheMovieDb(MovieProvider):
     }
 
     def __init__(self):
+        addEvent('info.search', self.search, priority = 3)
+        addEvent('movie.search', self.search, priority = 3)
         addEvent('movie.info', self.getInfo, priority = 3)
         addEvent('movie.info_by_tmdb', self.getInfo)
         addEvent('app.load', self.config)
@@ -32,49 +33,44 @@ class TheMovieDb(MovieProvider):
         if configuration:
             self.configuration = configuration
 
-    def search(self, q, limit = 12):
+    def search(self, q, limit = 3):
         """ Find movie by name """
 
         if self.isDisabled():
             return False
 
-        search_string = simplifyString(q)
-        cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
-        results = None #self.getCache(cache_key)
+        log.debug('Searching for movie: %s', q)
 
-        if not results:
-            log.debug('Searching for movie: %s', q)
+        raw = None
+        try:
+            name_year = fireEvent('scanner.name_year', q, single = True)
+            raw = self.request('search/movie', {
+                'query': name_year.get('name', q),
+                'year': name_year.get('year'),
+                'search_type': 'ngram' if limit > 1 else 'phrase'
+            }, return_key = 'results')
+        except:
+            log.error('Failed searching TMDB for "%s": %s', (q, traceback.format_exc()))
 
-            raw = None
+        results = []
+        if raw:
             try:
+                nr = 0
 
-                #name_year = fireEvent('scanner.name_year', q, single = True)
+                for movie in raw:
+                    parsed_movie = self.parseMovie(movie, extended = False)
+                    results.append(parsed_movie)
 
-                raw = self.request('search/movie', {
-                    'query': q
-                }, return_key = 'results')
-            except:
-                log.error('Failed searching TMDB for "%s": %s', (search_string, traceback.format_exc()))
+                    nr += 1
+                    if nr == limit:
+                        break
 
-            results = []
-            if raw:
-                try:
-                    nr = 0
+                log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
 
-                    for movie in raw:
-                        results.append(self.parseMovie(movie, extended = False))
-
-                        nr += 1
-                        if nr == limit:
-                            break
-
-                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
-
-                    self.setCache(cache_key, results)
-                    return results
-                except SyntaxError as e:
-                    log.error('Failed to parse XML response: %s', e)
-                    return False
+                return results
+            except SyntaxError as e:
+                log.error('Failed to parse XML response: %s', e)
+                return False
 
         return results
 
@@ -91,89 +87,81 @@ class TheMovieDb(MovieProvider):
 
     def parseMovie(self, movie, extended = True):
 
-        cache_key = 'tmdb.cache.%s%s' % (movie.get('id'), '.ex' if extended else '')
-        movie_data = None #self.getCache(cache_key)
+        # Do request, append other items
+        movie = self.request('movie/%s' % movie.get('id'), {
+            'append_to_response': 'alternative_titles' + (',images,casts' if extended else '')
+        })
 
-        if not movie_data:
+        # Images
+        poster = self.getImage(movie, type = 'poster', size = 'w154')
+        poster_original = self.getImage(movie, type = 'poster', size = 'original')
+        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
+        extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original') if extended else []
+
+        images = {
+            'poster': [poster] if poster else [],
+            #'backdrop': [backdrop] if backdrop else [],
+            'poster_original': [poster_original] if poster_original else [],
+            'backdrop_original': [backdrop_original] if backdrop_original else [],
+            'actors': {},
+            'extra_thumbs': extra_thumbs
+        }
+
+        # Genres
+        try:
+            genres = [genre.get('name') for genre in movie.get('genres', [])]
+        except:
+            genres = []
+
+        # 1900 is the same as None
+        year = str(movie.get('release_date') or '')[:4]
+        if not movie.get('release_date') or year == '1900' or year.lower() == 'none':
+            year = None
+
+        # Gather actors data
+        actors = {}
+        if extended:
 
             # Full data
-            movie = self.request('movie/%s' % movie.get('id'))
+            cast = movie.get('casts', {}).get('cast', [])
 
-            # Images
-            poster = self.getImage(movie, type = 'poster', size = 'w154')
-            poster_original = self.getImage(movie, type = 'poster', size = 'original')
-            backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
-            extra_thumbs = self.getMultImages(movie, type = 'backdrops', size = 'original')
+            for cast_item in cast:
+                try:
+                    actors[toUnicode(cast_item.get('name'))] = toUnicode(cast_item.get('character'))
+                    images['actors'][toUnicode(cast_item.get('name'))] = self.getImage(cast_item, type = 'profile', size = 'original')
+                except:
+                    log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
 
-            images = {
-                'poster': [poster] if poster else [],
-                #'backdrop': [backdrop] if backdrop else [],
-                'poster_original': [poster_original] if poster_original else [],
-                'backdrop_original': [backdrop_original] if backdrop_original else [],
-                'actors': {},
-                'extra_thumbs': extra_thumbs
-            }
+        movie_data = {
+            'type': 'movie',
+            'via_tmdb': True,
+            'tmdb_id': movie.get('id'),
+            'titles': [toUnicode(movie.get('title'))],
+            'original_title': movie.get('original_title'),
+            'images': images,
+            'imdb': movie.get('imdb_id'),
+            'runtime': movie.get('runtime'),
+            'released': str(movie.get('release_date')),
+            'year': tryInt(year, None),
+            'plot': movie.get('overview'),
+            'genres': genres,
+            'collection': getattr(movie.get('belongs_to_collection'), 'name', None),
+            'actor_roles': actors
+        }
 
-            # Genres
-            try:
-                genres = [genre.get('name') for genre in movie.get('genres', [])]
-            except:
-                genres = []
+        movie_data = dict((k, v) for k, v in movie_data.items() if v)
 
-            # 1900 is the same as None
-            year = str(movie.get('release_date') or '')[:4]
-            if not movie.get('release_date') or year == '1900' or year.lower() == 'none':
-                year = None
+        # Add alternative names
+        if movie_data['original_title'] and movie_data['original_title'] not in movie_data['titles']:
+            movie_data['titles'].append(movie_data['original_title'])
 
-            # Gather actors data
-            actors = {}
-            if extended:
+        # Add alternative titles
+        alternate_titles = movie.get('alternative_titles', {}).get('titles', [])
 
-                # Full data
-                cast = self.request('movie/%s/casts' % movie.get('id'), return_key = 'cast')
-
-                for cast_item in cast:
-                    try:
-                        actors[toUnicode(cast_item.get('name'))] = toUnicode(cast_item.get('character'))
-                        images['actors'][toUnicode(cast_item.get('name'))] = self.getImage(cast_item, type = 'profile', size = 'original')
-                    except:
-                        log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
-
-            movie_data = {
-                'type': 'movie',
-                'via_tmdb': True,
-                'tmdb_id': movie.get('id'),
-                'titles': [toUnicode(movie.get('title'))],
-                'original_title': movie.get('original_title'),
-                'images': images,
-                'imdb': movie.get('imdb_id'),
-                'runtime': movie.get('runtime'),
-                'released': str(movie.get('release_date')),
-                'year': tryInt(year, None),
-                'plot': movie.get('overview'),
-                'genres': genres,
-                'collection': getattr(movie.get('belongs_to_collection'), 'name', None),
-                'actor_roles': actors
-            }
-
-            movie_data = dict((k, v) for k, v in movie_data.items() if v)
-
-            # Add alternative names
-            if movie_data['original_title'] and movie_data['original_title'] not in movie_data['titles']:
-                movie_data['titles'].append(movie_data['original_title'])
-
-            if extended:
-
-                # Full data
-                alternate_titles = self.request('movie/%s/alternative_titles' % movie.get('id'), return_key = 'titles')
-
-                for alt in alternate_titles:
-                    alt_name = alt.get('title')
-                    if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
-                        movie_data['titles'].append(alt_name)
-
-            # Cache movie parsed
-            self.setCache(cache_key, movie_data)
+        for alt in alternate_titles:
+            alt_name = alt.get('title')
+            if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
+                movie_data['titles'].append(alt_name)
 
         return movie_data
 
@@ -192,23 +180,22 @@ class TheMovieDb(MovieProvider):
 
         image_urls = []
         try:
-
-            # Full data
-            images = self.request('movie/%s/images' % movie.get('id'), return_key = type)
-            for image in images[1:5]:
+            for image in movie.get('images', {}).get(type, [])[1:5]:
                 image_urls.append(self.getImage(image, 'file', size))
-
         except:
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_urls
 
     def request(self, call = '', params = {}, return_key = None):
-        params = tryUrlencode(params)
-        url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
-        data = self.getJsonData(url, cache_timeout = 0)
 
-        if data and return_key and data.get(return_key):
+        params = dict((k, v) for k, v in params.items() if v)
+        params = tryUrlencode(params)
+
+        url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
+        data = self.getJsonData(url)
+
+        if data and return_key and return_key in data:
             data = data.get(return_key)
 
         return data
