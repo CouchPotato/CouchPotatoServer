@@ -129,7 +129,7 @@ class Release(Plugin):
             if 'recent' in media.get('tags', []):
                 fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
-    def add(self, group, update_info = True, update_id = None, allowed_restatus = None):
+    def add(self, group, update_info = True, update_id = None):
 
         try:
             db = get_db()
@@ -187,7 +187,7 @@ class Release(Plugin):
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
-            fireEvent('media.restatus', media['_id'], allowed_restatus = allowed_restatus, single = True)
+            fireEvent('media.restatus', media['_id'], allowed_restatus = ['done'], single = True)
 
             return True
         except:
