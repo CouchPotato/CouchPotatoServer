@@ -131,7 +131,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
+    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, check_file_date = True, on_found = None):
 
         folder = sp(folder)
 
@@ -145,7 +145,6 @@ class Scanner(Plugin):
 
         # Scan all files of the folder if no files are set
         if not files:
-            check_file_date = True
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder, followlinks=True):
