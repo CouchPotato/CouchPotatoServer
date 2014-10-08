@@ -456,6 +456,11 @@ class MediaPlugin(MediaBase):
                         deleted = True
                     elif new_media_status:
                         media['status'] = new_media_status
+
+                        # Remove profile (no use for in manage)
+                        if new_media_status == 'done':
+                            media['profile_id'] = None
+                        
                         db.update(media)
 
                         fireEvent('media.untag', media['_id'], 'recent', single = True)
