@@ -491,7 +491,7 @@ class MediaPlugin(MediaBase):
             }
         })
 
-    def restatus(self, media_id, tag_recent = True):
+    def restatus(self, media_id, tag_recent = True, allowed_restatus = None):
 
         try:
             db = get_db()
@@ -526,7 +526,7 @@ class MediaPlugin(MediaBase):
                     m['status'] = previous_status
 
             # Only update when status has changed
-            if previous_status != m['status']:
+            if previous_status != m['status'] and (not allowed_restatus or m['status'] in allowed_restatus):
                 db.update(m)
 
                 # Tag media as recent

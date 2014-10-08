@@ -218,8 +218,8 @@ class Manage(Plugin):
             if group['media'] and group['identifier']:
                 added_identifiers.append(group['identifier'])
 
-                # Add it to release and update the info
-                fireEvent('release.add', group = group, update_info = False)
+                # Add it to release and update the info (only allow media restatus to done, not to active)
+                fireEvent('release.add', group = group, update_info = False, allowed_restatus = ['done'])
                 fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
