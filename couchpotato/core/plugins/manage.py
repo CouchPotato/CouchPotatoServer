@@ -123,7 +123,7 @@ class Manage(Plugin):
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
 
                 onFound = self.createAddToLibrary(folder, added_identifiers)
-                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
+                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, check_file_date = False, on_found = onFound, single = True)
 
                 # Break if CP wants to shut down
                 if self.shuttingDown():
@@ -218,8 +218,8 @@ class Manage(Plugin):
             if group['media'] and group['identifier']:
                 added_identifiers.append(group['identifier'])
 
-                # Add it to release and update the info
-                fireEvent('release.add', group = group, update_info = False)
+                # Add it to release and update the info (only allow media restatus to done, not to active)
+                fireEvent('release.add', group = group, update_info = False, allowed_restatus = ['done'])
                 fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
