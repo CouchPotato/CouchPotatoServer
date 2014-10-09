@@ -196,7 +196,7 @@ class Plugin(object):
         headers['Host'] = headers.get('Host', None)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
-        headers['Connection'] = headers.get('Connection', 'keep-alive')
+        headers['Connection'] = headers.get('Connection', 'close')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
         r = Env.get('http_opener')
