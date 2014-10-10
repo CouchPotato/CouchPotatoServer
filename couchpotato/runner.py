@@ -116,7 +116,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
                     # Delete non zip files
                     if len(ints) != 1:
-                        os.remove(os.path.join(root, backup_file))
+                        try: os.remove(os.path.join(root, backup_file))
+                        except: pass
                     else:
                         existing_backups.append((int(ints[0]), backup_file))
             else:
