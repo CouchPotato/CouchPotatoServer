@@ -53,12 +53,21 @@ var Profile = new Class({
 				}),
 				new Element('span', {'text':'day(s) for a better quality '}),
 				new Element('span.advanced', {'text':'and keep searching'}),
+
 				// "After a checked quality is found and downloaded, continue searching for even better quality releases for the entered number of days."
 				new Element('input.inlay.xsmall.stop_after_input.advanced', {
 					'type':'text',
 					'value': data.stop_after && data.stop_after.length > 0 ? data.stop_after[0] : 0
 				}),
-				new Element('span.advanced', {'text':'day(s) for a better (checked) quality.'})
+				new Element('span.advanced', {'text':'day(s) for a better (checked) quality.'}),
+
+				// Minimum score of
+				new Element('span.advanced', {'html':'<br/>Releases need a minimum score of'}),
+				new Element('input.advanced.inlay.xsmall.minimum_score_input', {
+					'size': 4,
+					'type':'text',
+					'value': data.minimum_score || 1
+				})
 			)
 		);
 
@@ -126,6 +135,7 @@ var Profile = new Class({
 			'label' : self.el.getElement('.quality_label input').get('value'),
 			'wait_for' : self.el.getElement('.wait_for_input').get('value'),
 			'stop_after' : self.el.getElement('.stop_after_input').get('value'),
+			'minimum_score' : self.el.getElement('.minimum_score_input').get('value'),
 			'types': []
 		};
 

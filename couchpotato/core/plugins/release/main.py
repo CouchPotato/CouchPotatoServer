@@ -389,8 +389,8 @@ class Release(Plugin):
                 log.info('Ignored: %s', rel['name'])
                 continue
 
-            if rel['score'] <= 0:
-                log.info('Ignored, score "%s" to low: %s', (rel['score'], rel['name']))
+            if rel['score'] < quality_custom.get('minimum_score'):
+                log.info('Ignored, score "%s" to low, need at least "%s": %s', (rel['score'], quality_custom.get('minimum_score'), rel['name']))
                 continue
 
             if rel['size'] <= 50:
