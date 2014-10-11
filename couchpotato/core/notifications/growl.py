@@ -34,9 +34,9 @@ class Growl(Notification):
 
             self.growl = notifier.GrowlNotifier(
                 applicationName = Env.get('appname'),
-                notifications = ["Updates"],
-                defaultNotifications = ["Updates"],
-                applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
+                notifications = ['Updates'],
+                defaultNotifications = ['Updates'],
+                applicationIcon = self.getNotificationImage('medium'),
                 hostname = hostname if hostname else 'localhost',
                 password = password if password else None,
                 port = port if port else 23053
@@ -56,7 +56,7 @@ class Growl(Notification):
 
         try:
             self.growl.notify(
-                noteType = "Updates",
+                noteType = 'Updates',
                 title = self.default_title,
                 description = message,
                 sticky = False,

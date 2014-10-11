@@ -13,6 +13,8 @@ Lastly, for anything related to CouchPotato, feel free to stop by the [forum](ht
 ## Issues
 Issues are intended for reporting bugs and weird behaviour or suggesting improvements to CouchPotatoServer.
 Before you submit an issue, please go through the following checklist:
+ * **FILL IN ALL THE FIELDS ASKED FOR**
+ * **POST MORE THAN A SINGLE LINE LOG**, if you do, you'd better have a easy reproducable bug
  * Search through existing issues (*including closed issues!*) first: you might be able to get your answer there.
  * Double check your issue manually, because it could be an external issue. 
  * Post logs with your issue: Without seeing what is going on, the developers can't reproduce the error.
@@ -25,12 +27,14 @@ Before you submit an issue, please go through the following checklist:
  * What hardware / OS are you using and what are its limitations? For example: NAS can be slow and maybe have a different version of python installed than when you use CP on OS X or Windows.
  * Your issue might be marked with the "can't reproduce" tag. Don't ask why your issue was closed if it says so in the tag.
  * If you're running on a NAS (QNAP, Austor, Synology etc.) with pre-made packages, make sure these are set up to use our source repository (RuudBurger/CouchPotatoServer) and nothing else!
+ * Do not "bump" issues with "Any updates on this" or whatever. Yes I've seen it, you don't have to remind me of it. There will be an update when the code is done or I need information. If you feel the need to do so, you'd better have more info on the issue.
 
 The more relevant information you provide, the more likely that your issue will be resolved.
+If you don't follow any of the checks above, I'll close the issue. If you are wondering why (and ask) I'll block you from posting new issues and the repo.
 
 ## Pull Requests
 Pull requests are intended for contributing code or documentation to the project. Before you submit a pull request, consider the following:
  * Make sure your pull request is made for the *develop* branch (or relevant feature branch).
  * Have you tested your PR? If not, why?
- * Does your PR have any limitations we should know of?
+ * Does your PR have any limitations I should know of?
  * Is your PR up-to-date with the branch you're trying to push into?

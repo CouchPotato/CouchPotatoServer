@@ -10,7 +10,6 @@ import socket
 import subprocess
 import sys
 import traceback
-import time
 
 # Root path
 base_path = dirname(os.path.abspath(__file__))

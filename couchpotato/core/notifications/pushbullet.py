@@ -84,7 +84,8 @@ config = [{
                 },
                 {
                     'name': 'api_key',
-                    'label': 'User API Key'
+                    'label': 'Access Token',
+                    'description': 'Can be found on <a href="https://www.pushbullet.com/account" target="_blank">Account Settings</a>',
                 },
                 {
                     'name': 'devices',

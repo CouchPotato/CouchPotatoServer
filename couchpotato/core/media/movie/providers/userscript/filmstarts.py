@@ -25,6 +25,6 @@ class Filmstarts(UserscriptBase):
 			name = html.find("meta", {"property":"og:title"})['content']
 			
 		# Year of production is not available in the meta data, so get it from the table
-		year = table.find("tr", text="Produktionsjahr").parent.parent.parent.td.text
+		year = table.find(text="Produktionsjahr").parent.parent.next_sibling.text
 		
 		return self.search(name, year)
