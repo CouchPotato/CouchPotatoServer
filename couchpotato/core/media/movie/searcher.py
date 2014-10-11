@@ -166,7 +166,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'quality': q_identifier,
                 'finish': profile['finish'][index],
                 'wait_for': tryInt(profile['wait_for'][index]),
-                '3d': profile['3d'][index] if profile.get('3d') else False
+                '3d': profile['3d'][index] if profile.get('3d') else False,
+                'minimum_score': profile.get('minimum_score', 1),
             }
 
             could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])

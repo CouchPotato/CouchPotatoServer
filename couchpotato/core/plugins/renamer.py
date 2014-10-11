@@ -222,8 +222,8 @@ class Renamer(Plugin):
 
         cd_keys = ['<cd>','<cd_nr>', '<original>']
         if not any(x in folder_name for x in cd_keys) and not any(x in file_name for x in cd_keys):
-            log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file.'
-                      'Force adding it')
+            log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file. '
+                      'Please add it in the renamer settings. Force adding it for now.')
             file_name = '%s %s' % ('<cd>', file_name)
 
         # Tag release folder as failed_rename in case no groups were found. This prevents check_snatched from removing the release from the downloader.
