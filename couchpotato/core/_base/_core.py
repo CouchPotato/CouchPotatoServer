@@ -290,7 +290,7 @@ config = [{
                 },
                 {
                     'name': 'permission_file',
-                    'default': '0755',
+                    'default': '0644',
                     'label': 'File CHMOD',
                     'description': 'See Folder CHMOD description, but for files',
                 },
