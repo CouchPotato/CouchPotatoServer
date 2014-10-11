@@ -56,7 +56,7 @@ if sys.platform == "win32":
     )
     exeICON = os.path.join(base_path, 'icon.ico')
     DATA_FILES = getDataFiles([r'.\\couchpotato', r'.\\libs'])
-    DATA_FILES.append('icon.png')
+    DATA_FILES.append('icon_windows.png')
     file_ext = 'win32.zip'
 
 
@@ -78,7 +78,7 @@ elif sys.platform == "darwin":
         includes = includes,
     )
     exeICON = None
-    DATA_FILES = ['icon.png']
+    DATA_FILES = ['icon_mac.png']
 
     file_ext = 'macosx-10_6-intel.zip'
 

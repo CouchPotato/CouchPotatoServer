@@ -15,6 +15,13 @@ if hasattr(sys, 'frozen'):
 else:
     base_path = os.path.dirname(os.path.abspath(__file__))
 
+def icon():
+    icon = 'icon_windows.png'
+    if os.path.isfile('icon_mac.png'):
+        icon = 'icon_mac.png'
+
+    return wx.Icon(icon, wx.BITMAP_TYPE_PNG)
+
 lib_dir = os.path.join(base_path, 'libs')
 
 sys.path.insert(0, base_path)
@@ -36,8 +43,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
 
-        icon = wx.Icon('icon.png', wx.BITMAP_TYPE_PNG)
-        self.SetIcon(icon)
+        self.SetIcon(icon())
 
         self.Bind(wx.EVT_TASKBAR_LEFT_UP, self.OnTaskBarClick)
         self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarClick)
@@ -170,7 +176,7 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
         # Updater
         base_url = 'https://api.couchpota.to/updates/%s'
         self.InitUpdates(base_url % VERSION + '/', 'https://couchpota.to/updates/%s' % 'changelog.html',
-                         icon = wx.Icon('icon.png'))
+                         icon = icon())
 
         self.frame = MainFrame(self)
         self.frame.Bind(wx.EVT_CLOSE, self.onClose)
