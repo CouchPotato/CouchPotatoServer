@@ -36,22 +36,43 @@ includes = [
     'distutils',
 ]
 
+excludes = [
+    'doctest',
+    'pdb',
+    'unittest',
+    'difflib',
+    'bsddb',
+    'pywin.debugger', 'pywin.debugger.dbgcon', 'pywin.dialogs',
+    'Tkconstants', 'Tkinter',
+    'curses',
+    '_gtkagg', '_tkagg',
+]
+
 # Windows
 if sys.platform == "win32":
     import py2exe
+
+    sys.path.append('C:\Windows\WinSxS\x86_microsoft.vc90.crt_1fc8b3b9a1e18e3b_9.0.21022.8_none_bcb86ed6ac711f91')
 
     FREEZER = 'py2exe'
     FREEZER_OPTIONS = dict(
         compressed = 0,
         bundle_files = 3,
         dll_excludes = [
-            'MSVCP90.dll',
+            'msvcp90.dll',
+            'msvcr90.dll',
+            'msvcr71.dll',
             'mswsock.dll',
             'powrprof.dll',
             'USP10.dll',
+            'libgdk-win32-2.0-0.dll',
+            'libgobject-2.0-0.dll',
+            'tcl84.dll',
+            'tk84.dll'
         ],
         packages = ['couchpotato', 'libs'],
         includes = includes,
+        excludes = excludes,
         skip_archive = 1,
     )
     exeICON = os.path.join(base_path, 'icon.ico')
@@ -66,6 +87,7 @@ elif sys.platform == "darwin":
 
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(
+        arch = 'intel',
         optimize = 2,
         strip = True,
         argv_emulation = False,
@@ -76,6 +98,7 @@ elif sys.platform == "darwin":
         ),
         packages = ['couchpotato', 'libs'],
         includes = includes,
+        excludes = excludes,
     )
     exeICON = None
     DATA_FILES = ['icon_mac.png']
