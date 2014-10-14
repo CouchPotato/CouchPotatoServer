@@ -791,7 +791,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         dest = sp(dest)
         try:
 
-            if os.path.exists(dest):
+            if os.path.exists(dest) and os.path.isfile(dest):
                 raise Exception('Destination "%s" already exists' % dest)
 
             move_type = self.conf('file_action')
