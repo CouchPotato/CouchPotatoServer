@@ -456,6 +456,11 @@ class MediaPlugin(MediaBase):
                         deleted = True
                     elif new_media_status:
                         media['status'] = new_media_status
+
+                        # Remove profile (no use for in manage)
+                        if new_media_status == 'done':
+                            media['profile_id'] = None
+                        
                         db.update(media)
 
                         fireEvent('media.untag', media['_id'], 'recent', single = True)
@@ -491,7 +496,7 @@ class MediaPlugin(MediaBase):
             }
         })
 
-    def restatus(self, media_id, tag_recent = True):
+    def restatus(self, media_id, tag_recent = True, allowed_restatus = None):
 
         try:
             db = get_db()
@@ -526,7 +531,7 @@ class MediaPlugin(MediaBase):
                     m['status'] = previous_status
 
             # Only update when status has changed
-            if previous_status != m['status']:
+            if previous_status != m['status'] and (not allowed_restatus or m['status'] in allowed_restatus):
                 db.update(m)
 
                 # Tag media as recent

@@ -205,19 +205,28 @@ class GitUpdater(BaseUpdater):
     def getVersion(self):
 
         if not self.version:
+
+            hash = None
+            date = None
+            branch = self.branch
+
             try:
                 output = self.repo.getHead()  # Yes, please
                 log.debug('Git version output: %s', output.hash)
-                self.version = {
-                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.repo.getCurrentBranch().name or self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
-                    'hash': output.hash[:8],
-                    'date': output.getDate(),
-                    'type': 'git',
-                    'branch': self.repo.getCurrentBranch().name
-                }
+
+                hash = output.hash[:8]
+                date = output.getDate()
+                branch = self.repo.getCurrentBranch().name
             except Exception as e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s', e)
-                return 'No GIT'
+
+            self.version = {
+                'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, branch, hash or 'unknown_hash', datetime.fromtimestamp(date) if date else 'unknown_date'),
+                'hash': hash,
+                'date': date,
+                'type': 'git',
+                'branch': branch
+            }
 
         return self.version
 

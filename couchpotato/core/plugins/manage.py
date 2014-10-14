@@ -123,7 +123,7 @@ class Manage(Plugin):
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
 
                 onFound = self.createAddToLibrary(folder, added_identifiers)
-                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
+                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, check_file_date = False, on_found = onFound, single = True)
 
                 # Break if CP wants to shut down
                 if self.shuttingDown():

@@ -196,7 +196,7 @@ class Plugin(object):
         headers['Host'] = headers.get('Host', None)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
-        headers['Connection'] = headers.get('Connection', 'keep-alive')
+        headers['Connection'] = headers.get('Connection', 'close')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
         r = Env.get('http_opener')
@@ -279,7 +279,7 @@ class Plugin(object):
             wait = (last_use - now) + self.http_time_between_calls
 
             if wait > 0:
-                log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
+                log.debug('Waiting for %s, %d seconds', (self.getName(), max(1, wait)))
                 time.sleep(min(wait, 30))
 
     def beforeCall(self, handler):
@@ -370,14 +370,16 @@ class Plugin(object):
 
     def cpTag(self, media, unique_tag = False):
 
-        identifier = getIdentifier(media) or ''
-        unique_tag = ', ' + randomString() if unique_tag else ''
+        tag = ''
+        if Env.setting('enabled', 'renamer') or unique_tag:
+            identifier = getIdentifier(media) or ''
+            unique_tag = ', ' + randomString() if unique_tag else ''
 
-        tag = '.cp('
-        tag += identifier
-        tag += ', ' if unique_tag and identifier else ''
-        tag += randomString() if unique_tag else ''
-        tag += ')'
+            tag = '.cp('
+            tag += identifier
+            tag += ', ' if unique_tag and identifier else ''
+            tag += randomString() if unique_tag else ''
+            tag += ')'
 
         return tag if len(tag) > 7 else ''
 

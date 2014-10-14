@@ -222,8 +222,8 @@ class Renamer(Plugin):
 
         cd_keys = ['<cd>','<cd_nr>', '<original>']
         if not any(x in folder_name for x in cd_keys) and not any(x in file_name for x in cd_keys):
-            log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file.'
-                      'Force adding it')
+            log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file. '
+                      'Please add it in the renamer settings. Force adding it for now.')
             file_name = '%s %s' % ('<cd>', file_name)
 
         # Tag release folder as failed_rename in case no groups were found. This prevents check_snatched from removing the release from the downloader.
@@ -372,10 +372,6 @@ class Renamer(Plugin):
                             final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
                         elif file_type is 'nfo':
                             final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
-
-                        # Seperator replace
-                        if separator:
-                            final_file_name = final_file_name.replace(' ', separator)
 
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
@@ -545,12 +541,13 @@ class Renamer(Plugin):
                             (not keep_original or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
 
-            total_space, available_space = getFreeSpace(destination)
-            renaming_size = getSize(rename_files.keys())
-            if renaming_size > available_space:
-                log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
-                self.tagRelease(group = group, tag = 'not_enough_space')
-                continue
+            if self.conf('check_space'):
+                total_space, available_space = getFreeSpace(destination)
+                renaming_size = getSize(rename_files.keys())
+                if renaming_size > available_space:
+                    log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
+                    self.tagRelease(group = group, tag = 'not_enough_space')
+                    continue
 
             # Remove files
             delete_folders = []
@@ -1392,6 +1389,14 @@ config = [{
                     'name': 'foldersep',
                     'label': 'Folder-Separator',
                     'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
+                },
+                {
+                    'name': 'check_space',
+                    'label': 'Check space',
+                    'default': True,
+                    'type': 'bool',
+                    'description': ('Check if there\'s enough available space to rename the files', 'Disable when the filesystem doesn\'t return the proper value'),
+                    'advanced': True,
                 },
                 {
                     'name': 'default_file_action',

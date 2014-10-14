@@ -41,11 +41,11 @@ def symlink(src, dst):
 def getUserDir():
     try:
         import pwd
-        os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
+        os.environ['HOME'] = sp(pwd.getpwuid(os.geteuid()).pw_dir)
     except:
         pass
 
-    return os.path.expanduser('~')
+    return sp(os.path.expanduser('~'))
 
 
 def getDownloadDir():
