@@ -220,6 +220,10 @@ class Renamer(Plugin):
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
 
+        if len(file_name) == 0:
+            log.error('Please fill in the filename option under renamer settings. Forcing it on <original>.<ext> to keep the same name as source file.')
+            file_name = '<original>.<ext>'
+
         cd_keys = ['<cd>','<cd_nr>', '<original>']
         if not any(x in folder_name for x in cd_keys) and not any(x in file_name for x in cd_keys):
             log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file. '
