@@ -621,6 +621,8 @@ class Database(object):
 
             except OperationalError:
                 log.error('Migrating from faulty database, probably a (too) old version: %s', traceback.format_exc())
+                
+                rename_old = True
             except:
                 log.error('Migration failed: %s', traceback.format_exc())
 

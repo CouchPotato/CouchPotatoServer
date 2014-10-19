@@ -39,7 +39,7 @@ from tornado import ioloop
 from tornado.log import gen_log, app_log
 from tornado.netutil import ssl_wrap_socket, ssl_match_hostname, SSLCertificateError
 from tornado import stack_context
-from tornado.util import bytes_type, errno_from_exception
+from tornado.util import errno_from_exception
 
 try:
     from tornado.platform.posix import _set_nonblocking
@@ -324,7 +324,7 @@ class BaseIOStream(object):
         .. versionchanged:: 4.0
             Now returns a `.Future` if no callback is given.
         """
-        assert isinstance(data, bytes_type)
+        assert isinstance(data, bytes)
         self._check_closed()
         # We use bool(_write_buffer) as a proxy for write_buffer_size>0,
         # so never put empty strings in the buffer.
@@ -554,7 +554,7 @@ class BaseIOStream(object):
             # Pretend to have a pending callback so that an EOF in
             # _read_to_buffer doesn't trigger an immediate close
             # callback.  At the end of this method we'll either
-            # estabilsh a real pending callback via
+            # establish a real pending callback via
             # _read_from_buffer or run the close callback.
             #
             # We need two try statements here so that
@@ -993,6 +993,11 @@ class IOStream(BaseIOStream):
 
         """
         self._connecting = True
+        if callback is not None:
+            self._connect_callback = stack_context.wrap(callback)
+            future = None
+        else:
+            future = self._connect_future = TracebackFuture()
         try:
             self.socket.connect(address)
         except socket.error as e:
@@ -1008,12 +1013,7 @@ class IOStream(BaseIOStream):
                 gen_log.warning("Connect error on fd %s: %s",
                                 self.socket.fileno(), e)
                 self.close(exc_info=True)
-                return
-        if callback is not None:
-            self._connect_callback = stack_context.wrap(callback)
-            future = None
-        else:
-            future = self._connect_future = TracebackFuture()
+                return future
         self._add_io_state(self.io_loop.WRITE)
         return future
 
@@ -1185,8 +1185,14 @@ class SSLIOStream(IOStream):
                 return self.close(exc_info=True)
             raise
         except socket.error as err:
-            if err.args[0] in _ERRNO_CONNRESET:
+            # Some port scans (e.g. nmap in -sT mode) have been known
+            # to cause do_handshake to raise EBADF, so make that error
+            # quiet as well.
+            # https://groups.google.com/forum/?fromgroups#!topic/python-tornado/ApucKJat1_0
+            if (err.args[0] in _ERRNO_CONNRESET or
+                err.args[0] == errno.EBADF):
                 return self.close(exc_info=True)
+            raise
         except AttributeError:
             # On Linux, if the connection was reset before the call to
             # wrap_socket, do_handshake will fail with an

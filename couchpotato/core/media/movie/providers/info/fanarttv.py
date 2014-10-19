@@ -4,6 +4,7 @@ from couchpotato import tryInt
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -32,12 +33,14 @@ class FanartTV(MovieProvider):
 
         try:
             url = self.urls['api'] % identifier
-            fanart_data = self.getJsonData(url)
+            fanart_data = self.getJsonData(url, show_error = False)
 
             if fanart_data:
                 log.debug('Found images for %s', fanart_data.get('name'))
                 images = self._parseMovie(fanart_data)
-
+        except HTTPError as e:
+            log.debug('Failed getting extra art for %s: %s',
+                      (identifier, e))
         except:
             log.error('Failed getting extra art for %s: %s',
                       (identifier, traceback.format_exc()))

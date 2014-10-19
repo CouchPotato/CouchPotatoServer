@@ -50,12 +50,13 @@ class HTTPServer(TCPServer, httputil.HTTPServerConnectionDelegate):
 
         import tornado.httpserver
         import tornado.ioloop
+        from tornado import httputil
 
         def handle_request(request):
            message = "You requested %s\n" % request.uri
            request.connection.write_headers(
                httputil.ResponseStartLine('HTTP/1.1', 200, 'OK'),
-               {"Content-Length": str(len(message))})
+               httputil.HTTPHeaders({"Content-Length": str(len(message))}))
            request.connection.write(message)
            request.connection.finish()
 
