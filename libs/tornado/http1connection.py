@@ -306,6 +306,8 @@ class HTTP1Connection(httputil.HTTPConnection):
         self._clear_callbacks()
         stream = self.stream
         self.stream = None
+        if not self._finish_future.done():
+            self._finish_future.set_result(None)
         return stream
 
     def set_body_timeout(self, timeout):
@@ -467,6 +469,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         if start_line.version == "HTTP/1.1":
             return connection_header != "close"
         elif ("Content-Length" in headers
+              or headers.get("Transfer-Encoding", "").lower() == "chunked"
               or start_line.method in ("HEAD", "GET")):
             return connection_header == "keep-alive"
         return False
@@ -483,7 +486,11 @@ class HTTP1Connection(httputil.HTTPConnection):
             self._finish_future.set_result(None)
 
     def _parse_headers(self, data):
-        data = native_str(data.decode('latin1'))
+        # The lstrip removes newlines that some implementations sometimes
+        # insert between messages of a reused connection.  Per RFC 7230,
+        # we SHOULD ignore at least one empty line before the request.
+        # http://tools.ietf.org/html/rfc7230#section-3.5
+        data = native_str(data.decode('latin1')).lstrip("\r\n")
         eol = data.find("\r\n")
         start_line = data[:eol]
         try:
