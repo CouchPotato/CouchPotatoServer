@@ -117,7 +117,6 @@ class TheMovieDb(MovieProvider):
             genres = []
 
         # 1900 is the same as None
-        print movie
         year = str(movie.get('release_date') or '')[:4]
         if not movie.get('release_date') or year == '1900' or year.lower() == 'none':
             year = None
