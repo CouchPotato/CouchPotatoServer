@@ -441,7 +441,6 @@ class Release(Plugin):
             for rel in search_results:
 
                 rel_identifier = md5(rel['url'])
-                found_releases.append(rel_identifier)
 
                 release = {
                     '_t': 'release',
@@ -481,6 +480,9 @@ class Release(Plugin):
 
                 # Update release in search_results
                 rel['status'] = rls.get('status')
+
+                if rel['status'] == 'available':
+                    found_releases.append(rel_identifier)
 
             return found_releases
         except:

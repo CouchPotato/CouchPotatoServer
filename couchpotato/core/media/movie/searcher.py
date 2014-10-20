@@ -203,13 +203,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             quality['custom'] = quality_custom
 
             results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
-            results_count = len(results)
-            total_result_count += results_count
-            if results_count == 0:
-                log.debug('Nothing found for %s in %s', (default_title, quality['label']))
-
-            # Keep track of releases found outside ETA window
-            outside_eta_results += results_count if could_not_be_released else 0
 
             # Check if movie isn't deleted while searching
             if not fireEvent('media.get', movie.get('_id'), single = True):
@@ -217,11 +210,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             # Add them to this movie releases list
             found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
+            results_count = len(found_releases)
+            total_result_count += results_count
+            if results_count == 0:
+                log.debug('Nothing found for %s in %s', (default_title, quality['label']))
+
+            # Keep track of releases found outside ETA window
+            outside_eta_results += results_count if could_not_be_released else 0
 
             # Don't trigger download, but notify user of available releases
-            if could_not_be_released:
-                if results_count > 0:
-                    log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
+            if could_not_be_released and results_count > 0:
+                log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
             # Try find a valid result and download it
             if (force_download or not could_not_be_released or always_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
