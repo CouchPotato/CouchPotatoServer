@@ -21,7 +21,7 @@ class Base(TorrentMagnetProvider):
         (['cam'], ['cam']),
         (['telesync'], ['ts', 'tc']),
         (['screener', 'tvrip'], ['screener']),
-        (['x264', '720p', '1080p', 'blu-ray', 'hdrip'], ['bd50', '1080p', '720p', 'brrip']),
+        (['x264', '720p', '1080p', 'blu-ray', 'hdrip', 'unknown'], ['bd50', '1080p', '720p', 'brrip']),
         (['dvdrip'], ['dvdrip']),
         (['dvd'], ['dvdr']),
     ]
