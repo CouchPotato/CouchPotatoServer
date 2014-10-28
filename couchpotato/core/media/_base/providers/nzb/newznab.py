@@ -45,7 +45,7 @@ class Base(NZBProvider, RSS):
     def _searchOnHost(self, host, media, quality, results):
 
         query = self.buildUrl(media, host)
-        url = '%s&%s' % (self.getUrl(host['host']), query)
+        url = '%s%s' % (self.getUrl(host['host']), query)
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
@@ -83,7 +83,7 @@ class Base(NZBProvider, RSS):
                 try:
                     # Get details for extended description to retrieve passwords
                     query = self.buildDetailsUrl(nzb_id, host['api_key'])
-                    url = '%s&%s' % (self.getUrl(host['host']), query)
+                    url = '%s%s' % (self.getUrl(host['host']), query)
                     nzb_details = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})[0]
 
                     description = self.getTextElement(nzb_details, 'description')
@@ -187,11 +187,12 @@ class Base(NZBProvider, RSS):
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
-            if e.code == 503:
+            sc = e.response.status_code
+            if sc in [503, 429]:
                 response = e.read().lower()
-                if 'maximum api' in response or 'download limit' in response:
+                if sc == 429 or 'maximum api' in response or 'download limit' in response:
                     if not self.limits_reached.get(host):
-                        log.error('Limit reached for newznab provider: %s', host)
+                        log.error('Limit reached / to many requests for newznab provider: %s', host)
                     self.limits_reached[host] = time.time()
                     return 'try_next'
 

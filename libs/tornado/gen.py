@@ -29,16 +29,7 @@ could be written with ``gen`` as::
 Most asynchronous functions in Tornado return a `.Future`;
 yielding this object returns its `~.Future.result`.
 
-For functions that do not return ``Futures``, `Task` works with any
-function that takes a ``callback`` keyword argument (most Tornado functions
-can be used in either style, although the ``Future`` style is preferred
-since it is both shorter and provides better exception handling)::
-
-    @gen.coroutine
-    def get(self):
-        yield gen.Task(AsyncHTTPClient().fetch, "http://example.com")
-
-You can also yield a list or dict of ``Futures`` and/or ``Tasks``, which will be
+You can also yield a list or dict of ``Futures``, which will be
 started at the same time and run in parallel; a list or dict of results will
 be returned when they are all finished::
 
@@ -54,30 +45,6 @@ be returned when they are all finished::
 
 .. versionchanged:: 3.2
    Dict support added.
-
-For more complicated interfaces, `Task` can be split into two parts:
-`Callback` and `Wait`::
-
-    class GenAsyncHandler2(RequestHandler):
-        @gen.coroutine
-        def get(self):
-            http_client = AsyncHTTPClient()
-            http_client.fetch("http://example.com",
-                              callback=(yield gen.Callback("key")))
-            response = yield gen.Wait("key")
-            do_something_with_response(response)
-            self.render("template.html")
-
-The ``key`` argument to `Callback` and `Wait` allows for multiple
-asynchronous operations to be started at different times and proceed
-in parallel: yield several callbacks with different keys, then wait
-for them once all the async operations have started.
-
-The result of a `Wait` or `Task` yield expression depends on how the callback
-was run.  If it was called with no arguments, the result is ``None``.  If
-it was called with one argument, the result is that argument.  If it was
-called with more than one argument or any keyword arguments, the result
-is an `Arguments` object, which is a named tuple ``(args, kwargs)``.
 """
 from __future__ import absolute_import, division, print_function, with_statement
 
@@ -142,7 +109,10 @@ def engine(func):
                 raise ReturnValueIgnoredError(
                     "@gen.engine functions cannot return values: %r" %
                     (future.result(),))
-        future.add_done_callback(final_callback)
+        # The engine interface doesn't give us any way to return
+        # errors but to raise them into the stack context.
+        # Save the stack context here to use when the Future has resolved.
+        future.add_done_callback(stack_context.wrap(final_callback))
     return wrapper
 
 
@@ -169,6 +139,17 @@ def coroutine(func, replace_callback=True):
 
     From the caller's perspective, ``@gen.coroutine`` is similar to
     the combination of ``@return_future`` and ``@gen.engine``.
+
+    .. warning::
+
+       When exceptions occur inside a coroutine, the exception
+       information will be stored in the `.Future` object. You must
+       examine the result of the `.Future` object, or the exception
+       may go unnoticed by your code. This means yielding the function
+       if called from another coroutine, using something like
+       `.IOLoop.run_sync` for top-level calls, or passing the `.Future`
+       to `.IOLoop.add_future`.
+
     """
     return _make_coroutine_wrapper(func, replace_callback=True)
 
@@ -218,7 +199,18 @@ def _make_coroutine_wrapper(func, replace_callback):
                     future.set_exc_info(sys.exc_info())
                 else:
                     Runner(result, future, yielded)
-                return future
+                try:
+                    return future
+                finally:
+                    # Subtle memory optimization: if next() raised an exception,
+                    # the future's exc_info contains a traceback which
+                    # includes this stack frame.  This creates a cycle,
+                    # which will be collected at the next full GC but has
+                    # been shown to greatly increase memory usage of
+                    # benchmarks (relative to the refcount-based scheme
+                    # used in the absence of cycles).  We can avoid the
+                    # cycle by clearing the local variable after we return it.
+                    future = None
         future.set_result(result)
         return future
     return wrapper
@@ -252,8 +244,8 @@ class Return(Exception):
 class YieldPoint(object):
     """Base class for objects that may be yielded from the generator.
 
-    Applications do not normally need to use this class, but it may be
-    subclassed to provide additional yielding behavior.
+    .. deprecated:: 4.0
+       Use `Futures <.Future>` instead.
     """
     def start(self, runner):
         """Called by the runner after the generator has yielded.
@@ -289,6 +281,9 @@ class Callback(YieldPoint):
 
     The callback may be called with zero or one arguments; if an argument
     is given it will be returned by `Wait`.
+
+    .. deprecated:: 4.0
+       Use `Futures <.Future>` instead.
     """
     def __init__(self, key):
         self.key = key
@@ -305,7 +300,11 @@ class Callback(YieldPoint):
 
 
 class Wait(YieldPoint):
-    """Returns the argument passed to the result of a previous `Callback`."""
+    """Returns the argument passed to the result of a previous `Callback`.
+
+    .. deprecated:: 4.0
+       Use `Futures <.Future>` instead.
+    """
     def __init__(self, key):
         self.key = key
 
@@ -326,6 +325,9 @@ class WaitAll(YieldPoint):
     a list of results in the same order.
 
     `WaitAll` is equivalent to yielding a list of `Wait` objects.
+
+    .. deprecated:: 4.0
+       Use `Futures <.Future>` instead.
     """
     def __init__(self, keys):
         self.keys = keys
@@ -341,21 +343,13 @@ class WaitAll(YieldPoint):
 
 
 def Task(func, *args, **kwargs):
-    """Runs a single asynchronous operation.
+    """Adapts a callback-based asynchronous function for use in coroutines.
 
     Takes a function (and optional additional arguments) and runs it with
     those arguments plus a ``callback`` keyword argument.  The argument passed
     to the callback is returned as the result of the yield expression.
 
-    A `Task` is equivalent to a `Callback`/`Wait` pair (with a unique
-    key generated automatically)::
-
-        result = yield gen.Task(func, args)
-
-        func(args, callback=(yield gen.Callback(key)))
-        result = yield gen.Wait(key)
-
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
        ``gen.Task`` is now a function that returns a `.Future`, instead of
        a subclass of `YieldPoint`.  It still behaves the same way when
        yielded.
@@ -464,7 +458,7 @@ def multi_future(children):
     This function is faster than the `Multi` `YieldPoint` because it does not
     require the creation of a stack context.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     if isinstance(children, dict):
         keys = list(children.keys())
@@ -520,7 +514,7 @@ def with_timeout(timeout, future, io_loop=None):
 
     Currently only supports Futures, not other `YieldPoint` classes.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     # TODO: allow yield points in addition to futures?
     # Tricky to do with stack_context semantics.
@@ -564,7 +558,7 @@ coroutines that are likely to yield Futures that are ready instantly.
 
 Usage: ``yield gen.moment``
 
-.. versionadded:: 3.3
+.. versionadded:: 4.0
 """
 moment.set_result(None)
 

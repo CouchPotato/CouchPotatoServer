@@ -302,15 +302,19 @@
 			font-family: 'Elusive-Icons';
 			color: #f5e39c;
 		}
-		.page form .directory > span {
+		.page form .directory > input {
 			height: 25px;
 			display: inline-block;
 			float: right;
 			text-align: right;
 			white-space: nowrap;
 			cursor: pointer;
+			background: none;
+			border: 0;
+			color: #FFF;
+			width: 100%;
 		}
-			.page form .directory span:empty:before {
+			.page form .directory input:empty:before {
 				content: 'No folder selected';
 				font-style: italic;
 				opacity: .3;
@@ -353,6 +357,11 @@
 			white-space: nowrap;
 			text-overflow: ellipsis;
 		}
+
+			.page .directory_list li.blur {
+				opacity: .3;
+			}
+
 		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
 		}

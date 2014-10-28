@@ -26,9 +26,9 @@ class MediaBase(Plugin):
         def onComplete():
             try:
                 media = fireEvent('media.get', media_id, single = True)
-                event_name = '%s.searcher.single' % media.get('type')
-
-                fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id), manual = True)
+                if media:
+                    event_name = '%s.searcher.single' % media.get('type')
+                    fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id), manual = True)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
 
@@ -39,9 +39,9 @@ class MediaBase(Plugin):
         def notifyFront():
             try:
                 media = fireEvent('media.get', media_id, single = True)
-                event_name = '%s.update' % media.get('type')
-
-                fireEvent('notify.frontend', type = event_name, data = media)
+                if media:
+                    event_name = '%s.update' % media.get('type')
+                    fireEvent('notify.frontend', type = event_name, data = media)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
 
@@ -95,7 +95,7 @@ class MediaBase(Plugin):
             if file_type not in existing_files or len(existing_files.get(file_type, [])) == 0:
                 file_path = fireEvent('file.download', url = image, single = True)
                 if file_path:
-                    existing_files[file_type] = [file_path]
+                    existing_files[file_type] = [toUnicode(file_path)]
                     break
             else:
                 break

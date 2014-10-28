@@ -25,7 +25,7 @@ class Transmission(DownloaderBase):
 
     def connect(self):
         # Load host from config and split out port.
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        host = cleanHost(self.conf('host')).rstrip('/').rsplit(':', 1)
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
@@ -78,12 +78,14 @@ class Transmission(DownloaderBase):
             log.error('Failed sending torrent to Transmission')
             return False
 
+        data = remote_torrent.get('torrent-added') or remote_torrent.get('torrent-duplicate')
+
         # Change settings of added torrents
         if torrent_params:
-            self.trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
+            self.trpc.set_torrent(data['hashString'], torrent_params)
 
         log.info('Torrent sent to Transmission successfully.')
-        return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
+        return self.downloadReturnId(data['hashString'])
 
     def test(self):
         if self.connect() and self.trpc.get_session():
@@ -162,11 +164,11 @@ class Transmission(DownloaderBase):
 class TransmissionRPC(object):
 
     """TransmissionRPC lite library"""
-    def __init__(self, host = 'localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
+    def __init__(self, host = 'http://localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
 
         super(TransmissionRPC, self).__init__()
 
-        self.url = 'http://' + host + ':' + str(port) + '/' + rpc_url + '/rpc'
+        self.url = host + ':' + str(port) + '/' + rpc_url + '/rpc'
         self.tag = 0
         self.session_id = 0
         self.session = {}
@@ -274,8 +276,8 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:9091',
-                    'description': 'Hostname with port. Usually <strong>localhost:9091</strong>',
+                    'default': 'http://localhost:9091',
+                    'description': 'Hostname with port. Usually <strong>http://localhost:9091</strong>',
                 },
                 {
                     'name': 'rpc_url',

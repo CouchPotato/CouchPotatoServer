@@ -24,16 +24,16 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://nobay.net',
+        'https://dieroschtibay.org',
         'https://thebay.al',
         'https://thepiratebay.se',
-        'http://thepiratebay.cd',
+        'http://thepiratebay.se.net',
         'http://thebootlegbay.com',
-        'http://www.tpb.gr',
-        'http://tpbproxy.co.uk',
+        'http://tpb.ninja.so',
+        'http://proxybay.fr',
         'http://pirateproxy.in',
-        'http://www.getpirate.com',
-        'http://piratebay.io',
+        'http://piratebay.skey.sk',
+        'http://pirateproxy.be',
         'http://bayproxy.li',
         'http://proxybay.pw',
     ]

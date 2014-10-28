@@ -39,7 +39,7 @@ from tornado import ioloop
 from tornado.log import gen_log, app_log
 from tornado.netutil import ssl_wrap_socket, ssl_match_hostname, SSLCertificateError
 from tornado import stack_context
-from tornado.util import bytes_type, errno_from_exception
+from tornado.util import errno_from_exception
 
 try:
     from tornado.platform.posix import _set_nonblocking
@@ -57,11 +57,24 @@ except ImportError:
 # some they differ.
 _ERRNO_WOULDBLOCK = (errno.EWOULDBLOCK, errno.EAGAIN)
 
+if hasattr(errno, "WSAEWOULDBLOCK"):
+    _ERRNO_WOULDBLOCK += (errno.WSAEWOULDBLOCK,)
+
 # These errnos indicate that a connection has been abruptly terminated.
 # They should be caught and handled less noisily than other errors.
-_ERRNO_CONNRESET = (errno.ECONNRESET, errno.ECONNABORTED, errno.EPIPE)
+_ERRNO_CONNRESET = (errno.ECONNRESET, errno.ECONNABORTED, errno.EPIPE,
+                    errno.ETIMEDOUT)
 
+if hasattr(errno, "WSAECONNRESET"):
+    _ERRNO_CONNRESET += (errno.WSAECONNRESET, errno.WSAECONNABORTED, errno.WSAETIMEDOUT)
 
+# More non-portable errnos:
+_ERRNO_INPROGRESS = (errno.EINPROGRESS,)
+
+if hasattr(errno, "WSAEINPROGRESS"):
+    _ERRNO_INPROGRESS += (errno.WSAEINPROGRESS,)
+
+#######################################################
 class StreamClosedError(IOError):
     """Exception raised by `IOStream` methods when the stream is closed.
 
@@ -116,7 +129,7 @@ class BaseIOStream(object):
         :arg max_write_buffer_size: Amount of outgoing data to buffer;
             defaults to unlimited.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
            Add the ``max_write_buffer_size`` parameter.  Changed default
            ``read_chunk_size`` to 64KB.
         """
@@ -203,7 +216,7 @@ class BaseIOStream(object):
         if more than ``max_bytes`` bytes have been read and the regex is
         not satisfied.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             Added the ``max_bytes`` argument.  The ``callback`` argument is
             now optional and a `.Future` will be returned if it is omitted.
         """
@@ -230,7 +243,7 @@ class BaseIOStream(object):
         if more than ``max_bytes`` bytes have been read and the delimiter
         is not found.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             Added the ``max_bytes`` argument.  The ``callback`` argument is
             now optional and a `.Future` will be returned if it is omitted.
         """
@@ -259,7 +272,7 @@ class BaseIOStream(object):
         If ``partial`` is true, the callback is run as soon as we have
         any bytes to return (but never more than ``num_bytes``)
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             Added the ``partial`` argument.  The callback argument is now
             optional and a `.Future` will be returned if it is omitted.
         """
@@ -280,7 +293,7 @@ class BaseIOStream(object):
         If a callback is given, it will be run with the data as an argument;
         if not, this method returns a `.Future`.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             The callback argument is now optional and a `.Future` will
             be returned if it is omitted.
         """
@@ -308,10 +321,10 @@ class BaseIOStream(object):
         completed.  If `write` is called again before that `.Future` has
         resolved, the previous future will be orphaned and will never resolve.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             Now returns a `.Future` if no callback is given.
         """
-        assert isinstance(data, bytes_type)
+        assert isinstance(data, bytes)
         self._check_closed()
         # We use bool(_write_buffer) as a proxy for write_buffer_size>0,
         # so never put empty strings in the buffer.
@@ -492,7 +505,7 @@ class BaseIOStream(object):
         def wrapper():
             self._pending_callbacks -= 1
             try:
-                callback(*args)
+                return callback(*args)
             except Exception:
                 app_log.error("Uncaught exception, closing connection.",
                               exc_info=True)
@@ -504,7 +517,8 @@ class BaseIOStream(object):
                 # Re-raise the exception so that IOLoop.handle_callback_exception
                 # can see it and log the error
                 raise
-            self._maybe_add_error_listener()
+            finally:
+                self._maybe_add_error_listener()
         # We schedule callbacks to be run on the next IOLoop iteration
         # rather than running them directly for several reasons:
         # * Prevents unbounded stack growth when a callback calls an
@@ -540,7 +554,7 @@ class BaseIOStream(object):
             # Pretend to have a pending callback so that an EOF in
             # _read_to_buffer doesn't trigger an immediate close
             # callback.  At the end of this method we'll either
-            # estabilsh a real pending callback via
+            # establish a real pending callback via
             # _read_from_buffer or run the close callback.
             #
             # We need two try statements here so that
@@ -949,11 +963,19 @@ class IOStream(BaseIOStream):
 
         May only be called if the socket passed to the constructor was
         not previously connected.  The address parameter is in the
-        same format as for `socket.connect <socket.socket.connect>`,
-        i.e. a ``(host, port)`` tuple.  If ``callback`` is specified,
-        it will be called with no arguments when the connection is
-        completed; if not this method returns a `.Future` (whose result
-        after a successful connection will be the stream itself).
+        same format as for `socket.connect <socket.socket.connect>` for
+        the type of socket passed to the IOStream constructor,
+        e.g. an ``(ip, port)`` tuple.  Hostnames are accepted here,
+        but will be resolved synchronously and block the IOLoop.
+        If you have a hostname instead of an IP address, the `.TCPClient`
+        class is recommended instead of calling this method directly.
+        `.TCPClient` will do asynchronous DNS resolution and handle
+        both IPv4 and IPv6.
+
+        If ``callback`` is specified, it will be called with no
+        arguments when the connection is completed; if not this method
+        returns a `.Future` (whose result after a successful
+        connection will be the stream itself).
 
         If specified, the ``server_hostname`` parameter will be used
         in SSL connections for certificate validation (if requested in
@@ -966,10 +988,16 @@ class IOStream(BaseIOStream):
         is ready.  Calling `IOStream` read methods before the socket is
         connected works on some platforms but is non-portable.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
             If no callback is given, returns a `.Future`.
+
         """
         self._connecting = True
+        if callback is not None:
+            self._connect_callback = stack_context.wrap(callback)
+            future = None
+        else:
+            future = self._connect_future = TracebackFuture()
         try:
             self.socket.connect(address)
         except socket.error as e:
@@ -980,17 +1008,12 @@ class IOStream(BaseIOStream):
             # returned immediately when attempting to connect to
             # localhost, so handle them the same way as an error
             # reported later in _handle_connect.
-            if (errno_from_exception(e) != errno.EINPROGRESS and
+            if (errno_from_exception(e) not in _ERRNO_INPROGRESS and
                     errno_from_exception(e) not in _ERRNO_WOULDBLOCK):
                 gen_log.warning("Connect error on fd %s: %s",
                                 self.socket.fileno(), e)
                 self.close(exc_info=True)
-                return
-        if callback is not None:
-            self._connect_callback = stack_context.wrap(callback)
-            future = None
-        else:
-            future = self._connect_future = TracebackFuture()
+                return future
         self._add_io_state(self.io_loop.WRITE)
         return future
 
@@ -1021,7 +1044,7 @@ class IOStream(BaseIOStream):
         If a close callback is defined on this stream, it will be
         transferred to the new stream.
 
-        .. versionadded:: 3.3
+        .. versionadded:: 4.0
         """
         if (self._read_callback or self._read_future or
                 self._write_callback or self._write_future or
@@ -1162,8 +1185,14 @@ class SSLIOStream(IOStream):
                 return self.close(exc_info=True)
             raise
         except socket.error as err:
-            if err.args[0] in _ERRNO_CONNRESET:
+            # Some port scans (e.g. nmap in -sT mode) have been known
+            # to cause do_handshake to raise EBADF, so make that error
+            # quiet as well.
+            # https://groups.google.com/forum/?fromgroups#!topic/python-tornado/ApucKJat1_0
+            if (err.args[0] in _ERRNO_CONNRESET or
+                err.args[0] == errno.EBADF):
                 return self.close(exc_info=True)
+            raise
         except AttributeError:
             # On Linux, if the connection was reset before the call to
             # wrap_socket, do_handshake will fail with an
