@@ -13,11 +13,11 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'http://www.bit-hdtv.com/',
-        'login': 'http://www.bit-hdtv.com/takelogin.php',
-        'login_check': 'http://www.bit-hdtv.com/messages.php',
-        'detail': 'http://www.bit-hdtv.com/details.php?id=%s',
-        'search': 'http://www.bit-hdtv.com/torrents.php?',
+        'test': 'https://www.bit-hdtv.com/',
+        'login': 'https://www.bit-hdtv.com/takelogin.php',
+        'login_check': 'https://www.bit-hdtv.com/messages.php',
+        'detail': 'https://www.bit-hdtv.com/details.php?id=%s',
+        'search': 'https://www.bit-hdtv.com/torrents.php?',
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
@@ -93,7 +93,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'BiT-HDTV',
-            'description': '<a href="http://bit-hdtv.com">BiT-HDTV</a>',
+            'description': '<a href="https://bit-hdtv.com">BiT-HDTV</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABMklEQVR4AZ3Qu0ojcQCF8W9MJcQbJNgEEQUbQVIqWgnaWfkIvoCgggixEAmIhRtY2GV3w7KwU61B0EYIxmiw0YCik84ipaCuc0nmP5dcjIUgOjqDvxf4OAdf9mnMLcUJyPyGSCP+YRdC+Kp8iagJKhuS+InYRhTGgDbeV2uEMand4ZRxizjXHQEimxhraAnUr73BNqQxMiNeV2SwcjTLEVtb4Zl10mXutvOWm2otw5Sxz6TGTbdd6ncuYvVLXAXrvM+ruyBpy1S3JLGDfUQ1O6jn5vTsrJXvqSt4UNfj6vxTRPxBHER5QeSirhLGk/5rWN+ffB1XZuxjnDy1q87m7TS+xOGA+Iv4gfkbaw+nOMXHDHnITGEk0VfRFnn4Po4vNYm6RGukmggR0L08+l+e4HMeASo/i6AJUjLgAAAAAElFTkSuQmCC',
             'options': [
