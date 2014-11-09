@@ -65,7 +65,7 @@ class MovieBase(MovieTypeBase):
             return False
         elif not params.get('info'):
             try:
-                is_movie = fireEvent('movie.is_movie', identifier = params.get('identifier'), single = True)
+                is_movie = fireEvent('movie.is_movie', identifier = params.get('identifier'), adding = True, single = True)
                 if not is_movie:
                     msg = 'Can\'t add movie, seems to be a TV show.'
                     log.error(msg)
