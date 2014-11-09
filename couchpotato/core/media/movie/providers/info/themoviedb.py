@@ -59,7 +59,8 @@ class TheMovieDb(MovieProvider):
 
                 for movie in raw:
                     parsed_movie = self.parseMovie(movie, extended = False)
-                    results.append(parsed_movie)
+                    if parsed_movie:
+                        results.append(parsed_movie)
 
                     nr += 1
                     if nr == limit:
@@ -83,7 +84,7 @@ class TheMovieDb(MovieProvider):
             'id': identifier
         }, extended = extended)
 
-        return result
+        return result or {}
 
     def parseMovie(self, movie, extended = True):
 
@@ -91,6 +92,8 @@ class TheMovieDb(MovieProvider):
         movie = self.request('movie/%s' % movie.get('id'), {
             'append_to_response': 'alternative_titles' + (',images,casts' if extended else '')
         })
+        if not movie:
+            return
 
         # Images
         poster = self.getImage(movie, type = 'poster', size = 'w154')
@@ -192,8 +195,12 @@ class TheMovieDb(MovieProvider):
         params = dict((k, v) for k, v in params.items() if v)
         params = tryUrlencode(params)
 
-        url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
-        data = self.getJsonData(url)
+        try:
+            url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
+            data = self.getJsonData(url, show_error = False)
+        except:
+            log.debug('Movie not found: %s, %s', (call, params))
+            data = None
 
         if data and return_key and return_key in data:
             data = data.get(return_key)
