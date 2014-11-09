@@ -754,14 +754,30 @@ MA.Delete = new Class({
 				new Element('a.button.delete', {
 					'text': 'Delete ' + self.movie.title.get('text'),
 					'events': {
-						'click': self.del.bind(self)
+						'click': self.del.bind(self, false)
 					}
 				})
-			).inject(self.movie, 'top');
+ 			);
+
+            /* Deleting files is only useful if it's already downloaded */
+ 		    if(self.movie.list.options.identifier == 'manage'){
+ 			    self.delete_container.adopt(
+ 				    new Element('span', {
+ 					    'text': ' '
+ 				    }),
+ 				    new Element('a.button.delete', {
+ 					    'text': '+ Files',
+ 					    'events': {
+ 						    'click': self.del.bind(self, true)
+ 					    }
+ 				    })
+ 				);
+ 			}
+
+ 			self.delete_container.inject(self.movie, 'top');
 		}
 
 		self.movie.slide('in', self.delete_container);
-
 	},
 
 	hideConfirm: function(e){
@@ -772,7 +788,7 @@ MA.Delete = new Class({
 		self.movie.slide('out');
 	},
 
-	del: function(e){
+	del: function(withFiles, e){
 		(e).preventDefault();
 		var self = this;
 
@@ -786,7 +802,8 @@ MA.Delete = new Class({
 				Api.request('media.delete', {
 					'data': {
 						'id': self.movie.get('_id'),
-						'delete_from': self.movie.list.options.identifier
+ 						'delete_from': self.movie.list.options.identifier,
+ 				        'with_files': !!withFiles
 					},
 					'onComplete': function(){
 						movie.set('tween', {

@@ -1,6 +1,7 @@
-from datetime import timedelta
+import os
 import time
 import traceback
+from datetime import timedelta
 from string import ascii_lowercase
 
 from CodernityDB.database import RecordNotFound, RecordDeleted
@@ -68,6 +69,7 @@ class MediaPlugin(MediaBase):
             'params': {
                 'id': {'desc': 'Media ID(s) you want to delete.', 'type': 'int (comma separated)'},
                 'delete_from': {'desc': 'Delete media from this page', 'type': 'string: all (default), wanted, manage'},
+                'with_files': {'desc': 'Delete the files as well', 'type': 'bool (true or false)'},
             }
         })
 
@@ -416,8 +418,57 @@ class MediaPlugin(MediaBase):
             tempChar = lambda *args, **kwargs : self.charView(type = media_type, **kwargs)
             addApiView('%s.available_chars' % media_type, tempChar)
 
-    def delete(self, media_id, delete_from = None):
+    def deleteFiles(self, instance):
+        directories = dict()
 
+        # Walk through all files in the Couch database
+        for name, paths in instance['files'].iteritems():
+            log.info('Removing %s', name)
+            for path in paths:
+                # Add the directories and filename prefixes to a list so we can
+                # remove the directories and related files as well
+                directory = os.path.dirname(path)
+                if directory not in directories:
+                    directories[directory] = set()
+
+                directories[directory].add(os.path.splitext(path)[0])
+
+                if os.path.isfile(path):
+                    try:
+                        os.remove(path)
+                        log.info('Removed %s', path)
+                    except:
+                        log.error('Unable to remove %s', path)
+
+        # Walk through the directories and file prefixes for removal if
+        # possible
+        for directory, prefixes in directories.iteritems():
+            if os.path.isdir(directory):
+                # If the files in the directory have the same name as the
+                # expected files (except for extensions and stuff), remove them
+                files = os.listdir(directory)
+                removed = 0
+                for file_ in files:
+                    for prefix in prefixes:
+                        if file_.startswith(prefix):
+                            try:
+                                os.remove(file_)
+                                removed += 1
+                                log.info('Removed %s', file_)
+                            except:
+                                log.error('Unable to remove %s', file_)
+
+                try:
+                    if len(files) == removed:
+                        os.rmdir(directory)
+                        log.info('Removed %s', directory)
+                    else:
+                        log.info('Not removing %s, %d files in directory',
+                                 (directory, len(files) - removed))
+                except Exception:
+                    log.error('Unable to remove %s', directory)
+
+    def delete(self, media_id, delete_from = None, with_files = False):
         try:
             db = get_db()
 
@@ -430,7 +481,13 @@ class MediaPlugin(MediaBase):
                 if delete_from == 'all':
                     # Delete connected releases
                     for release in media_releases:
+                        if with_files:
+                            self.deleteFiles(release)
+
                         db.delete(release)
+
+                    if with_files:
+                        self.deleteFiles(media)
 
                     db.delete(media)
                     deleted = True
@@ -452,6 +509,9 @@ class MediaPlugin(MediaBase):
                                 total_deleted += 1
 
                     if (total_releases == total_deleted) or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
+                        if with_files:
+                            self.deleteFiles(media)
+
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
@@ -460,7 +520,7 @@ class MediaPlugin(MediaBase):
                         # Remove profile (no use for in manage)
                         if new_media_status == 'done':
                             media['profile_id'] = None
-                        
+
                         db.update(media)
 
                         fireEvent('media.untag', media['_id'], 'recent', single = True)
@@ -478,7 +538,7 @@ class MediaPlugin(MediaBase):
 
         ids = splitString(id)
         for media_id in ids:
-            self.delete(media_id, delete_from = kwargs.get('delete_from', 'all'))
+            self.delete(media_id, delete_from = kwargs.get('delete_from', 'all'), with_files = kwargs.get('with_files'))
 
         return {
             'success': True,
