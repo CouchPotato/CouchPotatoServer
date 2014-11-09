@@ -11,7 +11,6 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
 import enzyme
@@ -121,7 +120,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$'  #*a.mkv
     ]
 
-    cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
+    cp_imdb = '\.cp\((?P<id>tt[0-9]+),?\s?(?P<random>[A-Za-z0-9]+)?\)'
 
     def __init__(self):
 
@@ -132,7 +131,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
+    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, check_file_date = True, on_found = None):
 
         folder = sp(folder)
 
@@ -146,7 +145,6 @@ class Scanner(Plugin):
 
         # Scan all files of the folder if no files are set
         if not files:
-            check_file_date = True
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder, followlinks=True):
@@ -457,6 +455,7 @@ class Scanner(Plugin):
                 meta = self.getMeta(cur_file)
 
                 try:
+                    data['titles'] = meta.get('titles', [])
                     data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
                     data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
                     data['audio_channels'] = meta.get('audio_channels', 2.0)
@@ -492,7 +491,7 @@ class Scanner(Plugin):
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
-        filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        filename = re.sub(self.cp_imdb, '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
         if data['quality'].get('is_3d', 0):
@@ -527,16 +526,33 @@ class Scanner(Plugin):
             try: ac = self.audio_codec_map.get(p.audio[0].codec)
             except: pass
 
+            # Find title in video headers
+            titles = []
+
+            try:
+                if p.title and self.findYear(p.title):
+                    titles.append(ss(p.title))
+            except:
+                log.error('Failed getting title from meta: %s', traceback.format_exc())
+
+            for video in p.video:
+                try:
+                    if video.title and self.findYear(video.title):
+                        titles.append(ss(video.title))
+                except:
+                    log.error('Failed getting title from meta: %s', traceback.format_exc())
+
             return {
+                'titles': list(set(titles)),
                 'video': vc,
                 'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
                 'audio_channels': p.audio[0].channels,
             }
-        except ParseError:
+        except enzyme.exceptions.ParseError:
             log.debug('Failed to parse meta for %s', filename)
-        except NoParserError:
+        except enzyme.exceptions.NoParserError:
             log.debug('No parser found for %s', filename)
         except:
             log.debug('Failed parsing %s', filename)
@@ -677,7 +693,7 @@ class Scanner(Plugin):
 
     def removeCPTag(self, name):
         try:
-            return re.sub(self.cp_imdb, '', name)
+            return re.sub(self.cp_imdb, '', name).strip()
         except:
             pass
         return name

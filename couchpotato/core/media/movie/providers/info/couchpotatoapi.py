@@ -2,7 +2,7 @@ import base64
 import time
 
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.environment import Env
@@ -66,7 +66,7 @@ class CouchPotatoApi(MovieProvider):
         if not name:
             return
 
-        name_enc = base64.b64encode(name)
+        name_enc = base64.b64encode(ss(name))
         return self.getJsonData(self.urls['validate'] % name_enc, headers = self.getRequestHeaders())
 
     def isMovie(self, identifier = None):

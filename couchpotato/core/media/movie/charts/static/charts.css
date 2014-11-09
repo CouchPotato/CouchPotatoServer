@@ -264,3 +264,11 @@
 	height: 40px;
 }
 
+@media all and (max-width: 480px) {
+    .toggle_menu h2 {
+        font-size: 16px;
+        text-align: center;
+        height: 30px;
+    }
+}
+

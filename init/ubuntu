@@ -46,7 +46,7 @@ DESC=CouchPotato
 # Run CP as username
 RUN_AS=${CP_USER-couchpotato}
 
-# Path to app 
+# Path to app
 # CP_HOME=path_to_app_CouchPotato.py
 APP_PATH=${CP_HOME-/opt/couchpotato/}
 
@@ -100,12 +100,12 @@ case "$1" in
         ;;
   stop)
         echo "Stopping $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
+        start-stop-daemon --stop --pidfile $PID_FILE --retry 15 --oknodo
         ;;
 
   restart|force-reload)
         echo "Restarting $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
+        start-stop-daemon --stop --pidfile $PID_FILE --retry 15 --oknodo
         start-stop-daemon -d $APP_PATH -c $RUN_AS $EXTRA_SSD_OPTS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;
 

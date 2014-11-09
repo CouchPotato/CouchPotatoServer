@@ -4,6 +4,7 @@ from couchpotato import tryInt
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -23,22 +24,23 @@ class FanartTV(MovieProvider):
     def __init__(self):
         addEvent('movie.info', self.getArt, priority = 1)
 
-    def getArt(self, identifier = None, **kwargs):
+    def getArt(self, identifier = None, extended = True, **kwargs):
 
-        log.debug("Getting Extra Artwork from Fanart.tv...")
-        if not identifier:
+        if not identifier or not extended:
             return {}
 
         images = {}
 
         try:
             url = self.urls['api'] % identifier
-            fanart_data = self.getJsonData(url)
+            fanart_data = self.getJsonData(url, show_error = False)
 
             if fanart_data:
                 log.debug('Found images for %s', fanart_data.get('name'))
                 images = self._parseMovie(fanart_data)
-
+        except HTTPError as e:
+            log.debug('Failed getting extra art for %s: %s',
+                      (identifier, e))
         except:
             log.error('Failed getting extra art for %s: %s',
                       (identifier, traceback.format_exc()))

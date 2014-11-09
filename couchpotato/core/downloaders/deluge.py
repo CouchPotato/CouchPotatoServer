@@ -27,6 +27,11 @@ class Deluge(DownloaderBase):
     def connect(self, reconnect = False):
         # Load host from config and split out port.
         host = cleanHost(self.conf('host'), protocol = False).split(':')
+
+        # Force host assignment
+        if len(host) == 1:
+            host.append(80)
+
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
