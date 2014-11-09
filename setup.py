@@ -34,6 +34,7 @@ includes = [
     'HTMLParser',
     'version',
     'distutils',
+    'lxml', 'lxml.etree', 'lxml._elementpath', 'gzip',
 ]
 
 excludes = [
