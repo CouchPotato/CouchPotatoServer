@@ -1,5 +1,5 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer "2.6.0"
+#define MyAppVer "2.6.1"
 #define MyAppBit "win32"
 //#define MyAppBit "win-amd64"
 
