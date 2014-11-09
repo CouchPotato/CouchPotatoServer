@@ -12,17 +12,16 @@ class Base(TorrentMagnetProvider):
 
     urls = {
         'test': '%s/api',
-        'search': '%s/api/list.json?keywords=%s&quality=%s',
+        'search': '%s/api/list.json?keywords=%s',
         'detail': '%s/api/movie.json?id=%s'
     }
 
     http_time_between_calls = 1  # seconds
 
     proxy_list = [
-        'http://yify.unlocktorrent.com',
-        'http://yify-torrents.com.come.in',
-        'http://yts.re',
-        'http://yts.im'
+        'https://yts.re',
+        'http://ytsproxy.come.in',
+        'http://yts.im',
         'http://yify-torrents.im',
     ]
 
@@ -39,7 +38,7 @@ class Base(TorrentMagnetProvider):
         if not domain:
             return
 
-        search_url = self.urls['search'] % (domain, getIdentifier(movie), quality['identifier'])
+        search_url = self.urls['search'] % (domain, getIdentifier(movie))
 
         data = self.getJsonData(search_url)
 
