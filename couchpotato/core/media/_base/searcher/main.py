@@ -129,7 +129,11 @@ class Searcher(SearcherBase):
         # Try guessing via quality tags
         guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
 
-        return threed == guess.get('is_3d')
+        if guess:
+            return threed == guess.get('is_3d')
+        # If no quality guess, assume not 3d
+        else:
+            return threed == False
 
     def correctYear(self, haystack, year, year_range):
 
@@ -174,6 +178,25 @@ class Searcher(SearcherBase):
 
         return False
 
+    def containsWords(self, rel_name, rel_words, conf, media):
+
+        # Make sure it has required words
+        words = splitString(self.conf('%s_words' % conf, section = 'searcher').lower())
+        try: words = removeDuplicate(words + splitString(media['category'][conf].lower()))
+        except: pass
+
+        req_match = 0
+        for req_set in words:
+            if len(req_set) >= 2 and (req_set[:1] + req_set[-1:]) == '//':
+                if re.search(req_set[1:-1], rel_name):
+                    log.debug('Regex match: %s', req_set[1:-1])
+                    req_match += 1
+            else:
+                req = splitString(req_set, '&')
+                req_match += len(list(set(rel_words) & set(req))) == len(req)
+
+        return words, req_match > 0
+
     def correctWords(self, rel_name, media):
         media_title = fireEvent('searcher.get_search_title', media, single = True)
         media_words = re.split('\W+', simplifyString(media_title))
@@ -181,31 +204,13 @@ class Searcher(SearcherBase):
         rel_name = simplifyString(rel_name)
         rel_words = re.split('\W+', rel_name)
 
-        # Make sure it has required words
-        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
-        try: required_words = removeDuplicate(required_words + splitString(media['category']['required'].lower()))
-        except: pass
-
-        req_match = 0
-        for req_set in required_words:
-            req = splitString(req_set, '&')
-            req_match += len(list(set(rel_words) & set(req))) == len(req)
-
-        if len(required_words) > 0 and req_match == 0:
+        required_words, contains_required = self.containsWords(rel_name, rel_words, 'required', media)
+        if len(required_words) > 0 and not contains_required:
             log.info2('Wrong: Required word missing: %s', rel_name)
             return False
 
-        # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
-        try: ignored_words = removeDuplicate(ignored_words + splitString(media['category']['ignored'].lower()))
-        except: pass
-
-        ignored_match = 0
-        for ignored_set in ignored_words:
-            ignored = splitString(ignored_set, '&')
-            ignored_match += len(list(set(rel_words) & set(ignored))) == len(ignored)
-
-        if len(ignored_words) > 0 and ignored_match:
+        ignored_words, contains_ignored = self.containsWords(rel_name, rel_words, 'ignored', media)
+        if len(ignored_words) > 0 and contains_ignored:
             log.info2("Wrong: '%s' contains 'ignored words'", rel_name)
             return False
 

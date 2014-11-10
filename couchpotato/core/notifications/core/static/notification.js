@@ -50,7 +50,7 @@ var NotificationBase = new Class({
 		, 'top');
 		self.notifications.include(result);
 
-		if((result.data.important !== undefined || result.data.sticky !== undefined) && !result.read){
+		if((result.important !== undefined || result.sticky !== undefined) && !result.read){
 			var sticky = true;
 			App.trigger('message', [result.message, sticky, result])
 		}
@@ -72,7 +72,7 @@ var NotificationBase = new Class({
 
 		if(!force_ids) {
 			var rn = self.notifications.filter(function(n){
-				return !n.read && n.data.important === undefined
+				return !n.read && n.important === undefined
 			});
 
 			var ids = [];

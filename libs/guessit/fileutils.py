@@ -79,7 +79,9 @@ def file_in_same_dir(ref_file, desired_file):
 
 def load_file_in_same_dir(ref_file, filename):
     """Load a given file. Works even when the file is contained inside a zip."""
-    path = split_path(ref_file)[:-1] + [filename]
+
+    from couchpotato.core.helpers.encoding import toUnicode
+    path = split_path(toUnicode(ref_file))[:-1] + [filename]
 
     for i, p in enumerate(path):
         if p.endswith('.zip'):

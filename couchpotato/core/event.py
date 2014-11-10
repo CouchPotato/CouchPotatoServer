@@ -90,7 +90,7 @@ def fireEvent(name, *args, **kwargs):
 
         else:
 
-            e = Event(name = name, threads = 10, exc_info = True, traceback = True, lock = threading.RLock())
+            e = Event(name = name, threads = 10, exc_info = True, traceback = True)
 
             for event in events[name]:
                 e.handle(event['handler'], priority = event['priority'])

@@ -8,7 +8,7 @@ from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, sp
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
@@ -65,43 +65,58 @@ class Release(Plugin):
         log.debug('Removing releases from dashboard')
 
         now = time.time()
-        week = 262080
+        week = 604800
 
         db = get_db()
 
         # Get (and remove) parentless releases
-        releases = db.all('release', with_doc = True)
+        releases = db.all('release', with_doc = False)
         media_exist = []
+        reindex = 0
         for release in releases:
             if release.get('key') in media_exist:
                 continue
 
             try:
+
+                try:
+                    doc = db.get('id', release.get('_id'))
+                except RecordDeleted:
+                    reindex += 1
+                    continue
+
                 db.get('id', release.get('key'))
                 media_exist.append(release.get('key'))
 
                 try:
-                    if release['doc'].get('status') == 'ignore':
-                        release['doc']['status'] = 'ignored'
-                        db.update(release['doc'])
+                    if doc.get('status') == 'ignore':
+                        doc['status'] = 'ignored'
+                        db.update(doc)
                 except:
                     log.error('Failed fixing mis-status tag: %s', traceback.format_exc())
+            except ValueError:
+                fireEvent('database.delete_corrupted', release.get('key'), traceback_error = traceback.format_exc(0))
+                reindex += 1
             except RecordDeleted:
-                db.delete(release['doc'])
-                log.debug('Deleted orphaned release: %s', release['doc'])
+                db.delete(doc)
+                log.debug('Deleted orphaned release: %s', doc)
+                reindex += 1
             except:
                 log.debug('Failed cleaning up orphaned releases: %s', traceback.format_exc())
+
+        if reindex > 0:
+            db.reindex()
 
         del media_exist
 
         # get movies last_edit more than a week ago
-        medias = fireEvent('media.with_status', 'done', single = True)
+        medias = fireEvent('media.with_status', ['done', 'active'], single = True)
 
         for media in medias:
             if media.get('last_edit', 0) > (now - week):
                 continue
 
-            for rel in fireEvent('release.for_media', media['_id'], single = True):
+            for rel in self.forMedia(media['_id']):
 
                 # Remove all available releases
                 if rel['status'] in ['available']:
@@ -111,7 +126,8 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignored')
 
-            fireEvent('media.untag', media.get('_id'), 'recent', single = True)
+            if 'recent' in media.get('tags', []):
+                fireEvent('media.untag', media.get('_id'), 'recent', single = True)
 
     def add(self, group, update_info = True, update_id = None):
 
@@ -171,7 +187,7 @@ class Release(Plugin):
             release['files'] = dict((k, [toUnicode(x) for x in v]) for k, v in group['files'].items() if v)
             db.update(release)
 
-            fireEvent('media.restatus', media['_id'], single = True)
+            fireEvent('media.restatus', media['_id'], allowed_restatus = ['done'], single = True)
 
             return True
         except:
@@ -325,7 +341,7 @@ class Release(Plugin):
                 rls['download_info'] = download_result
                 db.update(rls)
 
-            log_movie = '%s (%s) in %s' % (getTitle(media), media['info']['year'], rls['quality'])
+            log_movie = '%s (%s) in %s' % (getTitle(media), media['info'].get('year'), rls['quality'])
             snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
             log.info(snatch_message)
             fireEvent('%s.snatched' % data['type'], message = snatch_message, data = media)
@@ -364,6 +380,7 @@ class Release(Plugin):
         wait_for = False
         let_through = False
         filtered_results = []
+        minimum_seeders = tryInt(Env.setting('minimum_seeders', section = 'torrent', default = 1))
 
         # Filter out ignored and other releases we don't want
         for rel in results:
@@ -372,16 +389,16 @@ class Release(Plugin):
                 log.info('Ignored: %s', rel['name'])
                 continue
 
-            if rel['score'] <= 0:
-                log.info('Ignored, score "%s" to low: %s', (rel['score'], rel['name']))
+            if rel['score'] < quality_custom.get('minimum_score'):
+                log.info('Ignored, score "%s" to low, need at least "%s": %s', (rel['score'], quality_custom.get('minimum_score'), rel['name']))
                 continue
 
             if rel['size'] <= 50:
                 log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
                 continue
 
-            if 'seeders' in rel and rel.get('seeders') <= 0:
-                log.info('Ignored, no seeders: %s', (rel['name']))
+            if 'seeders' in rel and rel.get('seeders') < minimum_seeders:
+                log.info('Ignored, not enough seeders, has %s needs %s: %s', (rel.get('seeders'), minimum_seeders, rel['name']))
                 continue
 
             # If a single release comes through the "wait for", let through all
@@ -424,7 +441,6 @@ class Release(Plugin):
             for rel in search_results:
 
                 rel_identifier = md5(rel['url'])
-                found_releases.append(rel_identifier)
 
                 release = {
                     '_t': 'release',
@@ -464,6 +480,9 @@ class Release(Plugin):
 
                 # Update release in search_results
                 rel['status'] = rls.get('status')
+
+                if rel['status'] == 'available':
+                    found_releases.append(rel_identifier)
 
             return found_releases
         except:
@@ -527,11 +546,15 @@ class Release(Plugin):
     def forMedia(self, media_id):
 
         db = get_db()
-        raw_releases = list(db.get_many('release', media_id, with_doc = True))
+        raw_releases = db.get_many('release', media_id)
 
         releases = []
         for r in raw_releases:
-            releases.append(r['doc'])
+            try:
+                doc = db.get('id', r.get('_id'))
+                releases.append(doc)
+            except RecordDeleted:
+                pass
 
         releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
 

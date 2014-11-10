@@ -1,6 +1,5 @@
 import time
 
-from couchpotato import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent,fireEvent
@@ -13,13 +12,14 @@ log = CPLog(__name__)
 class Charts(Plugin):
 
     update_in_progress = False
+    update_interval = 72 # hours
 
     def __init__(self):
         addApiView('charts.view', self.automationView)
         addEvent('app.load', self.setCrons)
 
     def setCrons(self):
-        fireEvent('schedule.interval', 'charts.update_cache', self.updateViewCache, hours = self.conf('update_interval', default = 12))
+        fireEvent('schedule.interval', 'charts.update_cache', self.updateViewCache, hours = self.update_interval)
 
     def automationView(self, force_update = False, **kwargs):
 
@@ -65,7 +65,7 @@ class Charts(Plugin):
             for chart in charts:
                 chart['hide_wanted'] = self.conf('hide_wanted')
                 chart['hide_library'] = self.conf('hide_library')
-            self.setCache('charts_cached', charts, timeout = 7200 * tryInt(self.conf('update_interval', default = 12)))
+            self.setCache('charts_cached', charts, timeout = self.update_interval * 3600)
         except:
             log.error('Failed refreshing charts')
 

@@ -19,11 +19,8 @@ import functools
 import re
 import socket
 import sys
+from io import BytesIO
 
-try:
-    from io import BytesIO  # python 3
-except ImportError:
-    from cStringIO import StringIO as BytesIO  # python 2
 
 try:
     import urlparse  # py2
@@ -222,6 +219,7 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
                     stack_context.wrap(self._on_timeout))
             self.tcp_client.connect(host, port, af=af,
                                     ssl_options=ssl_options,
+                                    max_buffer_size=self.max_buffer_size,
                                     callback=self._on_connect)
 
     def _get_ssl_options(self, scheme):
@@ -277,7 +275,7 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
             stream.close()
             return
         self.stream = stream
-        self.stream.set_close_callback(self._on_close)
+        self.stream.set_close_callback(self.on_connection_close)
         self._remove_timeout()
         if self.final_callback is None:
             return
@@ -316,18 +314,18 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
         if self.request.user_agent:
             self.request.headers["User-Agent"] = self.request.user_agent
         if not self.request.allow_nonstandard_methods:
-            if self.request.method in ("POST", "PATCH", "PUT"):
-                if (self.request.body is None and
-                        self.request.body_producer is None):
-                    raise AssertionError(
-                        'Body must not be empty for "%s" request'
-                        % self.request.method)
-            else:
-                if (self.request.body is not None or
-                        self.request.body_producer is not None):
-                    raise AssertionError(
-                        'Body must be empty for "%s" request'
-                        % self.request.method)
+            # Some HTTP methods nearly always have bodies while others
+            # almost never do. Fail in this case unless the user has
+            # opted out of sanity checks with allow_nonstandard_methods.
+            body_expected = self.request.method in ("POST", "PATCH", "PUT")
+            body_present = (self.request.body is not None or
+                            self.request.body_producer is not None)
+            if ((body_expected and not body_present) or
+                (body_present and not body_expected)):
+                raise ValueError(
+                    'Body must %sbe None for method %s (unelss '
+                    'allow_nonstandard_methods is true)' %
+                    ('not ' if body_expected else '', self.request.method))
         if self.request.expect_100_continue:
             self.request.headers["Expect"] = "100-continue"
         if self.request.body is not None:
@@ -338,7 +336,7 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
         if (self.request.method == "POST" and
                 "Content-Type" not in self.request.headers):
             self.request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        if self.request.use_gzip:
+        if self.request.decompress_response:
             self.request.headers["Accept-Encoding"] = "gzip"
         req_path = ((self.parsed.path or '/') +
                     (('?' + self.parsed.query) if self.parsed.query else ''))
@@ -348,7 +346,7 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
             HTTP1ConnectionParameters(
                 no_keep_alive=True,
                 max_header_size=self.max_header_size,
-                use_gzip=self.request.use_gzip),
+                decompress=self.request.decompress_response),
             self._sockaddr)
         start_line = httputil.RequestStartLine(self.request.method,
                                                req_path, 'HTTP/1.1')
@@ -418,12 +416,15 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
             # pass it along, unless it's just the stream being closed.
             return isinstance(value, StreamClosedError)
 
-    def _on_close(self):
+    def on_connection_close(self):
         if self.final_callback is not None:
             message = "Connection closed"
             if self.stream.error:
                 raise self.stream.error
-            raise HTTPError(599, message)
+            try:
+                raise HTTPError(599, message)
+            except HTTPError:
+                self._handle_exception(*sys.exc_info())
 
     def headers_received(self, first_line, headers):
         if self.request.expect_100_continue and first_line.code == 100:
@@ -433,34 +434,12 @@ class _HTTPConnection(httputil.HTTPMessageDelegate):
         self.code = first_line.code
         self.reason = first_line.reason
 
-        if "Content-Length" in self.headers:
-            if "," in self.headers["Content-Length"]:
-                # Proxies sometimes cause Content-Length headers to get
-                # duplicated.  If all the values are identical then we can
-                # use them but if they differ it's an error.
-                pieces = re.split(r',\s*', self.headers["Content-Length"])
-                if any(i != pieces[0] for i in pieces):
-                    raise ValueError("Multiple unequal Content-Lengths: %r" %
-                                     self.headers["Content-Length"])
-                self.headers["Content-Length"] = pieces[0]
-            content_length = int(self.headers["Content-Length"])
-        else:
-            content_length = None
-
         if self.request.header_callback is not None:
             # Reassemble the start line.
             self.request.header_callback('%s %s %s\r\n' % first_line)
             for k, v in self.headers.get_all():
                 self.request.header_callback("%s: %s\r\n" % (k, v))
             self.request.header_callback('\r\n')
-
-        if 100 <= self.code < 200 or self.code == 204:
-            # These response codes never have bodies
-            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.3
-            if ("Transfer-Encoding" in self.headers or
-                    content_length not in (None, 0)):
-                raise ValueError("Response with code %d should not have body" %
-                                 self.code)
 
     def finish(self):
         data = b''.join(self.chunks)

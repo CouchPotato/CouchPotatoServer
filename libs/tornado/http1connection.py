@@ -16,10 +16,12 @@
 
 """Client and server implementations of HTTP/1.x.
 
-.. versionadded:: 3.3
+.. versionadded:: 4.0
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
+
+import re
 
 from tornado.concurrent import Future
 from tornado.escape import native_str, utf8
@@ -56,7 +58,7 @@ class HTTP1ConnectionParameters(object):
     """
     def __init__(self, no_keep_alive=False, chunk_size=None,
                  max_header_size=None, header_timeout=None, max_body_size=None,
-                 body_timeout=None, use_gzip=False):
+                 body_timeout=None, decompress=False):
         """
         :arg bool no_keep_alive: If true, always close the connection after
             one request.
@@ -65,7 +67,8 @@ class HTTP1ConnectionParameters(object):
         :arg float header_timeout: how long to wait for all headers (seconds)
         :arg int max_body_size: maximum amount of data for body
         :arg float body_timeout: how long to wait while reading body (seconds)
-        :arg bool use_gzip: if true, decode incoming ``Content-Encoding: gzip``
+        :arg bool decompress: if true, decode incoming
+            ``Content-Encoding: gzip``
         """
         self.no_keep_alive = no_keep_alive
         self.chunk_size = chunk_size or 65536
@@ -73,7 +76,7 @@ class HTTP1ConnectionParameters(object):
         self.header_timeout = header_timeout
         self.max_body_size = max_body_size
         self.body_timeout = body_timeout
-        self.use_gzip = use_gzip
+        self.decompress = decompress
 
 
 class HTTP1Connection(httputil.HTTPConnection):
@@ -141,7 +144,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         Returns a `.Future` that resolves to None after the full response has
         been read.
         """
-        if self.params.use_gzip:
+        if self.params.decompress:
             delegate = _GzipMessageDelegate(delegate, self.params.chunk_size)
         return self._read_message(delegate)
 
@@ -190,8 +193,17 @@ class HTTP1Connection(httputil.HTTPConnection):
                     skip_body = True
                 code = start_line.code
                 if code == 304:
+                    # 304 responses may include the content-length header
+                    # but do not actually have a body.
+                    # http://tools.ietf.org/html/rfc7230#section-3.3
                     skip_body = True
                 if code >= 100 and code < 200:
+                    # 1xx responses should never indicate the presence of
+                    # a body.
+                    if ('Content-Length' in headers or
+                        'Transfer-Encoding' in headers):
+                        raise httputil.HTTPInputError(
+                            "Response code %d cannot have body" % code)
                     # TODO: client delegates will get headers_received twice
                     # in the case of a 100-continue.  Document or change?
                     yield self._read_message(delegate)
@@ -200,7 +212,8 @@ class HTTP1Connection(httputil.HTTPConnection):
                         not self._write_finished):
                     self.stream.write(b"HTTP/1.1 100 (Continue)\r\n\r\n")
             if not skip_body:
-                body_future = self._read_body(headers, delegate)
+                body_future = self._read_body(
+                    start_line.code if self.is_client else 0, headers, delegate)
                 if body_future is not None:
                     if self._body_timeout is None:
                         yield body_future
@@ -231,7 +244,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 self.close()
             if self.stream is None:
                 raise gen.Return(False)
-        except httputil.HTTPInputException as e:
+        except httputil.HTTPInputError as e:
             gen_log.info("Malformed HTTP message from %s: %s",
                          self.context, e)
             self.close()
@@ -258,7 +271,7 @@ class HTTP1Connection(httputil.HTTPConnection):
     def set_close_callback(self, callback):
         """Sets a callback that will be run when the connection is closed.
 
-        .. deprecated:: 3.3
+        .. deprecated:: 4.0
             Use `.HTTPMessageDelegate.on_connection_close` instead.
         """
         self._close_callback = stack_context.wrap(callback)
@@ -293,6 +306,8 @@ class HTTP1Connection(httputil.HTTPConnection):
         self._clear_callbacks()
         stream = self.stream
         self.stream = None
+        if not self._finish_future.done():
+            self._finish_future.set_result(None)
         return stream
 
     def set_body_timeout(self, timeout):
@@ -377,7 +392,7 @@ class HTTP1Connection(httputil.HTTPConnection):
             if self._expected_content_remaining < 0:
                 # Close the stream now to stop further framing errors.
                 self.stream.close()
-                raise httputil.HTTPOutputException(
+                raise httputil.HTTPOutputError(
                     "Tried to write more data than Content-Length")
         if self._chunking_output and chunk:
             # Don't write out empty chunks because that means END-OF-STREAM
@@ -412,7 +427,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 self._expected_content_remaining != 0 and
                 not self.stream.closed()):
             self.stream.close()
-            raise httputil.HTTPOutputException(
+            raise httputil.HTTPOutputError(
                 "Tried to write %d bytes less than Content-Length" %
                 self._expected_content_remaining)
         if self._chunking_output:
@@ -454,6 +469,7 @@ class HTTP1Connection(httputil.HTTPConnection):
         if start_line.version == "HTTP/1.1":
             return connection_header != "close"
         elif ("Content-Length" in headers
+              or headers.get("Transfer-Encoding", "").lower() == "chunked"
               or start_line.method in ("HEAD", "GET")):
             return connection_header == "keep-alive"
         return False
@@ -470,23 +486,51 @@ class HTTP1Connection(httputil.HTTPConnection):
             self._finish_future.set_result(None)
 
     def _parse_headers(self, data):
-        data = native_str(data.decode('latin1'))
+        # The lstrip removes newlines that some implementations sometimes
+        # insert between messages of a reused connection.  Per RFC 7230,
+        # we SHOULD ignore at least one empty line before the request.
+        # http://tools.ietf.org/html/rfc7230#section-3.5
+        data = native_str(data.decode('latin1')).lstrip("\r\n")
         eol = data.find("\r\n")
         start_line = data[:eol]
         try:
             headers = httputil.HTTPHeaders.parse(data[eol:])
         except ValueError:
             # probably form split() if there was no ':' in the line
-            raise httputil.HTTPInputException("Malformed HTTP headers: %r" %
-                                              data[eol:100])
+            raise httputil.HTTPInputError("Malformed HTTP headers: %r" %
+                                          data[eol:100])
         return start_line, headers
 
-    def _read_body(self, headers, delegate):
-        content_length = headers.get("Content-Length")
-        if content_length:
-            content_length = int(content_length)
+    def _read_body(self, code, headers, delegate):
+        if "Content-Length" in headers:
+            if "," in headers["Content-Length"]:
+                # Proxies sometimes cause Content-Length headers to get
+                # duplicated.  If all the values are identical then we can
+                # use them but if they differ it's an error.
+                pieces = re.split(r',\s*', headers["Content-Length"])
+                if any(i != pieces[0] for i in pieces):
+                    raise httputil.HTTPInputError(
+                        "Multiple unequal Content-Lengths: %r" %
+                        headers["Content-Length"])
+                headers["Content-Length"] = pieces[0]
+            content_length = int(headers["Content-Length"])
+
             if content_length > self._max_body_size:
-                raise httputil.HTTPInputException("Content-Length too long")
+                raise httputil.HTTPInputError("Content-Length too long")
+        else:
+            content_length = None
+
+        if code == 204:
+            # This response code is not allowed to have a non-empty body,
+            # and has an implicit length of zero instead of read-until-close.
+            # http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.3
+            if ("Transfer-Encoding" in headers or
+                    content_length not in (None, 0)):
+                raise httputil.HTTPInputError(
+                    "Response with code %d should not have body" % code)
+            content_length = 0
+
+        if content_length is not None:
             return self._read_fixed_body(content_length, delegate)
         if headers.get("Transfer-Encoding") == "chunked":
             return self._read_chunked_body(delegate)
@@ -515,7 +559,7 @@ class HTTP1Connection(httputil.HTTPConnection):
                 return
             total_size += chunk_len
             if total_size > self._max_body_size:
-                raise httputil.HTTPInputException("chunked body too large")
+                raise httputil.HTTPInputError("chunked body too large")
             bytes_to_read = chunk_len
             while bytes_to_read:
                 chunk = yield self.stream.read_bytes(
@@ -580,6 +624,9 @@ class _GzipMessageDelegate(httputil.HTTPMessageDelegate):
                 # anything, treat it as an extra chunk
                 self._delegate.data_received(tail)
         return self._delegate.finish()
+
+    def on_connection_close(self):
+        return self._delegate.on_connection_close()
 
 
 class HTTP1ServerConnection(object):

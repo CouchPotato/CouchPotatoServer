@@ -1,3 +1,4 @@
+from math import fabs, ceil
 import traceback
 import re
 
@@ -6,7 +7,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
@@ -22,17 +23,17 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
-        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx'),('divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
-        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p'], 'ext':[]},
-        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]}
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'median_size': 40000, 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'median_size': 10000, 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'median_size': 5500, 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'median_size': 2000, 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip'), 'hdtv', 'hdrip'], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['webdl', ('web', 'dl')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'median_size': 4500, 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'median_size': 1500, 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
+        {'identifier': 'scr', 'size': (600, 1600), 'median_size': 700, 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr', 'webrip', ('web', 'rip')], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': []},
+        {'identifier': 'r5', 'size': (600, 1000), 'median_size': 700, 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p', '1080p'], 'ext':[]},
+        {'identifier': 'tc', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p', '1080p'], 'ext':[]},
+        {'identifier': 'ts', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p', '1080p'], 'ext':[]},
+        {'identifier': 'cam', 'size': (600, 1000), 'median_size': 700, 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p', '1080p'], 'ext':[]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
@@ -187,14 +188,15 @@ class QualityPlugin(Plugin):
 
         return False
 
-    def guess(self, files, extra = None, size = None):
+    def guess(self, files, extra = None, size = None, use_cache = True):
         if not extra: extra = {}
 
         # Create hash for cache
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
-        cached = self.getCache(cache_key)
-        if cached and len(extra) == 0:
-            return cached
+        if use_cache:
+            cached = self.getCache(cache_key)
+            if cached and len(extra) == 0:
+                return cached
 
         qualities = self.all()
 
@@ -205,6 +207,10 @@ class QualityPlugin(Plugin):
                 'score': 0,
                 '3d': {}
             }
+
+        # Use metadata titles as extra check
+        if extra and extra.get('titles'):
+            files.extend(extra.get('titles'))
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
@@ -218,7 +224,7 @@ class QualityPlugin(Plugin):
                 contains_score = self.containsTagScore(quality, words, cur_file)
                 threedscore = self.contains3D(quality, threed_words, cur_file) if quality.get('allow_3d') else (0, None)
 
-                self.calcScore(score, quality, contains_score, threedscore)
+                self.calcScore(score, quality, contains_score, threedscore, penalty = contains_score)
 
         size_scores = []
         for quality in qualities:
@@ -230,11 +236,11 @@ class QualityPlugin(Plugin):
             if size_score > 0:
                 size_scores.append(quality)
 
-            self.calcScore(score, quality, size_score + loose_score, penalty = False)
+            self.calcScore(score, quality, size_score + loose_score)
 
         # Add additional size score if only 1 size validated
         if len(size_scores) == 1:
-            self.calcScore(score, size_scores[0], 10, penalty = False)
+            self.calcScore(score, size_scores[0], 8)
         del size_scores
 
         # Return nothing if all scores are <= 0
@@ -259,18 +265,20 @@ class QualityPlugin(Plugin):
 
     def containsTagScore(self, quality, words, cur_file = ''):
         cur_file = ss(cur_file)
-        score = 0
+        score = 0.0
 
         extension = words[-1]
         words = words[:-1]
 
         points = {
-            'identifier': 10,
-            'label': 10,
-            'alternative': 9,
-            'tags': 9,
-            'ext': 3,
+            'identifier': 20,
+            'label': 20,
+            'alternative': 20,
+            'tags': 11,
+            'ext': 5,
         }
+
+        scored_on = []
 
         # Check alt and tags
         for tag_type in ['identifier', 'alternative', 'tags', 'label']:
@@ -283,13 +291,12 @@ class QualityPlugin(Plugin):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
 
-                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in words:
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in words and ss(alt.lower()) not in scored_on:
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                    score += points.get(tag_type) / 2
+                    score += points.get(tag_type)
 
-            if list(set(qualities) & set(words)):
-                log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                score += points.get(tag_type)
+                    # Don't score twice on same tag
+                    scored_on.append(ss(alt).lower())
 
         # Check extention
         for ext in quality.get('ext', []):
@@ -325,7 +332,7 @@ class QualityPlugin(Plugin):
             # Check width resolution, range 20
             if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
                 log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
-                score += 5
+                score += 10
 
             # Check height resolution, range 20
             if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
@@ -345,15 +352,28 @@ class QualityPlugin(Plugin):
 
         if size:
 
-            if tryInt(quality['size_min']) <= tryInt(size) <= tryInt(quality['size_max']):
-                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
-                score += 5
+            size = tryFloat(size)
+            size_min = tryFloat(quality['size_min'])
+            size_max = tryFloat(quality['size_max'])
+
+            if size_min <= size <= size_max:
+                log.debug('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], size_min, size, size_max))
+
+                proc_range = size_max - size_min
+                size_diff = size - size_min
+                size_proc = (size_diff / proc_range)
+
+                median_diff = quality['median_size'] - size_min
+                median_proc = (median_diff / proc_range)
+
+                max_points = 8
+                score += ceil(max_points - (fabs(size_proc - median_proc) * max_points))
             else:
                 score -= 5
 
         return score
 
-    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = True):
+    def calcScore(self, score, quality, add_score, threedscore = (0, None), penalty = 0):
 
         score[quality['identifier']]['score'] += add_score
 
@@ -372,11 +392,11 @@ class QualityPlugin(Plugin):
 
         if penalty and add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+                score[allow]['score'] -= ((penalty * 2) if self.cached_order[allow] < self.cached_order[quality['identifier']] else penalty) * 2
 
-            # Give panelty for all lower qualities
-            for q in self.qualities[self.order.index(quality.get('identifier'))+1:]:
-                if score.get(q.get('identifier')):
+            # Give panelty for all other qualities
+            for q in self.qualities:
+                if quality.get('identifier') != q.get('identifier') and score.get(q.get('identifier')):
                     score[q.get('identifier')]['score'] -= 1
 
     def isFinish(self, quality, profile, release_age = 0):
@@ -444,10 +464,12 @@ class QualityPlugin(Plugin):
             'Movie Monuments 2013 BrRip 1080p': {'size': 1800, 'quality': 'brrip'},
             'Movie Monuments 2013 BrRip 720p': {'size': 1300, 'quality': 'brrip'},
             'The.Movie.2014.3D.1080p.BluRay.AVC.DTS-HD.MA.5.1-GroupName': {'size': 30000, 'quality': 'bd50', 'is_3d': True},
-            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': False},
-            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 4500, 'quality': '1080p', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2012)/Movie Monuments.mkv': {'size': 5500, 'quality': '720p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2012)/Movie Monuments Full-OU.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments.mkv': {'size': 10000, 'quality': '1080p', 'is_3d': False},
+            '/home/namehou/Movie Monuments (2013)/Movie Monuments Full-OU.mkv': {'size': 10000, 'quality': '1080p', 'is_3d': True},
             '/volume1/Public/3D/Moviename/Moviename (2009).3D.SBS.ts': {'size': 7500, 'quality': '1080p', 'is_3d': True},
-            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 5500, 'quality': '1080p'},
+            '/volume1/Public/Moviename/Moviename (2009).ts': {'size': 7500, 'quality': '1080p'},
             '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
@@ -456,12 +478,24 @@ class QualityPlugin(Plugin):
             'Movie Name (2014).mp4': {'size': 750, 'quality': 'brrip'},
             'Moviename.2014.720p.R6.WEB-DL.x264.AC3-xyz': {'size': 750, 'quality': 'r5'},
             'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 750, 'quality': 'cam'},
-            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'}
+            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'},
+            'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7000, 'quality': 'brrip'},
+            'Movie.Name.2014.HDCam.Chinese.Subs-ReleaseGroup': {'size': 15000, 'quality': 'cam'},
+            'Movie Name 2014 HQ DVDRip X264 AC3 (bla)': {'size': 0, 'quality': 'dvdrip'},
+            'Movie Name1 (2012).mkv': {'size': 4500, 'quality': '720p'},
+            'Movie Name (2013).mkv': {'size': 8500, 'quality': '1080p'},
+            'Movie Name (2014).mkv': {'size': 4500, 'quality': '720p', 'extra': {'titles': ['Movie Name 2014 720p Bluray']}},
+            'Movie Name (2015).mkv': {'size': 500, 'quality': '1080p', 'extra': {'resolution_width': 1920}},
+            'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
+            'Movie Name (2015).mp4': {'size': 6500, 'quality': 'brrip'},
+            'Movie Name.2014.720p Web-Dl Aac2.0 h264-ReleaseGroup': {'size': 3800, 'quality': 'brrip'},
+            'Movie Name.2014.720p.WEBRip.x264.AC3-ReleaseGroup': {'size': 3000, 'quality': 'scr'},
+            'Movie.Name.2014.1080p.HDCAM.-.ReleaseGroup': {'size': 5300, 'quality': 'cam'},
         }
 
         correct = 0
         for name in tests:
-            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None)) or {}
+            test_quality = self.guess(files = [name], extra = tests[name].get('extra', None), size = tests[name].get('size', None), use_cache = False) or {}
             success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
                 log.error('%s failed check, thinks it\'s "%s" expecting "%s"', (name,

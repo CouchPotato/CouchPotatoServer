@@ -146,13 +146,13 @@ Page.Home = new Class({
 		var self = this;
 
 		// Suggest
-		self.suggestion_list = new SuggestList({
-			'onLoaded': function(){
+		self.suggestions_list = new SuggestList({
+			'onCreated': function(){
 				self.chain.callChain();
 			}
 		});
 
-		$(self.suggestion_list).inject(self.el);
+		$(self.suggestions_list).inject(self.el);
 
 	},
 
@@ -160,46 +160,38 @@ Page.Home = new Class({
 		var self = this;
 
 		// Charts
-		self.charts = new Charts({
+		self.charts_list = new Charts({
 			'onCreated': function(){
 				self.chain.callChain();
 			}
 		});
 
-		$(self.charts).inject(self.el);
+		$(self.charts_list).inject(self.el);
 
 	},
 
 	createSuggestionsChartsMenu: function(){
-		var self = this;
+		var self = this,
+			suggestion_tab, charts_tab;
 
-		self.el_toggle_menu_suggestions = new Element('a.toggle_suggestions.active', {
-                'href': '#',
-                'events': { 'click': function(e) {
-                        e.preventDefault();
-                        self.toggleSuggestionsCharts('suggestions');
-                    }
-                }
-            }).grab( new Element('h2', {'text': 'Suggestions'}));
+        self.el_toggle_menu = new Element('div.toggle_menu', {
+			'events': {
+				'click:relay(a)': function(e, el) {
+					e.preventDefault();
+					self.toggleSuggestionsCharts(el.get('data-container'), el);
+				}
+			}
+		}).adopt(
+			suggestion_tab = new Element('a.toggle_suggestions', {
+				'data-container': 'suggestions'
+			}).grab(new Element('h2', {'text': 'Suggestions'})),
+			charts_tab = new Element('a.toggle_charts', {
+				'data-container': 'charts'
+			}).grab( new Element('h2', {'text': 'Charts'}))
+		);
 
-        self.el_toggle_menu_charts = new Element('a.toggle_charts', {
-                'href': '#',
-                'events': { 'click': function(e) {
-                        e.preventDefault();
-                        self.toggleSuggestionsCharts('charts');
-                    }
-                }
-            }).grab( new Element('h2', {'text': 'Charts'}));
-
-        self.el_toggle_menu = new Element('div.toggle_menu').grab(
-                self.el_toggle_menu_suggestions
-            ).grab(
-                self.el_toggle_menu_charts
-            );
-
-        var menu_selected = Cookie.read('suggestions_charts_menu_selected');
-        if( menu_selected === null ) menu_selected = 'suggestions';
-        self.toggleSuggestionsCharts( menu_selected );
+        var menu_selected = Cookie.read('suggestions_charts_menu_selected') || 'suggestions';
+        self.toggleSuggestionsCharts(menu_selected, menu_selected == 'suggestions' ? suggestion_tab : charts_tab);
 
 		self.el_toggle_menu.inject(self.el);
 
@@ -207,23 +199,19 @@ Page.Home = new Class({
 
 	},
 
-	toggleSuggestionsCharts: function(menu_id){
+	toggleSuggestionsCharts: function(menu_id, el){
 	    var self = this;
 
-	    switch(menu_id) {
-            case 'suggestions':
-                if($(self.suggestion_list)) $(self.suggestion_list).show();
-                self.el_toggle_menu_suggestions.addClass('active');
-                if($(self.charts)) $(self.charts).hide();
-                self.el_toggle_menu_charts.removeClass('active');
-                break;
-            case 'charts':
-                if($(self.charts)) $(self.charts).show();
-                self.el_toggle_menu_charts.addClass('active');
-                if($(self.suggestion_list)) $(self.suggestion_list).hide();
-                self.el_toggle_menu_suggestions.removeClass('active');
-                break;
-        }
+		// Toggle ta
+		self.el_toggle_menu.getElements('.active').removeClass('active');
+		if(el) el.addClass('active');
+
+		// Hide both
+		if(self.suggestions_list) self.suggestions_list.hide();
+		if(self.charts_list) self.charts_list.hide();
+
+		var toggle_to = self[menu_id + '_list'];
+		if(toggle_to) toggle_to.show();
 
 		Cookie.write('suggestions_charts_menu_selected', menu_id, {'duration': 365});
 	},

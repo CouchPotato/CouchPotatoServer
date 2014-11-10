@@ -68,6 +68,7 @@ from __future__ import absolute_import, division, print_function, with_statement
 
 import datetime
 import functools
+import numbers
 import socket
 
 import twisted.internet.abstract
@@ -90,11 +91,7 @@ from tornado.log import app_log
 from tornado.netutil import Resolver
 from tornado.stack_context import NullContext, wrap
 from tornado.ioloop import IOLoop
-
-try:
-    long  # py2
-except NameError:
-    long = int  # py3
+from tornado.util import timedelta_to_seconds
 
 
 @implementer(IDelayedCall)
@@ -144,7 +141,7 @@ class TornadoDelayedCall(object):
 class TornadoReactor(PosixReactorBase):
     """Twisted reactor built on the Tornado IOLoop.
 
-    Since it is intented to be used in applications where the top-level
+    Since it is intended to be used in applications where the top-level
     event loop is ``io_loop.start()`` rather than ``reactor.run()``,
     it is implemented a little differently than other Twisted reactors.
     We override `mainLoop` instead of `doIteration` and must implement
@@ -475,28 +472,28 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
     def stop(self):
         self.reactor.crash()
 
-    def _run_callback(self, callback, *args, **kwargs):
-        try:
-            callback(*args, **kwargs)
-        except Exception:
-            self.handle_callback_exception(callback)
-
-    def add_timeout(self, deadline, callback):
-        if isinstance(deadline, (int, long, float)):
+    def add_timeout(self, deadline, callback, *args, **kwargs):
+        # This method could be simplified (since tornado 4.0) by
+        # overriding call_at instead of add_timeout, but we leave it
+        # for now as a test of backwards-compatibility.
+        if isinstance(deadline, numbers.Real):
             delay = max(deadline - self.time(), 0)
         elif isinstance(deadline, datetime.timedelta):
-            delay = tornado.ioloop._Timeout.timedelta_to_seconds(deadline)
+            delay = timedelta_to_seconds(deadline)
         else:
             raise TypeError("Unsupported deadline %r")
-        return self.reactor.callLater(delay, self._run_callback, wrap(callback))
+        return self.reactor.callLater(
+            delay, self._run_callback,
+            functools.partial(wrap(callback), *args, **kwargs))
 
     def remove_timeout(self, timeout):
         if timeout.active():
             timeout.cancel()
 
     def add_callback(self, callback, *args, **kwargs):
-        self.reactor.callFromThread(self._run_callback,
-                                    wrap(callback), *args, **kwargs)
+        self.reactor.callFromThread(
+            self._run_callback,
+            functools.partial(wrap(callback), *args, **kwargs))
 
     def add_callback_from_signal(self, callback, *args, **kwargs):
         self.add_callback(callback, *args, **kwargs)

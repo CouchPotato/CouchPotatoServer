@@ -41,11 +41,11 @@ def symlink(src, dst):
 def getUserDir():
     try:
         import pwd
-        os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
+        os.environ['HOME'] = sp(pwd.getpwuid(os.geteuid()).pw_dir)
     except:
         pass
 
-    return os.path.expanduser('~')
+    return sp(os.path.expanduser('~'))
 
 
 def getDownloadDir():
@@ -380,3 +380,33 @@ def getFreeSpace(directories):
         free_space[folder] = size
 
     return free_space
+
+
+def getSize(paths):
+
+    single = not isinstance(paths, (tuple, list))
+    if single:
+        paths = [paths]
+
+    total_size = 0
+    for path in paths:
+        path = sp(path)
+
+        if os.path.isdir(path):
+            total_size = 0
+            for dirpath, _, filenames in os.walk(path):
+                for f in filenames:
+                    total_size += os.path.getsize(sp(os.path.join(dirpath, f)))
+
+        elif os.path.isfile(path):
+            total_size += os.path.getsize(path)
+
+    return total_size / 1048576 # MB
+
+
+def find(func, iterable):
+    for item in iterable:
+        if func(item):
+            return item
+
+    return None

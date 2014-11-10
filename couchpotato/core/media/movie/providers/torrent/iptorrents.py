@@ -13,7 +13,7 @@ class IPTorrents(MovieProvider, Base):
         ([87], ['3d']),
         ([48], ['720p', '1080p', 'bd50']),
         ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
-        ([7], ['dvdrip', 'brrip']),
+        ([7, 48, 20], ['dvdrip', 'brrip']),
         ([6], ['dvdr']),
     ]
 

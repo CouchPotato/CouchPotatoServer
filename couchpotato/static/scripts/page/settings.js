@@ -560,11 +560,19 @@ Option.Password = new Class({
 	create: function(){
 		var self = this;
 
-		self.parent();
-		self.input.set('type', 'password');
+		self.el.adopt(
+			self.createLabel(),
+			self.input = new Element('input.inlay', {
+				'type': 'text',
+				'name': self.postName(),
+				'value': self.getSettingValue() ? '********' : '',
+				'placeholder': self.getPlaceholder()
+			})
+		);
 
 		self.input.addEvent('focus', function(){
-			self.input.set('value', '')
+			self.input.set('value', '');
+			self.input.set('type', 'password');
 		})
 
 	}
@@ -634,6 +642,7 @@ Option.Directory = new Class({
 	browser: null,
 	save_on_change: false,
 	use_cache: false,
+	current_dir: '',
 
 	create: function(){
 		var self = this;
@@ -645,8 +654,17 @@ Option.Directory = new Class({
 					'click': self.showBrowser.bind(self)
 				}
 			}).adopt(
-				self.input = new Element('span', {
-					'text': self.getSettingValue()
+				self.input = new Element('input', {
+					'value': self.getSettingValue(),
+					'events': {
+						'change': self.filterDirectory.bind(self),
+						'keydown': function(e){
+							if(e.key == 'enter' || e.key == 'tab')
+								(e).stop();
+						},
+						'keyup': self.filterDirectory.bind(self),
+						'paste': self.filterDirectory.bind(self)
+					}
 				})
 			)
 		);
@@ -654,10 +672,55 @@ Option.Directory = new Class({
 		self.cached = {};
 	},
 
+	filterDirectory: function(e){
+		var self = this,
+			value = self.getValue(),
+			path_sep = Api.getOption('path_sep'),
+			active_selector = 'li:not(.blur):not(.empty)';
+
+		if(e.key == 'enter' || e.key == 'tab'){
+			(e).stop();
+
+			var first = self.dir_list.getElement(active_selector);
+			if(first){
+				self.selectDirectory(first.get('data-value'));
+			}
+		}
+		else {
+
+			// New folder
+			if(value.substr(-1) == path_sep){
+				if(self.current_dir != value)
+					self.selectDirectory(value)
+			}
+			else {
+				var pd = self.getParentDir(value);
+				if(self.current_dir != pd)
+					self.getDirs(pd);
+
+				var folder_filter = value.split(path_sep).getLast()
+				self.dir_list.getElements('li').each(function(li){
+					var  valid = li.get('text').substr(0, folder_filter.length).toLowerCase() != folder_filter.toLowerCase()
+					li[valid ? 'addClass' : 'removeClass']('blur')
+				});
+
+				var first = self.dir_list.getElement(active_selector);
+				if(first){
+					if(!self.dir_list_scroll)
+						self.dir_list_scroll = new Fx.Scroll(self.dir_list, {
+							'transition': 'quint:in:out'
+						});
+
+					self.dir_list_scroll.toElement(first);
+				}
+			}
+		}
+	},
+
 	selectDirectory: function(dir){
 		var self = this;
 
-		self.input.set('text', dir);
+		self.input.set('value', dir);
 
 		self.getDirs()
 	},
@@ -668,8 +731,27 @@ Option.Directory = new Class({
 		self.selectDirectory(self.getParentDir())
 	},
 
+	caretAtEnd: function(){
+		var self = this;
+
+		self.input.focus();
+
+		if (typeof self.input.selectionStart == "number") {
+			self.input.selectionStart = self.input.selectionEnd = self.input.get('value').length;
+		} else if (typeof el.createTextRange != "undefined") {
+			self.input.focus();
+			var range = self.input.createTextRange();
+			range.collapse(false);
+			range.select();
+		}
+	},
+
 	showBrowser: function(){
 		var self = this;
+
+		// Move caret to back of the input
+		if(!self.browser || self.browser && !self.browser.isVisible())
+			self.caretAtEnd()
 
 		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
@@ -686,7 +768,9 @@ Option.Directory = new Class({
 					}).adopt(
 						self.show_hidden = new Element('input[type=checkbox].inlay', {
 							'events': {
-								'change': self.getDirs.bind(self)
+								'change': function(){
+									self.getDirs()
+								}
 							}
 						})
 					)
@@ -707,7 +791,7 @@ Option.Directory = new Class({
 						'text': 'Clear',
 						'events': {
 							'click': function(e){
-								self.input.set('text', '');
+								self.input.set('value', '');
 								self.hideBrowser(e, true);
 							}
 						}
@@ -735,7 +819,7 @@ Option.Directory = new Class({
 			new Form.Check(self.show_hidden);
 		}
 
-		self.initial_directory = self.input.get('text');
+		self.initial_directory = self.input.get('value');
 
 		self.getDirs();
 		self.browser.show();
@@ -749,7 +833,7 @@ Option.Directory = new Class({
 		if(save)
 			self.save();
 		else
-			self.input.set('text', self.initial_directory);
+			self.input.set('value', self.initial_directory);
 
 		self.browser.hide();
 		self.el.removeEvents('outerClick')
@@ -757,21 +841,21 @@ Option.Directory = new Class({
 	},
 
 	fillBrowser: function(json){
-		var self = this;
+		var self = this,
+			v = self.getValue();
 
 		self.data = json;
 
-		var v = self.getValue();
-		var previous_dir = self.getParentDir();
+		var previous_dir = json.parent;
 
 		if(v == '')
-			self.input.set('text', json.home);
+			self.input.set('value', json.home);
 
-		if(previous_dir != v && previous_dir.length >= 1 && !json.is_root){
+		if(previous_dir.length >= 1 && !json.is_root){
 
 			var prev_dirname = self.getCurrentDirname(previous_dir);
 			if(previous_dir == json.home)
-				prev_dirname = 'Home';
+				prev_dirname = 'Home Folder';
 			else if(previous_dir == '/' && json.platform == 'nt')
 				prev_dirname = 'Computer';
 
@@ -801,12 +885,13 @@ Option.Directory = new Class({
 			new Element('li.empty', {
 				'text': 'Selected folder is empty'
 			}).inject(self.dir_list)
+
+		self.caretAtEnd();
 	},
 
-	getDirs: function(){
-		var self = this;
-
-		var c = self.getValue();
+	getDirs: function(dir){
+		var self = this,
+			c = dir || self.getValue();
 
 		if(self.cached[c] && self.use_cache){
 			self.fillBrowser()
@@ -817,7 +902,10 @@ Option.Directory = new Class({
 					'path': c,
 					'show_hidden': +self.show_hidden.checked
 				},
-				'onComplete': self.fillBrowser.bind(self)
+				'onComplete': function(json){
+					self.current_dir = c;
+					self.fillBrowser(json);
+				}
 			})
 		}
 	},
@@ -831,8 +919,8 @@ Option.Directory = new Class({
 		var v = dir || self.getValue();
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
-			if(dirs.pop() == '')
-				dirs.pop();
+		if(dirs.pop() == '')
+			dirs.pop();
 
 		return dirs.join(sep) + sep
 	},
@@ -845,7 +933,7 @@ Option.Directory = new Class({
 
 	getValue: function(){
 		var self = this;
-		return self.input.get('text');
+		return self.input.get('value');
 	}
 });
 

@@ -1,6 +1,6 @@
-from datetime import date
 import random as rndm
 import time
+from CodernityDB.database import RecordDeleted
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -48,7 +48,6 @@ class Dashboard(Plugin):
         active_ids = [x['_id'] for x in fireEvent('media.with_status', 'active', with_doc = False, single = True)]
 
         medias = []
-        now_year = date.today().year
 
         if len(active_ids) > 0:
 
@@ -60,9 +59,13 @@ class Dashboard(Plugin):
                 rndm.shuffle(active_ids)
 
             for media_id in active_ids:
-                media = db.get('id', media_id)
+                try:
+                    media = db.get('id', media_id)
+                except RecordDeleted:
+                    log.debug('Record already deleted: %s', media_id)
+                    continue
 
-                pp = profile_pre.get(media['profile_id'])
+                pp = profile_pre.get(media.get('profile_id'))
                 if not pp: continue
 
                 eta = media['info'].get('release_date', {}) or {}
@@ -70,22 +73,25 @@ class Dashboard(Plugin):
 
                 # Theater quality
                 if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, media['info']['year'], single = True):
-                    coming_soon = True
+                    coming_soon = 'theater'
                 elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, media['info']['year'], single = True):
-                    coming_soon = True
+                    coming_soon = 'dvd'
 
                 if coming_soon:
 
                     # Don't list older movies
-                    if ((not late and (media['info']['year'] >= now_year - 1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                            (late and (media['info']['year'] < now_year - 1 or (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200)))):
+                    eta_date = eta.get(coming_soon)
+                    eta_3month_passed = eta_date < (now - 7862400)  # Release was more than 3 months ago
+
+                    if (not late and not eta_3month_passed) or \
+                            (late and eta_3month_passed):
 
                         add = True
 
                         # Check if it doesn't have any releases
                         if late:
                             media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
-                            
+
                             for release in media.get('releases'):
                                 if release.get('status') in ['snatched', 'available', 'seeding', 'downloaded']:
                                     add = False

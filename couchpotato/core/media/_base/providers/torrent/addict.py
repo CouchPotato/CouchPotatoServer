@@ -95,8 +95,8 @@ class Base(TorrentProvider):
                 time.sleep(timetosleep)
             URL = self.urls['search']+searchString
             
-            r = self.opener.open(URL)   
-            soup = BeautifulSoup( r, "html.parser" )
+            r = self.opener.open(URL)
+            soup = BeautifulSoup(r,"html5")
             
             resultsTable = soup.find("table", { "class" : "lista" , "width":"100%" })
             if resultsTable:

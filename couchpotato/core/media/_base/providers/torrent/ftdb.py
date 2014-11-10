@@ -5,6 +5,7 @@ from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.helpers import namer_check
 import cookielib
+import requests
 import re
 import urllib2
 import urllib
@@ -85,8 +86,8 @@ class Base(TorrentProvider):
                 time.sleep(timetosleep)
             URL = self.urls['test'] + '/?section=TORRENTS&' + searchString.replace('!','')
             
-            r = self.opener.open(URL)   
-            soup = BeautifulSoup( r, "html.parser" )
+            r = self.opener.open(URL)  
+            soup = BeautifulSoup( r, "html5" )
             
             resultsTable = soup.find("div", { "class" : "DataGrid" })
             if resultsTable:
@@ -104,7 +105,7 @@ class Base(TorrentProvider):
                     seeder=row.findAll('li')[4].text
                     autogetURL = self.urls['test'] +'/'+ (row.find("li", { "class" : "torrents_name"}).find('a')['href'][1:]).replace('#FTD_MENU','&menu=4')
                     r = self.opener.open( autogetURL , 'wb').read()
-                    soup = BeautifulSoup( r, "html.parser" )
+                    soup = BeautifulSoup( r, "html5" )
                     downloadURL = soup.find("div", { "class" : "autoget"}).find('a')['href']
                     date = soup.find("div", { "class" : "menu_box_stats"}).findAll('div')[4].find('span').text
                     

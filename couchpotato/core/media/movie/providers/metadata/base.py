@@ -28,7 +28,7 @@ class MovieMetaData(MetaDataBase):
 
         # Update library to get latest info
         try:
-            group['media'] = fireEvent('movie.update_info', group['media'].get('_id'), identifier = getIdentifier(group['media']), extended = True, single = True)
+            group['media'] = fireEvent('movie.update', group['media'].get('_id'), identifier = getIdentifier(group['media']), extended = True, single = True)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 
