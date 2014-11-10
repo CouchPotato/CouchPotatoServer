@@ -119,6 +119,8 @@ class Transmission(DownloaderBase):
                     status = 'failed'
                 elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                     status = 'completed'
+                elif torrent['status'] == 16 and torrent['percentDone'] == 1: 
+                    status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
 
