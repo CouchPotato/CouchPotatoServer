@@ -45,6 +45,13 @@ class Renamer(Plugin):
             },
         })
 
+        addApiView('renamer.progress', self.getProgress, docs = {
+            'desc': 'Get the progress of current renamer scan',
+            'return': {'type': 'object', 'example': """{
+    'progress': False || True,
+}"""},
+        })
+
         addEvent('renamer.scan', self.scan)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
@@ -67,6 +74,11 @@ class Renamer(Plugin):
             fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'), single = True)
 
         return True
+
+    def getProgress(self, **kwargs):
+        return {
+            'progress': self.renaming_started
+        }
 
     def scanView(self, **kwargs):
 
