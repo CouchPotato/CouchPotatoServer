@@ -33,8 +33,8 @@ DESC=CouchPotato
 ##
 ## CP_USER= #$RUN_AS, username to run couchpotato under, the default is couchpotato
 ## CP_HOME= #$APP_PATH, the location of couchpotato.py, the default is /opt/couchpotato
-## CP_DATA= #$DATA_DIR, the location of couchpotato.db, cache, logs, the default is /var/couchpotato
-## CP_PIDFILE= #$PID_FILE, the location of couchpotato.pid, the default is /var/run/couchpotato.pid
+## CP_DATA= #$DATA_DIR, the location of couchpotato.db, cache, logs, the default is /var/opt/couchpotato
+## CP_PIDFILE= #$PID_FILE, the location of couchpotato.pid, the default is /var/run/couchpotato/couchpotato.pid
 ## PYTHON_BIN= #$DAEMON, the location of the python binary, the default is /usr/bin/python
 ## CP_OPTS= #$EXTRA_DAEMON_OPTS, extra cli option for couchpotato, i.e. " --config_file=/home/couchpotato/couchpotato.ini"
 ## SSD_OPTS= #$EXTRA_SSD_OPTS, extra start-stop-daemon option like " --group=users"
@@ -51,10 +51,10 @@ RUN_AS=${CP_USER-couchpotato}
 APP_PATH=${CP_HOME-/opt/couchpotato/}
 
 # Data directory where couchpotato.db, cache and logs are stored
-DATA_DIR=${CP_DATA-/var/couchpotato}
+DATA_DIR=${CP_DATA-/var/opt/couchpotato}
 
 # Path to store PID file
-PID_FILE=${CP_PIDFILE-/var/run/couchpotato.pid}
+PID_FILE=${CP_PIDFILE-/var/run/couchpotato/couchpotato.pid}
 
 # path to python bin
 DAEMON=${PYTHON_BIN-/usr/bin/python}
