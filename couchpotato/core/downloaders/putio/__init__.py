@@ -30,7 +30,7 @@ config = [{
                 },
                 {
                     'name': 'callback_host',
-                    'description': 'This is used to generate the callback url',
+                    'description': 'External reachable url to CP so put.io can do it\'s thing',
                 },
                 {
                     'name': 'download',
