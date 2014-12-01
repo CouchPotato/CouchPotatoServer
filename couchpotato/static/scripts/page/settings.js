@@ -886,6 +886,9 @@ Option.Directory = new Class({
 				'text': 'Selected folder is empty'
 			}).inject(self.dir_list)
 
+		//fix for webkit type browsers to refresh the dom for the file browser
+		//http://stackoverflow.com/questions/3485365/how-can-i-force-webkit-to-redraw-repaint-to-propagate-style-changes
+		self.dir_list.setStyle('webkitTransform', 'scale(1)');
 		self.caretAtEnd();
 	},
 
