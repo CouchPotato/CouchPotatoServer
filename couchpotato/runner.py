@@ -245,7 +245,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Basic config
     host = Env.setting('host', default = '0.0.0.0')
     host6 = Env.setting('host6', default = '::')
-    # app.debug = development
+
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5050)),
