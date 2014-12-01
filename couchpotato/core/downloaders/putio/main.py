@@ -19,8 +19,8 @@ class PutIO(DownloaderBase):
     downloadingList = []
 
     # This is the location on the Internet of the Oauth helper server
-    #oauthServerURL = 'https://api.couchpota.to/validate/putio/'
-    oauthServerURL = 'http://localhost:3000/authorize/putio/'
+    oauthServerURL = 'https://api.couchpota.to/validate/putio/'
+    # oauthServerURL = 'http://localhost:3000/authorize/putio/'
 
     def __init__(self):
         addApiView('downloader.putio.getfrom', self.getFromPutio, docs = {
