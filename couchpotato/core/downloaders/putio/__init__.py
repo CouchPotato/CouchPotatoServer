@@ -40,7 +40,7 @@ config = [{
                 },
                 {
                     'name': 'delete_file',
-                    'description': 'Set this to remove the file from putio after sucessful download  Note: does nothing if you don\'t select download',
+                    'description': ('Set this to remove the file from putio after sucessful download','Does nothing if you don\'t select download'),
                     'type': 'bool',
                     'default': 0,
                 },
