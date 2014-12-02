@@ -54,7 +54,7 @@ class Hadouken(DownloaderBase):
         :return: boolean
             One faile returns false, but the downloaded should log his own errors
         """
-        
+
         if not media: media = {}
         if not data: data = {}
 
