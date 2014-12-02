@@ -21,6 +21,21 @@ class Sabnzbd(DownloaderBase):
     protocol = ['nzb']
 
     def download(self, data = None, media = None, filedata = None):
+        """
+        Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
