@@ -84,6 +84,11 @@ class Sabnzbd(DownloaderBase):
             return False
 
     def test(self):
+        """ Check if connection works
+        Return message if an old version of SAB is used
+        :return: bool
+        """
+
         try:
             sab_data = self.call({
                 'mode': 'version',
@@ -104,6 +109,13 @@ class Sabnzbd(DownloaderBase):
         return True
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
 
         log.debug('Checking SABnzbd download status.')
 

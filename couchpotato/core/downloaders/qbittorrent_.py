@@ -41,14 +41,17 @@ class qBittorrent(DownloaderBase):
         return self.qb
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         if self.connect():
             return True
 
         return False
 
     def download(self, data = None, media = None, filedata = None):
-        """
-        Send a torrent/nzb file to the downloader
+        """ Send a torrent/nzb file to the downloader
 
         :param data: dict returned from provider
             Contains the release information
@@ -110,6 +113,14 @@ class qBittorrent(DownloaderBase):
         return 'busy'
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
+
         log.debug('Checking qBittorrent download status.')
 
         if not self.connect():

@@ -19,8 +19,7 @@ class Pneumatic(DownloaderBase):
     status_support = False
 
     def download(self, data = None, media = None, filedata = None):
-        """
-        Send a torrent/nzb file to the downloader
+        """ Send a torrent/nzb file to the downloader
 
         :param data: dict returned from provider
             Contains the release information
@@ -78,6 +77,10 @@ class Pneumatic(DownloaderBase):
         return False
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         directory = self.conf('directory')
         if directory and os.path.isdir(directory):
 

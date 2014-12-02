@@ -40,8 +40,7 @@ class Hadouken(DownloaderBase):
         return True
 
     def download(self, data = None, media = None, filedata = None):
-        """
-        Send a torrent/nzb file to the downloader
+        """ Send a torrent/nzb file to the downloader
 
         :param data: dict returned from provider
             Contains the release information
@@ -110,6 +109,14 @@ class Hadouken(DownloaderBase):
         return False
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
+
         log.debug('Checking Hadouken download status.')
 
         if not self.connect():

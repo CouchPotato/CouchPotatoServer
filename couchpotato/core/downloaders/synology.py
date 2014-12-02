@@ -65,6 +65,10 @@ class Synology(DownloaderBase):
             return self.downloadReturnId('') if response else False
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         host = cleanHost(self.conf('host'), protocol = False).split(':')
         try:
             srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
