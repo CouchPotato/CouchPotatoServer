@@ -1,22 +1,23 @@
-from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
-from couchpotato.core.logger import CPLog
-
 from base64 import b16encode, b32decode, b64encode
-from bencode import bencode as benc, bdecode
 from distutils.version import LooseVersion
 from hashlib import sha1
 import httplib
 import json
 import os
 import re
-import urllib
 import urllib2
+
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import isInt, sp
+from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.logger import CPLog
+from bencode import bencode as benc, bdecode
+
 
 log = CPLog(__name__)
 
 autoload = 'Hadouken'
+
 
 class Hadouken(DownloaderBase):
     protocol = ['torrent', 'torrent_magnet']
@@ -211,12 +212,14 @@ class Hadouken(DownloaderBase):
         delete_files: Boolean indicating whether to remove the associated data.
         """
 
-        log.debug('Requesting Hadouken to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        log.debug('Requesting Hadouken to remove the torrent %s%s.',
+                  (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
 
         if not self.connect():
             return False
 
         return self.hadouken_api.remove(release_download['id'], remove_data = delete_files)
+
 
 class HadoukenAPI(object):
     def __init__(self, host = 'localhost', port = 7890, api_key = None):
@@ -239,7 +242,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.addFile',
-            'params': [ b64encode(filedata), torrent_params ]
+            'params': [b64encode(filedata), torrent_params]
         }
 
         return self._request(data)
@@ -253,7 +256,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.addUrl',
-            'params': [ magnetLink, torrent_params ]
+            'params': [magnetLink, torrent_params]
         }
 
         return self._request(data)
@@ -266,7 +269,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.getByInfoHashList',
-            'params': [ infoHashList ]
+            'params': [infoHashList]
         }
 
         return self._request(data)
@@ -280,7 +283,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.getFiles',
-            'params': [ infoHash ]
+            'params': [infoHash]
         }
 
         return self._request(data)
@@ -308,7 +311,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.pause',
-            'params': [ infoHash ]
+            'params': [infoHash]
         }
 
         if not pause:
@@ -326,7 +329,7 @@ class HadoukenAPI(object):
         """
         data = {
             'method': 'torrents.remove',
-            'params': [ infoHash, remove_data ]
+            'params': [infoHash, remove_data]
         }
 
         return self._request(data)
@@ -362,9 +365,9 @@ class HadoukenAPI(object):
                 log.error('Hadouken HTTPError: %s', err)
         except urllib2.URLError as err:
             log.error('Unable to connect to Hadouken %s', err)
-        
+
         return False
-        
+
 
 config = [{
     'name': 'hadouken',
