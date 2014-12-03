@@ -66,11 +66,21 @@ module.exports = function(grunt){
 			}
 		},
 
+		concat: {
+			options: {
+				separator: ''
+			},
+			dist: {
+				src: ['<%= config.tmp %>/styles/**/*.css'],
+				dest: '<%= config.tmp %>/test.css'
+			}
+		},
+
 		// COOL TASKS ==============================================================
 		watch: {
 			scss: {
 				files: ['**/*.{scss,sass}'],
-				tasks: ['sass:server', 'autoprefixer'],
+				tasks: ['sass:server', 'autoprefixer', 'concat'],
 				options: {
 					'livereload': true
 				}
