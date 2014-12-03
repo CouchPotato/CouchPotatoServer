@@ -2,6 +2,8 @@ var SuggestList = new Class({
 
 	Implements: [Options, Events],
 
+	shown_once: false,
+
 	initialize: function(options){
 		var self = this;
 		self.setOptions(options);
@@ -44,12 +46,13 @@ var SuggestList = new Class({
 			}
 		});
 
-        var cookie_menu_select = Cookie.read('suggestions_charts_menu_selected');
-        if( cookie_menu_select === 'suggestions' || cookie_menu_select === null ) self.el.show(); else self.el.hide();
+        var cookie_menu_select = Cookie.read('suggestions_charts_menu_selected') || 'suggestions';
+        if( cookie_menu_select === 'suggestions')
+			self.show();
+		else
+			self.hide();
 
-		self.api_request = Api.request('suggestion.view', {
-			'onComplete': self.fill.bind(self)
-		});
+		self.fireEvent('created');
 
 	},
 
@@ -143,6 +146,24 @@ var SuggestList = new Class({
 
 		}, 3000);
 
+	},
+
+	show: function(){
+		var self = this;
+
+		self.el.show();
+
+		if(!self.shown_once){
+			self.api_request = Api.request('suggestion.view', {
+				'onComplete': self.fill.bind(self)
+			});
+
+			self.shown_once = true;
+		}
+	},
+
+	hide: function(){
+		this.el.hide();
 	},
 
 	toElement: function(){

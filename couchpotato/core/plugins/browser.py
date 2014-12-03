@@ -1,12 +1,18 @@
 import ctypes
 import os
 import string
+import traceback
+import time
 
+from couchpotato import CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.encoding import sp, ss, toUnicode
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
-import six
+
+
+log = CPLog(__name__)
 
 
 if os.name == 'nt':
@@ -53,9 +59,9 @@ class FileBrowser(Plugin):
         dirs = []
         path = sp(path)
         for f in os.listdir(path):
-            p = os.path.join(path, f)
+            p = sp(os.path.join(path, f))
             if os.path.isdir(p) and ((self.is_hidden(p) and bool(int(show_hidden))) or not self.is_hidden(p)):
-                dirs.append(p + os.path.sep)
+                dirs.append(toUnicode('%s%s' % (p, os.path.sep)))
 
         return sorted(dirs)
 
@@ -66,8 +72,8 @@ class FileBrowser(Plugin):
 
         driveletters = []
         for drive in string.ascii_uppercase:
-            if win32file.GetDriveType(drive + ":") in [win32file.DRIVE_FIXED, win32file.DRIVE_REMOTE, win32file.DRIVE_RAMDISK, win32file.DRIVE_REMOVABLE]:
-                driveletters.append(drive + ":\\")
+            if win32file.GetDriveType(drive + ':') in [win32file.DRIVE_FIXED, win32file.DRIVE_REMOTE, win32file.DRIVE_RAMDISK, win32file.DRIVE_REMOVABLE]:
+                driveletters.append(drive + ':\\')
 
         return driveletters
 
@@ -100,14 +106,19 @@ class FileBrowser(Plugin):
 
 
     def is_hidden(self, filepath):
-        name = os.path.basename(os.path.abspath(filepath))
+        name = ss(os.path.basename(os.path.abspath(filepath)))
         return name.startswith('.') or self.has_hidden_attribute(filepath)
 
     def has_hidden_attribute(self, filepath):
+
+        result = False
         try:
-            attrs = ctypes.windll.kernel32.GetFileAttributesW(six.text_type(filepath)) #@UndefinedVariable
+            attrs = ctypes.windll.kernel32.GetFileAttributesW(sp(filepath)) #@UndefinedVariable
             assert attrs != -1
             result = bool(attrs & 2)
         except (AttributeError, AssertionError):
-            result = False
+            pass
+        except:
+            log.error('Failed getting hidden attribute: %s', traceback.format_exc())
+
         return result

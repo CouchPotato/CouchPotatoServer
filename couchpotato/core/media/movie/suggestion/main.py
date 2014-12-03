@@ -27,7 +27,7 @@ class Suggestion(Plugin):
         else:
 
             if not movies or len(movies) == 0:
-                active_movies = fireEvent('media.with_status', ['active', 'done'], single = True)
+                active_movies = fireEvent('media.with_status', ['active', 'done'], types = 'movie', single = True)
                 movies = [getIdentifier(x) for x in active_movies]
 
             if not ignored or len(ignored) == 0:

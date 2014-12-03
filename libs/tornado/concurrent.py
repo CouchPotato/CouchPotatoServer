@@ -29,6 +29,7 @@ import sys
 
 from tornado.stack_context import ExceptionStackContext, wrap
 from tornado.util import raise_exc_info, ArgReplacer
+from tornado.log import app_log
 
 try:
     from concurrent import futures
@@ -60,7 +61,7 @@ class Future(object):
     This functionality was previously available in a separate class
     ``TracebackFuture``, which is now a deprecated alias for this class.
 
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
        `tornado.concurrent.Future` is always a thread-unsafe ``Future``
        with support for the ``exc_info`` methods.  Previously it would
        be an alias for the thread-safe `concurrent.futures.Future`
@@ -152,7 +153,7 @@ class Future(object):
     def exc_info(self):
         """Returns a tuple in the same format as `sys.exc_info` or None.
 
-        .. versionadded:: 3.3
+        .. versionadded:: 4.0
         """
         return self._exc_info
 
@@ -161,7 +162,7 @@ class Future(object):
 
         Preserves tracebacks on Python 2.
 
-        .. versionadded:: 3.3
+        .. versionadded:: 4.0
         """
         self._exc_info = exc_info
         self.set_exception(exc_info[1])
@@ -173,8 +174,11 @@ class Future(object):
     def _set_done(self):
         self._done = True
         for cb in self._callbacks:
-            # TODO: error handling
-            cb(self)
+            try:
+                cb(self)
+            except Exception:
+                app_log.exception('exception calling callback %r for %r',
+                                  cb, self)
         self._callbacks = None
 
 TracebackFuture = Future

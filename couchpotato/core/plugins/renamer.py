@@ -10,7 +10,8 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, \
+    getIdentifier, randomString, getFreeSpace, getSize
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -34,6 +35,7 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
+                'to_folder': {'desc': 'Optional: The folder to move releases to. Leave empty for default folder.'},
                 'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
                 'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
@@ -41,6 +43,13 @@ class Renamer(Plugin):
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
+        })
+
+        addApiView('renamer.progress', self.getProgress, docs = {
+            'desc': 'Get the progress of current renamer scan',
+            'return': {'type': 'object', 'example': """{
+    'progress': False || True,
+}"""},
         })
 
         addEvent('renamer.scan', self.scan)
@@ -66,11 +75,17 @@ class Renamer(Plugin):
 
         return True
 
+    def getProgress(self, **kwargs):
+        return {
+            'progress': self.renaming_started
+        }
+
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
         base_folder = kwargs.get('base_folder')
         media_folder = sp(kwargs.get('media_folder'))
+        to_folder = kwargs.get('to_folder')
 
         # Backwards compatibility, to be removed after a few versions :)
         if not media_folder:
@@ -94,13 +109,13 @@ class Renamer(Plugin):
                 })
 
         fire_handle = fireEvent if not async else fireEventAsync
-        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
+        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download, to_folder = to_folder)
 
         return {
             'success': True
         }
 
-    def scan(self, base_folder = None, release_download = None):
+    def scan(self, base_folder = None, release_download = None, to_folder = None):
         if not release_download: release_download = {}
 
         if self.isDisabled():
@@ -114,7 +129,9 @@ class Renamer(Plugin):
             base_folder = sp(self.conf('from'))
 
         from_folder = sp(self.conf('from'))
-        to_folder = sp(self.conf('to'))
+
+        if not to_folder:
+            to_folder = sp(self.conf('to'))
 
         # Get media folder to process
         media_folder = sp(release_download.get('folder'))
@@ -219,6 +236,16 @@ class Renamer(Plugin):
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
 
+        if len(file_name) == 0:
+            log.error('Please fill in the filename option under renamer settings. Forcing it on <original>.<ext> to keep the same name as source file.')
+            file_name = '<original>.<ext>'
+
+        cd_keys = ['<cd>','<cd_nr>', '<original>']
+        if not any(x in folder_name for x in cd_keys) and not any(x in file_name for x in cd_keys):
+            log.error('Missing `cd` or `cd_nr` in the renamer. This will cause multi-file releases of being renamed to the same file. '
+                      'Please add it in the renamer settings. Force adding it for now.')
+            file_name = '%s %s' % ('<cd>', file_name)
+
         # Tag release folder as failed_rename in case no groups were found. This prevents check_snatched from removing the release from the downloader.
         if not groups and self.statusInfoComplete(release_download):
             self.tagRelease(release_download = release_download, tag = 'failed_rename')
@@ -247,7 +274,7 @@ class Renamer(Plugin):
                         'profile_id': None
                     }, search_after = False, status = 'done', single = True)
                 else:
-                    group['media'] = fireEvent('movie.update_info', media_id = group['media'].get('_id'), single = True)
+                    group['media'] = fireEvent('movie.update', media_id = group['media'].get('_id'), single = True)
 
                 if not group['media'] or not group['media'].get('_id'):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
@@ -266,12 +293,13 @@ class Renamer(Plugin):
                         category_label = category['label']
 
                         if category['destination'] and len(category['destination']) > 0 and category['destination'] != 'None':
-                            destination = category['destination']
+                            destination = sp(category['destination'])
                             log.debug('Setting category destination for "%s": %s' % (media_title, destination))
                         else:
                             log.debug('No category destination found for "%s"' % media_title)
                     except:
                         log.error('Failed getting category label: %s', traceback.format_exc())
+
 
                 # Find subtitle for renaming
                 group['before_rename'] = []
@@ -344,6 +372,9 @@ class Renamer(Plugin):
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
                         replacements['original_folder'] = fireEvent('scanner.remove_cptag', group['dirname'], single = True)
 
+                        if not replacements['original_folder'] or len(replacements['original_folder']) == 0:
+                            replacements['original_folder'] = replacements['original']
+
                         # Extension
                         replacements['ext'] = getExt(current_file)
 
@@ -361,10 +392,6 @@ class Renamer(Plugin):
                             final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
                         elif file_type is 'nfo':
                             final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
-
-                        # Seperator replace
-                        if separator:
-                            final_file_name = final_file_name.replace(' ', separator)
 
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
@@ -526,13 +553,21 @@ class Renamer(Plugin):
 
                 # Remove leftover files
                 if not remove_leftovers:  # Don't remove anything
-                    break
+                    continue
 
                 log.debug('Removing leftover files')
                 for current_file in group['files']['leftover']:
                     if self.conf('cleanup') and not self.conf('move_leftover') and \
                             (not keep_original or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
+
+            if self.conf('check_space'):
+                total_space, available_space = getFreeSpace(destination)
+                renaming_size = getSize(rename_files.keys())
+                if renaming_size > available_space:
+                    log.error('Not enough space left, need %s MB but only %s MB available', (renaming_size, available_space))
+                    self.tagRelease(group = group, tag = 'not_enough_space')
+                    continue
 
             # Remove files
             delete_folders = []
@@ -549,9 +584,9 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and \
+                        if parent_dir not in delete_folders and os.path.isdir(parent_dir) and \
                                 not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
-                                not isSubFolder(parent_dir, base_folder):
+                                isSubFolder(parent_dir, base_folder):
 
                             delete_folders.append(parent_dir)
 
@@ -560,6 +595,7 @@ class Renamer(Plugin):
                     self.tagRelease(group = group, tag = 'failed_remove')
 
             # Delete leftover folder from older releases
+            delete_folders = sorted(delete_folders, key = len, reverse = True)
             for delete_folder in delete_folders:
                 try:
                     self.deleteEmptyFolder(delete_folder, show_error = False)
@@ -572,7 +608,10 @@ class Renamer(Plugin):
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
-                    log.info('Renaming "%s" to "%s"', (src, dst))
+
+                    if dst in group['renamed_files']:
+                        log.error('File "%s" already renamed once, adding random string at the end to prevent data loss', dst)
+                        dst = '%s.random-%s' % (dst, randomString())
 
                     # Create dir
                     self.makeDir(os.path.dirname(dst))
@@ -614,8 +653,9 @@ class Renamer(Plugin):
                     group_folder = sp(os.path.join(base_folder, os.path.relpath(group['parentdir'], base_folder).split(os.path.sep)[0]))
 
                 try:
-                    log.info('Deleting folder: %s', group_folder)
-                    self.deleteEmptyFolder(group_folder)
+                    if self.conf('cleanup') or self.conf('move_leftover'):
+                        log.info('Deleting folder: %s', group_folder)
+                        self.deleteEmptyFolder(group_folder)
                 except:
                     log.error('Failed removing %s: %s', (group_folder, traceback.format_exc()))
 
@@ -771,22 +811,32 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         dest = sp(dest)
         try:
 
+            if os.path.exists(dest) and os.path.isfile(dest):
+                raise Exception('Destination "%s" already exists' % dest)
+
             move_type = self.conf('file_action')
             if use_default:
                 move_type = self.conf('default_file_action')
 
             if move_type not in ['copy', 'link']:
                 try:
+                    log.info('Moving "%s" to "%s"', (old, dest))
                     shutil.move(old, dest)
                 except:
-                    if os.path.exists(dest):
+                    exists = os.path.exists(dest)
+                    if exists and os.path.getsize(old) == os.path.getsize(dest):
                         log.error('Successfully moved file "%s", but something went wrong: %s', (dest, traceback.format_exc()))
                         os.unlink(old)
                     else:
+                        # remove faultly copied file
+                        if exists:
+                            os.unlink(dest)
                         raise
             elif move_type == 'copy':
+                log.info('Copying "%s" to "%s"', (old, dest))
                 shutil.copy(old, dest)
             else:
+                log.info('Linking "%s" to "%s"', (old, dest))
                 # First try to hardlink
                 try:
                     log.debug('Hardlinking file "%s" to "%s"...', (old, dest))
@@ -796,9 +846,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     log.debug('Couldn\'t hardlink file "%s" to "%s". Symlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
                     shutil.copy(old, dest)
                     try:
-                        symlink(dest, old + '.link')
+                        old_link = '%s.link' % sp(old)
+                        symlink(dest, old_link)
                         os.unlink(old)
-                        os.rename(old + '.link', old)
+                        os.rename(old_link, old)
                     except:
                         log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
 
@@ -807,7 +858,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 if os.name == 'nt' and self.conf('ntfs_permission'):
                     os.popen('icacls "' + dest + '"* /reset /T')
             except:
-                log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
+                log.debug('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
             raise
@@ -841,7 +892,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')
-        return replaced.replace(' ', ' ' if not sep else sep)
+        return ss(replaced.replace(' ', ' ' if not sep else sep))
 
     def replaceDoubles(self, string):
 
@@ -853,6 +904,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for r in replaces:
             reg, replace_with = r
             string = re.sub(reg, replace_with, string)
+
+        string = string.rstrip(',_-/\\ ')
 
         return string
 
@@ -1187,7 +1240,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 except Exception as e:
                     log.error('Failed moving left over file %s to %s: %s %s', (leftoverfile, move_to, e, traceback.format_exc()))
                     # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
-                    if os.path.isfile(move_to):
+                    if os.path.isfile(move_to) and os.path.getsize(leftoverfile) == os.path.getsize(move_to):
                         if cleanup:
                             log.info('Deleting left over file %s instead...', leftoverfile)
                             os.unlink(leftoverfile)
@@ -1356,6 +1409,14 @@ config = [{
                     'name': 'foldersep',
                     'label': 'Folder-Separator',
                     'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
+                },
+                {
+                    'name': 'check_space',
+                    'label': 'Check space',
+                    'default': True,
+                    'type': 'bool',
+                    'description': ('Check if there\'s enough available space to rename the files', 'Disable when the filesystem doesn\'t return the proper value'),
+                    'advanced': True,
                 },
                 {
                     'name': 'default_file_action',

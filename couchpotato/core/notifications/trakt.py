@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 
@@ -16,7 +16,8 @@ class Trakt(Notification):
         'test': 'account/test/%s',
     }
 
-    listen_to = ['movie.downloaded']
+    listen_to = ['movie.snatched']
+    enabled_option = 'notification_enabled'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
@@ -38,7 +39,7 @@ class Trakt(Notification):
                 'username': self.conf('automation_username'),
                 'password': self.conf('automation_password'),
                 'movies': [{
-                    'imdb_id': data['identifier'],
+                    'imdb_id': getIdentifier(data),
                     'title': getTitle(data),
                     'year': data['info']['year']
                 }] if data else []

@@ -9,6 +9,7 @@ import traceback
 import warnings
 import re
 import tarfile
+import shutil
 
 from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
@@ -19,6 +20,7 @@ from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
+from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
@@ -87,6 +89,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Do db stuff
     db_path = sp(os.path.join(data_dir, 'database'))
+    old_db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Remove database folder if both exists
+    if os.path.isdir(db_path) and os.path.isfile(old_db_path):
+        db = SuperThreadSafeDatabase(db_path)
+        db.open()
+        db.destroy()
 
     # Check if database exists
     db = SuperThreadSafeDatabase(db_path)
@@ -100,14 +109,20 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
         for root, dirs, files in os.walk(backup_path):
-            for backup_file in sorted(files):
-                ints = re.findall('\d+', backup_file)
+            # Only consider files being a direct child of the backup_path
+            if root == backup_path:
+                for backup_file in sorted(files):
+                    ints = re.findall('\d+', backup_file)
 
-                # Delete non zip files
-                if len(ints) != 1:
-                    os.remove(os.path.join(backup_path, backup_file))
-                else:
-                    existing_backups.append((int(ints[0]), backup_file))
+                    # Delete non zip files
+                    if len(ints) != 1:
+                        try: os.remove(os.path.join(root, backup_file))
+                        except: pass
+                    else:
+                        existing_backups.append((int(ints[0]), backup_file))
+            else:
+                # Delete stray directories.
+                shutil.rmtree(root)
 
         # Remove all but the last 5
         for eb in existing_backups[:-backup_count]:
@@ -137,12 +152,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not os.path.exists(python_cache):
         os.mkdir(python_cache)
 
+    session = requests.Session()
+    session.max_redirects = 5
+
     # Register environment settings
     Env.set('app_dir', sp(base_path))
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('http_opener', requests.Session())
+    Env.set('http_opener', session)
     Env.set('cache_dir', cache_dir)
     Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)
@@ -166,6 +184,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     for logger_name in ['gntp']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+    # Disable SSL warning
+    disable_warnings()
 
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
@@ -223,11 +244,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Basic config
     host = Env.setting('host', default = '0.0.0.0')
-    # app.debug = development
+    host6 = Env.setting('host6', default = '::')
+
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5050)),
         'host': host if host and len(host) > 0 else '0.0.0.0',
+        'host6': host6 if host6 and len(host6) > 0 else '::',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
     }
@@ -310,6 +333,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     while try_restart:
         try:
             server.listen(config['port'], config['host'])
+            server.listen(config['port'], config['host6'])
             loop.start()
             server.close_all_connections()
             server.stop()

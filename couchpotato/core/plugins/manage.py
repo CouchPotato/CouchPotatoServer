@@ -123,7 +123,7 @@ class Manage(Plugin):
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
 
                 onFound = self.createAddToLibrary(folder, added_identifiers)
-                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
+                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, check_file_date = False, on_found = onFound, single = True)
 
                 # Break if CP wants to shut down
                 if self.shuttingDown():
@@ -165,7 +165,7 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
-                                            release_id = release['_id'] if already_used.get('last_edit', 0) < release.get('last_edit', 0) else already_used['_id']
+                                            release_id = release['_id'] if already_used.get('last_edit', 0) > release.get('last_edit', 0) else already_used['_id']
                                             if release_id not in deleted_releases:
                                                 fireEvent('release.delete', release_id, single = True)
                                                 deleted_releases.append(release_id)
@@ -190,6 +190,7 @@ class Manage(Plugin):
 
             delete_me = {}
 
+            # noinspection PyTypeChecker
             for folder in self.in_progress:
                 if self.in_progress[folder]['to_go'] <= 0:
                     delete_me[folder] = True
@@ -219,7 +220,7 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
-                fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
+                fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
 
@@ -233,7 +234,8 @@ class Manage(Plugin):
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
-            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict))
+            if movie_dict:
+                fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict))
 
         return afterUpdate
 

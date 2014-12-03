@@ -1,9 +1,12 @@
+import traceback
+
 from bs4 import BeautifulSoup
 from couchpotato import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
+
 
 log = CPLog(__name__)
 
@@ -34,27 +37,49 @@ class Bluray(Automation, RSS):
 
                 try:
                     # Stop if the release year is before the minimal year
-                    page_year = soup.body.find_all('center')[3].table.tr.find_all('td', recursive = False)[3].h3.get_text().split(', ')[1]
-                    if tryInt(page_year) < self.getMinimal('year'):
+                    brk = False
+                    h3s = soup.body.find_all('h3')
+                    for h3 in h3s:
+                        if h3.parent.name != 'a':
+
+                            try:
+                                page_year = tryInt(h3.get_text()[-4:])
+                                if page_year > 0 and page_year < self.getMinimal('year'):
+                                    brk = True
+                            except:
+                                log.error('Failed determining page year: %s', traceback.format_exc())
+                                brk = True
+                                break
+
+                    if brk:
                         break
 
-                    for table in soup.body.find_all('center')[3].table.tr.find_all('td', recursive = False)[3].find_all('table')[1:20]:
-                        name = table.h3.get_text().lower().split('blu-ray')[0].strip()
-                        year = table.small.get_text().split('|')[1].strip()
+                    for h3 in h3s:
+                        try:
+                            if h3.parent.name == 'a':
+                                name = h3.get_text().lower().split('blu-ray')[0].strip()
 
-                        if not name.find('/') == -1:  # make sure it is not a double movie release
-                            continue
+                                if not name.find('/') == -1:  # make sure it is not a double movie release
+                                    continue
 
-                        if tryInt(year) < self.getMinimal('year'):
-                            continue
+                                if not h3.parent.parent.small:  # ignore non-movie tables
+                                    continue
 
-                        imdb = self.search(name, year)
+                                year = h3.parent.parent.small.get_text().split('|')[1].strip()
 
-                        if imdb:
-                            if self.isMinimalMovie(imdb):
-                                movies.append(imdb['imdb'])
+                                if tryInt(year) < self.getMinimal('year'):
+                                    continue
+
+                                imdb = self.search(name, year)
+
+                                if imdb:
+                                    if self.isMinimalMovie(imdb):
+                                        movies.append(imdb['imdb'])
+                        except:
+                            log.debug('Error parsing movie html: %s', traceback.format_exc())
+                            break
                 except:
-                    log.debug('Error loading page: %s', page)
+                    log.debug('Error loading page %s: %s', (page, traceback.format_exc()))
                     break
 
             self.conf('backlog', value = False)
@@ -134,7 +159,7 @@ config = [{
                 {
                     'name': 'backlog',
                     'advanced': True,
-                    'description': 'Parses the history until the minimum movie year is reached. (Will be disabled once it has completed)',
+                    'description': ('Parses the history until the minimum movie year is reached. (Takes a while)', 'Will be disabled once it has completed'),
                     'default': False,
                     'type': 'bool',
                 },

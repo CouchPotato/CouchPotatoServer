@@ -29,6 +29,9 @@ class Base(TorrentProvider):
         }
         post_data.update(params)
 
+        if self.conf('internal_only'):
+            post_data.update({'origin': [1]})
+
         try:
             result = self.getJsonData(self.urls['api'], data = json.dumps(post_data))
 
@@ -110,6 +113,14 @@ config = [{
                     'default': 0,
                     'description': 'Starting score for each release found via this provider.',
                 },
+                {
+                    'name': 'internal_only',
+                    'advanced': True,
+                    'label': 'Internal Only',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Only download releases marked as HDBits internal'
+                }
             ],
         },
     ],

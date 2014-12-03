@@ -51,6 +51,11 @@
 		margin: 0 5px !important;
 	}
 
+	.profile .wait_for .minimum_score_input {
+		width: 40px !important;
+		text-align: left;
+	}
+
 	.profile .types {
 		padding: 0;
 		margin: 0 20px 0 -4px;

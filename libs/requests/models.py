@@ -19,26 +19,28 @@ from .cookies import cookiejar_from_dict, get_cookie_header
 from .packages.urllib3.fields import RequestField
 from .packages.urllib3.filepost import encode_multipart_formdata
 from .packages.urllib3.util import parse_url
-from .packages.urllib3.exceptions import DecodeError
+from .packages.urllib3.exceptions import (
+    DecodeError, ReadTimeoutError, ProtocolError)
 from .exceptions import (
     HTTPError, RequestException, MissingSchema, InvalidURL,
-    ChunkedEncodingError, ContentDecodingError)
+    ChunkedEncodingError, ContentDecodingError, ConnectionError)
 from .utils import (
     guess_filename, get_auth_from_url, requote_uri,
     stream_decode_response_unicode, to_key_val_list, parse_header_links,
     iter_slices, guess_json_utf, super_len, to_native_string)
 from .compat import (
     cookielib, urlunparse, urlsplit, urlencode, str, bytes, StringIO,
-    is_py2, chardet, json, builtin_str, basestring, IncompleteRead)
+    is_py2, chardet, json, builtin_str, basestring)
 from .status_codes import codes
 
 #: The set of HTTP status codes that indicate an automatically
 #: processable redirect.
 REDIRECT_STATI = (
-    codes.moved,  # 301
-    codes.found,  # 302
-    codes.other,  # 303
-    codes.temporary_moved,  # 307
+    codes.moved,              # 301
+    codes.found,              # 302
+    codes.other,              # 303
+    codes.temporary_redirect, # 307
+    codes.permanent_redirect, # 308
 )
 DEFAULT_REDIRECT_LIMIT = 30
 CONTENT_CHUNK_SIZE = 10 * 1024
@@ -610,6 +612,11 @@ class Response(object):
         return ('location' in self.headers and self.status_code in REDIRECT_STATI)
 
     @property
+    def is_permanent_redirect(self):
+        """True if this Response one of the permanant versions of redirect"""
+        return ('location' in self.headers and self.status_code in (codes.moved_permanently, codes.permanent_redirect))
+
+    @property
     def apparent_encoding(self):
         """The apparent encoding, provided by the chardet library"""
         return chardet.detect(self.content)['encoding']
@@ -630,10 +637,12 @@ class Response(object):
                 try:
                     for chunk in self.raw.stream(chunk_size, decode_content=True):
                         yield chunk
-                except IncompleteRead as e:
+                except ProtocolError as e:
                     raise ChunkedEncodingError(e)
                 except DecodeError as e:
                     raise ContentDecodingError(e)
+                except ReadTimeoutError as e:
+                    raise ConnectionError(e)
             except AttributeError:
                 # Standard file-like object.
                 while True:

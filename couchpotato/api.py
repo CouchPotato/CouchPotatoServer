@@ -143,6 +143,8 @@ class ApiHandler(RequestHandler):
                 else:
                     self.write(result)
                     self.finish()
+            except UnicodeDecodeError:
+                log.error('Failed proper encode: %s', traceback.format_exc())
             except:
                 log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
                 try: self.finish({'success': False, 'error': 'Failed returning results'})
