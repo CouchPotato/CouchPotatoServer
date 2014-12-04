@@ -5,7 +5,8 @@ module.exports = function(grunt){
 	// Configurable paths
 	var config = {
 		tmp: '.tmp',
-		base: 'couchpotato'
+		base: 'couchpotato',
+		css_dest: 'couchpotato/static/style/combined.min.css'
 	};
 
 	grunt.initConfig({
@@ -29,23 +30,15 @@ module.exports = function(grunt){
 		// Compiles Sass to CSS and generates necessary files if requested
 		sass: {
 			options: {
-				compass: true
-			},
-			dist: {
-				files: [{
-					expand: true,
-					cwd: '<%= config.base %>/styles',
-					src: ['*.scss'],
-					dest: '<%= config.tmp %>/styles',
-					ext: '.css'
-				}]
+				compass: true,
+				update: true
 			},
 			server: {
 				files: [{
 					expand: true,
 					cwd: '<%= config.base %>/',
 					src: ['**/*.scss'],
-					dest: '<%= config.tmp %>/styles',
+					dest: '<%= config.tmp %>/styles/',
 					ext: '.css'
 				}]
 			}
@@ -66,13 +59,11 @@ module.exports = function(grunt){
 			}
 		},
 
-		concat: {
-			options: {
-				separator: ''
-			},
+		cssmin: {
 			dist: {
-				src: ['<%= config.tmp %>/styles/**/*.css'],
-				dest: '<%= config.tmp %>/test.css'
+				files: {
+					'<%= config.css_dest %>': ['<%= config.tmp %>/styles/**/*.css']
+				}
 			}
 		},
 
@@ -80,7 +71,7 @@ module.exports = function(grunt){
 		watch: {
 			scss: {
 				files: ['**/*.{scss,sass}'],
-				tasks: ['sass:server', 'autoprefixer', 'concat'],
+				tasks: ['sass:server', 'autoprefixer', 'cssmin'],
 				options: {
 					'livereload': true
 				}
@@ -101,7 +92,6 @@ module.exports = function(grunt){
 				files: [
 					'<%= config.base %>/{,*/}*.html',
 					'<%= config.tmp %>/styles/{,*/}*.css',
-					'<%= config.base %>/react/{,*/}*.js',
 					'<%= config.base %>/images/{,*/}*'
 				]
 			}
@@ -111,7 +101,7 @@ module.exports = function(grunt){
 			options: {
 				logConcurrentOutput: true
 			},
-			tasks: ['sass:server', 'watch']
+			tasks: ['sass:server', 'autoprefixer', 'cssmin', 'watch']
 		}
 
 	});
@@ -119,12 +109,11 @@ module.exports = function(grunt){
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	//grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-sass');
-	//grunt.loadNpmTasks('grunt-contrib-cssmin');
+	grunt.loadNpmTasks('grunt-contrib-cssmin');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-autoprefixer');
 	grunt.loadNpmTasks('grunt-concurrent');
-	grunt.loadNpmTasks('grunt-contrib-concat');
 
-	grunt.registerTask('default', ['sass', 'concurrent']);
+	grunt.registerTask('default', ['concurrent']);
 
 };
