@@ -70,7 +70,7 @@ module.exports = function(grunt){
 		// COOL TASKS ==============================================================
 		watch: {
 			scss: {
-				files: ['**/*.{scss,sass}'],
+				files: ['<%= config.base %>/**/*.{scss,sass}'],
 				tasks: ['sass:server', 'autoprefixer', 'cssmin'],
 				options: {
 					'livereload': true
@@ -78,9 +78,9 @@ module.exports = function(grunt){
 			},
 			js: {
 				files: [
-                    '<%= config.base %>/scripts/**/*.js'
+                    '<%= config.base %>/**/*.js'
                 ],
-				tasks: ['jshint'],
+				tasks: ['jshint', 'uglify'],
 				options: {
 					'livereload': true
 				}
