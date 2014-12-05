@@ -23,7 +23,8 @@ module.exports = function(grunt){
 				devel: true
 			},
 			all: [
-				'<%= config.base %>/{,**/}*.js'
+				'<%= config.base %>/{,**/}*.js',
+				'!<%= config.base %>/static/scripts/vendor/{,**/}*.js'
 			]
 		},
 
@@ -80,7 +81,7 @@ module.exports = function(grunt){
 				files: [
                     '<%= config.base %>/**/*.js'
                 ],
-				tasks: ['jshint', 'uglify'],
+				tasks: ['jshint'],
 				options: {
 					'livereload': true
 				}
