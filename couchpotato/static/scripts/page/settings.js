@@ -27,8 +27,8 @@ Page.Settings = new Class({
 	},
 
 	openTab: function(action){
-		var self = this,
-			action = (action == 'index' ? 'about' : action) || self.action;
+		var self = this;
+		action = (action == 'index' ? 'about' : action) || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);
@@ -72,7 +72,7 @@ Page.Settings = new Class({
 				t.content.fireEvent('activate');
 		}
 
-		return t
+		return t;
 	},
 
 	getData: function(onComplete){
@@ -99,7 +99,7 @@ Page.Settings = new Class({
 			return self.data.values[section][name];
 		}
 		catch(e){
-			return ''
+			return '';
 		}
 	},
 
@@ -113,7 +113,7 @@ Page.Settings = new Class({
 	},
 
     sortByOrder: function(a, b){
-		return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100);
 	},
 
 	create: function(json){
@@ -146,7 +146,7 @@ Page.Settings = new Class({
 		// Add content to tabs
 		var options = [];
 		Object.each(json.options, function(section, section_name){
-			section['section_name'] = section_name;
+			section.section_name = section_name;
 			options.include(section);
 		});
 
@@ -169,7 +169,7 @@ Page.Settings = new Class({
 				if(group.subtab){
 					if(!self.tabs[group.tab].subtabs[group.subtab])
 						self.createSubTab(group.subtab, group, self.tabs[group.tab], group.tab);
-					content_container = self.tabs[group.tab].subtabs[group.subtab].content
+					content_container = self.tabs[group.tab].subtabs[group.subtab].content;
 				}
 
 				if(group.list && !self.lists[group.list]){
@@ -240,7 +240,7 @@ Page.Settings = new Class({
 			'groups': {}
 		});
 
-		return self.tabs[tab_name]
+		return self.tabs[tab_name];
 
 	},
 
@@ -272,23 +272,24 @@ Page.Settings = new Class({
 			'groups': {}
 		});
 
-		return parent_tab.subtabs[tab_name]
+		return parent_tab.subtabs[tab_name];
 
 	},
 
 	createGroup: function(group){
+		var hint;
 
 		if((typeOf(group.description) == 'array')){
-			var hint = new Element('span.hint.more_hint', {
+			hint = new Element('span.hint.more_hint', {
 				'html': group.description[0]
 			});
 
 			createTooltip(group.description[1]).inject(hint, 'top');
 		}
 		else {
-			var hint = new Element('span.hint', {
+			hint = new Element('span.hint', {
 				'html': group.description || ''
-			})
+			});
 		}
 
 		var icon;
@@ -300,7 +301,7 @@ Page.Settings = new Class({
 
 		var label = new Element('span.group_label', {
 			'text': group.label || (group.name).capitalize()
-		})
+		});
 
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
@@ -315,7 +316,7 @@ Page.Settings = new Class({
 			new Element('h3', {
 				'text': 'Enable another'
 			})
-		).inject(content_container)
+		).inject(content_container);
 	}
 
 });
@@ -347,7 +348,7 @@ var OptionBase = new Class({
 			'keyup': self.changed.bind(self)
 		});
 
-		self.addEvent('injected', self.afterInject.bind(self))
+		self.addEvent('injected', self.afterInject.bind(self));
 
 	},
 
@@ -356,7 +357,7 @@ var OptionBase = new Class({
 	 */
 	createBase: function(){
 		var self = this;
-		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name)
+		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name);
 	},
 
 	create: function(){
@@ -366,17 +367,16 @@ var OptionBase = new Class({
 		var self = this;
 		return new Element('label', {
 			'text': (self.options.label || self.options.name.replace('_', ' ')).capitalize()
-		})
+		});
 	},
 
 	setAdvanced: function(){
-		this.el.addClass(this.options.advanced ? 'advanced' : '')
+		this.el.addClass(this.options.advanced ? 'advanced' : '');
 	},
 
 	createHint: function(){
 		var self = this;
 		if(self.options.description){
-
 
 			if((typeOf(self.options.description) == 'array')){
 				var hint = new Element('p.formHint.more_hint', {
@@ -388,7 +388,7 @@ var OptionBase = new Class({
 			else {
 				new Element('p.formHint', {
 					'html': self.options.description || ''
-				}).inject(self.el)
+				}).inject(self.el);
 			}
 		}
 	},
@@ -405,7 +405,7 @@ var OptionBase = new Class({
 				if(self.changed_timer) clearTimeout(self.changed_timer);
 				self.changed_timer = self.save.delay(300, self);
 			}
-			self.fireEvent('change')
+			self.fireEvent('change');
 		}
 
 	},
@@ -490,7 +490,7 @@ Option.String = new Class({
 	},
 
 	getPlaceholder: function(){
-		return this.options.placeholder
+		return this.options.placeholder;
 	}
 });
 
@@ -511,7 +511,7 @@ Option.Dropdown = new Class({
 			new Element('option', {
 				'text': value[0],
 				'value': value[1]
-			}).inject(self.input)
+			}).inject(self.input);
 		});
 
 		self.input.set('value', self.getSettingValue());
@@ -573,7 +573,7 @@ Option.Password = new Class({
 		self.input.addEvent('focus', function(){
 			self.input.set('value', '');
 			self.input.set('type', 'password');
-		})
+		});
 
 	}
 });
@@ -621,7 +621,7 @@ Option.Enabler = new Class({
 		self.parentFieldset = self.el.getParent('fieldset').addClass('enabler');
 		self.parentList = self.parentFieldset.getParent('.option_list');
 		self.el.inject(self.parentFieldset, 'top');
-		self.checkState()
+		self.checkState();
 	}
 
 });
@@ -676,12 +676,13 @@ Option.Directory = new Class({
 		var self = this,
 			value = self.getValue(),
 			path_sep = Api.getOption('path_sep'),
-			active_selector = 'li:not(.blur):not(.empty)';
+			active_selector = 'li:not(.blur):not(.empty)',
+			first;
 
 		if(e.key == 'enter' || e.key == 'tab'){
 			(e).stop();
 
-			var first = self.dir_list.getElement(active_selector);
+			first = self.dir_list.getElement(active_selector);
 			if(first){
 				self.selectDirectory(first.get('data-value'));
 			}
@@ -691,20 +692,20 @@ Option.Directory = new Class({
 			// New folder
 			if(value.substr(-1) == path_sep){
 				if(self.current_dir != value)
-					self.selectDirectory(value)
+					self.selectDirectory(value);
 			}
 			else {
 				var pd = self.getParentDir(value);
 				if(self.current_dir != pd)
 					self.getDirs(pd);
 
-				var folder_filter = value.split(path_sep).getLast()
+				var folder_filter = value.split(path_sep).getLast();
 				self.dir_list.getElements('li').each(function(li){
-					var  valid = li.get('text').substr(0, folder_filter.length).toLowerCase() != folder_filter.toLowerCase()
-					li[valid ? 'addClass' : 'removeClass']('blur')
+					var valid = li.get('text').substr(0, folder_filter.length).toLowerCase() != folder_filter.toLowerCase();
+					li[valid ? 'addClass' : 'removeClass']('blur');
 				});
 
-				var first = self.dir_list.getElement(active_selector);
+				first = self.dir_list.getElement(active_selector);
 				if(first){
 					if(!self.dir_list_scroll)
 						self.dir_list_scroll = new Fx.Scroll(self.dir_list, {
@@ -722,13 +723,13 @@ Option.Directory = new Class({
 
 		self.input.set('value', dir);
 
-		self.getDirs()
+		self.getDirs();
 	},
 
 	previousDirectory: function(){
 		var self = this;
 
-		self.selectDirectory(self.getParentDir())
+		self.selectDirectory(self.getParentDir());
 	},
 
 	caretAtEnd: function(){
@@ -751,7 +752,7 @@ Option.Directory = new Class({
 
 		// Move caret to back of the input
 		if(!self.browser || self.browser && !self.browser.isVisible())
-			self.caretAtEnd()
+			self.caretAtEnd();
 
 		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
@@ -769,7 +770,7 @@ Option.Directory = new Class({
 						self.show_hidden = new Element('input[type=checkbox].inlay', {
 							'events': {
 								'change': function(){
-									self.getDirs()
+									self.getDirs();
 								}
 							}
 						})
@@ -779,7 +780,7 @@ Option.Directory = new Class({
 					'events': {
 						'click:relay(li:not(.empty))': function(e, el){
 							(e).preventDefault();
-							self.selectDirectory(el.get('data-value'))
+							self.selectDirectory(el.get('data-value'));
 						},
 						'mousewheel': function(e){
 							(e).stopPropagation();
@@ -809,7 +810,7 @@ Option.Directory = new Class({
 						'text': 'Save',
 						'events': {
 							'click': function(e){
-								self.hideBrowser(e, true)
+								self.hideBrowser(e, true);
 							}
 						}
 					})
@@ -823,7 +824,7 @@ Option.Directory = new Class({
 
 		self.getDirs();
 		self.browser.show();
-		self.el.addEvent('outerClick', self.hideBrowser.bind(self))
+		self.el.addEvent('outerClick', self.hideBrowser.bind(self));
 	},
 
 	hideBrowser: function(e, save){
@@ -836,7 +837,7 @@ Option.Directory = new Class({
 			self.input.set('value', self.initial_directory);
 
 		self.browser.hide();
-		self.el.removeEvents('outerClick')
+		self.el.removeEvents('outerClick');
 
 	},
 
@@ -848,7 +849,7 @@ Option.Directory = new Class({
 
 		var previous_dir = json.parent;
 
-		if(v == '')
+		if(v === '')
 			self.input.set('value', json.home);
 
 		if(previous_dir.length >= 1 && !json.is_root){
@@ -861,10 +862,10 @@ Option.Directory = new Class({
 
 			self.back_button.set('data-value', previous_dir);
 			self.back_button.set('html', '&laquo; ' + prev_dirname);
-			self.back_button.show()
+			self.back_button.show();
 		}
 		else {
-			self.back_button.hide()
+			self.back_button.hide();
 		}
 
 		if(self.use_cache)
@@ -879,12 +880,12 @@ Option.Directory = new Class({
 				new Element('li', {
 					'data-value': dir,
 					'text': self.getCurrentDirname(dir)
-				}).inject(self.dir_list)
+				}).inject(self.dir_list);
 			});
 		else
 			new Element('li.empty', {
 				'text': 'Selected folder is empty'
-			}).inject(self.dir_list)
+			}).inject(self.dir_list);
 
 		//fix for webkit type browsers to refresh the dom for the file browser
 		//http://stackoverflow.com/questions/3485365/how-can-i-force-webkit-to-redraw-repaint-to-propagate-style-changes
@@ -897,7 +898,7 @@ Option.Directory = new Class({
 			c = dir || self.getValue();
 
 		if(self.cached[c] && self.use_cache){
-			self.fillBrowser()
+			self.fillBrowser();
 		}
 		else {
 			Api.request('directory.list', {
@@ -909,7 +910,7 @@ Option.Directory = new Class({
 					self.current_dir = c;
 					self.fillBrowser(json);
 				}
-			})
+			});
 		}
 	},
 
@@ -922,16 +923,16 @@ Option.Directory = new Class({
 		var v = dir || self.getValue();
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
-		if(dirs.pop() == '')
+		if(dirs.pop() === '')
 			dirs.pop();
 
-		return dirs.join(sep) + sep
+		return dirs.join(sep) + sep;
 	},
 
 	getCurrentDirname: function(dir){
 		var dir_split = dir.split(Api.getOption('path_sep'));
 
-		return dir_split[dir_split.length-2] || Api.getOption('path_sep')
+		return dir_split[dir_split.length-2] || Api.getOption('path_sep');
 	},
 
 	getValue: function(){
@@ -976,7 +977,7 @@ Option.Directories = new Class({
 
 		var parent = self.el.getParent('fieldset');
 		var dirs = parent.getElements('.multi_directory');
-		if(dirs.length == 0)
+		if(dirs.length === 0)
 			$(dir).inject(parent);
 		else
 			$(dir).inject(dirs.getLast(), 'after');
@@ -1080,7 +1081,7 @@ Option.Choice = new Class({
 					self.el.addEvent('outerClick', function(){
 						self.reset();
 						self.el.removeEvents('outerClick');
-					})
+					});
 				}
 			}
 		}).inject(self.input, 'after');
@@ -1105,7 +1106,7 @@ Option.Choice = new Class({
 				});
 			});
 
-		if(mtches.length == 0 && value != '')
+		if(mtches.length === 0 && value !== '')
 			mtches.include(value);
 
 		mtches.each(self.addTag.bind(self));
@@ -1141,10 +1142,10 @@ Option.Choice = new Class({
 				self.addLastTag();
 			},
 			'onGoLeft': function(){
-				self.goLeft(this)
+				self.goLeft(this);
 			},
 			'onGoRight': function(){
-				self.goRight(this)
+				self.goRight(this);
 			}
 		});
 		$(tag).inject(self.tag_input);
@@ -1412,7 +1413,7 @@ Option.Combined = new Class({
 			});
 
 			self.inputs[name].getParent('.ctrlHolder').setStyle('display', 'none');
-			self.inputs[name].addEvent('change', self.addEmpty.bind(self))
+			self.inputs[name].addEvent('change', self.addEmpty.bind(self));
 
 		});
 
@@ -1427,7 +1428,7 @@ Option.Combined = new Class({
 				'class': name,
 				'text': self.labels[name],
 				'title': self.descriptions[name]
-			}).inject(head)
+			}).inject(head);
 		});
 
 
@@ -1450,8 +1451,8 @@ Option.Combined = new Class({
 			var empty_count = 0;
 			self.options.combine.each(function(name){
 				var input = ctrl_holder.getElement('input.' + name);
-				if(input.get('value') == '' || input.get('type') == 'checkbox')
-					empty_count++
+				if(input.get('value') === '' || input.get('type') == 'checkbox')
+					empty_count++;
 			});
 			has_empty += (empty_count == self.options.combine.length) ? 1 : 0;
 			ctrl_holder[(empty_count == self.options.combine.length) ? 'addClass' : 'removeClass']('is_empty');
@@ -1516,10 +1517,9 @@ Option.Combined = new Class({
 	},
 
 	saveCombined: function(){
-		var self = this;
+		var self = this,
+			temp = {};
 
-
-		var temp = {};
 		self.items.each(function(item, nr){
 			self.options.combine.each(function(name){
 				var input = item.getElement('input.'+name);
@@ -1528,7 +1528,7 @@ Option.Combined = new Class({
 				if(!temp[name]) temp[name] = [];
 				temp[name][nr] = input.get('type') == 'checkbox' ? +input.get('checked') : input.get('value').trim();
 
-			})
+			});
 		});
 
 		self.options.combine.each(function(name){
@@ -1536,7 +1536,7 @@ Option.Combined = new Class({
 			self.inputs[name].fireEvent('change');
 		});
 
-		self.addEmpty()
+		self.addEmpty();
 
 	},
 
@@ -1559,10 +1559,10 @@ var createTooltip = function(description){
 	var tip = new Element('div.tooltip', {
 			'events': {
 				'mouseenter': function(){
-					tip.addClass('shown')
+					tip.addClass('shown');
 				},
 				'mouseleave': function(){
-					tip.removeClass('shown')
+					tip.removeClass('shown');
 				}
 			}
 		}).adopt(

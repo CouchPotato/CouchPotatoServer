@@ -3,7 +3,7 @@ var ReloaderBase = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.on('watcher.changed', self.reloadFile.bind(self))
+		App.on('watcher.changed', self.reloadFile.bind(self));
 
 	},
 
@@ -15,8 +15,8 @@ var ReloaderBase = new Class({
 			var without_timestamp = url.split('?')[0],
 				old_links = document.getElement('[data-url^=\''+without_timestamp+'\']');
 
-			old_links.set('href', old_links.get('href') + 1)
-		})
+			old_links.set('href', old_links.get('href') + 1);
+		});
 	}
 
 });

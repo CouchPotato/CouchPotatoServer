@@ -98,7 +98,7 @@ var PageBase = new Class({
 	},
 
 	getName: function(){
-		return this.name
+		return this.name;
 	},
 
 	show: function(){
@@ -110,7 +110,7 @@ var PageBase = new Class({
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 });
 

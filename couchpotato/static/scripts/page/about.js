@@ -6,7 +6,7 @@ var AboutSettingTab = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('loadSettings', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self));
 
 	},
 
@@ -48,13 +48,13 @@ var AboutSettingTab = new Class({
 					'text': 'Getting version...',
 					'events': {
 						'click': App.checkForUpdate.bind(App, function(json){
-							self.fillVersion(json.info)
+							self.fillVersion(json.info);
 						}),
 						'mouseenter': function(){
-							this.set('text', 'Check for updates')
+							this.set('text', 'Check for updates');
 						},
 						'mouseleave': function(){
-							self.fillVersion(Updater.getInfo())
+							self.fillVersion(Updater.getInfo());
 						}
 					}
 				}),
