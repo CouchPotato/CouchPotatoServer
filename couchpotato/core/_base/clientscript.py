@@ -1,14 +1,12 @@
 import os
 import re
-import time
 
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from scss import Scss
 from tornado.web import StaticFileHandler
 
 
@@ -21,27 +19,24 @@ class ClientScript(Plugin):
 
     core_static = {
         'style': [
-            'style/main.scss',
-            'style/uniform.generic.css',
-            'style/uniform.css',
-            'style/settings.css',
+            'style/combined.min.css',
         ],
         'script': [
-            'scripts/library/mootools.js',
-            'scripts/library/mootools_more.js',
+            'scripts/vendor/mootools.js',
+            'scripts/vendor/mootools_more.js',
+            'scripts/vendor/form_replacement/form_check.js',
+            'scripts/vendor/form_replacement/form_radio.js',
+            'scripts/vendor/form_replacement/form_dropdown.js',
+            'scripts/vendor/form_replacement/form_selectoption.js',
+            'scripts/vendor/spin.js',
+            'scripts/vendor/Array.stableSort.js',
+            'scripts/vendor/async.js',
+            'scripts/vendor/history.js',
             'scripts/library/uniform.js',
-            'scripts/library/form_replacement/form_check.js',
-            'scripts/library/form_replacement/form_radio.js',
-            'scripts/library/form_replacement/form_dropdown.js',
-            'scripts/library/form_replacement/form_selectoption.js',
             'scripts/library/question.js',
             'scripts/library/scrollspy.js',
-            'scripts/library/spin.js',
-            'scripts/library/Array.stableSort.js',
-            'scripts/library/async.js',
             'scripts/couchpotato.js',
             'scripts/api.js',
-            'scripts/library/history.js',
             'scripts/page.js',
             'scripts/block.js',
             'scripts/block/navigation.js',
@@ -74,15 +69,9 @@ class ClientScript(Plugin):
         addEvent('clientscript.get_styles', self.getStyles)
         addEvent('clientscript.get_scripts', self.getScripts)
 
-        addEvent('app.load', self.livereload, priority = 1)
         addEvent('app.load', self.compile)
 
         self.addCore()
-
-    def livereload(self):
-
-        if Env.get('dev'):
-            fireEvent('schedule.interval', 'livereload.watcher', self.watcher, seconds = .5)
 
     def addCore(self):
 
@@ -95,39 +84,6 @@ class ClientScript(Plugin):
                     self.registerScript(core_url, file_path, position = 'front')
                 else:
                     self.registerStyle(core_url, file_path, position = 'front')
-
-    def watcher(self):
-
-        changed = []
-
-        for file_path in self.watches:
-            info = self.watches[file_path]
-            old_time = info['file_time']
-            file_time = os.path.getmtime(file_path)
-            if file_time > old_time:
-                changed.append(info['api_path'])
-
-                if info['compiled_path']:
-                    compiler = Scss(live_errors = True, search_paths = [os.path.dirname(file_path)])
-                    f = open(file_path, 'r').read()
-                    f = compiler.compile(f)
-
-                    self.createFile(info['compiled_path'], f.strip())
-
-
-                # Add file to watchlist again, with current filetime
-                self.watches[file_path]['file_time'] = file_time
-
-        # Notify fronted with changes
-        if changed:
-            fireEvent('notify.frontend', type = 'watcher.changed', data = changed)
-
-    def watchFile(self, file_path, api_path, compiled_path = False):
-        self.watches[file_path] = {
-            'file_time': os.path.getmtime(file_path),
-            'api_path': api_path,
-            'compiled_path': compiled_path,
-        }
 
     def compile(self):
 
@@ -159,25 +115,6 @@ class ClientScript(Plugin):
             file_path, url_path = x
 
             f = open(file_path, 'r').read()
-
-            # Compile scss
-            if file_path[-5:] == '.scss':
-
-                # Compile to css
-                compiler = Scss(live_errors = True, search_paths = [os.path.dirname(file_path)])
-                f = compiler.compile(f)
-
-                # Reload watcher
-                if Env.get('dev'):
-
-                    compiled_file_name = position + '_%s.css' % url_path.replace('/', '_').split('.scss')[0]
-                    compiled_file_path = os.path.join(minified_dir, compiled_file_name)
-                    self.createFile(compiled_file_path, f.strip())
-
-                    # Remove scss path
-                    x = (file_path, 'minified/%s?%s' % (compiled_file_name, tryInt(time.time())))
-
-                    self.watchFile(file_path, x[1], compiled_path = compiled_file_path)
 
             if not Env.get('dev'):
 
@@ -212,8 +149,11 @@ class ClientScript(Plugin):
         return self.get('script', *args, **kwargs)
 
     def get(self, type, location = 'head'):
-        paths = self.paths[type][location]
-        return [x[1] for x in paths]
+        if type in self.paths and location in self.paths[type]:
+            paths = self.paths[type][location]
+            return [x[1] for x in paths]
+
+        return []
 
     def registerStyle(self, api_path, file_path, position = 'head'):
         self.register(api_path, file_path, 'style', position)
@@ -222,8 +162,6 @@ class ClientScript(Plugin):
         self.register(api_path, file_path, 'script', position)
 
     def register(self, api_path, file_path, type, location):
-
-        self.watchFile(file_path, api_path)
 
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
