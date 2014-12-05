@@ -48,7 +48,7 @@ var BlockSearchMovieItem = new Class({
 				self.alternativeTitle({
 					'title': title
 				});
-			})
+			});
 	},
 
 	alternativeTitle: function(alternative){
@@ -68,7 +68,7 @@ var BlockSearchMovieItem = new Class({
 	},
 
 	get: function(key){
-		return this.info[key]
+		return this.info[key];
 	},
 
 	showOptions: function(){
@@ -77,7 +77,7 @@ var BlockSearchMovieItem = new Class({
 		self.createOptions();
 
 		self.data_container.addClass('open');
-		self.el.addEvent('outerClick', self.closeOptions.bind(self))
+		self.el.addEvent('outerClick', self.closeOptions.bind(self));
 
 	},
 
@@ -85,7 +85,7 @@ var BlockSearchMovieItem = new Class({
 		var self = this;
 
 		self.data_container.removeClass('open');
-		self.el.removeEvents('outerClick')
+		self.el.removeEvents('outerClick');
 	},
 
 	add: function(e){
@@ -132,10 +132,11 @@ var BlockSearchMovieItem = new Class({
 
 		if(!self.options_el.hasClass('set')){
 
+			var in_library;
 			if(info.in_library){
-				var in_library = [];
+				in_library = [];
 				(info.in_library.releases || []).each(function(release){
-					in_library.include(release.quality)
+					in_library.include(release.quality);
 				});
 			}
 
@@ -171,14 +172,14 @@ var BlockSearchMovieItem = new Class({
 			Array.each(self.alternative_titles, function(alt){
 				new Element('option', {
 					'text': alt.title
-				}).inject(self.title_select)
+				}).inject(self.title_select);
 			});
 
 
 			// Fill categories
 			var categories = CategoryList.getAll();
 
-			if(categories.length == 0)
+			if(categories.length === 0)
 				self.category_select.hide();
 			else {
 				self.category_select.show();
@@ -199,12 +200,12 @@ var BlockSearchMovieItem = new Class({
 				new Element('option', {
 					'value': profile.get('_id'),
 					'text': profile.get('label')
-				}).inject(self.profile_select)
+				}).inject(self.profile_select);
 			});
 
 			self.options_el.addClass('set');
 
-			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1 &&
+			if(categories.length === 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1 &&
 				!(self.info.in_wanted && self.info.in_wanted.profile_id || in_library))
 				self.add();
 
@@ -218,12 +219,12 @@ var BlockSearchMovieItem = new Class({
 		self.mask = new Element('div.mask').inject(self.el).fade('hide');
 
 		createSpinner(self.mask);
-		self.mask.fade('in')
+		self.mask.fade('in');
 
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 
 });

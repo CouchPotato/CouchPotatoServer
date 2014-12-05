@@ -17,7 +17,7 @@ var PutIODownloader = new Class({
 
 			var putio_set = 0;
 		 	fieldset.getElements('input[type=text]').each(function(el){
-		 		putio_set += +(el.get('value') != '');
+		 		putio_set += +(el.get('value') !== '');
 		 	});
 
 			new Element('.ctrlHolder').adopt(
@@ -57,7 +57,7 @@ var PutIODownloader = new Class({
 					}
 				})
 			).inject(fieldset.getElement('.test_button'), 'before');
-		})
+		});
 
 	}
 

@@ -49,7 +49,7 @@
 			return this.options[name];
 		}
 		catch(e){
-			return null
+			return null;
 		}
 	},
 
@@ -69,7 +69,7 @@
 	},
 
 	isMac: function(){
-		return Browser.platform == 'mac'
+		return Browser.platform == 'mac';
 	},
 
 	createLayout: function(){
@@ -125,19 +125,19 @@
 		];
 
 		setting_links.each(function(a){
-			self.block.more.addLink(a)
+			self.block.more.addLink(a);
 		});
 
 
 		new ScrollSpy({
 			min: 10,
 			onLeave: function(){
-				$(self.block.header).removeClass('with_shadow')
+				$(self.block.header).removeClass('with_shadow');
 			},
 			onEnter: function(){
-				$(self.block.header).addClass('with_shadow')
+				$(self.block.header).addClass('with_shadow');
 			}
-		})
+		});
 	},
 
 	createPages: function(){
@@ -161,14 +161,12 @@
 			$(page['class']).inject(self.pages);
 		});
 
-		delete pages;
-
 		self.fireEvent('load');
 
 	},
 
 	sortPageByOrder: function(a, b){
-		return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100);
 	},
 
 	openPage: function(url) {
@@ -178,7 +176,8 @@
 		var page_name = self.route.getPage().capitalize(),
 			action = self.route.getAction(),
 			params = self.route.getParams(),
-			current_url = self.route.getCurrentUrl();
+			current_url = self.route.getCurrentUrl(),
+			page;
 
 		if(current_url == self.current_url)
 			return;
@@ -187,12 +186,12 @@
 			self.current_page.hide();
 
 		try {
-			var page = self.pages[page_name] || self.pages.Home;
+			page = self.pages[page_name] || self.pages.Home;
 			page.open(action, params, current_url);
 			page.show();
 		}
 		catch(e){
-			console.error("Can't open page:" + url, e)
+			console.error("Can't open page:" + url, e);
 		}
 
 		self.current_page = page;
@@ -201,11 +200,11 @@
 	},
 
 	getBlock: function(block_name){
-		return this.block[block_name]
+		return this.block[block_name];
 	},
 
 	getPage: function(name){
-		return this.pages[name]
+		return this.pages[name];
 	},
 
 	shutdown: function(){
@@ -281,7 +280,7 @@
 			var onFailure = function(){
 				self.checkAvailable.delay(1000, self, [delay, onAvailable]);
 				self.fireEvent('unload');
-			}
+			};
 
 			var request = Api.request('app.available', {
 				'timeout': 2000,
@@ -298,7 +297,7 @@
 				}
 			});
 
-		}).delay(delay || 0)
+		}).delay(delay || 0);
 	},
 
 	blockPage: function(message, title){
@@ -322,12 +321,12 @@
 		var self = this;
 		if(self.mask)
 			self.mask.get('tween').start('opacity', 0).chain(function(){
-				this.element.destroy()
+				this.element.destroy();
 			});
 	},
 
 	createUrl: function(action, params){
-		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '');
 	},
 
 	openDerefered: function(e, el){
@@ -364,7 +363,7 @@
 					'events': {
 						'click': function(e){
 							(e).stop();
-							alert('Drag it to your bookmark ;)')
+							alert('Drag it to your bookmark ;)');
 						}
 					}
 				}),
@@ -447,19 +446,19 @@ var Route = new Class({
 
 	initialize: function(defaults){
 		var self = this;
-		self.defaults = defaults
+		self.defaults = defaults;
 	},
 
 	parse: function(){
 		var self = this;
 
 		var rep = function (pa) {
-			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
+			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/');
 		};
 
 		var path = rep(History.getPath());
 		if(path == '/' && location.hash){
-			path = rep(location.hash.replace('#', '/'))
+			path = rep(location.hash.replace('#', '/'));
 		}
 		self.current = path.replace(/^\/+|\/+$/g, '');
 		var url = self.current.split('/');
@@ -471,46 +470,46 @@ var Route = new Class({
 		if(url.length > 1){
 			var key;
 			url.each(function(el, nr){
-				if(nr%2 == 0)
+				if(nr%2 === 0)
 					key = el;
 				else if(key) {
 					self.params[key] = el;
-					key = null
+					key = null;
 				}
-			})
+			});
 		}
 		else if(url.length == 1){
 			self.params[url] = true;
 		}
 
-		return self
+		return self;
 	},
 
 	getPage: function(){
-		return this.page
+		return this.page;
 	},
 
 	getAction: function(){
-		return this.action
+		return this.action;
 	},
 
 	getParams: function(){
-		return this.params
+		return this.params;
 	},
 
 	getCurrentUrl: function(){
-		return this.current
+		return this.current;
 	},
 
 	get: function(param){
-		return this.params[param]
+		return this.params[param];
 	}
 
 });
 
 var p = function(){
-	if(typeof(console) !== 'undefined' && console != null)
-		console.log(arguments)
+	if(typeof(console) !== 'undefined' && console !== null)
+		console.log(arguments);
 };
 
 
@@ -553,14 +552,14 @@ var p = function(){
 
 
 function randomString(length, extra) {
-	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz" + (extra ? '-._!@#$%^&*()+=' : '');
-	var stringLength = length || 8;
-	var randomString = '';
-	for (var i = 0; i < stringLength; i++) {
+	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz" + (extra ? '-._!@#$%^&*()+=' : ''),
+		string_length = length || 8,
+		random_string = '';
+	for (var i = 0; i < string_length; i++) {
 		var rnum = Math.floor(Math.random() * chars.length);
-		randomString += chars.charAt(rnum);
+		random_string += chars.charAt(rnum);
 	}
-	return randomString;
+	return random_string;
 }
 
 (function(){
@@ -576,7 +575,7 @@ function randomString(length, extra) {
 
 	var valueOf = function(object, path) {
 		var ptr = object;
-		path.each(function(key) { ptr = ptr[key] });
+		path.each(function(key) { ptr = ptr[key]; });
 		return ptr;
 	};
 

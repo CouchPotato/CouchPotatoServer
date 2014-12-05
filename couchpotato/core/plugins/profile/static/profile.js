@@ -81,7 +81,7 @@ var Profile = new Class({
 					'quality': quality,
 					'finish': data.finish[nr] || false,
 					'3d': data['3d'] ? data['3d'][nr] || false : false
-				})
+				});
 			});
 		}
 
@@ -123,7 +123,7 @@ var Profile = new Class({
 				}
 			});
 
-		}).delay(delay, self)
+		}).delay(delay, self);
 
 	},
 
@@ -148,7 +148,7 @@ var Profile = new Class({
 				});
 		});
 
-		return data
+		return data;
 	},
 
 	addType: function(data){
@@ -177,7 +177,7 @@ var Profile = new Class({
 		var self = this;
 
 		return self.types.filter(function(type){
-			return type.get('quality')
+			return type.get('quality');
 		});
 
 	},
@@ -231,15 +231,15 @@ var Profile = new Class({
 	},
 
 	get: function(attr){
-		return this.data[attr]
+		return this.data[attr];
 	},
 
 	isCore: function(){
-		return this.data.core
+		return this.data.core;
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 
 });
@@ -342,7 +342,7 @@ Profile.Type = new Class({
 				'text': q.label,
 				'value': q.identifier,
 				'data-allow_3d': q.allow_3d
-			}).inject(self.qualities)
+			}).inject(self.qualities);
 		});
 
 		self.qualities.set('value', self.data.quality);
@@ -358,7 +358,7 @@ Profile.Type = new Class({
 			'quality': self.qualities.get('value'),
 			'finish': +self.finish.checked,
 			'3d': +self['3d'].checked
-		}
+		};
 	},
 
 	get: function(key){

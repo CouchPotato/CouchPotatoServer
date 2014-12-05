@@ -60,7 +60,7 @@ var SuggestList = new Class({
 
 		var self = this;
 
-		if(!json || json.count == 0){
+		if(!json || json.count === 0){
 			self.el.hide();
 		}
 		else {
@@ -69,7 +69,7 @@ var SuggestList = new Class({
 
 				var m = new BlockSearchMovieItem(movie, {
 					'onAdded': function(){
-						self.afterAdded(m, movie)
+						self.afterAdded(m, movie);
 					}
 				});
 					m.data_container.grab(
@@ -114,7 +114,7 @@ var SuggestList = new Class({
 							'text': plot,
 							'events': {
 								'click': function(){
-									this.toggleClass('full')
+									this.toggleClass('full');
 								}
 							}
 						}) : null

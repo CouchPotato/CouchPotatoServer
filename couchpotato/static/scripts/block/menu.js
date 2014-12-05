@@ -25,16 +25,15 @@ var BlockMenu = new Class({
 							self.el.addEvent('outerClick', self.removeOuterClick.bind(self));
 							this.addEvent('outerClick', function(e){
 								if(e.target.get('tag') != 'input')
-									self.removeOuterClick()
-							})
+									self.removeOuterClick();
+							});
 						}
 						else
-							self.removeOuterClick()
-
+							self.removeOuterClick();
 					}
 				}
 			})
-		)
+		);
 
 	},
 

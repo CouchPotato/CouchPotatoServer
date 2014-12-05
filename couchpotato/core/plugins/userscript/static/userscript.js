@@ -54,7 +54,7 @@ var UserscriptSettingTab = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('loadSettings', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self));
 
 	},
 
@@ -88,7 +88,7 @@ var UserscriptSettingTab = new Class({
 						'events': {
 							'click': function(e){
 								(e).stop();
-								alert('Drag it to your bookmark ;)')
+								alert('Drag it to your bookmark ;)');
 							}
 						}
 					}),

@@ -126,12 +126,12 @@ var MoviesManage = new Class({
 									(folder_progress.eta > 0 ? ', ' + new Date ().increment('second', folder_progress.eta).timeDiffInWords().replace('from now', 'to go') : '')
 								}),
 								new Element('span.percentage', {'text': folder_progress.total ? Math.round(((folder_progress.total-folder_progress.to_go)/folder_progress.total)*100) + '%' : '0%'})
-							).inject(self.progress_container)
+							).inject(self.progress_container);
 						});
 
 					}
 				}
-			})
+			});
 
 		}, 1000);
 	},
@@ -141,10 +141,10 @@ var MoviesManage = new Class({
 
 		for (folder in progress_object) {
 			if (progress_object.hasOwnProperty(folder)) {
-				temp_array.push(folder)
+				temp_array.push(folder);
 			}
 		}
-		return temp_array.stableSort()
+		return temp_array.stableSort();
 	}
 
 });

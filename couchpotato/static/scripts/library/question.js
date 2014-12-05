@@ -10,7 +10,7 @@ var Question = new Class( {
 		self.createQuestion();
 		self.answers.each(function(answer) {
 			self.createAnswer(answer);
-		})
+		});
 
 	},
 
@@ -24,7 +24,7 @@ var Question = new Class( {
 			new Element('div.hint', {
 				'html': this.hint
 			})
-		).fade('hide').inject(document.body).fade('in')
+		).fade('hide').inject(document.body).fade('in');
 
 	},
 
@@ -32,7 +32,7 @@ var Question = new Class( {
 		var self = this;
 
 		var answer = new Element('a', Object.merge(options, {
-			'class' : 'answer button '+(options['class'] || '')+(options['cancel'] ? ' cancel' : '')
+			'class' : 'answer button '+(options['class'] || '')+(options.cancel ? ' cancel' : '')
 		})).inject(this.container);
 
 		if (options.cancel) {
@@ -55,7 +55,7 @@ var Question = new Class( {
 	close : function() {
 		var self = this;
 		self.container.fade('out');
-		(function(){self.container.destroy()}).delay(1000);
+		(function(){self.container.destroy();}).delay(1000);
 	},
 
 	toElement : function() {

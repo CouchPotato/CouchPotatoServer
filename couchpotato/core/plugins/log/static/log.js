@@ -8,20 +8,19 @@ Page.Log = new Class({
 	has_tab: false,
 
 	log_items: [],
-	report_text: '\
-### Steps to reproduce:\n\
-1. ..\n\
-2. ..\n\
-\n\
-### Information:\n\
-Movie(s) I have this with: ...\n\
-Quality of the movie being searched: ...\n\
-Providers I use: ...\n\
-Version of CouchPotato: {version}\n\
-Running on: ...\n\
-\n\
-### Logs:\n\
-```\n{issue}```',
+	report_text: '### Steps to reproduce:\n'+
+				'1. ..\n'+
+				'2. ..\n'+
+				'\n'+
+				'### Information:\n'+
+				'Movie(s) I have this with: ...\n'+
+				'Quality of the movie being searched: ...\n'+
+				'Providers I use: ...\n'+
+				'Version of CouchPotato: {version}\n'+
+				'Running on: ...\n'+
+				'\n'+
+				'### Logs:\n'+
+				'```\n{issue}```',
 
 	indexAction: function () {
 		var self = this;
@@ -133,7 +132,7 @@ Running on: ...\n\
 				new Element('span.message', {
 					'text': log.message
 				})
-			))
+			));
 		});
 
 		return elements;

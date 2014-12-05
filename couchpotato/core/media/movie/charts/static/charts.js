@@ -58,7 +58,7 @@ var Charts = new Class({
 		self.el_refreshing_text.hide();
 		self.el_refresh_link.show();
 
-		if(!json || json.count == 0){
+		if(!json || json.count === 0){
 			self.el_no_charts_enabled.show();
 		    self.el_refresh_link.show();
 		    self.el_refreshing_text.hide();
@@ -85,15 +85,14 @@ var Charts = new Class({
 
 					var m = new BlockSearchMovieItem(movie, {
 						'onAdded': function(){
-							self.afterAdded(m, movie)
+							self.afterAdded(m, movie);
 						}
 					});
 
 					var in_database_class = (chart.hide_wanted && movie.in_wanted) ? 'hidden' : (movie.in_wanted ? 'chart_in_wanted' : ((chart.hide_library && movie.in_library) ? 'hidden': (movie.in_library ? 'chart_in_library' : ''))),
 						in_database_title = movie.in_wanted ? 'Movie in wanted list' : (movie.in_library ? 'Movie in library' : '');
 
-					m.el
-						.addClass(in_database_class)
+					m.el.addClass(in_database_class)
 						.grab(
 							new Element('div.chart_number', {
 								'text': it++,
@@ -135,7 +134,7 @@ var Charts = new Class({
 							'text': plot,
 							'events': {
 								'click': function(){
-									this.toggleClass('full')
+									this.toggleClass('full');
 								}
 							}
 						}) : null

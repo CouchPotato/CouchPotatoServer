@@ -53,7 +53,7 @@ var MovieList = new Class({
 		self.getMovies();
 
 		App.on('movie.added', self.movieAdded.bind(self));
-		App.on('movie.deleted', self.movieDeleted.bind(self))
+		App.on('movie.deleted', self.movieDeleted.bind(self));
 	},
 
 	movieDeleted: function(notification){
@@ -67,7 +67,7 @@ var MovieList = new Class({
 					self.setCounter(self.counter_count-1);
 					self.total_movies--;
 				}
-			})
+			});
 		}
 
 		self.checkIfEmpty();
@@ -97,7 +97,7 @@ var MovieList = new Class({
 			self.scrollspy = new ScrollSpy({
 				min: function(){
 					var c = self.load_more.getCoordinates();
-					return c.top - window.document.getSize().y - 300
+					return c.top - window.document.getSize().y - 300;
 				},
 				onEnter: self.loadMore.bind(self)
 			});
@@ -138,7 +138,7 @@ var MovieList = new Class({
 			self.empty_message = null;
 		}
 
-		if(self.total_movies && count == 0 && !self.empty_message){
+		if(self.total_movies && count === 0 && !self.empty_message){
 			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
 				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
 
@@ -245,7 +245,7 @@ var MovieList = new Class({
 							el.getSiblings().hide();
 							setTimeout(function(){
 								el.getSiblings().setStyle('display', null);
-							}, 100)
+							}, 100);
 						}
 					}
 				}),
@@ -261,7 +261,7 @@ var MovieList = new Class({
 			new Element('option', {
 				'value': profile.get('_id'),
 				'text': profile.get('label')
-			}).inject(self.mass_edit_quality)
+			}).inject(self.mass_edit_quality);
 		});
 
 		self.filter_menu.addLink(
@@ -289,8 +289,8 @@ var MovieList = new Class({
 						available_chars = json.chars;
 
 						available_chars.each(function(c){
-							self.letters[c.capitalize()].addClass('available')
-						})
+							self.letters[c.capitalize()].addClass('available');
+						});
 
 					}
 				});
@@ -301,7 +301,7 @@ var MovieList = new Class({
 				'events': {
 					'click:relay(li.available)': function(e, el){
 						self.activateLetter(el.get('data-letter'));
-						self.getMovies(true)
+						self.getMovies(true);
 					}
 				}
 			})
@@ -317,7 +317,7 @@ var MovieList = new Class({
 		});
 
 		// All
-		self.letters['all'] = new Element('li.letter_all.available.active', {
+		self.letters.all = new Element('li.letter_all.available.active', {
 			'text': 'ALL'
 		}).inject(self.navigation_alpha);
 
@@ -346,7 +346,7 @@ var MovieList = new Class({
 		var selected = 0,
 			movies = self.movies.length;
 		self.movies.each(function(movie){
-			selected += movie.isSelected() ? 1 : 0
+			selected += movie.isSelected() ? 1 : 0;
 		});
 
 		var indeterminate = selected > 0 && selected < movies,
@@ -441,10 +441,10 @@ var MovieList = new Class({
 		var ids = [];
 		self.movies.each(function(movie){
 			if (movie.isSelected())
-				ids.include(movie.get('_id'))
+				ids.include(movie.get('_id'));
 		});
 
-		return ids
+		return ids;
 	},
 
 	massEditToggleAll: function(){
@@ -453,10 +453,10 @@ var MovieList = new Class({
 		var select = self.mass_edit_select.get('checked');
 
 		self.movies.each(function(movie){
-			movie.select(select)
+			movie.select(select);
 		});
 
-		self.calculateSelected()
+		self.calculateSelected();
 	},
 
 	reset: function(){
@@ -537,7 +537,7 @@ var MovieList = new Class({
 			self.load_more.set('text', 'loading...');
 		}
 
-		if(self.movies.length == 0 && self.options.loader){
+		if(self.movies.length === 0 && self.options.loader){
 
 			self.loader_first = new Element('div.loading').adopt(
 				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
@@ -590,7 +590,7 @@ var MovieList = new Class({
 	loadMore: function(){
 		var self = this;
 		if(self.offset >= self.options.limit)
-			self.getMovies()
+			self.getMovies();
 	},
 
 	store: function(movies){
@@ -603,7 +603,7 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
+		var is_empty = self.movies.length === 0 && (self.total_movies === 0 || self.total_movies === undefined);
 
 		if(self.title)
 			self.title[is_empty ? 'hide' : 'show']();

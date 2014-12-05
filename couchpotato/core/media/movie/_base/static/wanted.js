@@ -91,7 +91,7 @@ var MoviesWanted = new Class({
         };
 
         if(!self.folder_browser){
-            self.folder_browser = new Option['Directory']("Scan", "folder", "", options);
+            self.folder_browser = new Option.Directory("Scan", "folder", "", options);
 
             self.folder_browser.save = function() {
                 var folder = self.folder_browser.getValue();

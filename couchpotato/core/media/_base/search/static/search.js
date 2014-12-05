@@ -21,11 +21,11 @@ var BlockSearch = new Class({
 							if(focus_timer) clearTimeout(focus_timer);
 							self.el.addClass('focused');
 							if(this.get('value'))
-								self.hideResults(false)
+								self.hideResults(false);
 						},
 						'blur': function(){
 							focus_timer = (function(){
-								self.el.removeClass('focused')
+								self.el.removeClass('focused');
 							}).delay(100);
 						}
 					}
@@ -71,7 +71,7 @@ var BlockSearch = new Class({
 
 			self.media = {};
 			self.results.empty();
-			self.el.removeClass('filled')
+			self.el.removeClass('filled');
 
 		}
 	},
@@ -105,7 +105,7 @@ var BlockSearch = new Class({
 				self.api_request.cancel();
 
 			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer);
-			self.autocomplete_timer = self.autocomplete.delay(300, self)
+			self.autocomplete_timer = self.autocomplete.delay(300, self);
 		}
 
 	},
@@ -115,10 +115,10 @@ var BlockSearch = new Class({
 
 		if(!self.q()){
 			self.hideResults(true);
-			return
+			return;
 		}
 
-		self.list()
+		self.list();
 	},
 
 	list: function(){
@@ -139,7 +139,7 @@ var BlockSearch = new Class({
 					'q': q
 				},
 				'onComplete': self.fill.bind(self, q)
-			})
+			});
 		}
 		else
 			self.fill(q, cache);
@@ -158,14 +158,14 @@ var BlockSearch = new Class({
 
 		Object.each(json, function(media){
 			if(typeOf(media) == 'array'){
-				Object.each(media, function(m){
+				Object.each(media, function(me){
 
-					var m = new BlockSearch[m.type.capitalize() + 'Item'](m);
+					var m = new BlockSearch[me.type.capitalize() + 'Item'](me);
 					$(m).inject(self.results);
 					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m;
 
 					if(q == m.imdb)
-						m.showOptions()
+						m.showOptions();
 
 				});
 			}
@@ -176,12 +176,12 @@ var BlockSearch = new Class({
 			rc = self.result_container.getCoordinates();
 
 		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px');
-		self.mask.fade('out')
+		self.mask.fade('out');
 
 	},
 
 	loading: function(bool){
-		this.el[bool ? 'addClass' : 'removeClass']('loading')
+		this.el[bool ? 'addClass' : 'removeClass']('loading');
 	},
 
 	q: function(){

@@ -47,7 +47,7 @@ var Movie = new Class({
 		// Remove spinner
 		self.global_events['movie.searcher.ended'] = function(notification){
 			if(notification.data && self.data._id == notification.data._id)
-				self.busy(false)
+				self.busy(false);
 		};
 		App.on('movie.searcher.ended', self.global_events['movie.searcher.ended']);
 
@@ -62,7 +62,7 @@ var Movie = new Class({
 				var updated = false;
 				self.data.releases.each(function(release){
 					if(release._id == data._id){
-						release['status'] = data.status;
+						release.status = data.status;
 						updated = true;
 					}
 				});
@@ -107,7 +107,7 @@ var Movie = new Class({
 						self.mask = null;
 					}, timeout || 400);
 				}
-			}, timeout || 1000)
+			}, timeout || 1000);
 		}
 		else if(!self.spinner) {
 			self.createMask();
@@ -150,7 +150,7 @@ var Movie = new Class({
 
 		if(self.data.info.release_date)
 			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
-				if (timestamp > 0 && (eta == null || Math.abs(timestamp - now) < Math.abs(eta - now)))
+				if (timestamp > 0 && (eta === null || Math.abs(timestamp - now) < Math.abs(eta - now)))
 					eta = timestamp;
 			});
 
@@ -163,7 +163,7 @@ var Movie = new Class({
 			self.select_checkbox = new Element('input[type=checkbox].inlay', {
 				'events': {
 					'change': function(){
-						self.fireEvent('select')
+						self.fireEvent('select');
 					}
 				}
 			}),
@@ -193,7 +193,7 @@ var Movie = new Class({
 							'click': function(e){
 								var releases = self.el.getElement('.actions .releases');
 								if(releases.isVisible())
-									releases.fireEvent('click', [e])
+									releases.fireEvent('click', [e]);
 							}
 						}
 					})
@@ -213,9 +213,9 @@ var Movie = new Class({
 			self.profile.getTypes().each(function(type){
 
 				var q = self.addQuality(type.get('quality'), type.get('3d'));
-				if((type.finish == true || type.get('finish')) && !q.hasClass('finish')){
+				if((type.finish === true || type.get('finish')) && !q.hasClass('finish')){
 					q.addClass('finish');
-					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.')
+					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.');
 				}
 
 			});
@@ -226,14 +226,14 @@ var Movie = new Class({
 		Object.each(self.options.actions, function(action, key){
 			self.action[key.toLowerCase()] = action = new self.options.actions[key](self);
 			if(action.el)
-				self.actions.adopt(action)
+				self.actions.adopt(action);
 		});
 
 	},
 
 	updateReleases: function(){
 		var self = this;
-		if(!self.data.releases || self.data.releases.length == 0) return;
+		if(!self.data.releases || self.data.releases.length === 0) return;
 
 		self.data.releases.each(function(release){
 
@@ -245,7 +245,7 @@ var Movie = new Class({
 
 			if (q && !q.hasClass(status)){
 				q.addClass(status);
-				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status)
+				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status);
 			}
 
 		});
@@ -271,7 +271,7 @@ var Movie = new Class({
 		else if(self.data.info.titles.length > 0)
 			return self.getUnprefixedTitle(self.data.info.titles[0]);
 
-		return 'Unknown movie'
+		return 'Unknown movie';
 	},
 
 	getUnprefixedTitle: function(t){
@@ -293,7 +293,7 @@ var Movie = new Class({
 
 			self.el.addEvent('outerClick', function(){
 				self.removeView();
-				self.slide('out')
+				self.slide('out');
 			});
 			el.show();
 			self.data_container.addClass('hide_right');
@@ -324,7 +324,7 @@ var Movie = new Class({
 	removeView: function(){
 		var self = this;
 
-		self.el.removeClass(self.view+'_view')
+		self.el.removeClass(self.view+'_view');
 	},
 
 	getIdentifier: function(){
@@ -339,12 +339,12 @@ var Movie = new Class({
 	},
 
 	get: function(attr){
-		return this.data[attr] || this.data.info[attr]
+		return this.data[attr] || this.data.info[attr];
 	},
 
 	select: function(bool){
 		var self = this;
-		self.select_checkbox_class[bool ? 'check' : 'uncheck']()
+		self.select_checkbox_class[bool ? 'check' : 'uncheck']();
 	},
 
 	isSelected: function(){

@@ -12,19 +12,19 @@ var MovieAction = new Class({
 
 		self.create();
 		if(self.el)
-			self.el.addClass(self.class_name)
+			self.el.addClass(self.class_name);
 	},
 
 	create: function(){},
 
 	disable: function(){
 		if(this.el)
-			this.el.addClass('disable')
+			this.el.addClass('disable');
 	},
 
 	enable: function(){
 		if(this.el)
-			this.el.removeClass('disable')
+			this.el.removeClass('disable');
 	},
 
 	getTitle: function(){
@@ -37,7 +37,7 @@ var MovieAction = new Class({
 			try {
 				return self.movie.original_title ? self.movie.original_title : self.movie.titles[0];
 			}
-			catch(e){
+			catch(e2){
 				return 'Unknown';
 			}
 		}
@@ -46,10 +46,10 @@ var MovieAction = new Class({
 	get: function(key){
 		var self = this;
 		try {
-			return self.movie.get(key)
+			return self.movie.get(key);
 		}
 		catch(e){
-			return self.movie[key]
+			return self.movie[key];
 		}
 	},
 
@@ -63,7 +63,7 @@ var MovieAction = new Class({
 	},
 
 	toElement: function(){
-		return this.el || null
+		return this.el || null;
 	}
 
 });
@@ -105,7 +105,7 @@ MA.Release = new Class({
 			}
 		});
 
-		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0)
 			self.el.hide();
 		else
 			self.showHelper();
@@ -162,14 +162,14 @@ MA.Release = new Class({
 
 					var quality = Quality.getQuality(release.quality) || {},
 						info = release.info || {},
-						provider = self.get(release, 'provider') + (info['provider_extra'] ? self.get(release, 'provider_extra') : '');
+						provider = self.get(release, 'provider') + (info.provider_extra ? self.get(release, 'provider_extra') : '');
 
 					var release_name = self.get(release, 'name');
 					if(release.files && release.files.length > 0){
 						try {
 							var movie_file = release.files.filter(function(file){
 								var type = File.Type.get(file.type_id);
-								return type && type.identifier == 'movie'
+								return type && type.identifier == 'movie';
 							}).pick();
 							release_name = movie_file.path.split(Api.getOption('path_sep')).getLast();
 						}
@@ -177,19 +177,19 @@ MA.Release = new Class({
 					}
 
 					// Create release
-					release['el'] = new Element('div', {
+					release.el = new Element('div', {
 						'class': 'item '+release.status,
 						'id': 'release_'+release._id
 					}).adopt(
 						new Element('span.name', {'text': release_name, 'title': release_name}),
 						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
 						new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
-						new Element('span.size', {'text': info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
+						new Element('span.size', {'text': info.size ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),
 						new Element('span.provider', { 'text': provider, 'title': provider }),
-						info['detail_url'] ? new Element('a.info.icon2', {
-							'href': info['detail_url'],
+						info.detail_url ? new Element('a.info.icon2', {
+							'href': info.detail_url,
 							'target': '_blank'
 						}) : new Element('a'),
 						new Element('a.download.icon2', {
@@ -283,7 +283,7 @@ MA.Release = new Class({
 					new Element('span.or', {
 						'text': 'or pick one below'
 					})] : null
-				)
+				);
 			}
 
 			self.last_release = null;
@@ -342,13 +342,13 @@ MA.Release = new Class({
 						'click': self.markMovieDone.bind(self)
 					}
 				})
-			)
+			);
 		}
 
 	},
 
 	get: function(release, type){
-		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a'
+		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a';
 	},
 
 	download: function(release){
@@ -386,7 +386,7 @@ MA.Release = new Class({
 			'data': {
 				'id': release._id
 			}
-		})
+		});
 
 	},
 
@@ -403,7 +403,7 @@ MA.Release = new Class({
 				movie.set('tween', {
 					'duration': 300,
 					'onComplete': function(){
-						self.movie.destroy()
+						self.movie.destroy();
 					}
 				});
 				movie.tween('height', 0);
@@ -508,7 +508,7 @@ MA.Trailer = new Class({
 				self.player.addEventListener('onStateChange', change_quality);
 
 			}
-		}).send()
+		}).send();
 
 	},
 
@@ -523,7 +523,7 @@ MA.Trailer = new Class({
 		setTimeout(function(){
 			self.container.destroy();
 			self.close_button.destroy();
-		}, 1800)
+		}, 1800);
 	}
 
 
@@ -585,7 +585,7 @@ MA.Edit = new Class({
 			// Fill categories
 			var categories = CategoryList.getAll();
 
-			if(categories.length == 0)
+			if(categories.length === 0)
 				self.category_select.hide();
 			else {
 				self.category_select.show();
@@ -686,11 +686,12 @@ MA.Readd = new Class({
 	Extends: MovieAction,
 
 	create: function(){
-		var self = this;
+		var self = this,
+			movie_done = self.movie.data.status == 'done',
+			snatched;
 
-		var movie_done = self.movie.data.status == 'done';
 		if(self.movie.data.releases && !movie_done)
-			var snatched = self.movie.data.releases.filter(function(release){
+			snatched = self.movie.data.releases.filter(function(release){
 				return release.status && (release.status == 'snatched' || release.status == 'seeding' || release.status == 'downloaded' || release.status == 'done');
 			}).length;
 
@@ -792,7 +793,7 @@ MA.Delete = new Class({
 						movie.set('tween', {
 							'duration': 300,
 							'onComplete': function(){
-								self.movie.destroy()
+								self.movie.destroy();
 							}
 						});
 						movie.tween('height', 0);
@@ -847,7 +848,7 @@ MA.Files = new Class({
 							new Element('div.file.item').adopt(
 								new Element('span.name', {'text': file}),
 								new Element('span.type', {'text': type})
-							).inject(rel)
+							).inject(rel);
 						});
 					});
 				});

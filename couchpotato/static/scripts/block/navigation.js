@@ -20,7 +20,7 @@ var BlockNavigation = new Class({
 				'text': 'back to top',
 				'events': {
 					'click': function(){
-						window.scroll(0,0)
+						window.scroll(0,0);
 					}
 				},
 				'tween': {
@@ -32,10 +32,10 @@ var BlockNavigation = new Class({
 		new ScrollSpy({
 			min: 400,
 			onLeave: function(){
-				self.backtotop.fade('out')
+				self.backtotop.fade('out');
 			},
 			onEnter: function(){
-				self.backtotop.fade('in')
+				self.backtotop.fade('in');
 			}
 		});
 
@@ -44,7 +44,7 @@ var BlockNavigation = new Class({
 				if($(document.body).getParent().hasClass('menu_shown'))
 					self.toggleMenu();
 			}
-		})
+		});
 
 	},
 
@@ -53,7 +53,7 @@ var BlockNavigation = new Class({
 
 		return new Element('li.tab_'+(name || 'unknown')).grab(
 			new Element('a', tab)
-		).inject(self.nav)
+		).inject(self.nav);
 
 	},
 

@@ -12,20 +12,20 @@ var QualityBase = new Class({
 		self.profiles = [];
 		Array.each(data.profiles, self.createProfilesClass.bind(self));
 
-		App.addEvent('loadSettings', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self));
 
 	},
 
 	getProfile: function(id){
 		return this.profiles.filter(function(profile){
-			return profile.data._id == id
-		}).pick()
+			return profile.data._id == id;
+		}).pick();
 	},
 
 	// Hide items when getting profiles
 	getActiveProfiles: function(){
 		return Array.filter(this.profiles, function(profile){
-			return !profile.data.hide
+			return !profile.data.hide;
 		});
 	},
 
@@ -37,7 +37,7 @@ var QualityBase = new Class({
 		}
 		catch(e){}
 
-		return {}
+		return {};
 	},
 
 	addSettings: function(){
@@ -58,7 +58,7 @@ var QualityBase = new Class({
 			self.createProfileOrdering();
 			self.createSizes();
 
-		})
+		});
 
 	},
 
@@ -68,7 +68,7 @@ var QualityBase = new Class({
 	createProfiles: function(){
 		var self = this;
 
-		var non_core_profiles = Array.filter(self.profiles, function(profile){ return !profile.isCore() });
+		var non_core_profiles = Array.filter(self.profiles, function(profile){ return !profile.isCore(); });
 		var count = non_core_profiles.length;
 
 		self.settings.createGroup({
@@ -81,7 +81,7 @@ var QualityBase = new Class({
 				'events': {
 					'click': function(){
 						var profile = self.createProfilesClass();
-						$(profile).inject(self.profile_container)
+						$(profile).inject(self.profile_container);
 					}
 				}
 			})
@@ -89,7 +89,7 @@ var QualityBase = new Class({
 
 		// Add profiles, that aren't part of the core (for editing)
 		Array.each(non_core_profiles, function(profile){
-			$(profile).inject(self.profile_container)
+			$(profile).inject(self.profile_container);
 		});
 
 	},
@@ -97,7 +97,7 @@ var QualityBase = new Class({
 	createProfilesClass: function(data){
 		var self = this;
 
-		var data = data || {'id': randomString()};
+		data = data || {'id': randomString()};
 		var profile = new Profile(data);
 		self.profiles.include(profile);
 
@@ -190,7 +190,6 @@ var QualityBase = new Class({
 			'name': 'sizes'
 		}).inject(self.content);
 
-
 		new Element('div.item.head.ctrlHolder').adopt(
 			new Element('span.label', {'text': 'Quality'}),
 			new Element('span.min', {'text': 'Min'}),
@@ -204,7 +203,7 @@ var QualityBase = new Class({
 					'value': quality.size_min,
 					'events': {
 						'keyup': function(e){
-							self.changeSize(quality.identifier, 'size_min', e.target.get('value'))
+							self.changeSize(quality.identifier, 'size_min', e.target.get('value'));
 						}
 					}
 				}),
@@ -212,11 +211,11 @@ var QualityBase = new Class({
 					'value': quality.size_max,
 					'events': {
 						'keyup': function(e){
-							self.changeSize(quality.identifier, 'size_max', e.target.get('value'))
+							self.changeSize(quality.identifier, 'size_max', e.target.get('value'));
 						}
 					}
 				})
-			).inject(group)
+			).inject(group);
 		});
 
 	},
@@ -235,7 +234,7 @@ var QualityBase = new Class({
 					'value': value
 				}
 			});
-		}).delay(300)
+		}).delay(300);
 
 	}
 

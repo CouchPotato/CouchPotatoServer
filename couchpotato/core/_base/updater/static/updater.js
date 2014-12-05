@@ -27,7 +27,7 @@ var UpdaterBase = new Class({
 					App.trigger('message', ['No updates available']);
 				}
 			}
-		})
+		});
 
 	},
 
@@ -50,8 +50,8 @@ var UpdaterBase = new Class({
 							self.message.destroy();
 					}
 				}
-			})
-		}, (timeout || 0))
+			});
+		}, (timeout || 0));
 
 	},
 
@@ -84,7 +84,7 @@ var UpdaterBase = new Class({
 					'click': self.doUpdate.bind(self)
 				}
 			})
-		).inject(document.body)
+		).inject(document.body);
 	},
 
 	doUpdate: function(){
@@ -96,7 +96,7 @@ var UpdaterBase = new Class({
 				if(json.success)
 					self.updating();
 				else
-					App.unBlockPage()
+					App.unBlockPage();
 			}
 		});
 	},
