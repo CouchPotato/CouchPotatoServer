@@ -2,7 +2,7 @@
 <!doctype html>
 <html>
 	<head>
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -21,22 +21,22 @@
 		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
 
 		{% if Env.get('dev') %}
-		<script type="text/javascript" src="{{ Env.get('static_path') }}scripts/reloader.js"></script>
+		<script src="//localhost:35729/livereload.js?snipver=1"></script>
 		{% end %}
 
-		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
+		<script type="text/javascript" src="//www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
 
-            window.addEvent('load', function(){
+			window.addEvent('load', function(){
 
-                if(window.getSize().x <= 480)
-                    setTimeout(function(){
-                        window.scrollTo(0, 1);
-                        window.scrollTo(0, 0);
-                    }, 100);
+				if(window.getSize().x <= 480)
+					setTimeout(function(){
+						window.scrollTo(0, 1);
+						window.scrollTo(0, 0);
+					}, 100);
 
-            });
+			});
 
 			window.addEvent('domready', function() {
 

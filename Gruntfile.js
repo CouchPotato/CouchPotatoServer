@@ -2,6 +2,8 @@
 
 module.exports = function(grunt){
 
+	require('time-grunt')(grunt);
+
 	// Configurable paths
 	var config = {
 		tmp: '.tmp',
@@ -68,32 +70,30 @@ module.exports = function(grunt){
 			}
 		},
 
+		shell: {
+			runCouchPotato: {
+				command: 'python CouchPotato.py'
+			}
+		},
+
 		// COOL TASKS ==============================================================
 		watch: {
 			scss: {
 				files: ['<%= config.base %>/**/*.{scss,sass}'],
-				tasks: ['sass:server', 'autoprefixer', 'cssmin'],
-				options: {
-					'livereload': true
-				}
+				tasks: ['sass:server', 'autoprefixer', 'cssmin']
 			},
 			js: {
 				files: [
                     '<%= config.base %>/**/*.js'
                 ],
-				tasks: ['jshint'],
-				options: {
-					'livereload': true
-				}
+				tasks: ['jshint']
 			},
 			livereload: {
 				options: {
 					livereload: 35729
 				},
 				files: [
-					'<%= config.base %>/{,*/}*.html',
-					'<%= config.tmp %>/styles/{,*/}*.css',
-					'<%= config.base %>/images/{,*/}*'
+					'<%= config.css_dest %>'
 				]
 			}
 		},
@@ -102,7 +102,7 @@ module.exports = function(grunt){
 			options: {
 				logConcurrentOutput: true
 			},
-			tasks: ['sass:server', 'autoprefixer', 'cssmin', 'watch']
+			tasks: ['shell:runCouchPotato', 'sass:server', 'autoprefixer', 'cssmin', 'watch']
 		}
 
 	});
@@ -114,6 +114,7 @@ module.exports = function(grunt){
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-autoprefixer');
 	grunt.loadNpmTasks('grunt-concurrent');
+	grunt.loadNpmTasks('grunt-shell');
 
 	grunt.registerTask('default', ['concurrent']);
 

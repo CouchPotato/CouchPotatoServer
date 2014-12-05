@@ -109,7 +109,6 @@ class ClientScript(Plugin):
 
         data_combined = ''
 
-        raw = []
         new_paths = []
         for x in paths:
             file_path, url_path = x
@@ -117,14 +116,7 @@ class ClientScript(Plugin):
             f = open(file_path, 'r').read()
 
             if not Env.get('dev'):
-
-                if file_type == 'script':
-                    data = f
-                else:
-                    data = self.prefix(f)
-                    data = data.replace('../images/', '../static/images/')
-                    data = data.replace('../fonts/', '../static/fonts/')
-                    data = data.replace('../../static/', '../static/')  # Replace inside plugins
+                data = f
 
                 data_combined += self.comment.get(file_type) % (ss(file_path), int(os.path.getmtime(file_path)))
                 data_combined += data + '\n\n'
@@ -172,29 +164,3 @@ class ClientScript(Plugin):
         if not self.paths[type].get(location):
             self.paths[type][location] = []
         self.paths[type][location].append((file_path, api_path))
-
-    prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
-    prefix_tags = ['ms', 'moz', 'webkit']
-
-    def prefix(self, data):
-
-        trimmed_data = re.sub('(\t|\n|\r)+', '', data)
-
-        new_data = ''
-        colon_split = trimmed_data.split(';')
-        for splt in colon_split:
-            curl_split = splt.strip().split('{')
-            for curly in curl_split:
-                curly = curly.strip()
-                for prop in self.prefix_properties:
-                    if curly[:len(prop) + 1] == prop + ':':
-                        for tag in self.prefix_tags:
-                            new_data += ' -%s-%s; ' % (tag, curly)
-
-                new_data += curly + (' { ' if len(curl_split) > 1 else ' ')
-
-            new_data += '; '
-
-        new_data = new_data.replace('{ ;', '; ').replace('} ;', '} ')
-
-        return new_data
