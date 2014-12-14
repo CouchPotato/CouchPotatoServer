@@ -8,8 +8,9 @@ body, html {
 	height:  100%;
 	margin: 0;
 	padding: 0;
-	background: #111;
-	-webkit-font-smoothing: subpixel-antialiased;
+	background: $menu_color;
+	-webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
 }
 
@@ -35,11 +36,11 @@ a {
     .navigation {
 
         .logo {
-            background: #ac0000;
+            background: $couch_color;
             display: block;
             text-align: center;
 
-            font-family: Lobster;
+            font-family: Lobster, serif;
             color: #FFF;
             font-size: 38px;
             line-height: 80px;
@@ -67,11 +68,10 @@ a {
     }
 }
 
-
 .content {
     @include flex(1 auto);
 
-    background: #FFF;
+    background: $background_color;
     border-radius: 3px 0 0 3px;
     overflow: hidden;
 
@@ -82,7 +82,7 @@ a {
 
     .pages {
         height: 100%;
-        widows: 100%;
+        width: 100%;
     }
 
     .footer {
