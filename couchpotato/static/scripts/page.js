@@ -10,11 +10,13 @@ var PageBase = new Class({
 	has_tab: true,
 	name: '',
 
+	parent_page: null,
 	sub_pages: null,
 
-	initialize: function(options) {
+	initialize: function(parent_page, options) {
 		var self = this;
 
+		self.parent_page = parent_page;
 		self.setOptions(options);
 
 		// Create main page container
@@ -26,9 +28,17 @@ var PageBase = new Class({
 
 		// Create tab for page
 		if(self.has_tab){
-			var nav = App.getBlock('navigation');
+			var nav;
+
+			if(self.parent_page && self.parent_page.navigation){
+				nav = self.parent_page.navigation;
+			}
+			else {
+				nav = App.getBlock('navigation');
+			}
+
 			self.tab = nav.addTab(self.name, {
-				'href': App.createUrl(self.name),
+				'href': App.createUrl(self.getPageUrl()),
 				'title': self.title,
 				'text': self.name.capitalize()
 			});
@@ -73,7 +83,13 @@ var PageBase = new Class({
 		//p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));
 
 		try {
-			var elements = self[action+'Action'](params);
+			var elements
+			if(!self[action+'Action']){
+				elements = self['defaultAction'](action, params);
+			}
+			else {
+				elements = self[action+'Action'](params);
+			}
 			if(elements !== undefined){
 				self.el.empty();
 				self.el.adopt(elements);
@@ -91,6 +107,11 @@ var PageBase = new Class({
 	openUrl: function(url){
 		if(History.getPath() != url)
 			History.push(url);
+	},
+
+	getPageUrl: function(){
+		var self = this;
+		return (self.parent_page && self.parent_page.getPageUrl ? self.parent_page.getPageUrl() + '/' : '') + self.name;
 	},
 
 	errorAction: function(e){

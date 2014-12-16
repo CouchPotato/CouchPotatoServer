@@ -43,8 +43,8 @@ a {
             font-family: Lobster, serif;
             color: #FFF;
             font-size: 38px;
-            line-height: 80px;
-            height: 80px;
+            line-height: $header-height;
+            height: $header-height;
 
             span:nth-child(odd){
                 display: block;
@@ -60,7 +60,7 @@ a {
             margin: 0;
 
             li a {
-                padding: 10px 20px;
+                padding: $padding/2 $padding;
                 display: block;
             }
         }
@@ -83,23 +83,68 @@ a {
     .pages {
         height: 100%;
         width: 100%;
+        overflow: auto;
+        overflow-x: hidden;
     }
 
     .footer {
         position: fixed;
         bottom: 0;
-        height: 20px;
+        height: $padding;
         width: 100%;
     }
 }
 
 .page {
-
+    position: relative;
     display: none;
-    padding: 20px;
+    padding: $padding 0;
+
+    .page {
+        margin-top: $header-height - $padding;
+        z-index: 10;
+        padding: 0;
+    }
 
     &.active {
         display: block;
+    }
+
+    .navigation {
+        @include flexbox();
+        position: fixed;
+        top: 0;
+        height: $header-height;
+        left: 130px;
+        right: 0;
+        background: $background_color;
+        z-index: 100;
+
+        ul {
+            @include flex(1 auto);
+            list-style: none;
+
+            li {
+                display: inline-block;
+
+                a {
+                    font-size: 24px;
+                    line-height: $header-height;
+                    padding: $padding;
+                    color: rgba(0,0,0,.5);
+                    font-weight: 300;
+
+                    &.active {
+                        color: rgba(0,0,0,1);
+                    }
+                }
+            }
+        }
+
+    }
+
+    .alph_nav {
+        display: none; // Hide for now
     }
 
 }

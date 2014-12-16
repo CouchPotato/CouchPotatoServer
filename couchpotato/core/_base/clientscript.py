@@ -40,6 +40,7 @@ class ClientScript(Plugin):
             'scripts/page.js',
             'scripts/block.js',
             'scripts/block/navigation.js',
+            'scripts/block/header.js',
             'scripts/block/footer.js',
             'scripts/block/menu.js',
             'scripts/page/home.js',

@@ -23,8 +23,6 @@
 
 		self.c = $(document.body);
 
-		self.route = new Route(self.defaults);
-
 		self.createLayout();
 		self.createPages();
 
@@ -79,7 +77,7 @@
 
 		self.c.adopt(
 			$(self.block.header).addClass('header').adopt(
-				self.block.navigation = new BlockNavigation(self, {}),
+				self.block.navigation = new BlockHeader(self, {}),
 				self.block.search = new BlockSearch(self, {}),
 				self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
 			),
@@ -170,13 +168,15 @@
 	},
 
 	openPage: function(url) {
-		var self = this;
+		var self = this,
+			route = new Route(self.defaults);
 
-		self.route.parse();
-		var page_name = self.route.getPage().capitalize(),
-			action = self.route.getAction(),
-			params = self.route.getParams(),
-			current_url = self.route.getCurrentUrl(),
+		route.parse(rep(History.getPath()));
+
+		var page_name = route.getPage().capitalize(),
+			action = route.getAction(),
+			params = route.getParams(),
+			current_url = route.getCurrentUrl(),
 			page;
 
 		if(current_url == self.current_url)
@@ -439,24 +439,19 @@ window.App = new CouchPotato();
 
 var Route = new Class({
 
-	defaults: {},
+	defaults: null,
 	page: '',
 	action: 'index',
 	params: {},
 
 	initialize: function(defaults){
 		var self = this;
-		self.defaults = defaults;
+		self.defaults = defaults || {};
 	},
 
-	parse: function(){
+	parse: function(path){
 		var self = this;
 
-		var rep = function (pa) {
-			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/');
-		};
-
-		var path = rep(History.getPath());
 		if(path == '/' && location.hash){
 			path = rep(location.hash.replace('#', '/'));
 		}
@@ -464,7 +459,7 @@ var Route = new Class({
 		var url = self.current.split('/');
 
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page;
-		self.action = (url.length > 0) ? url.shift() : self.defaults.action;
+		self.action = (url.length > 0) ? url.join('/') : self.defaults.action;
 
 		self.params = Object.merge({}, self.defaults.params);
 		if(url.length > 1){
@@ -623,4 +618,8 @@ var createSpinner = function(target, options){
 	}, options);
 
 	return new Spinner(opts).spin(target);
+};
+
+var rep = function (pa) {
+	return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/');
 };

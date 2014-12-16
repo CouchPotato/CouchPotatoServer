@@ -181,9 +181,6 @@ var Movie = new Class({
 							'text': self.data.info.year || 'n/a'
 						})
 					),
-					self.description = new Element('div.description.tiny_scroll', {
-						'text': self.data.info.plot
-					}),
 					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {
 						'text': eta_date,
 						'title': 'ETA'
