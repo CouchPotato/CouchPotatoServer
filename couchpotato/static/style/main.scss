@@ -5,12 +5,11 @@ body, html {
 	font-size: 14px;
 	line-height: 1.5;
 	font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+    font-weight: 300;
 	height:  100%;
 	margin: 0;
 	padding: 0;
 	background: $menu_color;
-	-webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
 }
 
@@ -23,10 +22,14 @@ a {
     text-decoration: none;
 }
 
+input, textarea, select {
+    font-size: 1em;
+    font-weight: 300;
+}
+
 .header {
     width: $header-width;
-
-	font-weight: 200;
+    min-width: $header-width;
 
     a {
         color: #FFF;
@@ -37,7 +40,6 @@ a {
 
         .logo {
             background: $couch_color;
-            opacity: .05;
             display: block;
             text-align: center;
 
@@ -84,8 +86,8 @@ a {
     .pages {
         height: 100%;
         width: 100%;
-        overflow: auto;
-        overflow-x: hidden;
+        overflow: hidden;
+        position: relative;
     }
 
     .footer {
@@ -97,9 +99,14 @@ a {
 }
 
 .page {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: none;
     padding: $padding 0;
+    overflow: auto;
 
     &.active {
         display: block;
@@ -128,12 +135,11 @@ a {
                     line-height: $header-height;
                     padding: $padding;
                     color: rgba(0,0,0,.5);
-                    font-weight: 300;
-
-                    &.active {
-                        color: rgba(0,0,0,1);
-                    }
                 }
+            }
+
+            .active a {
+                color: #000;
             }
         }
 

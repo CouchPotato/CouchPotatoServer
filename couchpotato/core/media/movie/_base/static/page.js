@@ -42,6 +42,7 @@ Page.Movies = new Class({
 			page.list.navigation.inject(self.navigation);
 
 		self.current_page = page;
+		self.navigation.activate(page_name.toLowerCase());
 
 	}
 

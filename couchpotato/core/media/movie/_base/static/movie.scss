@@ -2,19 +2,25 @@
 
 .page.movies {
 	z-index: 21; // Sets navigation above
+	bottom: auto;
+}
+
+.page.movies_wanted, .page.movies_manage {
+	top: $header-height;
+	padding: 0;
 }
 
 .list_list {
 	font-size: 15px;
 	font-weight: 300;
-	background: #f2f2f2;
 
 	.poster {
 		display: none;
 	}
 
 	.movie {
-		border-bottom: 1px solid #e6e6e6;
+		display: block;
+		border-top: 1px solid #f2f2f2;
 		position: relative;
 		cursor: pointer;
 
@@ -45,14 +51,14 @@
 				}
 
 				.quality {
-
 					span {
+						float: left;
 						color: #FFF;
-						font-size: .8em;
+						font-size: .7em;
 						padding: 2px 4px;
 						background: rgba(0,0,0,.2);
 						border-radius: 1px;
-						margin-left: 2px;
+						margin: 2px 0 0 2px;
 					}
 				}
 			}
@@ -63,7 +69,7 @@
 .thumb_list {
 
 	font-size: 12px;
-	padding: $padding/2 $padding;
+	padding: 0 $padding;
 
 	.movie {
 		@include span(6);
@@ -83,7 +89,6 @@
 			overflow: hidden;
 			width: 100%;
 			float: left;
-			opacity: .05;
 		}
 
 		.data {
@@ -188,4 +193,127 @@
 			border-bottom: 1px solid rgba(0,0,0,.1);
 		}
 	}
+}
+
+
+.alph_nav {
+
+	.mass_edit_form {
+		display: none;
+	}
+
+	.menus {
+		margin-right: $padding;
+
+		.button {
+			padding: 0 $padding/2;
+			line-height: $header-height;
+			font-size: 24px;
+			color: rgba(0, 0, 0, 0.5);
+			cursor: pointer;
+		}
+
+		.counter, .more_menu, .actions {
+			float: left;
+		}
+
+		.counter {
+			line-height: $header-height;
+		}
+
+		.actions {
+
+			a {
+				display: none;
+			}
+
+			.active {
+				display: inline-block;
+			}
+
+		}
+
+		.filter {
+			margin-top: -2px;
+
+			.search {
+				position: relative;
+
+				&:before {
+					position: absolute;
+					height: 100%;
+					line-height: 38px;
+					padding-left: $padding/2;
+					font-size: 16px;
+					opacity: .5;
+				}
+
+				input {
+					width: 100%;
+					padding: $padding/2 $padding/2 $padding/2 $padding*1.5;
+					background: $background_color;
+					border: none;
+					border-bottom: 1px solid #f2f2f2;
+				}
+			}
+
+			.numbers {
+				padding: $padding/2;
+
+				li {
+					float: left;
+					width: 10%;
+					height: 30px;
+					line-height: 30px;
+					text-align: center;
+					color: rgba(0,0,0,.2);
+					cursor: default;
+
+					&.active {
+						background: #f2f2f2;
+					}
+
+					&.available {
+						color: rgba(0,0,0,1);
+						cursor: pointer;
+
+						&:hover {
+							background: #f2f2f2;
+						}
+					}
+				}
+			}
+		}
+
+		.more_menu {
+			position: relative;
+			line-height: 1em;
+
+			.wrapper {
+				display: none;
+				position: absolute;
+				width: 320px;
+				right: 0;
+				top: $header-height;
+				background: $background_color;
+
+				ul {
+					overflow: hidden;
+				}
+
+				li {
+					display: block;
+				}
+			}
+
+			&.show {
+				background: #f2f2f2;
+
+				.wrapper {
+					display: block;
+				}
+			}
+		}
+	}
+
 }

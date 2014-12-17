@@ -231,26 +231,29 @@ var MovieList = new Class({
 			new Element('div.menus').adopt(
 				self.navigation_counter = new Element('span.counter[title=Total]'),
 				self.filter_menu = new BlockMenu(self, {
-					'class': 'filter'
+					'class': 'filter',
+					'button_class': 'icon-filter'
 				}),
-				self.navigation_actions = new Element('ul.actions', {
+				self.navigation_actions = new Element('div.actions', {
 					'events': {
-						'click:relay(li)': function(e, el){
+						'click': function(e, el){
+							(e).stop();
+
+							var new_view = self.current_view == 'list' ? 'thumb' : 'list';
+
 							var a = 'active';
 							self.navigation_actions.getElements('.'+a).removeClass(a);
-							self.changeView(el.get('data-view'));
-							this.addClass(a);
+							self.changeView(new_view);
 
-							el.inject(el.getParent(), 'top');
-							el.getSiblings().hide();
-							setTimeout(function(){
-								el.getSiblings().setStyle('display', null);
-							}, 100);
+							self.navigation_actions.getElement('[data-view='+new_view+']')
+								.addClass(a);
+
 						}
 					}
 				}),
 				self.navigation_menu = new BlockMenu(self, {
-					'class': 'extra'
+					'class': 'extra',
+					'button_class': 'icon-dots'
 				})
 			)
 		);
@@ -273,7 +276,7 @@ var MovieList = new Class({
 					'change': self.search.bind(self)
 				}
 			})
-		).addClass('search');
+		).addClass('search icon-search');
 
 		var available_chars;
 		self.filter_menu.addEvent('open', function(){
@@ -310,8 +313,8 @@ var MovieList = new Class({
 		// Actions
 		['thumb', 'list'].each(function(view){
 			var current = self.current_view == view;
-			new Element('li', {
-				'class': 'icon2 ' + view + (current ?  ' active ' : ''),
+			new Element('a', {
+				'class': 'button icon-' + view + (current ?  ' active ' : ''),
 				'data-view': view
 			}).inject(self.navigation_actions, current ? 'top' : 'bottom');
 		});
