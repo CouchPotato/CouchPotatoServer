@@ -19,8 +19,12 @@ Page.Movies = new Class({
 	defaultAction: function(action, params){
 		var self = this;
 
-		if(self.current_page)
+		if(self.current_page){
 			self.current_page.hide();
+
+			if(self.current_page.list && self.current_page.list.navigation)
+				self.current_page.list.navigation.destroy();
+		}
 
 		var route = new Route();
 			route.parse(action);
@@ -33,6 +37,9 @@ Page.Movies = new Class({
 
 		page.open(route.getAction() || 'index', params);
 		page.show();
+
+		if(page.list && page.list.navigation)
+			page.list.navigation.inject(self.navigation);
 
 		self.current_page = page;
 

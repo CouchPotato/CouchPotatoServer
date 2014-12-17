@@ -50,6 +50,10 @@ var MovieList = new Class({
 		else
 			self.changeView(self.getSavedView() || self.options.view || 'thumb');
 
+		// Create the alphabet nav
+		if(self.options.navigation)
+			self.createNavigation();
+
 		self.getMovies();
 
 		App.on('movie.added', self.movieAdded.bind(self));
@@ -88,10 +92,6 @@ var MovieList = new Class({
 
 	create: function(){
 		var self = this;
-
-		// Create the alphabet nav
-		if(self.options.navigation)
-			self.createNavigation();
 
 		if(self.options.load_more)
 			self.scrollspy = new ScrollSpy({
@@ -253,7 +253,7 @@ var MovieList = new Class({
 					'class': 'extra'
 				})
 			)
-		).inject(self.el, 'top');
+		);
 
 		// Mass edit
 		self.mass_edit_select_class = new Form.Check(self.mass_edit_select);

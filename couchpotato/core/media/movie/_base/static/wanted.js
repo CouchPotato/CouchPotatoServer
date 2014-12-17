@@ -10,7 +10,7 @@ var MoviesWanted = new Class({
 	indexAction: function(){
 		var self = this;
 
-		if(!self.wanted){
+		if(!self.list){
 
 			self.manual_search = new Element('a', {
 				'title': 'Force a search for the full wanted list',
@@ -19,7 +19,6 @@ var MoviesWanted = new Class({
 					'click': self.doFullSearch.bind(self, true)
 				}
 			});
-
 
             self.scan_folder = new Element('a', {
                 'title': 'Scan a folder and rename all movies in it',
@@ -30,7 +29,7 @@ var MoviesWanted = new Class({
             });
 
 			// Wanted movies
-			self.wanted = new MovieList({
+			self.list = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
 				'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Edit, MA.Refresh, MA.Readd, MA.Delete],
@@ -38,7 +37,7 @@ var MoviesWanted = new Class({
 				'menu': [self.manual_search, self.scan_folder],
 				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
 			});
-			$(self.wanted).inject(self.el);
+			$(self.list).inject(self.el);
 
 			// Check if search is in progress
 			self.startProgressInterval.delay(4000, self);
