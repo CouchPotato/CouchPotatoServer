@@ -20,7 +20,9 @@ var PageBase = new Class({
 		self.setOptions(options);
 
 		// Create main page container
-		self.el = new Element('div.page.'+self.name);
+		self.el = new Element('div', {
+			'class': 'page ' + self.getPageClass() + (' level_' + (options.level || 0))
+		});
 	},
 
 	load: function(){
@@ -55,11 +57,11 @@ var PageBase = new Class({
 
 		var sub_pages = self.sub_pages;
 
-		self.pages = new Element('div.pages').inject(self.el);
-
 		self.sub_pages = [];
 		sub_pages.each(function(class_name){
-			var pg = new window[self.name.capitalize()+class_name](self, {});
+			var pg = new window[self.name.capitalize()+class_name](self, {
+				'level': 2
+			});
 			self.sub_pages[class_name] = pg;
 
 			self.sub_pages.include({
@@ -73,7 +75,7 @@ var PageBase = new Class({
 			page['class'].load();
 			self.fireEvent('load'+page.name);
 
-			$(page['class']).inject(self.pages);
+			$(page['class']).inject(App.getPageContainer());
 		});
 
 	},
@@ -83,9 +85,9 @@ var PageBase = new Class({
 		//p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));
 
 		try {
-			var elements
+			var elements;
 			if(!self[action+'Action']){
-				elements = self['defaultAction'](action, params);
+				elements = self.defaultAction(action, params);
 			}
 			else {
 				elements = self[action+'Action'](params);
@@ -112,6 +114,11 @@ var PageBase = new Class({
 	getPageUrl: function(){
 		var self = this;
 		return (self.parent_page && self.parent_page.getPageUrl ? self.parent_page.getPageUrl() + '/' : '') + self.name;
+	},
+
+	getPageClass: function(){
+		var self = this;
+		return (self.parent_page && self.parent_page.getPageClass ? self.parent_page.getPageClass() + '_' : '') + self.name;
 	},
 
 	errorAction: function(e){

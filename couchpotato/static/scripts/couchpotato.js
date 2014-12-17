@@ -82,7 +82,7 @@
 				self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
 			),
 			self.content = new Element('div.content').adopt(
-				self.pages = new Element('div.pages'),
+				self.pages_container = new Element('div.pages'),
 				self.block.footer = new BlockFooter(self, {})
 			)
 		);
@@ -143,7 +143,9 @@
 
 		var pages = [];
 		Object.each(Page, function(page_class, class_name){
-			var pg = new Page[class_name](self, {});
+			var pg = new Page[class_name](self, {
+				'level': 1
+			});
 			self.pages[class_name] = pg;
 
 			pages.include({
@@ -156,7 +158,7 @@
 		pages.stableSort(self.sortPageByOrder).each(function(page){
 			page['class'].load();
 			self.fireEvent('load'+page.name);
-			$(page['class']).inject(self.pages);
+			$(page['class']).inject(self.getPageContainer());
 		});
 
 		self.fireEvent('load');
@@ -205,6 +207,10 @@
 
 	getPage: function(name){
 		return this.pages[name];
+	},
+
+	getPageContainer: function(){
+		return this.pages_container;
 	},
 
 	shutdown: function(){

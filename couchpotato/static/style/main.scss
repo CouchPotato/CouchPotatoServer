@@ -24,7 +24,7 @@ a {
 }
 
 .header {
-    width: 130px;
+    width: $header-width;
 
 	font-weight: 200;
 
@@ -37,6 +37,7 @@ a {
 
         .logo {
             background: $couch_color;
+            opacity: .05;
             display: block;
             text-align: center;
 
@@ -100,12 +101,6 @@ a {
     display: none;
     padding: $padding 0;
 
-    .page {
-        margin-top: $header-height - $padding;
-        z-index: 10;
-        padding: 0;
-    }
-
     &.active {
         display: block;
     }
@@ -115,9 +110,10 @@ a {
         position: fixed;
         top: 0;
         height: $header-height;
-        left: 130px;
+        left: $header-width;
         right: 0;
         background: $background_color;
+        border-radius: 3px 0 0 3px;
         z-index: 100;
 
         ul {
@@ -147,4 +143,10 @@ a {
         display: none; // Hide for now
     }
 
+}
+
+@for $i from 1 through 4 {
+    .level_#{$i} {
+        z-index: #{$i * 10};
+    }
 }

@@ -3,15 +3,33 @@ var Movie = new Class({
 	Extends: BlockBase,
 
 	action: {},
+	details: null,
 
 	initialize: function(list, options, data){
 		var self = this;
 
 		self.data = data;
-		self.view = options.view || 'details';
 		self.list = list;
 
-		self.el = new Element('div.movie');
+		self.el = new Element('a.movie', {
+			'events': {
+				'click': function(e){
+					(e).stop();
+
+					if(!self.details)
+						self.details = new MovieDetails(self, {
+							'level': 3
+						});
+
+					App.getPageContainer().grab(self.details);
+
+					self.details.addSection('test', new Element('div.test', {
+						'text': '.'
+					}));
+
+				}
+			}
+		});
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.category = CategoryList.getCategory(data.category_id) || {};
@@ -202,7 +220,6 @@ var Movie = new Class({
 		if(!self.thumbnail)
 			self.el.addClass('no_thumbnail');
 
-		//self.changeView(self.view);
 		self.select_checkbox_class = new Form.Check(self.select_checkbox);
 
 		// Add profile
@@ -279,49 +296,6 @@ var Movie = new Class({
 		else if(t.substr(0, 2).toLowerCase() == 'a ')
 			t = t.substr(2) + ', A';
 		return t;
-	},
-
-	slide: function(direction, el){
-		var self = this;
-
-		if(direction == 'in'){
-			self.temp_view = self.view;
-			self.changeView('details');
-
-			self.el.addEvent('outerClick', function(){
-				self.removeView();
-				self.slide('out');
-			});
-			el.show();
-			self.data_container.addClass('hide_right');
-		}
-		else {
-			self.el.removeEvents('outerClick');
-
-			setTimeout(function(){
-				if(self.el)
-					self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
-			}, 600);
-
-			self.data_container.removeClass('hide_right');
-		}
-	},
-
-	changeView: function(new_view){
-		var self = this;
-
-		if(self.el)
-			self.el
-				.removeClass(self.view+'_view')
-				.addClass(new_view+'_view');
-
-		self.view = new_view;
-	},
-
-	removeView: function(){
-		var self = this;
-
-		self.el.removeClass(self.view+'_view');
 	},
 
 	getIdentifier: function(){

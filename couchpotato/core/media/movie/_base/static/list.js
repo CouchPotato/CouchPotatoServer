@@ -48,7 +48,7 @@ var MovieList = new Class({
 		if($(window).getSize().x <= 480 && !self.options.force_view)
 			self.changeView('list');
 		else
-			self.changeView(self.getSavedView() || self.options.view || 'details');
+			self.changeView(self.getSavedView() || self.options.view || 'thumb');
 
 		self.getMovies();
 
@@ -308,7 +308,7 @@ var MovieList = new Class({
 		);
 
 		// Actions
-		['mass_edit', 'details', 'list'].each(function(view){
+		['thumb', 'list'].each(function(view){
 			var current = self.current_view == view;
 			new Element('li', {
 				'class': 'icon2 ' + view + (current ?  ' active ' : ''),

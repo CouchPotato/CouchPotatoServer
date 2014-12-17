@@ -1,138 +1,191 @@
 @import "couchpotato/static/style/mixins";
 
-.movies {
+.page.movies {
+	z-index: 21; // Sets navigation above
+}
 
-	.list_list {
-		font-size: 15px;
-		font-weight: 300;
-		background: #f2f2f2;
+.list_list {
+	font-size: 15px;
+	font-weight: 300;
+	background: #f2f2f2;
+
+	.poster {
+		display: none;
+	}
+
+	.movie {
+		border-bottom: 1px solid #e6e6e6;
+		position: relative;
+		cursor: pointer;
+
+		&:last-child {
+			border-bottom: none;
+		}
+
+		&:hover {
+			background: rgba(0,0,0,.1);
+		}
+
+		.data {
+			padding: $padding/2 $padding;
+
+			.info {
+
+				@include flexbox();
+				flex-flow: row nowrap;
+
+				.title {
+					@include flex(1 auto);
+
+					.year {
+						display: inline-block;
+						margin-left: 10px;
+						opacity: .5;
+					}
+				}
+
+				.quality {
+
+					span {
+						color: #FFF;
+						font-size: .8em;
+						padding: 2px 4px;
+						background: rgba(0,0,0,.2);
+						border-radius: 1px;
+						margin-left: 2px;
+					}
+				}
+			}
+		}
+	}
+}
+
+.thumb_list {
+
+	font-size: 12px;
+	padding: $padding/2 $padding;
+
+	.movie {
+		@include span(6);
+		float: left;
+		margin-bottom: $padding;
+
+		&:nth-child(4n+4){
+			@include span(last);
+		}
+
+		&:nth-child(4n+5){
+			clear: both;
+		}
 
 		.poster {
-			display: none;
-		}
-
-		.movie {
-			border-bottom: 1px solid #e6e6e6;
-			position: relative;
-			cursor: pointer;
-
-			&:last-child {
-				border-bottom: none;
-			}
-
-			&:hover {
-				background: rgba(0,0,0,.1);
-			}
-
-			.data {
-				padding: $padding/2 $padding;
-
-				.info {
-
-					@include flexbox();
-					flex-flow: row nowrap;
-
-					.title {
-						@include flex(1 auto);
-
-						.year {
-							display: inline-block;
-							margin-left: 10px;
-							opacity: .5;
-						}
-					}
-
-					.quality {
-
-						span {
-							color: #FFF;
-							font-size: .8em;
-							padding: 2px 4px;
-							background: rgba(0,0,0,.2);
-							border-radius: 1px;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	.thumb_list {
-
-		font-size: 12px;
-		padding: $padding/2 $padding;
-
-		.movie {
-			@include span(6);
+			border-radius: 2px;
+			overflow: hidden;
+			width: 100%;
 			float: left;
-			margin-bottom: $padding;
+			opacity: .05;
+		}
 
-			&:nth-child(4n+4){
-				@include span(last);
-			}
+		.data {
+			clear: both;
 
-			&:nth-child(4n+5){
-				clear: both;
-			}
+			.info {
 
-			.poster {
-				border-radius: 2px;
-				overflow: hidden;
-				width: 100%;
-				float: left;
-			}
+				.title {
+					@include flexbox();
+					padding: 3px 0;
 
-			.data {
-				clear: both;
-
-				.info {
-
-					.title {
-						@include flexbox();
-						padding: 3px 0;
-
-						span {
-							@include flex(1 auto);
-							white-space: nowrap;
-							overflow: hidden;
-							text-overflow: ellipsis;
-						}
-
-						.year {
-							display: inline-block;
-							margin-left: 5px;
-							opacity: .5;
-						}
-					}
-
-					.quality {
+					span {
+						@include flex(1 auto);
 						white-space: nowrap;
 						overflow: hidden;
+						text-overflow: ellipsis;
+					}
 
-						span {
-							color: #FFF;
-							font-size: .8em;
-							padding: 2px 4px;
-							background: rgba(0,0,0,.2);
-							border-radius: 1px;
-							margin-right: 2px;
-						}
+					.year {
+						display: inline-block;
+						margin-left: 5px;
+						opacity: .5;
+					}
+				}
+
+				.quality {
+					white-space: nowrap;
+					overflow: hidden;
+
+					span {
+						color: #FFF;
+						font-size: .8em;
+						padding: 2px 4px;
+						background: rgba(0,0,0,.2);
+						border-radius: 1px;
+						margin-right: 2px;
 					}
 				}
 			}
 		}
-
 	}
 
-	.check {
-		position: absolute;
+}
+
+.check {
+	position: absolute;
+	top: 0;
+	left: $padding;
+	display: none;
+}
+
+.eta {
+	display: none;
+}
+
+.page.movie_details {
+
+	$gab-width: $header-width/3;
+
+	.overlay {
+		position: fixed;
 		top: 0;
-		left: $padding;
-		display: none;
+		bottom: 0;
+		right: 0;
+		left: $header-width;
+		background: rgba(0,0,0,.6);
+		border-radius: 3px 0 0 3px;
+
+		.close {
+			display: inline-block;
+			text-align: center;
+			font-size: 60px;
+			line-height: $header-height;
+			color: #FFF;
+			width: $gab-width;
+			cursor: pointer;
+			height: 100%;
+		}
 	}
 
-	.eta {
-		display: none;
-	}
+	.content {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		left: $header-width + $gab-width;
+		background: $background_color;
+		z-index: 200;
+		border-radius: 3px 0 0 3px;
 
+		h1 {
+			margin: 0;
+			padding: 0 $padding;
+			font-size: 24px;
+			line-height: $header-height;
+			color: rgba(0,0,0,.5);
+			font-weight: 300;
+		}
+
+		.section {
+			padding: $padding/2 $padding;
+			border-bottom: 1px solid rgba(0,0,0,.1);
+		}
+	}
 }
