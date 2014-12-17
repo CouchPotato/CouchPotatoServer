@@ -696,7 +696,7 @@ MA.Readd = new Class({
 
 		if(movie_done || snatched && snatched > 0)
 			self.el = new Element('a.readd', {
-				'title': 'Readd the movie and mark all previous snatched/downloaded as ignored',
+				'title': 'Re-add the movie and mark all previous snatched/downloaded as ignored',
 				'events': {
 					'click': self.doReadd.bind(self)
 				}
