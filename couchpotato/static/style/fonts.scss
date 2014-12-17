@@ -1,14 +1,26 @@
 /* Fonts */
 @font-face {
-    font-family: 'Elusive-Icons';
-    src:url('../fonts/Elusive-Icons.eot');
-    src:url('../fonts/Elusive-Icons.eot?#iefix') format('embedded-opentype'),
-        url('../fonts/Elusive-Icons.woff') format('woff'),
-        url('../fonts/Elusive-Icons.ttf') format('truetype'),
-        url('../fonts/Elusive-Icons.svg#Elusive-Icons') format('svg');
+    font-family: 'icons';
+    src: url('../fonts/icons.eot?74719531');
+    src: url('../fonts/icons.eot?74719531#iefix') format('embedded-opentype'),
+    url('../fonts/icons.woff?74719531') format('woff'),
+    url('../fonts/icons.ttf?74719531') format('truetype'),
+    url('../fonts/icons.svg?74719531#icons') format('svg');
     font-weight: normal;
     font-style: normal;
 }
+
+[class^="icon-"]:before, [class*=" icon-"]:before {
+    font-family: "icons";
+    font-style: normal;
+    font-weight: normal;
+    speak: none;
+}
+.icon-left-arrow:before { content: '\e803'; }
+.icon-settings:before { content: '\e800'; }
+.icon-search:before { content: '\e801'; }
+.icon-dots:before { content: '\e802'; }
+.icon-left-arrow:before { content: '\e803'; }
 
 @font-face {
     font-family: 'OpenSans';
@@ -70,9 +82,10 @@
     font-family: 'Lobster';
     src: url('../fonts/Lobster-webfont.eot');
     src: url('../fonts/Lobster-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Lobster-webfont.woff2') format('woff2'),
          url('../fonts/Lobster-webfont.woff') format('woff'),
          url('../fonts/Lobster-webfont.ttf') format('truetype'),
-         url('../fonts/Lobster-webfont.svg#lobster_1.4regular') format('svg');
+         url('../fonts/Lobster-webfont.svg#lobster_14regular') format('svg');
     font-weight: normal;
     font-style: normal;
 }
