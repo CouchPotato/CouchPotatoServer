@@ -9,6 +9,12 @@ var BlockSearch = new Class({
 
 		var focus_timer = 0;
 		self.el = new Element('div.search_form').adopt(
+			new Element('a.icon-search', {
+				'events': {
+					'click': self.clear.bind(self),
+					'touchend': self.clear.bind(self)
+				}
+			}),
 			new Element('div.input').adopt(
 				self.input = new Element('input', {
 					'placeholder': 'Search & add a new media',
@@ -28,12 +34,6 @@ var BlockSearch = new Class({
 								self.el.removeClass('focused');
 							}).delay(100);
 						}
-					}
-				}),
-				new Element('a.icon2', {
-					'events': {
-						'click': self.clear.bind(self),
-						'touchend': self.clear.bind(self)
 					}
 				})
 			),

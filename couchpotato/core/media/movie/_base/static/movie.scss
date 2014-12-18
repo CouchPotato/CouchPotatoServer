@@ -6,7 +6,7 @@
 }
 
 .page.movies_wanted, .page.movies_manage {
-	top: $header-height;
+	top: $header_height;
 	padding: 0;
 }
 
@@ -20,7 +20,7 @@
 
 	.movie {
 		display: block;
-		border-top: 1px solid #f2f2f2;
+		border-top: 1px solid $theme_off;
 		position: relative;
 		cursor: pointer;
 
@@ -146,14 +146,14 @@
 
 .page.movie_details {
 
-	$gab-width: $header-width/3;
+	$gab-width: $header_width/3;
 
 	.overlay {
 		position: fixed;
 		top: 0;
 		bottom: 0;
 		right: 0;
-		left: $header-width;
+		left: $header_width;
 		background: rgba(0,0,0,.6);
 		border-radius: 3px 0 0 3px;
 
@@ -161,7 +161,7 @@
 			display: inline-block;
 			text-align: center;
 			font-size: 60px;
-			line-height: $header-height;
+			line-height: $header_height;
 			color: #FFF;
 			width: $gab-width;
 			cursor: pointer;
@@ -174,7 +174,7 @@
 		top: 0;
 		bottom: 0;
 		right: 0;
-		left: $header-width + $gab-width;
+		left: $header_width + $gab-width;
 		background: $background_color;
 		z-index: 200;
 		border-radius: 3px 0 0 3px;
@@ -183,7 +183,7 @@
 			margin: 0;
 			padding: 0 $padding;
 			font-size: 24px;
-			line-height: $header-height;
+			line-height: $header_height;
 			color: rgba(0,0,0,.5);
 			font-weight: 300;
 		}
@@ -207,10 +207,8 @@
 
 		.button {
 			padding: 0 $padding/2;
-			line-height: $header-height;
-			font-size: 24px;
+			line-height: $header_height;
 			color: rgba(0, 0, 0, 0.5);
-			cursor: pointer;
 		}
 
 		.counter, .more_menu, .actions {
@@ -218,7 +216,7 @@
 		}
 
 		.counter {
-			line-height: $header-height;
+			line-height: $header_height;
 		}
 
 		.actions {
@@ -253,7 +251,7 @@
 					padding: $padding/2 $padding/2 $padding/2 $padding*1.5;
 					background: $background_color;
 					border: none;
-					border-bottom: 1px solid #f2f2f2;
+					border-bottom: 1px solid $theme_off;
 				}
 			}
 
@@ -270,7 +268,7 @@
 					cursor: default;
 
 					&.active {
-						background: #f2f2f2;
+						background: $theme_off;
 					}
 
 					&.available {
@@ -278,41 +276,16 @@
 						cursor: pointer;
 
 						&:hover {
-							background: #f2f2f2;
+							background: $theme_off;
 						}
 					}
 				}
 			}
 		}
 
-		.more_menu {
-			position: relative;
-			line-height: 1em;
-
-			.wrapper {
-				display: none;
-				position: absolute;
-				width: 320px;
-				right: 0;
-				top: $header-height;
-				background: $background_color;
-
-				ul {
-					overflow: hidden;
-				}
-
-				li {
-					display: block;
-				}
-			}
-
-			&.show {
-				background: #f2f2f2;
-
-				.wrapper {
-					display: block;
-				}
-			}
+		.more_menu .wrapper {
+			width: 320px;
+			top: $header_height;
 		}
 	}
 

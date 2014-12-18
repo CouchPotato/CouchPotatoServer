@@ -79,7 +79,7 @@
 			$(self.block.header).addClass('header').adopt(
 				self.block.navigation = new BlockHeader(self, {}),
 				self.block.search = new BlockSearch(self, {}),
-				self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
+				self.block.more = new BlockMenu(self, {'button_class': 'icon-settings'})
 			),
 			self.content = new Element('div.content').adopt(
 				self.pages_container = new Element('div.pages'),

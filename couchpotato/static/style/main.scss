@@ -25,11 +25,16 @@ a {
 input, textarea, select {
     font-size: 1em;
     font-weight: 300;
+    padding: $padding/2;
+    background: $background_color;
+    border: 1px solid #f2f2f2;
 }
 
+/* Header */
 .header {
-    width: $header-width;
-    min-width: $header-width;
+    width: $header_width;
+    min-width: $header_width;
+    position: relative;
 
     a {
         color: #FFF;
@@ -39,6 +44,7 @@ input, textarea, select {
     .navigation {
 
         .logo {
+            opacity: .05;
             background: $couch_color;
             display: block;
             text-align: center;
@@ -46,8 +52,8 @@ input, textarea, select {
             font-family: Lobster, serif;
             color: #FFF;
             font-size: 38px;
-            line-height: $header-height;
-            height: $header-height;
+            line-height: $header_height;
+            height: $header_height;
 
             span:nth-child(odd){
                 display: block;
@@ -69,8 +75,80 @@ input, textarea, select {
         }
 
     }
+
+
+    .menu, .search_form, .notification_menu  {
+        position: absolute;
+        bottom: $padding / 3;
+        width: 44px;
+        height: 44px;
+
+        > a {
+            display: inline-block;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            line-height: 44px;
+        }
+    }
+
+    .notification_menu {
+        left: 50%;
+        @include translateX(-50%);
+
+        .button:before {
+            font-size: 20px;
+            top: -2px;
+        }
+
+        ul {
+            min-height: 60px;
+            max-height: 300px;
+            overflow: auto;
+
+            &:empty:after {
+                content: 'No notifications (yet)';
+                text-align: center;
+                width: 100%;
+                position: absolute;
+                padding: 18px 0;
+                font-size: 15px;
+                font-style: italic;
+                opacity: .4;
+            }
+
+            &:empty:before {
+                content: '\e808';
+                font-family: "icons";
+            }
+        }
+    }
+
+    .menu  {
+        left: $padding / 3;
+
+        .button:before {
+            font-size: 20px;
+            top: -2px;
+        }
+    }
+
+    .search_form {
+        right: $padding / 3;
+    }
+
+    .more_menu {
+
+        .wrapper {
+            bottom: 0;
+            left: 44px;
+            right: auto;
+        }
+
+    }
 }
 
+/* Content */
 .content {
     @include flex(1 auto);
 
@@ -98,6 +176,7 @@ input, textarea, select {
     }
 }
 
+/* Page */
 .page {
     position: absolute;
     top: 0;
@@ -116,8 +195,8 @@ input, textarea, select {
         @include flexbox();
         position: fixed;
         top: 0;
-        height: $header-height;
-        left: $header-width;
+        height: $header_height;
+        left: $header_width;
         right: 0;
         background: $background_color;
         border-radius: 3px 0 0 3px;
@@ -132,7 +211,7 @@ input, textarea, select {
 
                 a {
                     font-size: 24px;
-                    line-height: $header-height;
+                    line-height: $header_height;
                     padding: $padding;
                     color: rgba(0,0,0,.5);
                 }
@@ -147,8 +226,85 @@ input, textarea, select {
 
 }
 
+/* Page levels */
 @for $i from 1 through 4 {
     .level_#{$i} {
         z-index: #{$i * 10};
+    }
+}
+
+
+/* Menu basis */
+.more_menu {
+    position: relative;
+    line-height: 1em;
+
+    .button {
+        font-size: 24px;
+        cursor: pointer;
+        display: inline-block;
+
+        &:before {
+            position: relative;
+        }
+    }
+
+    .wrapper {
+        display: none;
+        position: absolute;
+        width: 320px;
+        right: 0;
+        background: $background_color;
+        z-index: 5000;
+
+        &:before {
+            @include transform(rotate(45deg) translateY(-60%));
+            content: '';
+            display: block;
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            background: $background_color;
+            left: -10px;
+            bottom: 2px;
+            z-index: 1;
+            opacity: 0;
+        }
+
+        ul {
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        li {
+            display: block;
+            line-height: 1em;
+
+            a {
+                display: block;
+                color: $text_color;
+                padding: $padding/4 $padding/2;
+            }
+
+            &:first-child a {
+                padding-top: $padding/2;
+            }
+
+            &:last-child a {
+                padding-bottom: $padding/2;
+            }
+        }
+    }
+
+    &.show {
+
+        .wrapper {
+            display: block;
+
+            &:before {
+                opacity: 1;
+            }
+        }
     }
 }

@@ -1,101 +1,78 @@
+@import "couchpotato/static/style/mixins";
+
 .search_form {
 	display: inline-block;
-	vertical-align: middle;
-	text-align: right;
-	transition: all .4s cubic-bezier(0.9,0,0.1,1);
-	z-index: 20;
-	border: 0 solid transparent;
-	border-bottom-width: 4px;
-}
-	.search_form:hover {
-		border-color: #047792;
-	}
+	z-index: 200;
+	width: 44px;
 
-	@media all and (max-width: 480px) {
-		.search_form {
-			right: 44px;
-		}
-	}
-
-	.search_form.focused,
-	.search_form.shown {
-		border-color: #04bce6;
-	}
-
-	.search_form .input {
-		height: 100%;
-		overflow: hidden;
-		width: 45px;
-		transition: all .4s cubic-bezier(0.9,0,0.1,1);
-	}
-
-		.search_form.focused .input,
-		.search_form.shown .input  {
-			width: 380px;
-			background: #4e5969;
-		}
-
-			.search_form .input input {
-				border-radius: 0;
-				display: block;
-				border: 0;
-				background: none;
-				color: #FFF;
-				font-size: 25px;
-				height: 100%;
-				width: 100%;
-				opacity: 0;
-				padding: 0 40px 0 10px;
-				transition: all .4s ease-in-out .2s;
-			}
-				.search_form.focused .input input,
-				.search_form.shown .input input {
-					opacity: 1;
-				}
-
-				.search_form input::-ms-clear {
-				    width : 0;
-					height: 0;
-				}
-
-			@media all and (max-width: 480px) {
-				.search_form .input input {
-					font-size: 15px;
-				}
-
-				.search_form.focused .input,
-				.search_form.shown .input {
-					width: 277px;
-				}
-			}
-
-	.search_form .input a  {
+	a  {
 		position: absolute;
-		top: 0;
-		right: 0;
-		width:  44px;
+		z-index: 2;
+		top: 50%;
+		left: 0;
 		height: 100%;
 		cursor: pointer;
-		vertical-align: middle;
 		text-align: center;
-		line-height: 66px;
-		font-size: 15px;
 		color: #FFF;
+		font-size: 20px;
+
+		@include translateY(-50%);
+
 	}
 
-		.search_form .input a:after {
-			content: "\e03e";
+	.input {
+		position: relative;
+		height: 100%;
+
+		&:before {
+			@include transform(rotate(45deg) translateY(-60%));
+			content: '';
+			display: block;
+			position: absolute;
+			height: 20px;
+			width: 20px;
+			background: $background_color;
+			left: 33px;
+			top: 50%;
+			z-index: 1;
+			opacity: 0;
 		}
 
-		.search_form.shown.filled .input a:after {
-			content: "\e04e";
-		}
+		input {
+			opacity: 0;
+			position: absolute;
+			top: 0;
+			left: 44px;
+			height: 100%;
+			width: 100%;
+			z-index: 1;
+			box-shadow: 0 0 4px rgba(0,0,0,.1);
 
-		@media all and (max-width: 480px) {
-			.search_form .input a  {
-				line-height: 44px;
+			&::-ms-clear {
+				width : 0;
+				height: 0;
 			}
 		}
+	}
+
+	&.focused,
+	&.shown {
+		border-color: #04bce6;
+
+		.input {
+			width: 380px;
+
+			&:before {
+				opacity: 1;
+			}
+
+			input {
+				opacity: 1;
+			}
+		}
+	}
+
+}
 
 	.search_form .results_container {
 		text-align: left;
