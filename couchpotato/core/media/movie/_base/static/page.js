@@ -23,7 +23,7 @@ Page.Movies = new Class({
 			self.current_page.hide();
 
 			if(self.current_page.list && self.current_page.list.navigation)
-				self.current_page.list.navigation.destroy();
+				self.current_page.list.navigation.dispose();
 		}
 
 		var route = new Route();
