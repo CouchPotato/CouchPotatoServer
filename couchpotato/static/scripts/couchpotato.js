@@ -407,19 +407,12 @@
 		var callbacks = [];
 		self.global_events[name].each(function(handle){
 
-			callbacks.push(function(callback){
+			setTimeout(function(){
 				var results = handle.apply(handle, args || []);
-				callback(null, results || null);
-			});
 
-		});
-
-		// Fire events
-		async.parallel(callbacks, function(err, results){
-			if(err) p(err);
-
-			if(on_complete)
-				on_complete(results);
+				if(on_complete)
+					on_complete(results);
+			}, 0);
 		});
 
 	},
