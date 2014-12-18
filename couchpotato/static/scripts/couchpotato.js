@@ -404,7 +404,6 @@
 		}
 
 		// Create parallel callback
-		var callbacks = [];
 		self.global_events[name].each(function(handle){
 
 			setTimeout(function(){

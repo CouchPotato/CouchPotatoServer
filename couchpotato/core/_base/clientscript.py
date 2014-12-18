@@ -30,7 +30,6 @@ class ClientScript(Plugin):
             'scripts/vendor/form_replacement/form_selectoption.js',
             'scripts/vendor/spin.js',
             'scripts/vendor/Array.stableSort.js',
-            'scripts/vendor/async.js',
             'scripts/vendor/history.js',
             'scripts/library/uniform.js',
             'scripts/library/question.js',
