@@ -42,6 +42,7 @@ class Base(TorrentProvider):
 
                     link = result.find('span', attrs = {'class': 'torrent_name_link'}).parent
                     url = result.find('td', attrs = {'class': 'torrent_td'}).find('a')
+                    size = result.find('td', attrs = {'class': 'size'}).contents[0].strip('\n ')
                     tds = result.find_all('td')
 
                     results.append({
@@ -49,7 +50,7 @@ class Base(TorrentProvider):
                         'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
-                        'size': self.parseSize(result.find_all('td')[5].string),
+                        'size': self.parseSize(size),
                         'seeders': tryInt(tds[len(tds)-2].string),
                         'leechers': tryInt(tds[len(tds)-1].string),
                     })
