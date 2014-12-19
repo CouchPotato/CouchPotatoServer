@@ -157,7 +157,15 @@ class Settings(object):
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
+
+                is_password = False
+                try: is_password = self.types[section][option_name] == 'password'
+                except: pass
+
                 values[section][option_name] = self.get(option_name, section)
+                if is_password and values[section][option_name]:
+                    values[section][option_name] = len(values[section][option_name]) * '*'
+
         return values
 
     def save(self):

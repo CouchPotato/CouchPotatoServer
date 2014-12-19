@@ -24,6 +24,20 @@ class NZBVortex(DownloaderBase):
     session_id = None
 
     def download(self, data = None, media = None, filedata = None):
+        """ Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
@@ -45,6 +59,10 @@ class NZBVortex(DownloaderBase):
             return False
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         try:
             login_result = self.login()
         except:
@@ -53,6 +71,13 @@ class NZBVortex(DownloaderBase):
         return login_result
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
 
         raw_statuses = self.call('nzb')
 

@@ -20,14 +20,31 @@ class Blackhole(DownloaderBase):
     status_support = False
 
     def download(self, data = None, media = None, filedata = None):
+        """ Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
         directory = self.conf('directory')
+
+        # The folder needs to exist
         if not directory or not os.path.isdir(directory):
             log.error('No directory set for blackhole %s download.', data.get('protocol'))
         else:
             try:
+                # Filedata can be empty, which probably means it a magnet link
                 if not filedata or len(filedata) < 50:
                     try:
                         if data.get('protocol') == 'torrent_magnet':
@@ -36,13 +53,16 @@ class Blackhole(DownloaderBase):
                     except:
                         log.error('Failed download torrent via magnet url: %s', traceback.format_exc())
 
+                    # If it's still empty, don't know what to do!
                     if not filedata or len(filedata) < 50:
                         log.error('No nzb/torrent available: %s', data.get('url'))
                         return False
 
+                # Create filename with imdb id and other nice stuff
                 file_name = self.createFileName(data, filedata, media)
                 full_path = os.path.join(directory, file_name)
 
+                # People want thinks nice and tidy, create a subdir
                 if self.conf('create_subdir'):
                     try:
                         new_path = os.path.splitext(full_path)[0]
@@ -53,6 +73,8 @@ class Blackhole(DownloaderBase):
                         log.error('Couldnt create sub dir, reverting to old one: %s', full_path)
 
                 try:
+
+                    # Make sure the file doesn't exist yet, no need in overwriting it
                     if not os.path.isfile(full_path):
                         log.info('Downloading %s to %s.', (data.get('protocol'), full_path))
                         with open(full_path, 'wb') as f:
@@ -74,6 +96,10 @@ class Blackhole(DownloaderBase):
         return False
 
     def test(self):
+        """ Test and see if the directory is writable
+        :return: boolean
+        """
+
         directory = self.conf('directory')
         if directory and os.path.isdir(directory):
 
@@ -88,6 +114,10 @@ class Blackhole(DownloaderBase):
         return False
 
     def getEnabledProtocol(self):
+        """ What protocols is this downloaded used for
+        :return: list with protocols
+        """
+
         if self.conf('use_for') == 'both':
             return super(Blackhole, self).getEnabledProtocol()
         elif self.conf('use_for') == 'torrent':
@@ -96,6 +126,12 @@ class Blackhole(DownloaderBase):
             return ['nzb']
 
     def isEnabled(self, manual = False, data = None):
+        """ Check if protocol is used (and enabled)
+        :param manual: The user has clicked to download a link through the webUI
+        :param data: dict returned from provider
+            Contains the release information
+        :return: boolean
+        """
         if not data: data = {}
         for_protocol = ['both']
         if data and 'torrent' in data.get('protocol'):
