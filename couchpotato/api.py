@@ -34,7 +34,7 @@ def run_async(func):
 def run_handler(route, kwargs, callback = None):
     try:
         res = api[route](**kwargs)
-        IOLoop.instance().add_callback(callback, res, route)
+        IOLoop.current().add_callback(callback, res, route)
     except:
         log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
         callback({'success': False, 'error': 'Failed returning results'}, route)
