@@ -44,7 +44,6 @@ input, textarea, select {
     .navigation {
 
         .logo {
-            opacity: .05;
             background: $couch_color;
             display: block;
             text-align: center;
@@ -79,6 +78,7 @@ input, textarea, select {
 
     .menu, .search_form, .notification_menu  {
         position: absolute;
+        z-index: 200;
         bottom: $padding / 3;
         width: 44px;
         height: 44px;
@@ -108,18 +108,23 @@ input, textarea, select {
 
             &:empty:after {
                 content: 'No notifications (yet)';
-                text-align: center;
                 width: 100%;
                 position: absolute;
-                padding: 18px 0;
+                line-height: 60px;
                 font-size: 15px;
                 font-style: italic;
                 opacity: .4;
+                left: $padding * 2;
             }
 
             &:empty:before {
                 content: '\e808';
                 font-family: "icons";
+                height: 100%;
+                line-height: 60px;
+                margin-left: $padding;
+                text-align: center;
+                opacity: .4;
             }
         }
     }
@@ -256,6 +261,7 @@ input, textarea, select {
         right: 0;
         background: $background_color;
         z-index: 5000;
+        box-shadow: 0 0 4px rgba(0,0,0,.1);
 
         &:before {
             @include transform(rotate(45deg) translateY(-60%));
@@ -277,7 +283,7 @@ input, textarea, select {
             overflow: hidden;
         }
 
-        li {
+        ul li {
             display: block;
             line-height: 1em;
 
@@ -285,6 +291,8 @@ input, textarea, select {
                 display: block;
                 color: $text_color;
                 padding: $padding/4 $padding/2;
+                font-size: 1em;
+                line-height: 22px;
             }
 
             &:first-child a {
