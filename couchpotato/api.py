@@ -7,6 +7,7 @@ import urllib
 
 from couchpotato.core.helpers.request import getParams
 from couchpotato.core.logger import CPLog
+from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler, asynchronous
 
 
@@ -33,7 +34,7 @@ def run_async(func):
 def run_handler(route, kwargs, callback = None):
     try:
         res = api[route](**kwargs)
-        callback(res, route)
+        IOLoop.current().add_callback(callback, res, route)
     except:
         log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
         callback({'success': False, 'error': 'Failed returning results'}, route)
@@ -83,10 +84,11 @@ def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
 
 # Blocking API handler
 class ApiHandler(RequestHandler):
+    route = None
 
     @asynchronous
     def get(self, route, *args, **kwargs):
-        route = route.strip('/')
+        self.route = route = route.strip('/')
         if not api.get(route):
             self.write('API call doesn\'t seem to exist')
             self.finish()
@@ -123,9 +125,17 @@ class ApiHandler(RequestHandler):
             except:
                 log.error('Failed write error "%s": %s', (route, traceback.format_exc()))
 
-            api_locks[route].release()
+            self.unlock()
 
     post = get
+
+    def on_connection_close(self):
+        self.unlock()
+        super(ApiHandler, self).on_connection_close()
+
+    def on_finish(self):
+        self.unlock()
+        super(ApiHandler, self).on_finish()
 
     def taskFinished(self, result, route):
 
@@ -150,7 +160,11 @@ class ApiHandler(RequestHandler):
                 try: self.finish({'success': False, 'error': 'Failed returning results'})
                 except: pass
 
-        api_locks[route].release()
+        self.unlock()
+
+    def unlock(self):
+        try: api_locks[self.route].release()
+        except: pass
 
 
 def addApiView(route, func, static = False, docs = None, **kwargs):
