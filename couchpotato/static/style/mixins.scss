@@ -1,4 +1,5 @@
-$couch_color: #ac0000;
+$primary_color: #ac0000;
+$secondary_color: #00d2c2;
 $background_color: #FFF;
 $menu_color: #111;
 $theme_off: #eaeaea;
@@ -7,6 +8,9 @@ $text_color: #000;
 $header_height: 80px;
 $header_width: 132px;
 $padding: 20px;
+$border_radius: 3px;
+
+$cubic: cubic-bezier(0.9,0,0.1,1);
 
 @import "susy";
 @import "compass/css3/transition";

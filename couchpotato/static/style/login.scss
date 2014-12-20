@@ -1,0 +1,59 @@
+@import "mixins";
+
+/*** Login ***/
+.page.login {
+	display: block;
+	background: $primary_color;
+
+	h1 {
+		padding: 0 0 10px;
+		font-size: 60px;
+		font-family: Lobster;
+		font-weight: normal;
+		color: #FFF;
+		text-align: center;
+	}
+
+	form {
+		padding: 0;
+		height: 300px;
+		width: 400px;
+		position: fixed;
+		left: 50%;
+		top: 50%;
+		margin: -200px 0 0 -200px;
+	}
+
+	.ctrlHolder {
+		padding: 0;
+		margin: 0 0 20px;
+
+		&:hover {
+			background: none;
+		}
+	}
+
+	input[type=text],
+	input[type=password] {
+		width: 100% !important;
+		font-size: 25px;
+		padding: 14px !important;
+	}
+
+	.remember_me {
+		font-size: 15px;
+		float: left;
+		width: 150px;
+		padding: 20px 0;
+
+		.check {
+			margin: 5px 5px 0 0;
+		}
+	}
+
+	.button {
+		font-size: 25px;
+		padding: 20px;
+		float: right;
+	}
+}

@@ -44,9 +44,10 @@ input, textarea, select {
     .navigation {
 
         .logo {
-            background: $couch_color;
+            background: $primary_color;
             display: block;
             text-align: center;
+            position: relative;
 
             font-family: Lobster, serif;
             color: #FFF;
@@ -54,12 +55,30 @@ input, textarea, select {
             line-height: $header_height;
             height: $header_height;
 
-            span:nth-child(odd){
+            span {
+                position: absolute;
                 display: block;
-            }
-            span:nth-child(even){
-                display: none;
+                height: 100%;
+                left: 50%;
+                @include transition(all 200ms $cubic);
+                @include translateX(-50%);
 
+                &:nth-child(even){
+                    @include translateX(45%);
+                    opacity: 0;
+                }
+            }
+
+            &:hover {
+                span{
+                    @include translateX(-153%);
+                    opacity: 0;
+
+                    &:nth-child(even){
+                        @include translateX(-50%);
+                        opacity: 1;
+                    }
+                }
             }
         }
 
@@ -99,6 +118,10 @@ input, textarea, select {
         .button:before {
             font-size: 20px;
             top: -2px;
+        }
+
+        .wrapper {
+			width: 320px;
         }
 
         ul {
@@ -148,6 +171,7 @@ input, textarea, select {
             bottom: 0;
             left: 44px;
             right: auto;
+            padding-left: 4px;
         }
 
     }
@@ -158,7 +182,7 @@ input, textarea, select {
     @include flex(1 auto);
 
     background: $background_color;
-    border-radius: 3px 0 0 3px;
+    border-radius: $border_radius 0 0 $border_radius;
     overflow: hidden;
 
     h1, h2, h3 {
@@ -204,7 +228,7 @@ input, textarea, select {
         left: $header_width;
         right: 0;
         background: $background_color;
-        border-radius: 3px 0 0 3px;
+        border-radius: $border_radius 0 0 0;
         z-index: 100;
 
         ul {
@@ -257,30 +281,36 @@ input, textarea, select {
     .wrapper {
         display: none;
         position: absolute;
-        width: 320px;
         right: 0;
-        background: $background_color;
+        background: $primary_color;
         z-index: 5000;
-        box-shadow: 0 0 4px rgba(0,0,0,.1);
+        box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
+        border-radius: $border_radius 0 0 $border_radius;
 
         &:before {
             @include transform(rotate(45deg) translateY(-60%));
             content: '';
             display: block;
             position: absolute;
-            height: 20px;
-            width: 20px;
-            background: $background_color;
-            left: -10px;
-            bottom: 2px;
+            background: $primary_color;
+            height: 10px;
+            width: 10px;
+            left: -9px;
+            bottom: 11px;
             z-index: 1;
             opacity: 0;
+            border-radius: 2px;
+//            border: 8px solid $primary_color;
+//            border-color: transparent $primary_color transparent transparent;
         }
 
         ul {
+            @include transform(translateZ(0));
+            background: $background_color;
             position: relative;
             z-index: 2;
             overflow: hidden;
+            border-radius: $border_radius 0 0 $border_radius;
         }
 
         ul li {
@@ -293,6 +323,7 @@ input, textarea, select {
                 padding: $padding/4 $padding/2;
                 font-size: 1em;
                 line-height: 22px;
+                white-space: nowrap;
             }
 
             &:first-child a {

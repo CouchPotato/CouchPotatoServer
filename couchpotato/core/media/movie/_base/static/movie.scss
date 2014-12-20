@@ -11,7 +11,6 @@
 }
 
 .list_list {
-	font-size: 15px;
 	font-weight: 300;
 
 	.poster {
@@ -232,7 +231,13 @@
 		}
 
 		.filter {
-			margin-top: -2px;
+			.wrapper {
+				width: 320px;
+			}
+
+			.button {
+				margin-top: -2px;
+			}
 
 			.search {
 				position: relative;
@@ -283,9 +288,27 @@
 			}
 		}
 
-		.more_menu .wrapper {
-			width: 320px;
-			top: $header_height;
+		.more_menu {
+
+			&.show .button {
+				color: rgba(0, 0, 0, 1);
+			}
+
+			.wrapper {
+				top: $header_height - 10px;
+				padding-top: 4px;
+				border-radius: $border_radius $border_radius 0 0;
+
+				&:before {
+					top: 0;
+					left: auto;
+					right: 22px;
+				}
+
+				ul {
+					border-radius: $border_radius $border_radius 0 0;
+				}
+			}
 		}
 	}
 

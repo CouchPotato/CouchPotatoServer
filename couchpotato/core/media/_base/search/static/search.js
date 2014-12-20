@@ -15,39 +15,40 @@ var BlockSearch = new Class({
 					'touchend': self.clear.bind(self)
 				}
 			}),
-			new Element('div.input').adopt(
-				self.input = new Element('input', {
-					'placeholder': 'Search & add a new media',
+			new Element('div.wrapper').adopt(
+				new Element('div.input').grab(
+					self.input = new Element('input', {
+						'placeholder': 'Search & add a new media',
+						'events': {
+							'input': self.keyup.bind(self),
+							'paste': self.keyup.bind(self),
+							'change': self.keyup.bind(self),
+							'keyup': self.keyup.bind(self),
+							'focus': function(){
+								if(focus_timer) clearTimeout(focus_timer);
+								if(this.get('value'))
+									self.hideResults(false);
+							},
+							'blur': function(){
+								focus_timer = (function(){
+									self.el.removeClass('focused');
+								}).delay(100);
+							}
+						}
+					})
+				),
+				self.result_container = new Element('div.results_container', {
+					'tween': {
+						'duration': 200
+					},
 					'events': {
-						'input': self.keyup.bind(self),
-						'paste': self.keyup.bind(self),
-						'change': self.keyup.bind(self),
-						'keyup': self.keyup.bind(self),
-						'focus': function(){
-							if(focus_timer) clearTimeout(focus_timer);
-							self.el.addClass('focused');
-							if(this.get('value'))
-								self.hideResults(false);
-						},
-						'blur': function(){
-							focus_timer = (function(){
-								self.el.removeClass('focused');
-							}).delay(100);
+						'mousewheel': function(e){
+							(e).stopPropagation();
 						}
 					}
-				})
-			),
-			self.result_container = new Element('div.results_container', {
-				'tween': {
-					'duration': 200
-				},
-				'events': {
-					'mousewheel': function(e){
-						(e).stopPropagation();
-					}
-				}
-			}).adopt(
-				self.results = new Element('div.results')
+				}).grab(
+					self.results = new Element('div.results')
+				)
 			)
 		);
 
@@ -67,6 +68,7 @@ var BlockSearch = new Class({
 
 			self.last_q = '';
 			self.input.set('value', '');
+			self.el.addClass('focused');
 			self.input.focus();
 
 			self.media = {};
