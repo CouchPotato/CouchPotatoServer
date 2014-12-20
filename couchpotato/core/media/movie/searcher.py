@@ -394,8 +394,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.info('Trying next release for: %s', getTitle(media))
                 self.single(media, manual = manual, force_download = force_download)
 
-            return True
-
+                return True
+            
+            return False
         except:
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
