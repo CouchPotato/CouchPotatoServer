@@ -40,6 +40,8 @@ class WebHandler(BaseHandler):
             return
 
         try:
+            if route == 'robots.txt':
+                self.set_header('Content-Type', 'text/plain')
             self.write(views[route]())
         except:
             log.error("Failed doing web request '%s': %s", (route, traceback.format_exc()))
@@ -58,6 +60,13 @@ def get_db():
 def index():
     return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
 addView('', index)
+
+
+# Web view
+def robots():
+    return 'User-agent: * \n' \
+           'Disallow: /'
+addView('robots.txt', robots)
 
 
 # API docs
