@@ -51,24 +51,22 @@ class NonBlockHandler(RequestHandler):
         start, stop = api_nonblock[route]
         self.stopper = stop
 
-        start(self.onNewMessage, last_id = self.get_argument('last_id', None))
+        start(self.sendData, last_id = self.get_argument('last_id', None))
 
-    def onNewMessage(self, response):
-        if self.request.connection.stream.closed():
-            self.on_connection_close()
-            return
+    def sendData(self, response):
+        if not self.request.connection.stream.closed():
+            try:
+                self.finish(response)
+            except:
+                log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
+                try: self.finish({'success': False, 'error': 'Failed returning results'})
+                except: pass
 
-        try:
-            self.finish(response)
-        except:
-            log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
-            try: self.finish({'success': False, 'error': 'Failed returning results'})
-            except: pass
+        self.removeStopper()
 
-    def on_connection_close(self):
-
+    def removeStopper(self):
         if self.stopper:
-            self.stopper(self.onNewMessage)
+            self.stopper(self.sendData)
 
         self.stopper = None
 
