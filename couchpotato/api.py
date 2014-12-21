@@ -141,14 +141,12 @@ class ApiHandler(RequestHandler):
                 jsonp_callback = self.get_argument('callback_func', default = None)
 
                 if jsonp_callback:
-                    self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
-                    self.set_header("Content-Type", "text/javascript")
-                    self.finish()
+                    self.set_header('Content-Type', 'text/javascript')
+                    self.finish(str(jsonp_callback) + '(' + json.dumps(result) + ')')
                 elif isinstance(result, tuple) and result[0] == 'redirect':
                     self.redirect(result[1])
                 else:
-                    self.write(result)
-                    self.finish()
+                    self.finish(result)
             except UnicodeDecodeError:
                 log.error('Failed proper encode: %s', traceback.format_exc())
             except:
