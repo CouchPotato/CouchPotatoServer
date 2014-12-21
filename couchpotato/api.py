@@ -7,6 +7,7 @@ import urllib
 
 from couchpotato.core.helpers.request import getParams
 from couchpotato.core.logger import CPLog
+from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler, asynchronous
 
 
@@ -129,6 +130,10 @@ class ApiHandler(RequestHandler):
     post = get
 
     def taskFinished(self, result, route):
+        IOLoop.current().add_callback(self.sendData, result, route)
+        self.unlock()
+
+    def sendData(self, result, route):
 
         if not self.request.connection.stream.closed():
             try:
@@ -150,8 +155,6 @@ class ApiHandler(RequestHandler):
                 log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
                 try: self.finish({'success': False, 'error': 'Failed returning results'})
                 except: pass
-
-        self.unlock()
 
     def unlock(self):
         try: api_locks[self.route].release()
