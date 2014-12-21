@@ -42,6 +42,7 @@ class Base(TorrentProvider):
 
                     link = result.find('td', attrs = {'class': 'ttr_name'}).find('a')
                     url = result.find('td', attrs = {'class': 'td_dl'}).find('a')
+                    seeders = result.find('td', attrs = {'class': 'ttr_seeders'}).find('a')
                     leechers = result.find('td', attrs = {'class': 'ttr_leechers'}).find('a')
                     torrent_id = link['href'].replace('details?id=', '')
 
@@ -51,7 +52,7 @@ class Base(TorrentProvider):
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['detail'] % torrent_id,
                         'size': self.parseSize(result.find('td', attrs = {'class': 'ttr_size'}).contents[0]),
-                        'seeders': tryInt(result.find('td', attrs = {'class': 'ttr_seeders'}).find('a').string),
+                        'seeders': tryInt(seeders.string) if seeders else 0,
                         'leechers': tryInt(leechers.string) if leechers else 0,
                         'get_more_info': self.getMoreInfo,
                     })
