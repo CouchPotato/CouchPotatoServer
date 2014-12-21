@@ -244,11 +244,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Basic config
     host = Env.setting('host', default = '0.0.0.0')
-    # app.debug = development
+    host6 = Env.setting('host6', default = '::')
+
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5050)),
         'host': host if host and len(host) > 0 else '0.0.0.0',
+        'host6': host6 if host6 and len(host6) > 0 else '::',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
     }
@@ -331,6 +333,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     while try_restart:
         try:
             server.listen(config['port'], config['host'])
+            
+            try: server.listen(config['port'], config['host6'])
+            except: log.info2('Tried to bind to IPV6 but failed')
+
             loop.start()
             server.close_all_connections()
             server.stop()

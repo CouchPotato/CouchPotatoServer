@@ -23,6 +23,20 @@ class NZBGet(DownloaderBase):
     rpc = 'xmlrpc'
 
     def download(self, data = None, media = None, filedata = None):
+        """ Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
@@ -71,6 +85,10 @@ class NZBGet(DownloaderBase):
             return False
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         rpc = self.getRPC()
 
         try:
@@ -91,6 +109,13 @@ class NZBGet(DownloaderBase):
         return True
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
 
         log.debug('Checking NZBGet download status.')
 
@@ -163,12 +188,12 @@ class NZBGet(DownloaderBase):
                 nzb_id = nzb['NZBID']
 
             if nzb_id in ids:
-                log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (nzb['NZBFilename'] , nzb['ParStatus'], nzb['ScriptStatus'] , nzb['Log']))
+                log.debug('Found %s in NZBGet history. TotalStatus: %s, ParStatus: %s, ScriptStatus: %s, Log: %s', (nzb['NZBFilename'] , nzb['Status'], nzb['ParStatus'], nzb['ScriptStatus'] , nzb['Log']))
                 release_downloads.append({
                     'id': nzb_id,
                     'name': nzb['NZBFilename'],
-                    'status': 'completed' if nzb['ParStatus'] in ['SUCCESS', 'NONE'] and nzb['ScriptStatus'] in ['SUCCESS', 'NONE'] else 'failed',
-                    'original_status': nzb['ParStatus'] + ', ' + nzb['ScriptStatus'],
+                    'status': 'completed' if 'SUCCESS' in nzb['Status'] else 'failed',
+                    'original_status': nzb['Status'],
                     'timeleft': str(timedelta(seconds = 0)),
                     'folder': sp(nzb['DestDir'])
                 })

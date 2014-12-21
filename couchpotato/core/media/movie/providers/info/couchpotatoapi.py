@@ -58,12 +58,7 @@ class CouchPotatoApi(MovieProvider):
         }), headers = self.getRequestHeaders())
 
     def search(self, q, limit = 5):
-        results=self.getJsonData(self.urls['search'] % tryUrlencode(q) + ('?limit=%s' % limit), headers = self.getRequestHeaders())
-        x=0
-        for result in results:
-            results[x]['titles']=[results[x]['original_title']]
-            x+=1
-        return results
+        return self.getJsonData(self.urls['search'] % tryUrlencode(q) + ('?limit=%s' % limit), headers = self.getRequestHeaders())
 
     def validate(self, name = None):
 
@@ -73,12 +68,15 @@ class CouchPotatoApi(MovieProvider):
         name_enc = base64.b64encode(ss(name))
         return self.getJsonData(self.urls['validate'] % name_enc, headers = self.getRequestHeaders())
 
-    def isMovie(self, identifier = None):
+    def isMovie(self, identifier = None, adding = False):
 
         if not identifier:
             return
 
-        data = self.getJsonData(self.urls['is_movie'] % identifier, headers = self.getRequestHeaders())
+        url = self.urls['is_movie'] % identifier
+        url += '?adding=1' if adding else ''
+
+        data = self.getJsonData(url, headers = self.getRequestHeaders())
         if data:
             return data.get('is_movie', True)
 
@@ -112,7 +110,7 @@ class CouchPotatoApi(MovieProvider):
             'ignore': ','.join(ignore),
         }, headers = self.getRequestHeaders())
         log.info('Found suggestions for %s movies, %s ignored', (len(movies), len(ignore)))
-        
+
         return suggestions
 
     def getRequestHeaders(self):

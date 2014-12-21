@@ -35,6 +35,7 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
+                'to_folder': {'desc': 'Optional: The folder to move releases to. Leave empty for default folder.'},
                 'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
                 'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
@@ -42,6 +43,13 @@ class Renamer(Plugin):
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
+        })
+
+        addApiView('renamer.progress', self.getProgress, docs = {
+            'desc': 'Get the progress of current renamer scan',
+            'return': {'type': 'object', 'example': """{
+    'progress': False || True,
+}"""},
         })
 
         addEvent('renamer.scan', self.scan)
@@ -67,11 +75,17 @@ class Renamer(Plugin):
 
         return True
 
+    def getProgress(self, **kwargs):
+        return {
+            'progress': self.renaming_started
+        }
+
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
         base_folder = kwargs.get('base_folder')
         media_folder = sp(kwargs.get('media_folder'))
+        to_folder = kwargs.get('to_folder')
 
         # Backwards compatibility, to be removed after a few versions :)
         if not media_folder:
@@ -95,13 +109,13 @@ class Renamer(Plugin):
                 })
 
         fire_handle = fireEvent if not async else fireEventAsync
-        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
+        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download, to_folder = to_folder)
 
         return {
             'success': True
         }
 
-    def scan(self, base_folder = None, release_download = None):
+    def scan(self, base_folder = None, release_download = None, to_folder = None):
         if not release_download: release_download = {}
 
         if self.isDisabled():
@@ -115,7 +129,9 @@ class Renamer(Plugin):
             base_folder = sp(self.conf('from'))
 
         from_folder = sp(self.conf('from'))
-        to_folder = sp(self.conf('to'))
+
+        if not to_folder:
+            to_folder = sp(self.conf('to'))
 
         # Get media folder to process
         media_folder = sp(release_download.get('folder'))

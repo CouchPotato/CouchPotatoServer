@@ -11,6 +11,10 @@ class TrailerProvider(Provider):
 
     def __init__(self):
         addEvent('trailer.search', self.search)
+
+    def search(self, *args, **kwargs):
+        pass
+
         
 class VFTrailerProvider(Provider):
 
@@ -18,3 +22,6 @@ class VFTrailerProvider(Provider):
 
     def __init__(self):
         addEvent('vftrailer.search', self.search)
+
+    def search(self, *args, **kwargs):
+        pass
