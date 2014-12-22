@@ -1,7 +1,8 @@
 import traceback
+import re
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -56,7 +57,7 @@ class Base(TorrentProvider):
 
                     full_id = link['href'].replace('details.php?id=', '')
                     torrent_id = full_id[:6]
-                    name = toUnicode(link.contents[0])
+                    name = re.sub(r'\xa0+$', '', link.contents[0])
 
                     results.append({
                         'id': torrent_id,
