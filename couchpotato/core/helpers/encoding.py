@@ -44,8 +44,7 @@ def toUnicode(original, *args):
                     raise
     except:
         log.error('Unable to decode value "%s..." : %s ', (repr(original)[:20], traceback.format_exc()))
-        ascii_text = str(original).encode('string_escape')
-        return toUnicode(ascii_text)
+        return toSafeString(original)
 
 
 def ss(original, *args):
