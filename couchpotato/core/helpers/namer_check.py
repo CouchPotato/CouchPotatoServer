@@ -54,8 +54,9 @@ def correctName(check_name, movie):
                 try:
                     check_words = filter(None, re.split('\W+', simplifyString(check_movie.get('name', ''))))
                     movie_words = filter(None, re.split('\W+', simplifyString(movietitle)))
-                    if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
+                    if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0 and len(list(set(movie_words) - set(check_words))) == 0:
                         result+=1
+                        return result
                 except:
                     pass
     

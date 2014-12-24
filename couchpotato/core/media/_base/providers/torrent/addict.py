@@ -45,12 +45,12 @@ class Base(TorrentProvider):
         MovieTitles = movie['info']['titles']
         moviequality = simplifyString(quality['identifier'])
         moviegenre = movie['info']['genres']
-        if 'Animation' in moviegenre:
+        if quality['custom']['3d']==1:
+            category=13
+        elif 'Animation' in moviegenre:
             category=25
         elif 'Documentaire' in moviegenre or 'Documentary' in moviegenre:
             category=48
-        elif quality['custom']['3d']==1:
-            category=13
         else:    
             
             if moviequality in ['720p']:
@@ -94,11 +94,13 @@ class Base(TorrentProvider):
                 timetosleep= 10-(actualtime-lastsearch)
                 time.sleep(timetosleep)
             URL = self.urls['search']+searchString
-            
             r = self.opener.open(URL)
-            soup = BeautifulSoup(r,"html5")
-            
-            resultsTable = soup.find("table", { "class" : "lista" , "width":"100%" })
+            soupfull = BeautifulSoup(r)
+            #hack to avoid dummy parsing css and else
+            delbegin=str(soupfull.prettify).split('<table width="100%">')[1]
+            restable=delbegin[delbegin.find('<table'):delbegin.find('table>')+6]
+            soup=BeautifulSoup(restable)
+            resultsTable = soup.find("table")
             if resultsTable:
 
                 rows = resultsTable.findAll("tr")
@@ -107,6 +109,9 @@ class Base(TorrentProvider):
                     x=x+1
                     if (x > 1): 
                         #bypass first row because title only
+                        #bypass date lines
+                        if 'Liste des torrents' in str(row) :
+                            continue
                         link = row.findAll('td')[1].find("a",  href=re.compile("torrent-details"))
                         if link:
                             new={}           
@@ -115,10 +120,10 @@ class Base(TorrentProvider):
                             if testname==0:
                                 continue
                             downloadURL =  self.urls['test'] + "/" + row.find("a",href=re.compile("\.torrent"))['href']
-                            size= row.findAll('td')[8].text
-                            leecher=row.findAll('td')[6].text
-                            seeder=row.findAll('td')[5].text
-                            date=row.findAll('td')[4].text
+                            size= row.findAll('td')[9].text
+                            leecher=row.findAll('td')[7].text
+                            seeder=row.findAll('td')[6].text
+                            date=row.findAll('td')[5].text
                             detail=self.urls['test'] + "/" + row.find("a",href=re.compile("torrent-details"))['href']
                             
                             def extra_check(item):
