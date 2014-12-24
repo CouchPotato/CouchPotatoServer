@@ -65,50 +65,37 @@ class Base(TorrentProvider):
                        
             try:
                 html = BeautifulSoup(data)
-
-                resultdiv = html.find('div', attrs = {'id':'recherche'}).find('table').find('tbody')
-
-                for result in resultdiv.find_all('tr', recursive = False):
+                lin=0
+                erlin=0
+                resultdiv=[]
+                while erlin==0:
+                    try:
+                        classlin='ligne'+str(lin)
+                        resultlin=html.findAll(attrs = {'class' : [classlin]})
+                        if resultlin:
+                            for ele in resultlin:
+                                resultdiv.append(ele)
+                            lin+=1
+                        else:
+                            erlin=1
+                    except:
+                        erlin=1
+                for result in resultdiv:
 
                     try:
                         
                         new = {}
-
-                        #id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
-                        name = result.find_all('td')[0].find_all('a')[0].text
+                        name = result.findAll(attrs = {'class' : ["titre"]})[0].text
                         testname=namer_check.correctName(name,movie)
                         if testname==0:
                             continue
-                        detail_url = result.find_all('td')[0].find_all('a')[0]['href']
-
-                        #on scrapp la page detail
-
-                        urldetail = detail_url.encode('UTF8')
-                        urldetail=unicodedata.normalize('NFD',unicode(urldetail,"utf8","replace"))
-                        urldetail=urldetail.encode('ascii','ignore')
-                        urldetail = urllib2.quote(urldetail.encode('utf8'), ":/?=")
-
-                        req = urllib2.Request(urldetail, headers={'User-Agent' : "Mozilla/5.0"} )  # POST request doesn't not work
-                        data_detail = urllib2.urlopen(req)
-
-                        url_download = ""
-
-                        if data_detail:
-                            
-                            html_detail = BeautifulSoup(data_detail)                                
-                            url_tmp = html_detail.find_all('div', attrs = {'class':'download-torrent'})[0].find_all('a')[0]['href']    
-                            url_download = ('http://www.cpasbien.pe%s' % url_tmp)
-                        else:
-                            tmp = result.find_all('td')[0].find_all('a')[0]['href']
-                            tmp = tmp.split('/')[6].replace('.html','.torrent')
-                            url_download = ('http://www.cpasbien.pe/_torrents/%s' % tmp)
-
-
-
-                        size = result.find_all('td')[1].text
-                        seeder = result.find_all('td')[2].find_all('span')[0].text
-                        leecher = result.find_all('td')[3].text
-                        age = '0'
+                        detail_url = result.find("a")['href']
+                        tmp = detail_url.split('/')[-1].replace('.html','.torrent')
+                        url_download = ('http://www.cpasbien.pe/telecharge/%s' % tmp)
+                        size = result.findAll(attrs = {'class' : ["poid"]})[0].text
+                        seeder = result.findAll(attrs = {'class' : ["seed_ok"]})[0].text
+                        leecher = result.findAll(attrs = {'class' : ["down"]})[0].text
+                        age = '1'
 
                         verify = getTitle(movie['info']).split(' ')
                         
