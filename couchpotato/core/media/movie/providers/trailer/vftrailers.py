@@ -33,7 +33,10 @@ class vftrailers(VFTrailerProvider):
     
     def cleantitle(self,title):
         specialchars=['(',')',',','.',';','!','?','-',':','_','[',']','|','  ','  ','  ']
-        title=unicodedata.normalize('NFKD',title).encode('ascii','ignore')
+        try:
+            title=unicodedata.normalize('NFKD',title).encode('ascii','ignore')
+        except:
+            title=title
         for chars in specialchars:
             title=title.replace(chars,' ')        
         return title.lower()
@@ -145,20 +148,18 @@ class vftrailers(VFTrailerProvider):
         self.logg('En train de rechercher sur google : ' +searchstring)
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
-        soup=BeautifulSoup(htmltext,"html.parser")
-        search=soup.findAll('div',attrs={'id':'search'})
-        searchtext = str(search[0])
-        
-        soup1=BeautifulSoup(searchtext,"html.parser")
-        list_items=soup1.findAll('li')
+        soup=BeautifulSoup(htmltext)
+        list_items=soup.findAll('div',attrs={'id':'search'})[0].findAll('li')
+        x=0
         for li in list_items:
             try:
                 doweignore=0
-                soup2 = BeautifulSoup(str(li),"html.parser")
+                soup2 = list_items[x]
                 for toignore in uploadtoignore:
                     if toignore in str(soup2):
                         doweignore+=1
                 if doweignore<>0:
+                    x+=1
                     continue
                 links= soup2.findAll('a')
                 if not 'webcache' in str(links): 
@@ -168,7 +169,9 @@ class vftrailers(VFTrailerProvider):
                     urldic.update({source_title:source_url})
                 
             except:
+                x+=1
                 continue
+            x+=1
         self.logg(str(len(urldic))+ ' resultats trouves sur google')
         return urldic
     
@@ -202,7 +205,7 @@ class vftrailers(VFTrailerProvider):
                     pagetrailer=x['href']
                 else:
                     continue
-            soup = BeautifulSoup( urllib2.urlopen(pagetrailer), "html.parser" )
+            soup = BeautifulSoup( urllib2.urlopen(pagetrailer))
             rows = soup.findAll("a")
             
             for lien in rows:
