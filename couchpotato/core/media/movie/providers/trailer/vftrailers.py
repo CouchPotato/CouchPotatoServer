@@ -151,6 +151,7 @@ class vftrailers(VFTrailerProvider):
         soup=BeautifulSoup(htmltext)
         list_items=soup.findAll('div',attrs={'id':'search'})[0].findAll('li')
         x=0
+        urldic={}
         for li in list_items:
             try:
                 doweignore=0
