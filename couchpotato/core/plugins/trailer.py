@@ -21,8 +21,14 @@ class Trailer(Plugin):
         if self.isDisabled() or len(group['files']['trailer']) > 0: return
 
         if self.conf('usevf'):
-            filename = self.conf('name').replace('<filename>', group['filename'])
-            destination = os.path.join(group['destination_dir'], filename)
+            try:
+                filename = self.conf('name').replace('<filename>', group['filename'].decode('latin-1'))
+            except:
+                filename = self.conf('name').replace('<filename>', group['filename'])
+            try:
+                destination = os.path.join(group['destination_dir'].decode('latin-1'), filename)
+            except:
+                destination = os.path.join(group['destination_dir'], filename)
             trailers = fireEvent('vftrailer.search', group = group, filename=filename, destination=destination, merge = True)
         else :
             trailers = fireEvent('trailer.search', group = group, merge = True)
