@@ -98,6 +98,8 @@ class Base(NZBProvider):
                         newsgroup = newgroupLink.contents[0]
                         if newsgroup == "abmulti":
                             newsgroup = "alt.binaries.multimedia"
+                        elif newsgroup == "ab.moovee":
+                            newsgroup = "alt.binaries.moovee"
                         elif newsgroup == "abtvseries":
                             newsgroup = "alt.binaries.tvseries"
                         elif newsgroup == "abtv":
@@ -310,11 +312,12 @@ class Base(NZBProvider):
     
     def download(self, url = '', nzb_id = ''):
         if 'binsearch' in url:
-            params = {'action': 'nzb'}
-            params[nzb_id] = 'on'
-
+            data = {
+            'action': 'nzb',
+            nzb_id: 'on'
+            }
             try:
-                return self.urlopen(url, data = params, show_error = False)
+                return self.urlopen(url, data = data, show_error = False)
             except:
                 log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
                 return 'try_next'

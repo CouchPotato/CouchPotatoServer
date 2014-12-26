@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 from nzbdownloader import NZBDownloader
 from nzbdownloader import NZBPostURLSearchResult
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, tryFloat
 
 class BinSearch(NZBDownloader):
 
@@ -21,29 +21,65 @@ class BinSearch(NZBDownloader):
 
             foundName = None
             sizeInMegs = None
-            for elem in binSearchSoup.findAll(lambda tag: tag.name=='tr' and 'size:' in tag.text):
-                if foundName:
-                    break
-                for checkbox in elem.findAll(lambda tag: tag.name=='input' and tag.get('type') == 'checkbox'):
-                    sizeStr = re.search("size:\s+([^B]*)B", elem.text).group(1).strip()
+            main_table = binSearchSoup.find('table', attrs = {'id': 'r2'})
+            if not main_table:
+                    return
+
+            items = main_table.find_all('tr')
+            for row in items:
+                    title = row.find('span', attrs = {'class': 's'})
+
+                    if not title: continue
+
+                    nzb_id = row.find('input', attrs = {'type': 'checkbox'})['name']
+                    info = row.find('span', attrs = {'class':'d'})
                     try:
-                        age = tryInt(re.search('(?P<size>\d+d)', elem.find_all('td')[-1:][0].text).group('size')[:-1])
+                        size_match = re.search('size:.(?P<size>[0-9\.]+.[GMB]+)', info.text)
                     except:
-                        age = 0
-                    nzbid = elem.find('input', attrs = {'type':'checkbox'})['name']
-                    if "G" in sizeStr:
-                        sizeInMegs = float( re.search("([0-9\\.]+)", sizeStr).group(1) ) * 1024
-                    elif "K" in sizeStr:
-                        sizeInMegs = 0
-                    else:
-                        sizeInMegs = float( re.search("([0-9\\.]+)", sizeStr).group(1) )
-                    
-                    if sizeInMegs > minSize:
-                        foundName = checkbox.get('name')
-                        break
+                        continue
+                    age = 0
+                    try: age = re.search('(?P<size>\d+d)', row.find_all('td')[-1:][0].text).group('size')[:-1]
+                    except: pass
+
+                    parts = re.search('available:.(?P<parts>\d+)./.(?P<total>\d+)', info.text)
+                    total = float(tryInt(parts.group('total')))
+                    parts = float(tryInt(parts.group('parts')))
+
+                    if (total / parts) < 1 and ((total / parts) < 0.95 or ((total / parts) >= 0.95 and not ('par2' in info.text.lower() or 'pa3' in info.text.lower()))):
+                        log.info2('Wrong: \'%s\', not complete: %s out of %s', (item['name'], parts, total))
+                        continue
+
+                    if 'requires password' in info.text.lower():
+                        log.info2('Wrong: \'%s\', passworded', (item['name']))
+                        continue
+                    sizeInMegs=self.parseSize(size_match.group('size'))
+                    if sizeInMegs < minSize:
+                        continue
+                    postData = title
+                    nzbURL = 'https://www.binsearch.info/fcgi/nzb.fcgi?q=' + nzb_id
+                    nzbid=nzb_id
+                    age=tryInt(age)
+                    return NZBPostURLSearchResult( self, nzbURL, postData, sizeInMegs, binSearchURL, age, nzbid )
                 
-            if foundName:
-                postData = foundName
-                nzbURL = "https://binsearch.info/?adv_age=&" + suffixURL
-                return NZBPostURLSearchResult( self, nzbURL, postData, sizeInMegs, binSearchURL, age, nzbid )
+    def parseSize(self, size):
+        size_gb = ['gb', 'gib','go']
+        size_mb = ['mb', 'mib','mo']
+        size_kb = ['kb', 'kib','ko']
+        size_raw = size.lower()
+        size = tryFloat(re.sub(r'[^0-9.]', '', size).strip())
+
+        for s in size_gb:
+            if s in size_raw:
+                return size * 1024
+
+        for s in size_mb:
+            if s in size_raw:
+                return size
+
+        for s in size_kb:
+            if s in size_raw:
+                return size / 1024
+
+        return 0
+
 
