@@ -1506,6 +1506,13 @@ config = [{
                     'type': 'choice',
                     'options': rename_options
                 },
+                        {
+                    'name': 'trailer_name',
+                    'label': 'Existing trailer naming add extension',
+                    'default': '<filename>-trailer.<ext>',
+                    'type': 'choice',
+                    'options': rename_options
+                },
             ],
         },
     ],

@@ -69,6 +69,10 @@ class Video(object):
         :rtype: :class:`Episode` or :class:`Movie` or :class:`UnknownVideo`
 
         """
+        try:
+            path=path.decode('latin-1')
+        except:
+            path=path
         guess = guessit.guess_file_info(path, 'autodetect')
         result = None
         if guess['type'] == 'episode' and 'series' in guess and 'season' in guess and 'episodeNumber' in guess:
