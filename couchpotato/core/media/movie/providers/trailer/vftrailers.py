@@ -131,7 +131,6 @@ class vftrailers(VFTrailerProvider):
            
     def googlesearch(self,searchstringori):
         uploadtoignore=['UniversalMoviesFR','ParamountmoviesFR']
-        time.sleep(30)
         searchstring=searchstringori[:-5].replace(' ','+')
         urldic={}
         regexurl ="url(?!.*url).*?&amp"
@@ -148,7 +147,7 @@ class vftrailers(VFTrailerProvider):
         self.logg('En train de rechercher sur google : ' +searchstring)
         self.logg('Query : ' +query,True)
         htmltext=br.open(query).read()
-        soup=BeautifulSoup(htmltext)
+        soup=BeautifulSoup(htmltext,'html5lib')
         list_items=soup.findAll('div',attrs={'id':'search'})[0].findAll('li')
         x=0
         urldic={}
