@@ -304,7 +304,7 @@ class vftrailers(VFTrailerProvider):
                     extallo=url['ext']
                     self.logg('Telechargement de la bande annonce suivante : ' + linkallo +' en '+str(heightbaallo)+'p en cours...')
                     try:
-                        urllib.urlretrieve(linkallo, trailerpath+'.'+extallo)
+                        urllib.urlretrieve(linkallo, trailerpath.encode('latin-1')+'.'+extallo.encode('latin-1'))
                         self.logg('Une bande annonce telechargee pour ' + moviename +' sur Allocine')
                         return True
                         break
