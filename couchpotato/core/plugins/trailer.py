@@ -91,7 +91,7 @@ config = [{
                     'values': [('1080p', '1080p'), ('720p', '720p'), ('480P', '480p')],
                 },
                 {
-                    'name': 'trailer_name',
+                    'name': 'name',
                     'label': 'New trailer Naming without extension',
                     'default': '<filename>-trailer',
                     'advanced': True,

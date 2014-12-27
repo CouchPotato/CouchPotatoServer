@@ -56,7 +56,11 @@ class XBMC(MovieMetaData):
             root=root.decode('latin-1')
         except:
             root=root
-        return os.path.join(root, basename.replace('%s', name)).encode('utf-8')
+        try:
+            dest=os.path.join(root, basename.replace('%s', name)).encode('latin-1')
+        except:
+            dest=os.path.join(root, basename.replace('%s', name))
+        return dest
 
     def createMetaNameMult(self, basename, name, root, i):
         try:
@@ -67,7 +71,11 @@ class XBMC(MovieMetaData):
             root=root.decode('latin-1')
         except:
             root=root
-        return os.path.join(root, basename.replace('%s', name).replace('<i>', str(i + 1))).encode('utf-8')
+        try:
+            dest=os.path.join(root, basename.replace('%s', name).replace('<i>', str(i + 1))).encode('latin-1')
+        except:
+            dest=os.path.join(root, basename.replace('%s', name).replace('<i>', str(i + 1)))
+        return dest
 
     def getNfo(self, movie_info=None, data=None, i=0):
         if not data: data = {}

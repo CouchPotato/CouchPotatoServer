@@ -316,6 +316,14 @@ class vftrailers(VFTrailerProvider):
             for bo in cleanlist:
                 if bocount==0:
                     try:
+                        try:
+                            trailerpath=trailerpath.encode('latin-1')
+                        except:
+                            trailerpath=trailerpath
+                        try:
+                            trailername=trailername.encode('latin-1')
+                        except:
+                            trailername=trailername
                         self.logg('En train de telecharger : ' + bo + ' pour ' +moviename)
                         tempdest=unicodedata.normalize('NFKD', os.path.join(rootDir,trailername.replace("'",''))).encode('ascii','ignore')+u'.%(ext)s'
                         dest=trailerpath
