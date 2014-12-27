@@ -2,7 +2,7 @@ var Movie = new Class({
 
 	Extends: BlockBase,
 
-	action: {},
+	actions: [],
 	details: null,
 
 	initialize: function(list, options, data){
@@ -15,18 +15,7 @@ var Movie = new Class({
 			'events': {
 				'click': function(e){
 					(e).stop();
-
-					if(!self.details)
-						self.details = new MovieDetails(self, {
-							'level': 3
-						});
-
-					App.getPageContainer().grab(self.details);
-
-					self.details.addSection('test', new Element('div.test', {
-						'text': '.'
-					}));
-
+					self.openDetails();
 				}
 			}
 		});
@@ -36,6 +25,29 @@ var Movie = new Class({
 		self.parent(self, options);
 
 		self.addEvents();
+
+		//if(data.identifiers.imdb == 'tt0948470')
+		//	self.openDetails();
+	},
+
+	openDetails: function(){
+		var self = this;
+
+		if(!self.details){
+			self.details = new MovieDetails(self, {
+				'level': 3
+			});
+
+			App.getPageContainer().grab(self.details);
+
+			// Add action items
+			self.actions.each(function(action, nr){
+				var details = action.getDetails();
+				p(action, action.getLabel(), details);
+				if(details)
+					self.details.addSection(action.getLabel(), details);
+			});
+		}
 	},
 
 	addEvents: function(){
@@ -213,7 +225,7 @@ var Movie = new Class({
 						}
 					})
 				),
-				self.actions = new Element('div.actions')
+				self.actions_el = new Element('div.actions')
 			)
 		);
 
@@ -237,10 +249,13 @@ var Movie = new Class({
 		// Add releases
 		self.updateReleases();
 
-		Object.each(self.options.actions, function(action, key){
-			self.action[key.toLowerCase()] = action = new self.options.actions[key](self);
-			if(action.el)
-				self.actions.adopt(action);
+		self.options.actions.each(function(action){
+			var action = new action(self),
+				button = action.getButton();
+			if(button)
+				self.actions_el.grab(button);
+
+			self.actions.push(action);
 		});
 
 	},

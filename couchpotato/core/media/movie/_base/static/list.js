@@ -45,10 +45,7 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		if($(window).getSize().x <= 480 && !self.options.force_view)
-			self.changeView('list');
-		else
-			self.changeView(self.getSavedView() || self.options.view || 'thumb');
+		self.changeView(self.getSavedView() || self.options.view || 'thumb');
 
 		// Create the alphabet nav
 		if(self.options.navigation)
@@ -496,12 +493,12 @@ var MovieList = new Class({
 			.addClass(new_view+'_list');
 
 		self.current_view = new_view;
-		Cookie.write(self.options.identifier+'_view2', new_view, {duration: 1000});
+		Cookie.write(self.options.identifier+'_view3', new_view, {duration: 1000});
 	},
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view2');
+		return Cookie.read(self.options.identifier+'_view3');
 	},
 
 	search: function(){

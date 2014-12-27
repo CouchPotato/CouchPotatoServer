@@ -1,6 +1,14 @@
 @import "fonts";
 @import "mixins";
 
+* {
+    margin: 0;
+    padding: 0;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
 body, html {
 	font-size: 14px;
 	line-height: 1.5;
@@ -25,7 +33,7 @@ a {
 input, textarea, select {
     font-size: 1em;
     font-weight: 300;
-    padding: $padding/2;
+    padding: $padding/6 $padding/4;
     background: $background_color;
     border: 1px solid #f2f2f2;
 }
@@ -345,5 +353,46 @@ input, textarea, select {
                 opacity: 1;
             }
         }
+    }
+}
+
+
+.mask{
+	background: rgba(0,0,0, 0.9);
+	z-index: 100;
+	text-align: center;
+
+    $spinner_size: 22px;
+
+    .spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: $spinner_size;
+        height: $spinner_size;
+        display: block;
+        background: white;
+        margin-top: -($spinner_size/2);
+        margin-left: -($spinner_size/2);
+        outline: 1px solid transparent;
+        border: 1px solid #FFF;
+
+        @include animation(rotating 4.4s $cubic infinite normal);
+    }
+}
+
+@keyframes rotating {
+    0% {
+        @include transform(rotate(0deg) scale(1.4));
+        border-radius: 2px;
+    }
+    45% {
+        @include transform(rotate(360deg) scale(1));
+        border-radius: 50%;
+    }
+    55% {}
+    100% {
+        @include transform(rotate(720deg) scale(1.4));
+        border-radius: 2px;
     }
 }

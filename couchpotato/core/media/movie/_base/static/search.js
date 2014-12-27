@@ -31,9 +31,11 @@ var BlockSearchMovieItem = new Class({
 				}
 			}).adopt(
 				self.info_container = new Element('div.info').adopt(
-					new Element('h2').adopt(
+					new Element('h2', {
+						'title': self.getTitle()
+					}).adopt(
 						self.title = new Element('span.title', {
-							'text': info.titles && info.titles.length > 0 ? info.titles[0] : 'Unknown'
+							'text': self.getTitle()
 						}),
 						self.year = info.year ? new Element('span.year', {
 							'text': info.year

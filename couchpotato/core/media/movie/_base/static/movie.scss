@@ -49,16 +49,14 @@
 					}
 				}
 
-				.quality {
-					span {
-						float: left;
-						color: #FFF;
-						font-size: .7em;
-						padding: 2px 4px;
-						background: rgba(0,0,0,.2);
-						border-radius: 1px;
-						margin: 2px 0 0 2px;
-					}
+				.quality span {
+					float: left;
+					color: #FFF;
+					font-size: .7em;
+					padding: 2px 4px;
+					background: rgba(0,0,0,.2);
+					border-radius: 1px;
+					margin: 2px 0 0 2px;
 				}
 			}
 		}

@@ -598,24 +598,10 @@ function randomString(length, extra) {
 
 })();
 
-var createSpinner = function(target, options){
-	var opts = Object.merge({
-		lines: 12,
-		length: 5,
-		width: 4,
-		radius: 9,
-		color: '#fff',
-		speed: 1.9,
-		trail: 53,
-		shadow: false,
-		hwaccel: true,
-		className: 'spinner',
-		zIndex: 2e9,
-		top: 'auto',
-		left: 'auto'
-	}, options);
-
-	return new Spinner(opts).spin(target);
+var createSpinner = function(container){
+	var spinner = new Element('div.spinner');
+	container.grab(spinner);
+	return spinner;
 };
 
 var rep = function (pa) {

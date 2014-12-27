@@ -2,7 +2,10 @@ var MovieAction = new Class({
 
 	Implements: [Options],
 
-	class_name: 'action icon2',
+	class_name: 'action',
+	label: 'UNKNOWN',
+	button: null,
+	details: null,
 
 	initialize: function(movie, options){
 		var self = this;
@@ -11,11 +14,24 @@ var MovieAction = new Class({
 		self.movie = movie;
 
 		self.create();
-		if(self.el)
-			self.el.addClass(self.class_name);
+
+		if(self.button)
+			self.button.addClass(self.class_name);
 	},
 
 	create: function(){},
+
+	getButton: function(){
+		return this.button || null;
+	},
+
+	getDetails: function(){
+		return this.details || null;
+	},
+
+	getLabel: function(){
+		return this.label;
+	},
 
 	disable: function(){
 		if(this.el)
@@ -80,7 +96,8 @@ MA.IMDB = new Class({
 
 		self.id = self.movie.getIdentifier ? self.movie.getIdentifier() : self.get('imdb');
 
-		self.el = new Element('a.imdb', {
+		self.button = new Element('a.imdb', {
+			'text': 'IMDB',
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
 			'href': 'http://www.imdb.com/title/'+self.id+'/',
 			'target': '_blank'
@@ -94,21 +111,10 @@ MA.IMDB = new Class({
 MA.Release = new Class({
 
 	Extends: MovieAction,
+	label: 'Releases',
 
 	create: function(){
 		var self = this;
-
-		self.el = new Element('a.releases.download', {
-			'title': 'Show the releases that are available for ' + self.getTitle(),
-			'events': {
-				'click': self.show.bind(self)
-			}
-		});
-
-		if(!self.movie.data.releases || self.movie.data.releases.length === 0)
-			self.el.hide();
-		else
-			self.showHelper();
 
 		App.on('movie.searcher.ended', function(notification){
 			if(self.movie.data._id != notification.data._id) return;
@@ -118,7 +124,7 @@ MA.Release = new Class({
 				// Releases are currently displayed
 				if(self.options_container.isDisplayed()){
 					self.options_container.destroy();
-					self.createReleases();
+					self.getDetails();
 				}
 				else {
 					self.options_container.destroy();
@@ -129,17 +135,10 @@ MA.Release = new Class({
 
 	},
 
-	show: function(e){
+	getDetails: function(refresh){
 		var self = this;
-		if(e)
-			(e).preventDefault();
 
-		self.createReleases();
-
-	},
-
-	createReleases: function(refresh){
-		var self = this;
+		p('test');
 
 		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(
@@ -291,9 +290,7 @@ MA.Release = new Class({
 
 		}
 
-		// Show it
-		self.options_container.inject(self.movie, 'top');
-		self.movie.slide('in', self.options_container);
+		return self.options_container;
 
 	},
 

@@ -16,6 +16,18 @@ var BlockSearch = new Class({
 				}
 			}),
 			new Element('div.wrapper').adopt(
+				self.result_container = new Element('div.results_container', {
+					'tween': {
+						'duration': 200
+					},
+					'events': {
+						'mousewheel': function(e){
+							(e).stopPropagation();
+						}
+					}
+				}).grab(
+					self.results = new Element('div.results')
+				),
 				new Element('div.input').grab(
 					self.input = new Element('input', {
 						'placeholder': 'Search & add a new media',
@@ -36,18 +48,6 @@ var BlockSearch = new Class({
 							}
 						}
 					})
-				),
-				self.result_container = new Element('div.results_container', {
-					'tween': {
-						'duration': 200
-					},
-					'events': {
-						'mousewheel': function(e){
-							(e).stopPropagation();
-						}
-					}
-				}).grab(
-					self.results = new Element('div.results')
 				)
 			)
 		);
@@ -162,7 +162,7 @@ var BlockSearch = new Class({
 			if(typeOf(media) == 'array'){
 				Object.each(media, function(me){
 
-					var m = new BlockSearch[me.type.capitalize() + 'Item'](me);
+					var m = new window['BlockSearch' + me.type.capitalize() + 'Item'](me);
 					$(m).inject(self.results);
 					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m;
 
@@ -173,11 +173,6 @@ var BlockSearch = new Class({
 			}
 		});
 
-		// Calculate result heights
-		var w = window.getSize(),
-			rc = self.result_container.getCoordinates();
-
-		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px');
 		self.mask.fade('out');
 
 	},
