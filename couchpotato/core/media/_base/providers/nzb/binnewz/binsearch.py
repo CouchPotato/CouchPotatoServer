@@ -1,9 +1,11 @@
 import urllib
 from bs4 import BeautifulSoup
+from couchpotato.core.logger import CPLog
 import re
 from nzbdownloader import NZBDownloader
 from nzbdownloader import NZBPostURLSearchResult
 from couchpotato.core.helpers.variable import tryInt, tryFloat
+log = CPLog(__name__)
 
 class BinSearch(NZBDownloader):
 
