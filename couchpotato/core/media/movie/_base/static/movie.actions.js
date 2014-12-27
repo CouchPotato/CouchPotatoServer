@@ -138,8 +138,6 @@ MA.Release = new Class({
 	getDetails: function(refresh){
 		var self = this;
 
-		p('test');
-
 		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(
 				self.release_container = new Element('div.releases.table')
@@ -181,7 +179,7 @@ MA.Release = new Class({
 						'id': 'release_'+release._id
 					}).adopt(
 						new Element('span.name', {'text': release_name, 'title': release_name}),
-						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
+						new Element('span.status', {'text': release.status, 'class': 'status '+release.status}),
 						new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
 						new Element('span.size', {'text': info.size ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
@@ -533,7 +531,8 @@ MA.Edit = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.edit', {
+		self.button = new Element('a.edit', {
+			'text': 'Edit',
 			'title': 'Change movie information, like title and quality.',
 			'events': {
 				'click': self.editMovie.bind(self)
@@ -656,7 +655,8 @@ MA.Refresh = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.refresh', {
+		self.button = new Element('a.refresh', {
+			'text': 'Refresh',
 			'title': 'Refresh the movie info and do a forced search',
 			'events': {
 				'click': self.doRefresh.bind(self)
@@ -667,7 +667,7 @@ MA.Refresh = new Class({
 
 	doRefresh: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stop();
 
 		Api.request('media.refresh', {
 			'data': {

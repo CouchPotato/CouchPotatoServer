@@ -38,16 +38,15 @@ var Movie = new Class({
 				'level': 3
 			});
 
-			App.getPageContainer().grab(self.details);
-
 			// Add action items
 			self.actions.each(function(action, nr){
 				var details = action.getDetails();
-				p(action, action.getLabel(), details);
 				if(details)
 					self.details.addSection(action.getLabel(), details);
 			});
 		}
+
+		App.getPageContainer().grab(self.details);
 	},
 
 	addEvents: function(){
@@ -60,7 +59,6 @@ var Movie = new Class({
 			if(self.data._id != notification.data._id) return;
 
 			self.busy(false);
-			self.removeView();
 			self.update.delay(2000, self, notification);
 		};
 		App.on('movie.update', self.global_events['movie.update']);
@@ -132,7 +130,7 @@ var Movie = new Class({
 						if(self.mask)
 							self.mask.destroy();
 						if(self.spinner)
-							self.spinner.el.destroy();
+							self.spinner.destroy();
 						self.spinner = null;
 						self.mask = null;
 					}, timeout || 400);
@@ -160,7 +158,6 @@ var Movie = new Class({
 
 		self.data = notification.data;
 		self.el.empty();
-		self.removeView();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.category = CategoryList.getCategory(self.data.category_id) || {};
@@ -225,7 +222,13 @@ var Movie = new Class({
 						}
 					})
 				),
-				self.actions_el = new Element('div.actions')
+				self.actions_el = new Element('div.actions', {
+					'events': {
+						'click': function(e){
+							(e).stopPropagation();
+						}
+					}
+				})
 			)
 		);
 

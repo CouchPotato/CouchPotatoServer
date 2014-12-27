@@ -72,6 +72,7 @@
 		@include span(6);
 		float: left;
 		margin-bottom: $padding;
+		position: relative;
 
 		&:nth-child(4n+4){
 			@include span(last);
@@ -82,7 +83,7 @@
 		}
 
 		.poster {
-			border-radius: 2px;
+			border-radius: $border_radius;
 			overflow: hidden;
 			width: 100%;
 			float: left;
@@ -92,6 +93,7 @@
 			clear: both;
 
 			.info {
+				height: 44px;
 
 				.title {
 					@include flexbox();
@@ -125,6 +127,32 @@
 					}
 				}
 			}
+		}
+
+		.actions {
+			position: absolute;
+			top: $padding / 2;
+			right: $padding / 2;
+			display: none;
+
+			a {
+				display: block;
+				background: $background_color;
+				padding: $padding / 3;
+				width: auto;
+				margin-bottom: 1px;
+				clear: both;
+				float: right;
+			}
+		}
+
+		&:hover .actions {
+			display: block;
+		}
+
+		.mask {
+			bottom: 44px;
+			border-radius: $border_radius;
 		}
 	}
 
@@ -189,6 +217,28 @@
 			padding: $padding/2 $padding;
 			border-bottom: 1px solid rgba(0,0,0,.1);
 		}
+	}
+
+	.releases {
+
+		.item span {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			text-align: center;
+		}
+
+		.item .name {
+            @include flex(1 auto);
+			text-align: left;
+		}
+		.status { min-width: 70px; max-width: 70px; }
+		.quality { min-width: 60px; max-width: 60px; }
+		.size { min-width: 40px; max-width: 40px; }
+		.age { min-width: 40px; max-width: 40px; }
+		.score { min-width: 45px; max-width: 45px; }
+		.provider { min-width: 100px; max-width: 100px; }
+
 	}
 }
 

@@ -28,7 +28,6 @@ class ClientScript(Plugin):
             'scripts/vendor/form_replacement/form_radio.js',
             'scripts/vendor/form_replacement/form_dropdown.js',
             'scripts/vendor/form_replacement/form_selectoption.js',
-            'scripts/vendor/spin.js',
             'scripts/vendor/Array.stableSort.js',
             'scripts/vendor/history.js',
             'scripts/library/uniform.js',

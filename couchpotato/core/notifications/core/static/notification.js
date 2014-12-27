@@ -174,7 +174,7 @@ var NotificationBase = new Class({
 
 		var new_message = new Element('div', {
 			'class': 'message' + (sticky ? ' sticky' : ''),
-			'html': message
+			'html': '<div class="inner">' + message + '</div>'
 		}).inject(self.message_container, 'top');
 
 		setTimeout(function(){

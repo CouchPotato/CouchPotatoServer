@@ -12,7 +12,11 @@ var MovieDetails = new Class({
 		self.el = new Element('div',{
 			'class': 'page active movie_details level_' + (options.level || 0)
 		}).adopt(
-			self.overlay = new Element('div.overlay').grab(
+			self.overlay = new Element('div.overlay', {
+				'events': {
+					'click': self.close.bind(self)
+				}
+			}).grab(
 				new Element('a.close.icon-left-arrow')
 			),
 			self.content = new Element('div.content').grab(
@@ -36,6 +40,12 @@ var MovieDetails = new Class({
 				'class': 'section section_' + name
 			}).grab(section_el)
 		);
+	},
+
+	close: function(){
+		var self = this;
+
+		self.el.dispose();
 	}
 
 });
