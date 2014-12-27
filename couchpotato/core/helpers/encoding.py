@@ -37,15 +37,15 @@ def toUnicode(original, *args):
             except:
                 try:
                     detected = detect(original)
-                    if detected.get('encoding') == 'utf-8':
-                        return original.decode('utf-8')
-                    return ek(original, *args)
+                    try:
+                        return original.decode(detected.get('encoding'))
+                    except:
+                        return ek(original, *args)
                 except:
                     raise
     except:
         log.error('Unable to decode value "%s..." : %s ', (repr(original)[:20], traceback.format_exc()))
-        ascii_text = str(original).encode('string_escape')
-        return toUnicode(ascii_text)
+        return 'ERROR DECODING STRING'
 
 
 def ss(original, *args):
@@ -92,7 +92,7 @@ def ek(original, *args):
     if isinstance(original, (str, unicode)):
         try:
             from couchpotato.environment import Env
-            return original.decode(Env.get('encoding'))
+            return original.decode(Env.get('encoding'), 'ignore')
         except UnicodeDecodeError:
             raise
 

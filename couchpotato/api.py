@@ -7,6 +7,7 @@ import urllib
 
 from couchpotato.core.helpers.request import getParams
 from couchpotato.core.logger import CPLog
+from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler, asynchronous
 
 
@@ -50,24 +51,22 @@ class NonBlockHandler(RequestHandler):
         start, stop = api_nonblock[route]
         self.stopper = stop
 
-        start(self.onNewMessage, last_id = self.get_argument('last_id', None))
+        start(self.sendData, last_id = self.get_argument('last_id', None))
 
-    def onNewMessage(self, response):
-        if self.request.connection.stream.closed():
-            self.on_connection_close()
-            return
+    def sendData(self, response):
+        if not self.request.connection.stream.closed():
+            try:
+                self.finish(response)
+            except:
+                log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
+                try: self.finish({'success': False, 'error': 'Failed returning results'})
+                except: pass
 
-        try:
-            self.finish(response)
-        except:
-            log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
-            try: self.finish({'success': False, 'error': 'Failed returning results'})
-            except: pass
+        self.removeStopper()
 
-    def on_connection_close(self):
-
+    def removeStopper(self):
         if self.stopper:
-            self.stopper(self.onNewMessage)
+            self.stopper(self.sendData)
 
         self.stopper = None
 
@@ -129,6 +128,10 @@ class ApiHandler(RequestHandler):
     post = get
 
     def taskFinished(self, result, route):
+        IOLoop.current().add_callback(self.sendData, result, route)
+        self.unlock()
+
+    def sendData(self, result, route):
 
         if not self.request.connection.stream.closed():
             try:
@@ -136,22 +139,18 @@ class ApiHandler(RequestHandler):
                 jsonp_callback = self.get_argument('callback_func', default = None)
 
                 if jsonp_callback:
-                    self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
-                    self.set_header("Content-Type", "text/javascript")
-                    self.finish()
+                    self.set_header('Content-Type', 'text/javascript')
+                    self.finish(str(jsonp_callback) + '(' + json.dumps(result) + ')')
                 elif isinstance(result, tuple) and result[0] == 'redirect':
                     self.redirect(result[1])
                 else:
-                    self.write(result)
-                    self.finish()
+                    self.finish(result)
             except UnicodeDecodeError:
                 log.error('Failed proper encode: %s', traceback.format_exc())
             except:
                 log.debug('Failed doing request, probably already closed: %s', (traceback.format_exc()))
                 try: self.finish({'success': False, 'error': 'Failed returning results'})
                 except: pass
-
-        self.unlock()
 
     def unlock(self):
         try: api_locks[self.route].release()
