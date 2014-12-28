@@ -48,11 +48,11 @@ class BinSearch(NZBDownloader):
                     parts = float(tryInt(parts.group('parts')))
 
                     if (total / parts) < 1 and ((total / parts) < 0.95 or ((total / parts) >= 0.95 and not ('par2' in info.text.lower() or 'pa3' in info.text.lower()))):
-                        log.info2('Wrong: \'%s\', not complete: %s out of %s', (item['name'], parts, total))
+                        log.info2('Wrong: \'%s\', not complete: %s out of %s', (title, parts, total))
                         continue
 
                     if 'requires password' in info.text.lower():
-                        log.info2('Wrong: \'%s\', passworded', (item['name']))
+                        log.info2('Wrong: \'%s\', passworded', (title))
                         continue
                     sizeInMegs=self.parseSize(size_match.group('size'))
                     if sizeInMegs < minSize:
