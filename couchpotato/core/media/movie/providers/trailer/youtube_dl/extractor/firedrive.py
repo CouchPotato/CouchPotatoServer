@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 import re
 
 from .common import InfoExtractor
-from ..utils import (
-    ExtractorError,
+from ..compat import (
     compat_urllib_parse,
     compat_urllib_request,
+)
+from ..utils import (
+    ExtractorError,
 )
 
 
@@ -28,11 +30,8 @@ class FiredriveIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        video_id = mobj.group('id')
-
+        video_id = self._match_id(url)
         url = 'http://firedrive.com/file/%s' % video_id
-
         webpage = self._download_webpage(url, video_id)
 
         if re.search(self._FILE_DELETED_REGEX, webpage) is not None:
@@ -42,7 +41,6 @@ class FiredriveIE(InfoExtractor):
         fields = dict(re.findall(r'''(?x)<input\s+
             type="hidden"\s+
             name="([^"]+)"\s+
-            (?:id="[^"]+"\s+)?
             value="([^"]*)"
             ''', webpage))
 
@@ -66,7 +64,7 @@ class FiredriveIE(InfoExtractor):
         ext = self._search_regex(r'type:\s?\'([^\']+)\',',
                                  webpage, 'extension', fatal=False)
         video_url = self._search_regex(
-            r'file:\s?\'(http[^\']+)\',', webpage, 'file url')
+            r'file:\s?loadURL\(\'(http[^\']+)\'\),', webpage, 'file url')
 
         formats = [{
             'format_id': 'sd',

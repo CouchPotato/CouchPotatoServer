@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import re
-
 from .common import InfoExtractor
 from ..utils import (
     ExtractorError,
@@ -26,17 +24,8 @@ class BRIE(InfoExtractor):
                 'title': 'Wenn das Traditions-Theater wackelt',
                 'description': 'Heimatsound-Festival 2014: Wenn das Traditions-Theater wackelt',
                 'duration': 34,
-            }
-        },
-        {
-            'url': 'http://www.br.de/mediathek/video/sendungen/unter-unserem-himmel/unter-unserem-himmel-alpen-ueber-den-pass-100.html',
-            'md5': 'ab451b09d861dbed7d7cc9ab0be19ebe',
-            'info_dict': {
-                'id': '2c060e69-3a27-4e13-b0f0-668fac17d812',
-                'ext': 'mp4',
-                'title': 'Über den Pass',
-                'description': 'Die Eroberung der Alpen: Über den Pass',
-                'duration': 2588,
+                'uploader': 'BR',
+                'upload_date': '20140802',
             }
         },
         {
@@ -77,8 +66,7 @@ class BRIE(InfoExtractor):
     ]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        display_id = mobj.group('id')
+        display_id = self._match_id(url)
         page = self._download_webpage(url, display_id)
         xml_url = self._search_regex(
             r"return BRavFramework\.register\(BRavFramework\('avPlayer_(?:[a-f0-9-]{36})'\)\.setup\({dataURL:'(/(?:[a-z0-9\-]+/)+[a-z0-9/~_.-]+)'}\)\);", page, 'XMLURL')

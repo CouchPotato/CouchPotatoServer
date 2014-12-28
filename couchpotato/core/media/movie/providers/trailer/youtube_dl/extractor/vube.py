@@ -1,10 +1,15 @@
 from __future__ import unicode_literals
 
-import json
 import re
 
 from .common import InfoExtractor
-from ..utils import int_or_none
+from ..compat import (
+    compat_str,
+)
+from ..utils import (
+    int_or_none,
+    ExtractorError,
+)
 
 
 class VubeIE(InfoExtractor):
@@ -14,6 +19,24 @@ class VubeIE(InfoExtractor):
 
     _TESTS = [
         {
+            'url': 'http://vube.com/trending/William+Wei/Y8NUZ69Tf7?t=s',
+            'md5': 'e7aabe1f8f1aa826b9e4735e1f9cee42',
+            'info_dict': {
+                'id': 'Y8NUZ69Tf7',
+                'ext': 'mp4',
+                'title': 'Best Drummer Ever [HD]',
+                'description': 'md5:2d63c4b277b85c2277761c2cf7337d71',
+                'thumbnail': 're:^https?://.*\.jpg',
+                'uploader': 'William',
+                'timestamp': 1406876915,
+                'upload_date': '20140801',
+                'duration': 258.051,
+                'like_count': int,
+                'dislike_count': int,
+                'comment_count': int,
+                'categories': ['amazing', 'hd', 'best drummer ever', 'william wei', 'bucket drumming', 'street drummer', 'epic street drumming'],
+            },
+        }, {
             'url': 'http://vube.com/Chiara+Grispo+Video+Channel/YL2qNPkqon',
             'md5': 'db7aba89d4603dadd627e9d1973946fe',
             'info_dict': {
@@ -29,7 +52,9 @@ class VubeIE(InfoExtractor):
                 'like_count': int,
                 'dislike_count': int,
                 'comment_count': int,
-            }
+                'categories': ['pop', 'music', 'cover', 'singing', 'jessie j', 'price tag', 'chiara grispo'],
+            },
+            'skip': 'Removed due to DMCA',
         },
         {
             'url': 'http://vube.com/SerainaMusic/my-7-year-old-sister-and-i-singing-alive-by-krewella/UeBhTudbfS?t=s&n=1',
@@ -47,7 +72,9 @@ class VubeIE(InfoExtractor):
                 'like_count': int,
                 'dislike_count': int,
                 'comment_count': int,
-            }
+                'categories': ['seraina', 'jessica', 'krewella', 'alive'],
+            },
+            'skip': 'Removed due to DMCA',
         }, {
             'url': 'http://vube.com/vote/Siren+Gene/0nmsMY5vEq?n=2&t=s',
             'md5': '0584fc13b50f887127d9d1007589d27f',
@@ -56,14 +83,17 @@ class VubeIE(InfoExtractor):
                 'ext': 'mp4',
                 'title': 'Frozen - Let It Go Cover by Siren Gene',
                 'description': 'My rendition of "Let It Go" originally sung by Idina Menzel.',
-                'uploader': 'Siren Gene',
-                'uploader_id': 'Siren',
                 'thumbnail': 're:^http://frame\.thestaticvube\.com/snap/[0-9x]+/10283ab622a-86c9-4681-51f2-30d1f65774af\.jpg$',
+                'uploader': 'Siren',
+                'timestamp': 1395448018,
+                'upload_date': '20140322',
                 'duration': 221.788,
                 'like_count': int,
                 'dislike_count': int,
                 'comment_count': int,
-            }
+                'categories': ['let it go', 'cover', 'idina menzel', 'frozen', 'singing', 'disney', 'siren gene'],
+            },
+            'skip': 'Removed due to DMCA',
         }
     ]
 
@@ -71,47 +101,45 @@ class VubeIE(InfoExtractor):
         mobj = re.match(self._VALID_URL, url)
         video_id = mobj.group('id')
 
-        webpage = self._download_webpage(url, video_id)
-        data_json = self._search_regex(
-            r'(?s)window\["(?:tapiVideoData|vubeOriginalVideoData)"\]\s*=\s*(\{.*?\n});\n',
-            webpage, 'video data'
-        )
-        data = json.loads(data_json)
-        video = (
-            data.get('video') or
-            data)
-        assert isinstance(video, dict)
+        video = self._download_json(
+            'http://vube.com/t-api/v1/video/%s' % video_id, video_id, 'Downloading video JSON')
 
         public_id = video['public_id']
 
-        formats = [
-            {
-                'url': 'http://video.thestaticvube.com/video/%s/%s.mp4' % (fmt['media_resolution_id'], public_id),
-                'height': int(fmt['height']),
-                'abr': int(fmt['audio_bitrate']),
-                'vbr': int(fmt['video_bitrate']),
-                'format_id': fmt['media_resolution_id']
-            } for fmt in video['mtm'] if fmt['transcoding_status'] == 'processed'
-        ]
+        formats = []
+
+        for media in video['media'].get('video', []) + video['media'].get('audio', []):
+            if media['transcoding_status'] != 'processed':
+                continue
+            fmt = {
+                'url': 'http://video.thestaticvube.com/video/%s/%s.mp4' % (media['media_resolution_id'], public_id),
+                'abr': int(media['audio_bitrate']),
+                'format_id': compat_str(media['media_resolution_id']),
+            }
+            vbr = int(media['video_bitrate'])
+            if vbr:
+                fmt.update({
+                    'vbr': vbr,
+                    'height': int(media['height']),
+                })
+            formats.append(fmt)
 
         self._sort_formats(formats)
 
+        if not formats and video.get('vst') == 'dmca':
+            raise ExtractorError(
+                'This video has been removed in response to a complaint received under the US Digital Millennium Copyright Act.',
+                expected=True)
+
         title = video['title']
         description = video.get('description')
-        thumbnail = self._proto_relative_url(
-            video.get('thumbnail') or video.get('thumbnail_src'),
-            scheme='http:')
-        uploader = data.get('user', {}).get('channel', {}).get('name') or video.get('user_alias')
-        uploader_id = data.get('user', {}).get('name')
+        thumbnail = self._proto_relative_url(video.get('thumbnail_src'), scheme='http:')
+        uploader = video.get('user_alias') or video.get('channel')
         timestamp = int_or_none(video.get('upload_time'))
         duration = video['duration']
         view_count = video.get('raw_view_count')
-        like_count = video.get('rlikes')
-        if like_count is None:
-            like_count = video.get('total_likes')
-        dislike_count = video.get('rhates')
-        if dislike_count is None:
-            dislike_count = video.get('total_hates')
+        like_count = video.get('total_likes')
+        dislike_count = video.get('total_hates')
 
         comments = video.get('comments')
         comment_count = None
@@ -124,6 +152,8 @@ class VubeIE(InfoExtractor):
         else:
             comment_count = len(comments)
 
+        categories = [tag['text'] for tag in video['tags']]
+
         return {
             'id': video_id,
             'formats': formats,
@@ -131,11 +161,11 @@ class VubeIE(InfoExtractor):
             'description': description,
             'thumbnail': thumbnail,
             'uploader': uploader,
-            'uploader_id': uploader_id,
             'timestamp': timestamp,
             'duration': duration,
             'view_count': view_count,
             'like_count': like_count,
             'dislike_count': dislike_count,
             'comment_count': comment_count,
+            'categories': categories,
         }

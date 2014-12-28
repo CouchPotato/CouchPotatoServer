@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 import subprocess
+import youtube_dl
 import time
 import sys
 import os.path
@@ -316,39 +317,23 @@ class vftrailers(VFTrailerProvider):
             for bo in cleanlist:
                 if bocount==0:
                     try:
-                        try:
-                            trailerpath=trailerpath.encode('latin-1')
-                        except:
-                            trailerpath=trailerpath
-                        try:
-                            trailername=trailername.encode('latin-1')
-                        except:
-                            trailername=trailername
                         self.logg('En train de telecharger : ' + bo + ' pour ' +moviename)
                         tempdest=unicodedata.normalize('NFKD', os.path.join(rootDir,trailername.replace("'",''))).encode('ascii','ignore')+u'.%(ext)s'
-                        dest=trailerpath
-                        p=subprocess.Popen([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', '--max-filesize', '105m', '--format','best',bo],cwd=rootDir, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                        while p.poll() is None:
-                            l = p.stdout.readline()
-                            if 'download' in l:
-                                lmsg= l.replace('%',' percent')+' '+trailername
-                                self.logg(lmsg)
-                        (out, err) = p.communicate()
-                        self.logg(out)
-                        if err:
-                            self.logg(err)
-                            continue
-                        else:
-                            listetemp=glob.glob(os.path.join(rootDir,'*'))
-                            for listfile in listetemp:
-                                if unicodedata.normalize('NFKD', trailername.replace("'",'')).encode('ascii','ignore') in listfile:
-                                    ext=listfile[-4:]
-                                    destination=dest+ext
-                                    shutil.move(listfile, destination)
-                                    bocount=1
-                                    self.logg('Une bande annonce telechargee pour ' + moviename)
-                                    return True
-                    except:
+                        dest=trailerpath.encode('latin-1')
+                        ydl_opts={'outtmpl':tempdest,'max_filesize':'105m','format':'best'}
+                        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                            ydl.download([bo])
+                        listetemp=glob.glob(os.path.join(rootDir,'*'))
+                        for listfile in listetemp:
+                            if unicodedata.normalize('NFKD', trailername.replace("'",'')).encode('ascii','ignore') in listfile:
+                                ext=listfile[-4:]
+                                destination=dest+ext
+                                shutil.move(listfile, destination)
+                                bocount=1
+                                self.logg('Une bande annonce telechargee pour ' + moviename)
+                                return True
+                    except Exception, err:
+                        print err
                         continue
                 else:
                     continue

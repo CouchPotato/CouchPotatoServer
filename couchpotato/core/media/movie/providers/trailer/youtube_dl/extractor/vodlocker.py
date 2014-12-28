@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 import re
+
 from .common import InfoExtractor
-from ..utils import (
+from ..compat import (
     compat_urllib_parse,
     compat_urllib_request,
 )
@@ -24,8 +25,7 @@ class VodlockerIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        mobj = re.match(self._VALID_URL, url)
-        video_id = mobj.group('id')
+        video_id = self._match_id(url)
         webpage = self._download_webpage(url, video_id)
 
         fields = dict(re.findall(r'''(?x)<input\s+
@@ -44,7 +44,7 @@ class VodlockerIE(InfoExtractor):
                 req, video_id, 'Downloading video page')
 
         title = self._search_regex(
-            r'id="file_title".*?>\s*(.*?)\s*<span', webpage, 'title')
+            r'id="file_title".*?>\s*(.*?)\s*<(?:br|span)', webpage, 'title')
         thumbnail = self._search_regex(
             r'image:\s*"(http[^\"]+)",', webpage, 'thumbnail')
         url = self._search_regex(

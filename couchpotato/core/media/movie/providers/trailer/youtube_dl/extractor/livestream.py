@@ -4,10 +4,12 @@ import re
 import json
 
 from .common import InfoExtractor
-from ..utils import (
+from ..compat import (
     compat_str,
     compat_urllib_parse_urlparse,
     compat_urlparse,
+)
+from ..utils import (
     ExtractorError,
     find_xpath_attr,
     int_or_none,
@@ -18,8 +20,8 @@ from ..utils import (
 
 class LivestreamIE(InfoExtractor):
     IE_NAME = 'livestream'
-    _VALID_URL = r'http://new\.livestream\.com/.*?/(?P<event_name>.*?)(/videos/(?P<id>\d+))?/?$'
-    _TEST = {
+    _VALID_URL = r'https?://new\.livestream\.com/.*?/(?P<event_name>.*?)(/videos/(?P<id>[0-9]+)(?:/player)?)?/?(?:$|[?#])'
+    _TESTS = [{
         'url': 'http://new.livestream.com/CoheedandCambria/WebsterHall/videos/4719370',
         'md5': '53274c76ba7754fb0e8d072716f2292b',
         'info_dict': {
@@ -31,7 +33,16 @@ class LivestreamIE(InfoExtractor):
             'view_count': int,
             'thumbnail': 're:^http://.*\.jpg$'
         }
-    }
+    }, {
+        'url': 'http://new.livestream.com/tedx/cityenglish',
+        'info_dict': {
+            'title': 'TEDCity2.0 (English)',
+        },
+        'playlist_mincount': 4,
+    }, {
+        'url': 'https://new.livestream.com/accounts/362/events/3557232/videos/67864563/player?autoPlay=false&height=360&mute=false&width=640',
+        'only_matching': True,
+    }]
 
     def _parse_smil(self, video_id, smil_url):
         formats = []
@@ -111,23 +122,37 @@ class LivestreamIE(InfoExtractor):
         event_name = mobj.group('event_name')
         webpage = self._download_webpage(url, video_id or event_name)
 
-        if video_id is None:
-            # This is an event page:
-            config_json = self._search_regex(
-                r'window.config = ({.*?});', webpage, 'window config')
-            info = json.loads(config_json)['event']
-            videos = [self._extract_video_info(video_data['data'])
-                for video_data in info['feed']['data']
-                if video_data['type'] == 'video']
-            return self.playlist_result(videos, info['id'], info['full_name'])
-        else:
-            og_video = self._og_search_video_url(webpage, 'player url')
+        og_video = self._og_search_video_url(
+            webpage, 'player url', fatal=False, default=None)
+        if og_video is not None:
             query_str = compat_urllib_parse_urlparse(og_video).query
             query = compat_urlparse.parse_qs(query_str)
-            api_url = query['play_url'][0].replace('.smil', '')
-            info = json.loads(self._download_webpage(
-                api_url, video_id, 'Downloading video info'))
-            return self._extract_video_info(info)
+            if 'play_url' in query:
+                api_url = query['play_url'][0].replace('.smil', '')
+                info = json.loads(self._download_webpage(
+                    api_url, video_id, 'Downloading video info'))
+                return self._extract_video_info(info)
+
+        config_json = self._search_regex(
+            r'window.config = ({.*?});', webpage, 'window config')
+        info = json.loads(config_json)['event']
+
+        def is_relevant(vdata, vid):
+            result = vdata['type'] == 'video'
+            if video_id is not None:
+                result = result and compat_str(vdata['data']['id']) == vid
+            return result
+
+        videos = [self._extract_video_info(video_data['data'])
+                  for video_data in info['feed']['data']
+                  if is_relevant(video_data, video_id)]
+        if video_id is None:
+            # This is an event page:
+            return self.playlist_result(videos, info['id'], info['full_name'])
+        else:
+            if not videos:
+                raise ExtractorError('Cannot find video %s' % video_id)
+            return videos[0]
 
 
 # The original version of Livestream uses a different system
@@ -137,7 +162,7 @@ class LivestreamOriginalIE(InfoExtractor):
         (?P<user>[^/]+)/(?P<type>video|folder)
         (?:\?.*?Id=|/)(?P<id>.*?)(&|$)
         '''
-    _TEST = {
+    _TESTS = [{
         'url': 'http://www.livestream.com/dealbook/video?clipId=pla_8aa4a3f1-ba15-46a4-893b-902210e138fb',
         'info_dict': {
             'id': 'pla_8aa4a3f1-ba15-46a4-893b-902210e138fb',
@@ -148,7 +173,13 @@ class LivestreamOriginalIE(InfoExtractor):
             # rtmp
             'skip_download': True,
         },
-    }
+    }, {
+        'url': 'https://www.livestream.com/newplay/folder?dirId=a07bf706-d0e4-4e75-a747-b021d84f2fd3',
+        'info_dict': {
+            'id': 'a07bf706-d0e4-4e75-a747-b021d84f2fd3',
+        },
+        'playlist_mincount': 4,
+    }]
 
     def _extract_video(self, user, video_id):
         api_url = 'http://x{0}x.api.channel.livestream.com/2.0/clipdetails?extendedInfo=true&id={1}'.format(user, video_id)
@@ -164,22 +195,27 @@ class LivestreamOriginalIE(InfoExtractor):
             'id': video_id,
             'title': item.find('title').text,
             'url': 'rtmp://extondemand.livestream.com/ondemand',
-            'play_path': 'mp4:trans/dv15/mogulus-{0}.mp4'.format(path),
+            'play_path': 'trans/dv15/mogulus-{0}'.format(path),
+            'player_url': 'http://static.livestream.com/chromelessPlayer/v21/playerapi.swf?hash=5uetk&v=0803&classid=D27CDB6E-AE6D-11cf-96B8-444553540000&jsEnabled=false&wmode=opaque',
             'ext': 'flv',
             'thumbnail': thumbnail_url,
         }
 
     def _extract_folder(self, url, folder_id):
         webpage = self._download_webpage(url, folder_id)
-        urls = orderedSet(re.findall(r'<a href="(https?://livestre\.am/.*?)"', webpage))
+        paths = orderedSet(re.findall(
+            r'''(?x)(?:
+                <li\s+class="folder">\s*<a\s+href="|
+                <a\s+href="(?=https?://livestre\.am/)
+            )([^"]+)"''', webpage))
 
         return {
             '_type': 'playlist',
             'id': folder_id,
             'entries': [{
                 '_type': 'url',
-                'url': video_url,
-            } for video_url in urls],
+                'url': compat_urlparse.urljoin(url, p),
+            } for p in paths],
         }
 
     def _real_extract(self, url):

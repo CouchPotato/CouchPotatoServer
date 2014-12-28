@@ -6,24 +6,26 @@ import json
 import xml.etree.ElementTree
 
 from .common import InfoExtractor
-from ..utils import (
-    compat_urllib_parse,
-    find_xpath_attr,
-    fix_xml_ampersands,
-    compat_urlparse,
-    compat_str,
-    compat_urllib_request,
+from ..compat import (
     compat_parse_qs,
-
+    compat_str,
+    compat_urllib_parse,
+    compat_urllib_parse_urlparse,
+    compat_urllib_request,
+    compat_urlparse,
+)
+from ..utils import (
     determine_ext,
     ExtractorError,
-    unsmuggle_url,
+    find_xpath_attr,
+    fix_xml_ampersands,
     unescapeHTML,
+    unsmuggle_url,
 )
 
 
 class BrightcoveIE(InfoExtractor):
-    _VALID_URL = r'https?://.*brightcove\.com/(services|viewer).*\?(?P<query>.*)'
+    _VALID_URL = r'(?:https?://.*brightcove\.com/(services|viewer).*?\?|brightcove:)(?P<query>.*)'
     _FEDERATED_URL_TEMPLATE = 'http://c.brightcove.com/services/viewer/htmlFederated?%s'
 
     _TESTS = [
@@ -87,6 +89,15 @@ class BrightcoveIE(InfoExtractor):
                 'description': 'UCI MTB World Cup 2014: Fort William, UK - Downhill Finals',
             },
         },
+        {
+            # playlist test
+            # from http://support.brightcove.com/en/video-cloud/docs/playlist-support-single-video-players
+            'url': 'http://c.brightcove.com/services/viewer/htmlFederated?playerID=3550052898001&playerKey=AQ%7E%7E%2CAAABmA9XpXk%7E%2C-Kp7jNgisre1fG5OdqpAFUTcs0lP_ZoL',
+            'info_dict': {
+                'title': 'Sealife',
+            },
+            'playlist_mincount': 7,
+        },
     ]
 
     @classmethod
@@ -101,6 +112,8 @@ class BrightcoveIE(InfoExtractor):
                             lambda m: m.group(1) + '/>', object_str)
         # Fix up some stupid XML, see https://github.com/rg3/youtube-dl/issues/1608
         object_str = object_str.replace('<--', '<!--')
+        # remove namespace to simplify extraction
+        object_str = re.sub(r'(<object[^>]*)(xmlns=".*?")', r'\1', object_str)
         object_str = fix_xml_ampersands(object_str)
 
         object_doc = xml.etree.ElementTree.fromstring(object_str.encode('utf-8'))
@@ -154,12 +167,14 @@ class BrightcoveIE(InfoExtractor):
     def _extract_brightcove_urls(cls, webpage):
         """Return a list of all Brightcove URLs from the webpage """
 
-        url_m = re.search(r'<meta\s+property="og:video"\s+content="(http://c.brightcove.com/[^"]+)"', webpage)
+        url_m = re.search(
+            r'<meta\s+property="og:video"\s+content="(https?://(?:secure|c)\.brightcove.com/[^"]+)"',
+            webpage)
         if url_m:
             url = unescapeHTML(url_m.group(1))
             # Some sites don't add it, we can't download with this url, for example:
             # http://www.ktvu.com/videos/news/raw-video-caltrain-releases-video-of-man-almost/vCTZdY/
-            if 'playerKey' in url:
+            if 'playerKey' in url or 'videoId' in url:
                 return [url]
 
         matches = re.findall(
@@ -188,9 +203,13 @@ class BrightcoveIE(InfoExtractor):
             referer = smuggled_data.get('Referer', url)
             return self._get_video_info(
                 videoPlayer[0], query_str, query, referer=referer)
-        else:
+        elif 'playerKey' in query:
             player_key = query['playerKey']
             return self._get_playlist_info(player_key[0])
+        else:
+            raise ExtractorError(
+                'Cannot find playerKey= variable. Did you forget quotes in a shell invocation?',
+                expected=True)
 
     def _get_video_info(self, video_id, query_str, query, referer=None):
         request_url = self._FEDERATED_URL_TEMPLATE % query_str
@@ -201,6 +220,13 @@ class BrightcoveIE(InfoExtractor):
         if referer is not None:
             req.add_header('Referer', referer)
         webpage = self._download_webpage(req, video_id)
+
+        error_msg = self._html_search_regex(
+            r"<h1>We're sorry.</h1>([\s\n]*<p>.*?</p>)+", webpage,
+            'error message', default=None)
+        if error_msg is not None:
+            raise ExtractorError(
+                'brightcove said: %s' % error_msg, expected=True)
 
         self.report_extraction(video_id)
         info = self._search_regex(r'var experienceJSON = ({.*});', webpage, 'json')
@@ -238,12 +264,21 @@ class BrightcoveIE(InfoExtractor):
             formats = []
             for rend in renditions:
                 url = rend['defaultURL']
+                if not url:
+                    continue
+                ext = None
                 if rend['remote']:
-                    # This type of renditions are served through akamaihd.net,
-                    # but they don't use f4m manifests
-                    url = url.replace('control/', '') + '?&v=3.3.0&fp=13&r=FEEFJ&g=RTSJIMBMPFPB'
-                    ext = 'flv'
-                else:
+                    url_comp = compat_urllib_parse_urlparse(url)
+                    if url_comp.path.endswith('.m3u8'):
+                        formats.extend(
+                            self._extract_m3u8_formats(url, info['id'], 'mp4'))
+                        continue
+                    elif 'akamaihd.net' in url_comp.netloc:
+                        # This type of renditions are served through
+                        # akamaihd.net, but they don't use f4m manifests
+                        url = url.replace('control/', '') + '?&v=3.3.0&fp=13&r=FEEFJ&g=RTSJIMBMPFPB'
+                        ext = 'flv'
+                if ext is None:
                     ext = determine_ext(url)
                 size = rend.get('size')
                 formats.append({

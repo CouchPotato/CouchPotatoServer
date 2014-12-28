@@ -106,6 +106,13 @@ class TeacherTubeUserIE(InfoExtractor):
         \s*
         <a\s+href="(https?://(?:www\.)?teachertube\.com/(?:video|audio)/[^"]+)"
     '''
+    _TEST = {
+        'url': 'http://www.teachertube.com/user/profile/rbhagwati2',
+        'info_dict': {
+            'id': 'rbhagwati2'
+        },
+        'playlist_mincount': 179,
+    }
 
     def _real_extract(self, url):
         mobj = re.match(self._VALID_URL, url)
@@ -114,7 +121,7 @@ class TeacherTubeUserIE(InfoExtractor):
         urls = []
         webpage = self._download_webpage(url, user_id)
         urls.extend(re.findall(self._MEDIA_RE, webpage))
-        
+
         pages = re.findall(r'/ajax-user/user-videos/%s\?page=([0-9]+)' % user_id, webpage)[:-1]
         for p in pages:
             more = 'http://www.teachertube.com/ajax-user/user-videos/%s?page=%s' % (user_id, p)
