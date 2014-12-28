@@ -214,12 +214,16 @@
 		}
 
 		.section {
-			padding: $padding/2 $padding;
-			border-bottom: 1px solid rgba(0,0,0,.1);
+			padding: $padding $padding;
+			border-top: 1px solid rgba(0,0,0,.1);
 		}
 	}
 
 	.releases {
+
+		.buttons {
+			margin-bottom: $padding/2;
+		}
 
 		.item span {
 			overflow: hidden;
@@ -237,7 +241,7 @@
 		.size { min-width: 40px; max-width: 40px; }
 		.age { min-width: 40px; max-width: 40px; }
 		.score { min-width: 45px; max-width: 45px; }
-		.provider { min-width: 100px; max-width: 100px; }
+		.provider { min-width: 110px; max-width: 110px; }
 
 	}
 }

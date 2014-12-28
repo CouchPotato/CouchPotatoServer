@@ -26,8 +26,8 @@ var Movie = new Class({
 
 		self.addEvents();
 
-		//if(data.identifiers.imdb == 'tt0948470')
-		//	self.openDetails();
+		if(data.identifiers.imdb == 'tt1228705')
+			self.openDetails();
 	},
 
 	openDetails: function(){

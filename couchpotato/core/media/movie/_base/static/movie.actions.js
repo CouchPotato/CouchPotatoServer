@@ -424,49 +424,35 @@ MA.Trailer = new Class({
 
 	Extends: MovieAction,
 	id: null,
+	label: 'Trailer',
 
-	create: function(){
+	getDetails: function(){
 		var self = this;
 
-		self.el = new Element('a.trailer', {
-			'title': 'Watch the trailer of ' + self.getTitle(),
-			'events': {
-				'click': self.watch.bind(self)
-			}
-		});
+		if(!self.player_container){
+			var id = 'trailer-'+randomString();
+			self.player_container = new Element('div.icon-play[id='+id+']', {
+				'events': {
+					'click': function(e){
+						self.watch(id);
+					}
+				}
+			});
+			self.container = new Element('div.trailer_container')
+				.grab(self.player_container);
+		}
 
+		return self.player_container;
 	},
 
-	watch: function(offset){
+	watch: function(){
 		var self = this;
 
-		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18';
-		var url = data_url.substitute({
+		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18',
+			url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
-				'year': self.get('year'),
-				'offset': offset || 1
-			}),
-			size = $(self.movie).getSize(),
-			height = self.options.height || (size.x/16)*9,
-			id = 'trailer-'+randomString();
-
-		self.player_container = new Element('div[id='+id+']');
-		self.container = new Element('div.hide.trailer_container')
-			.adopt(self.player_container)
-			.inject($(self.movie), 'top');
-
-		self.container.setStyle('height', 0);
-		self.container.removeClass('hide');
-
-		self.close_button = new Element('a.hide.hide_trailer', {
-			'text': 'Hide trailer',
-			'events': {
-				'click': self.stop.bind(self)
-			}
-		}).inject(self.movie);
-
-		self.container.setStyle('height', height);
-		$(self.movie).setStyle('height', height);
+				'year': self.get('year')
+			});
 
 		new Request.JSONP({
 			'url': url,
@@ -486,8 +472,6 @@ MA.Trailer = new Class({
 					}
 				});
 
-				self.close_button.removeClass('hide');
-
 				var quality_set = false;
 				var change_quality = function(state){
 					if(!quality_set && (state.data == 1 || state.data || 2)){
@@ -504,6 +488,8 @@ MA.Trailer = new Class({
 
 			}
 		}).send();
+
+		return self.container;
 
 	},
 

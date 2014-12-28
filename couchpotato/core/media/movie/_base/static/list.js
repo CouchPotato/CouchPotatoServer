@@ -311,7 +311,7 @@ var MovieList = new Class({
 		['thumb', 'list'].each(function(view){
 			var current = self.current_view == view;
 			new Element('a', {
-				'class': 'button icon-' + view + (current ?  ' active ' : ''),
+				'class': 'icon-' + view + (current ?  ' active ' : ''),
 				'data-view': view
 			}).inject(self.navigation_actions, current ? 'top' : 'bottom');
 		});

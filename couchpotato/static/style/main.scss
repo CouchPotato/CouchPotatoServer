@@ -38,6 +38,21 @@ input, textarea, select {
     border: 1px solid #f2f2f2;
 }
 
+.button {
+    color: $primary_color;
+    font-weight: 300;
+    padding: $padding/4;
+    cursor: pointer;
+    border: 1px solid $primary_color;
+    border-radius: $border_radius;
+    margin: 0 $padding/4;
+
+    &:hover {
+        background: $primary_color;
+        color: $background_color;
+    }
+}
+
 /* Header */
 .header {
     width: $header_width;
@@ -357,7 +372,6 @@ input, textarea, select {
 }
 
 /* Messages */
-
 .messages {
 	position: fixed;
 	right: 0;

@@ -21,19 +21,20 @@ var MovieDetails = new Class({
 			),
 			self.content = new Element('div.content').grab(
 				new Element('h1', {
-					'text': 'Title'
+					'text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : '')
 				})
 			)
 		);
 
 		self.addSection('description', new Element('div', {
-			'text': 'Description'
+			'text': parent.get('plot')
 		}));
 
 	},
 
 	addSection: function(name, section_el){
 		var self = this;
+		name = name.toLowerCase();
 
 		self.content.grab(
 			self.sections[name] = new Element('div', {

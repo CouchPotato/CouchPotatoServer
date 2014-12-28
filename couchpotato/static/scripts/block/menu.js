@@ -15,7 +15,7 @@ var BlockMenu = new Class({
 			self.wrapper = new Element('div.wrapper').adopt(
 				self.more_option_ul = new Element('ul')
 			),
-			self.button = new Element('a.button' + (self.options.button_class ? '.' + self.options.button_class : ''), {
+			self.button = new Element('a' + (self.options.button_class ? '.' + self.options.button_class : ''), {
 				'text': self.options.button_text || '',
 				'events': {
 					'click': function(){
