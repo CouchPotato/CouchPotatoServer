@@ -225,6 +225,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'cpasbien',
             'description': 'See <a href="http://www.cpasbien.com/">cPASbien</a>',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAgZJREFUOI2lkj9oE2EYxn93l/Quf440gXg4lBoEMd2MDuLSkk0R6hCnuqjUoR0c7FDo4Ca0CDo7uRRBqEMDXSLUUqRDiZM1NMEI1VKTlDZpUppccvc5nJp/KooPfMPH+z3P+zzv+8F/Quq8XIVEEOY0kASIzpoLlBKUV+CuCblfCjyF/P3V1Qi6jrCs7k4eD/X1dS5NTy9tQaJD2MFDkA23W8UwQFGQRJcB0DS0cBg/DPY4a0OVZcHeHihKf1ifD6pVfGD/VmBAUeDwEGQZLAskCVQV6nVYW+M4lSLQo9stoKpQLoNtO2QhYHsbkkmOczm+AP5eBy/BfwRDn8GHJLkpFp3utRpkMpDLwckJvlCIM9Uqg6YZeAAj58E1CVlXCaaigcCjsWhU8Xq9UCo5lisVx4FhODFkGbdpMtlqXa4IsVUHYkLcVlbg3ddGo3AzErl2emLCGaCmwcAAuL4ntCxoNpFsG8O2odlkXojF17CgAK2PsJna2Xk/ViyOh0dHXWhaewaW1T6mSb5a5V6rtbAMU4D5c18FyCzu7i5fyWZvDMfjOh4PNBpd5A/5vLheq93ZhMc/eF0Lr0NhaX8/eS6djo/EYqfQdUekUuHNxsZR4uDg1id40f9J+qE/CwTeitlZIWZmxKtQqOSFi39D7IQy5/c/fxIMpoGhfyUDMAwXzsL4n958A9jfxsJ8X4WQAAAAAElFTkSuQmCC',
             'wizard': True,
             'options': [
                 {

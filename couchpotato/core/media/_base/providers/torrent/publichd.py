@@ -101,6 +101,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'PublicHD',
             'description': 'Public Torrent site with only HD content. See <a href="https://publichd.se/">PublicHD</a>',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAASFJREFUOI3VkjtLxEAUhb87TNZgoSIoNqYUFUGw9Bdoo5UoItgoLrJFWsHa3sLav6GNoI2NxYqIDwQRC1+FLLgx2SQzFiNLLGyyjR6Y6t773XNmBv69BHgEVMl5I0AL8EoCUlWdE9O4Vt9mnLZW4OFWAOH9Bp5O4e28cOrwXIfaohi9VrP0xALYNuDjE4LAMjYAfT5c3CmOzhSedvVWJoSrKQtLFp1EQGrZ39Z0VcAYCAYtNHKiGNBweW8Id03BuRBWhbhpcUwDQ+M5WoGxbitpIZXwq7TvAxVhdtm2Y2zOw94MdPtABiPDws6GwvNcS5IKxBm+D/rgRJha/0nt74WoCVevDjk6aZmYzovXRJIJh8fOXEfPqIEXOvhIJef+kr4AxLZfW1OtpggAAAAASUVORK5CYII=',
             'wizard': True,
             'options': [
                 {

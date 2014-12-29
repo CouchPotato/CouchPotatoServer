@@ -211,6 +211,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'addict',
             'description': 'See <a href="https://addict-to.net/">Addict</a>',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAArZJREFUOI2NkktPE2EUht/5vmlH2oyIBAeKICUIMfUCUtuSSDTGaDckbkzcmLgx0Y0iCxe60sSVxhh/gDsNmhBjwMBCkwaiAblIQqhWqIptp1OmU3qZdjq003FHUEF9lue859mcF9gaxuVyXXW73Re32W9Atxr237pzOxkN+/Rypb5eENoSicTkfwvGfpjXNKbmPtHk1mJGiSlraWtLS0tnPB6f+Kfg6YJ5Y3HqyyOWqwW111rUyHSdWcGatJqscjpb2iVJer+tIPDNvDodmH1c0dehpRUsLwSwz9NnI3p6j7omfs5k822CINQqijLzh6D/2u2BH3HmMWNQ5FMSPs0Oo91zFk0dPbDV7a3SUyttSjz6zjDRy3GcXVXVeQAVAKBer/dSIhE+QXRp/7pO2ZXlKbR7/di1uxm5pAS+xgG9lOfKhURXQoyMgqEejuN2apr2EYBJ7Xb7saJe4kvrhVVD+y7s6ThZ5WjqRDYpgiUWBCdHoJcL8J27QuWvi95ENBwg1NJqtVobXC7XPFUUZV4QhC5FSZUJIWlqZOsYUm3bwe5E6OMYtHIGnjOXwVpqUO88gtxquEuOLi0aJtktiiIoAFOW5YnGxkZfLCYSTU0ulwtiay6b2wEOcJ+6BC2TgqEXQVkO+eIaIcTskKXYXLFYHNn4gizLAYfD0anmtaZMShpnWbX74PELlClRlAt5qGkFHwKDONzbB1tt3dD021d3AYR/6UEqlRrneb7BBOlZjUdH02LIx1c3A2UGc5MvcdDjR+zr5+fPHvYPAIhs2US/3z8TCoWqWQvXLUuRN2p6pTubSZMDR0+b4rfgi6Ent24CiG5b5WAwaGqaNme1WgXKWpxKMjLPstjHENvr4cF7A5uPAYD5XbAJwvP8dcOodJRKRaZUMh4AWPpLfksYSul5AIe2C/wE9XA/rBqvYMsAAAAASUVORK5CYII=',
             'wizard': True,
             'options': [
                 {
