@@ -17,8 +17,8 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'http://www.cpasbien.pe/',
-        'search': 'http://www.cpasbien.pe/recherche/',
+        'test': 'http://www.cpasbien.pw/',
+        'search': 'http://www.cpasbien.pw/recherche/',
     }
 
     http_time_between_calls = 1 #seconds
@@ -91,7 +91,7 @@ class Base(TorrentProvider):
                             continue
                         detail_url = result.find("a")['href']
                         tmp = detail_url.split('/')[-1].replace('.html','.torrent')
-                        url_download = ('http://www.cpasbien.pe/telechargement/%s' % tmp)
+                        url_download = ('http://www.cpasbien.pw/telechargement/%s' % tmp)
                         size = result.findAll(attrs = {'class' : ["poid"]})[0].text
                         seeder = result.findAll(attrs = {'class' : ["seed_ok"]})[0].text
                         leecher = result.findAll(attrs = {'class' : ["down"]})[0].text
