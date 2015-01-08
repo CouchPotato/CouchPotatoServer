@@ -1,13 +1,9 @@
-from urlparse import urlparse, parse_qs
-import time
-
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
-from dateutil.parser import parse
 
 
 log = CPLog(__name__)
@@ -16,8 +12,7 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
-        'search': 'https://rss.omgwtfnzbs.org/rss-search.php?%s',
-        'detail_url': 'https://omgwtfnzbs.org/details.php?id=%s',
+        'search': 'https://api.omgwtfnzbs.org/json/?%s',
     }
 
     http_time_between_calls = 1   # Seconds
@@ -47,21 +42,18 @@ class Base(NZBProvider, RSS):
             'api': self.conf('api_key', default = ''),
         })
 
-        nzbs = self.getRSSData(self.urls['search'] % params)
+        nzbs = self.getJsonData(self.urls['search'] % params)
 
         for nzb in nzbs:
 
-            enclosure = self.getElement(nzb, 'enclosure').attrib
-            nzb_id = parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0]
-
             results.append({
-                'id': nzb_id,
-                'name': toUnicode(self.getTextElement(nzb, 'title')),
-                'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
-                'size': tryInt(enclosure['length']) / 1024 / 1024,
-                'url': enclosure['url'],
-                'detail_url': self.urls['detail_url'] % nzb_id,
-                'description': self.getTextElement(nzb, 'description')
+                'id': nzb.get('nzbid'),
+                'name': toUnicode(nzb.get('release')),
+                'age': self.calculateAge(tryInt(nzb.get('usenetage'))),
+                'size': tryInt(nzb.get('sizebytes')) / 1024 / 1024,
+                'url': nzb.get('getnzb'),
+                'detail_url': nzb.get('details'),
+                'description': nzb.get('weblink')
             })
 
 
