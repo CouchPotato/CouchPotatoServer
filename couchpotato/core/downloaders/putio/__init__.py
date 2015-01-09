@@ -29,6 +29,11 @@ config = [{
                     'advanced': True,
                 },
                 {
+                    'name': 'folder',
+                    'description': ('The folder on putio where you want the upload to go','Must be a folder in the root directory'),
+                    'default': 0,
+                },
+                {
                     'name': 'callback_host',
                     'description': 'External reachable url to CP so put.io can do it\'s thing',
                 },

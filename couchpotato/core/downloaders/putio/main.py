@@ -28,20 +28,32 @@ class PutIO(DownloaderBase):
 
         return super(PutIO, self).__init__()
 
+    def convertFolder(self, client, folder):
+        if folder == 0:
+            return 0
+        else:
+            files = client.File.list()
+            for f in files:
+                if f.name == folder and f.content_type == "application/x-directory":
+                    return f.id
+            #If we get through the whole list and don't get a match we will use the root 
+            return 0
+
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
 
         log.info('Sending "%s" to put.io', data.get('name'))
         url = data.get('url')
-
         client = pio.Client(self.conf('oauth_token'))
+        putioFolder = self.convertFolder(client, self.conf('folder'))
+        log.debug('putioFolder ID is %s', putioFolder)
         # It might be possible to call getFromPutio from the renamer if we can then we don't need to do this.
         # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
-            callbackurl = 'http://' + self.conf('callback_host') + '/' + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
-        resp = client.Transfer.add_url(url, callback_url = callbackurl)
+            callbackurl = 'http://' + self.conf('callback_host') + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
+        resp = client.Transfer.add_url(url, callback_url = callbackurl, parent_id = putioFolder)
         log.debug('resp is %s', resp.id);
         return self.downloadReturnId(resp.id)
 
@@ -124,7 +136,9 @@ class PutIO(DownloaderBase):
         client = pio.Client(self.conf('oauth_token'))
 
         log.debug('About to get file List')
-        files = client.File.list()
+        putioFolder = self.convertFolder(client, self.conf('folder'))
+        log.debug('PutioFolderID is %s', putioFolder)
+        files = client.File.list(parent_id=putioFolder)
         downloaddir = self.conf('download_dir')
 
         for f in files:
