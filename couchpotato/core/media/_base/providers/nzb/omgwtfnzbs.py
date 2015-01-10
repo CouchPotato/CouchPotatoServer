@@ -44,17 +44,18 @@ class Base(NZBProvider, RSS):
 
         nzbs = self.getJsonData(self.urls['search'] % params)
 
-        for nzb in nzbs:
+        if isinstance(nzbs, list):
+            for nzb in nzbs:
 
-            results.append({
-                'id': nzb.get('nzbid'),
-                'name': toUnicode(nzb.get('release')),
-                'age': self.calculateAge(tryInt(nzb.get('usenetage'))),
-                'size': tryInt(nzb.get('sizebytes')) / 1024 / 1024,
-                'url': nzb.get('getnzb'),
-                'detail_url': nzb.get('details'),
-                'description': nzb.get('weblink')
-            })
+                results.append({
+                    'id': nzb.get('nzbid'),
+                    'name': toUnicode(nzb.get('release')),
+                    'age': self.calculateAge(tryInt(nzb.get('usenetage'))),
+                    'size': tryInt(nzb.get('sizebytes')) / 1024 / 1024,
+                    'url': nzb.get('getnzb'),
+                    'detail_url': nzb.get('details'),
+                    'description': nzb.get('weblink')
+                })
 
 
 config = [{
