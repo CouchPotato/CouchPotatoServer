@@ -51,8 +51,8 @@ var SuggestList = new Class({
 			self.show();
 		else
 			self.hide();
-
-		self.fireEvent('created');
+		
+		self.fireEvent.delay(0, self, 'created');
 
 	},
 
