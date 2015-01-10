@@ -39,7 +39,7 @@ class Plugin(object):
 
     _locks = {}
 
-    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0'
     http_last_use = {}
     http_time_between_calls = 0
     http_failed_request = {}
