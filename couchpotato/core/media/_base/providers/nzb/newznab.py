@@ -183,7 +183,7 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            data = self.urlopen(url, show_error = False)
+            data = self.urlopen(url, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
