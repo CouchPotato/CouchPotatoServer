@@ -331,7 +331,7 @@ class HTTPServerRequest(object):
         self.uri = uri
         self.version = version
         self.headers = headers or HTTPHeaders()
-        self.body = body or ""
+        self.body = body or b""
 
         # set remote IP and protocol
         context = getattr(connection, 'context', None)
@@ -873,3 +873,17 @@ def _encode_header(key, pdict):
 def doctests():
     import doctest
     return doctest.DocTestSuite()
+
+def split_host_and_port(netloc):
+    """Returns ``(host, port)`` tuple from ``netloc``.
+
+    Returned ``port`` will be ``None`` if not present.
+    """
+    match = re.match(r'^(.+):(\d+)$', netloc)
+    if match:
+        host = match.group(1)
+        port = int(match.group(2))
+    else:
+        host = netloc
+        port = None
+    return (host, port)
