@@ -30,7 +30,7 @@ config = [{
                 },
                 {
                     'name': 'folder',
-                    'description': ('The folder on putio where you want the upload to go','Must be a folder in the root directory'),
+                    'description': ('The folder on putio where you want the upload to go','Will find the first first folder that matches this name'),
                     'default': 0,
                 },
                 {
