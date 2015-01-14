@@ -20,7 +20,6 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
-        'detail': 'details/%s',
         'download': 't=get&id=%s'
     }
 
@@ -104,7 +103,7 @@ class Base(NZBProvider, RSS):
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
-                'detail_url': (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id),
+                'detail_url': detail_url,
                 'content': self.getTextElement(nzb, 'description'),
                 'description': description,
                 'score': host['extra_score'],
