@@ -68,7 +68,8 @@ class Base(NZBProvider, RSS):
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
 
-            nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
+            detail_url = self.getTextElement(nzb, 'guid')
+            nzb_id = detail_url.split('/')[-1:].pop()
             name = self.getTextElement(nzb, 'title')
 
             if not name:
