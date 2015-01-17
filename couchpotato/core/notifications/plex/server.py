@@ -35,11 +35,20 @@ class PlexServer(object):
         if path.startswith('/'):
             path = path[1:]
 
-        data = self.plex.urlopen('%s/%s' % (
-            self.createHost(self.plex.conf('media_server'), port = 32400),
-            path
-        ))
-
+        #Maintain support for older Plex installations without myPlex
+        if not self.plex.conf('auth_token'):
+            data = self.plex.urlopen('%s/%s' % (
+                self.createHost(self.plex.conf('media_server'), port = 32400),
+                path
+            ))
+        else:
+            #Add X-Plex-Token header for myPlex support workaround
+            data = self.plex.urlopen('%s/%s?X-Plex-Token=%s' % (
+                self.createHost(self.plex.conf('media_server'), port = 32400),
+                path,
+                self.plex.conf('auth_token')
+            ))
+        
         if data_type == 'xml':
             return etree.fromstring(data)
         else:
