@@ -20,6 +20,7 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
+        'detail': 'details/%s',
         'download': 't=get&id=%s'
     }
 
@@ -67,9 +68,12 @@ class Base(NZBProvider, RSS):
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
 
+            name = self.getTextElement(nzb, 'title')
             detail_url = self.getTextElement(nzb, 'guid')
             nzb_id = detail_url.split('/')[-1:].pop()
-            name = self.getTextElement(nzb, 'title')
+
+            if '://' not in detail_url:
+                detail_url = (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id)
 
             if not name:
                 continue
