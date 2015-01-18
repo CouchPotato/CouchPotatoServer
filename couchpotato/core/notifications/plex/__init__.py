@@ -24,6 +24,12 @@ config = [{
                     'description': 'Hostname/IP, default localhost'
                 },
                 {
+                    'name': 'media_server_token',
+                    'label': 'Auth Token',
+                    'default': '',
+                    'description': 'Auth Token of your Plex Media Server'
+                },
+                {
                     'name': 'clients',
                     'default': '',
                     'description': 'Comma separated list of client names\'s (computer names). Top right when you start Plex'
