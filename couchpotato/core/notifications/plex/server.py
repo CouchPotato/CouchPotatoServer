@@ -34,6 +34,8 @@ class PlexServer(object):
 
         if path.startswith('/'):
             path = path[1:]
+            if self.plex.conf('media_server_token'):
+                path += "/?X-Plex-Token=" + (self.plex.conf('media_server_token'))
 
         data = self.plex.urlopen('%s/%s' % (
             self.createHost(self.plex.conf('media_server'), port = 32400),
@@ -50,7 +52,11 @@ class PlexServer(object):
 
         self.clients = {}
 
-        result = self.request('clients')
+        path = 'clients'
+        if self.plex.conf('media_server_token'):
+            path += "/?X-Plex-Token=" + (self.plex.conf('media_server_token'))
+
+        result = self.request(path)
         if not result:
             return
 
@@ -88,14 +94,20 @@ class PlexServer(object):
         if not section_types:
             section_types = ['movie']
 
-        sections = self.request('library/sections')
+        path = 'library/sections'
+        if self.plex.conf('media_server_token'):
+            path += "/?X-Plex-Token=" + (self.plex.conf('media_server_token'))
+        sections = self.request(path)
 
         try:
             for section in sections.findall('Directory'):
                 if section.get('type') not in section_types:
                     continue
 
-                self.request('library/sections/%s/refresh' % section.get('key'), 'text')
+                path = 'library/sections/%s/refresh' % section.get('key')
+                if self.plex.conf('media_server_token'):
+                    path += "/?X-Plex-Token=" + (self.plex.conf('media_server_token'))
+                self.request(path , 'text')
         except:
             log.error('Plex library update failed for %s, Media Server not running: %s',
                       (self.plex.conf('media_server'), traceback.format_exc(1)))
