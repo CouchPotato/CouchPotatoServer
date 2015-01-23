@@ -79,7 +79,7 @@ config = [{
                     'name': 'priority',
                     'default': 0,
                     'type': 'dropdown',
-                    'values': [('Normal', 0), ('High', 1)],
+                    'values': [('Low', -1),('Normal', 0), ('High', 1)],
                 },
                 {
                     'name': 'on_snatch',
