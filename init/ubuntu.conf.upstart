@@ -1,0 +1,27 @@
+description "CouchPotato upstart script"
+author "dellipse"
+
+# This is a sample Upstart script to be used in Ubuntu.  Use at your own risk.
+
+# What user/group to run as
+setuid YourUser
+setgid YourGroup
+
+# When to start/stop the service
+start on started gdrive and runlevel [2345]
+stop on stopping gdrive or runlevel [016]
+
+# Change these variables to the proper values for your system.
+# Make sure the user/group above have the ability to write to these locations as well.
+#
+env PID_FILE=/var/run/couchpotato/couchpotato.pid
+env CONFIG_FILE=/home/YourUser/configs/couchpotato/couchpotato.ini
+env DATA_DIR=/var/couchpotato
+
+# Start the process
+
+script
+
+        exec python /opt/CouchPotatoServer/CouchPotato.py --quiet --pid_file="$PID_FILE" --data_dir="$DATA_DIR" --config_file="$CONFIG_FILE"
+
+end script
