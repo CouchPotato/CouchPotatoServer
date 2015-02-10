@@ -1,3 +1,4 @@
+import re
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -55,6 +56,10 @@ class Base(TorrentProvider):
         }
 
     def loginSuccess(self, output):
+        often = re.search('You tried too often, please wait .*</div>', output)
+        if often:
+            raise Exception(often.group(0)[:-6].strip())
+
         return 'Password not correct' not in output
 
     def loginCheckSuccess(self, output):
