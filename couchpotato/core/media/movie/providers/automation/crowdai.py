@@ -1,5 +1,3 @@
-from xml.etree.ElementTree import QName
-import datetime
 import re
 
 from couchpotato.core.helpers.rss import RSS
@@ -21,7 +19,6 @@ class CrowdAI(Automation, RSS):
 
         movies = []
 
-        newznab_namespace = 'http://www.newznab.com/DTD/2010/feeds/attributes/'
         urls = dict(zip(splitString(self.conf('automation_urls')), [tryInt(x) for x in splitString(self.conf('automation_urls_use'))]))
 
         for url in urls:
@@ -33,20 +30,18 @@ class CrowdAI(Automation, RSS):
 
             for movie in rss_movies:
 
-                title = ""
-                description = self.getTextElement(movie, "description")
+                description = self.getTextElement(movie, 'description')
                 grabs = 0
-                
+
                 for item in movie:
                     if item.attrib.get('name') == 'grabs':
                         grabs = item.attrib.get('value')
                         break
-                    
-                    
+
                 if int(grabs) > tryInt(self.conf('number_grabs')):
-                    title = re.match( r'.*Title: .a href.*/">(.*) \(\d{4}\).*', description).group(1)
+                    title = re.match(r'.*Title: .a href.*/">(.*) \(\d{4}\).*', description).group(1)
                     log.info2('%s grabs for movie: %s, enqueue...', (grabs, title))
-                    year = re.match( r'.*Year: (\d{4}).*', description).group(1)
+                    year = re.match(r'.*Year: (\d{4}).*', description).group(1)
                     imdb = self.search(title, year)
 
                     if imdb and self.isMinimalMovie(imdb):
@@ -80,7 +75,7 @@ config = [{
                     'label': 'url',
                     'type': 'combined',
                     'combine': ['automation_urls_use', 'automation_urls'],
-                    'default': 'http://YOUR_PROVIDER/rss?t=THE_MOVIE_CATEGORY&i=YOUR_USER_ID&r=YOUR_API_KEY&res=2&rls=2&num=100', 
+                    'default': 'http://YOUR_PROVIDER/rss?t=THE_MOVIE_CATEGORY&i=YOUR_USER_ID&r=YOUR_API_KEY&res=2&rls=2&num=100',
                 },
                 {
                     'name': 'number_grabs',
