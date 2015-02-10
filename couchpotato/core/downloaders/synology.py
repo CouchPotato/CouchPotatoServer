@@ -137,7 +137,7 @@ class SynologyRPC(object):
     def _req(self, url, args, files = None):
         response = {'success': False}
         try:
-            req = requests.post(url, data = args, files = files)
+            req = requests.post(url, data = args, files = files, verify = False)
             req.raise_for_status()
             response = json.loads(req.text)
             if response['success']:
