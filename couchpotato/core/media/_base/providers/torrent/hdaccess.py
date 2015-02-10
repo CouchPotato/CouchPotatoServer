@@ -1,5 +1,4 @@
 import re
-import json
 import traceback
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
@@ -41,17 +40,6 @@ class Base(TorrentProvider):
                     if freeleech > 0 and self.conf('prefer_internal'):
                         torrent_desc += '/ Internal'
                         torrentscore += 200
-
-                    if resolution == '1080p':
-                        torrentscore += 100
-                    if encoding == 'x264' and self.conf('favor') in ['encode', 'all']:
-                        torrentscore += 100
-                    elif encoding == 'Encode' and self.conf('favor') in ['encode', 'all']:
-                        torrentscore += 100
-                    elif encoding == 'Remux' and self.conf('favor') in ['remux', 'all']:
-                        torrentscore += 200
-                    elif encoding == 'Bluray' and self.conf('favor') in ['bluray', 'all']:
-                        torrentscore += 300
 
                     if seeders == 0:
                         torrentscore = 0
@@ -97,7 +85,7 @@ config = [{
                     'name': 'apikey',
                     'default': '',
                     'label': 'API Key',
-                    'description': 'Enter your site api key. This can be find in \'Edit My Profile\'->Security',
+                    'description': 'Enter your site api key. This can be find on <a href="https://hdaccess.net/usercp.php?action=security">Profile Security</a>',
                 },
                 {
                     'name': 'seed_ratio',
@@ -119,14 +107,6 @@ config = [{
                     'type': 'bool',
                     'default': 1,
                     'description': 'Favors internal releases over non-internal releases.',
-                },
-                {
-                    'name': 'favor',
-                    'advanced': True,
-                    'default': 'all',
-                    'type': 'dropdown',
-                    'values': [('Blurays & Encodes & Remuxes', 'all'), ('Blurays', 'bluray'), ('Encodes', 'encode'), ('Remuxes', 'remux'), ('None', 'none')],
-                    'description': 'Give extra scoring to blurays(+300), remuxes(+200) or encodes(+100).',
                 },
                 {
                     'name': 'internal_only',
