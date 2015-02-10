@@ -1,14 +1,16 @@
+import traceback
+
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+
 
 log = CPLog(__name__)
 
 autoload = 'Webhook'
 
 class Webhook(Notification):
-
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
