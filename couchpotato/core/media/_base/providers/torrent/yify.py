@@ -20,7 +20,7 @@ class Base(TorrentProvider):
     proxy_list = [
         'https://yts.re',
         'https://yts.wf',
-        'http://yts.im',
+        'https://yts.im',
     ]
 
     def search(self, movie, quality):
