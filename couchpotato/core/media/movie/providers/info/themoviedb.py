@@ -1,4 +1,5 @@
 import traceback
+import collections
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss, tryUrlencode
@@ -122,7 +123,7 @@ class TheMovieDb(MovieProvider):
             year = None
 
         # Gather actors data
-        actors = {}
+        actors = collections.OrderedDict()
         if extended:
 
             # Full data
