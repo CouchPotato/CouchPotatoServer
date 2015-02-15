@@ -1,2 +1,2 @@
-VERSION = None
-BRANCH = 'master'
+VERSION = '2.6.1'
+BRANCH = 'desktop'
