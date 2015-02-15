@@ -2,27 +2,25 @@ import traceback
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 
 log = CPLog(__name__)
 
 
-class Base(TorrentMagnetProvider):
+class Base(TorrentProvider):
 
     urls = {
-        'test': '%s/api',
-        'search': '%s/api/list.json?keywords=%s',
-        'detail': '%s/api/movie.json?id=%s'
+        'test': '%s/api/v2',
+        'search': '%s/api/v2/list_movies.json?limit=50&query_term=%s'
     }
 
     http_time_between_calls = 1  # seconds
 
     proxy_list = [
         'https://yts.re',
-        'http://ytsproxy.come.in',
-        'http://yts.im',
-        'http://yify-torrents.im',
+        'https://yts.wf',
+        'https://yts.im',
     ]
 
     def search(self, movie, quality):
@@ -41,25 +39,28 @@ class Base(TorrentMagnetProvider):
         search_url = self.urls['search'] % (domain, getIdentifier(movie))
 
         data = self.getJsonData(search_url)
+        data = data.get('data')
 
-        if data and data.get('MovieList'):
+        if data and data.get('movies'):
             try:
-                for result in data.get('MovieList'):
+                for result in data.get('movies'):
 
-                    if result['Quality'] and result['Quality'] not in result['MovieTitle']:
-                        title = result['MovieTitle'] + ' BrRip ' + result['Quality']
-                    else:
-                        title = result['MovieTitle'] + ' BrRip'
+                    for release in result.get('torrents', []):
 
-                    results.append({
-                        'id': result['MovieID'],
-                        'name': title,
-                        'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % (domain, result['MovieID']),
-                        'size': self.parseSize(result['Size']),
-                        'seeders': tryInt(result['TorrentSeeds']),
-                        'leechers': tryInt(result['TorrentPeers']),
-                    })
+                        if release['quality'] and release['quality'] not in result['title_long']:
+                            title = result['title_long'] + ' BRRip ' + release['quality']
+                        else:
+                            title = result['title_long'] + ' BRRip'
+
+                        results.append({
+                            'id': release['hash'],
+                            'name': title,
+                            'url': release['url'],
+                            'detail_url': result['url'],
+                            'size': self.parseSize(release['size']),
+                            'seeders': tryInt(release['seeds']),
+                            'leechers': tryInt(release['peers']),
+                        })
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))

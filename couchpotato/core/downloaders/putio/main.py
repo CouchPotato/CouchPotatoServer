@@ -28,16 +28,25 @@ class PutIO(DownloaderBase):
 
         return super(PutIO, self).__init__()
 
+    # This is a recusive function to check for the folders
+    def recursionFolder(self, client, folder = 0, tfolder = ''):
+        files = client.File.list(folder)
+        for f in files:
+            if f.content_type == 'application/x-directory':
+                if f.name == tfolder:
+                   return f.id
+                else:
+                    result = self.recursionFolder(client, f.id, tfolder)
+                    if result != 0:
+                       return result
+        return 0
+
+    # This will check the root for the folder, and kick of recusively checking sub folder
     def convertFolder(self, client, folder):
         if folder == 0:
             return 0
         else:
-            files = client.File.list()
-            for f in files:
-                if f.name == folder and f.content_type == "application/x-directory":
-                    return f.id
-            #If we get through the whole list and don't get a match we will use the root 
-            return 0
+            return self.recursionFolder(client, 0, folder)
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

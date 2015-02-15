@@ -87,6 +87,7 @@ class FileBrowser(Plugin):
         try:
             dirs = self.getDirectories(path = path, show_hidden = show_hidden)
         except:
+            log.error('Failed getting directory "%s" : %s', (path, traceback.format_exc()))
             dirs = []
 
         parent = os.path.dirname(path.rstrip(os.path.sep))

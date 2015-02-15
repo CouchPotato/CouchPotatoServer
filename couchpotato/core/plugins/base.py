@@ -206,7 +206,7 @@ class Plugin(object):
             if self.http_failed_disabled[host] > (time.time() - 900):
                 log.info2('Disabled calls to %s for 15 minutes because so many failed requests.', host)
                 if not show_error:
-                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests')
+                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests' % host)
                 else:
                     return ''
             else:

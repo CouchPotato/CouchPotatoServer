@@ -56,7 +56,7 @@ class Base(TorrentProvider):
 
                     full_id = link['href'].replace('details.php?id=', '')
                     torrent_id = full_id[:6]
-                    name = toUnicode(link.contents[0].encode('ISO-8859-1')).strip()
+                    name = toUnicode(link.get('title', link.contents[0]).encode('ISO-8859-1')).strip()
 
                     results.append({
                         'id': torrent_id,

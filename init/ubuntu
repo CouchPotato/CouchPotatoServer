@@ -95,6 +95,8 @@ fi
 
 case "$1" in
   start)
+        touch $PID_FILE
+        chown $RUN_AS $PID_FILE
         echo "Starting $DESC"
         start-stop-daemon -d $APP_PATH -c $RUN_AS $EXTRA_SSD_OPTS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;

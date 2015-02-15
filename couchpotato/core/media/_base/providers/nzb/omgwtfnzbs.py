@@ -18,19 +18,12 @@ class Base(NZBProvider, RSS):
     http_time_between_calls = 1   # Seconds
 
     cat_ids = [
-        ([15], ['dvdrip']),
+        ([15], ['dvdrip', 'scr', 'r5', 'tc', 'ts', 'cam']),
         ([15, 16], ['brrip']),
         ([16], ['720p', '1080p', 'bd50']),
         ([17], ['dvdr']),
     ]
     cat_backup_id = 'movie'
-
-    def search(self, movie, quality):
-
-        if quality['identifier'] in fireEvent('quality.pre_releases', single = True):
-            return []
-
-        return super(Base, self).search(movie, quality)
 
     def _searchOnTitle(self, title, movie, quality, results):
 

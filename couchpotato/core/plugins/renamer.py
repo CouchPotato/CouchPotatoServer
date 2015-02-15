@@ -885,7 +885,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 #If information is not available, we don't want the tag in the filename
                 replaced = replaced.replace('<' + x + '>', '')
 
-        replaced = self.replaceDoubles(replaced.lstrip('. '))
+        if self.conf('replace_doubles'):
+           replaced = self.replaceDoubles(replaced.lstrip('. '))       
+        
         for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
@@ -1341,6 +1343,14 @@ config = [{
                     'default': '<thename><cd>.<ext>',
                     'type': 'choice',
                     'options': rename_options
+                },
+                {
+                    'advanced': True,                
+                    'name': 'replace_doubles',
+                    'type': 'bool',
+                    'label': 'Clean Name',
+                    'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/RuudBurger/CouchPotatoServer/issues/2782">#2782</a>).'),
+                    'default': True 
                 },
                 {
                     'name': 'unrar',
