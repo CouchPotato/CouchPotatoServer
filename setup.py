@@ -89,7 +89,7 @@ elif sys.platform == "darwin":
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(
         arch = 'intel',
-        optimize = 2,
+        optimize = 0,
         strip = True,
         argv_emulation = False,
         site_packages = False,
