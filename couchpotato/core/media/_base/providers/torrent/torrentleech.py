@@ -17,7 +17,7 @@ class Base(TorrentProvider):
         'login': 'https://www.torrentleech.org/user/account/login/',
         'login_check': 'https://torrentleech.org/user/messages',
         'detail': 'https://www.torrentleech.org/torrent/%s',
-        'search': 'https://www.torrentleech.org/torrents/browse/index/query/%s/categories/%d',
+        'search': 'https://www.torrentleech.org/torrents/browse/index/query/%s/categories/%s',
         'download': 'https://www.torrentleech.org%s',
     }
 
