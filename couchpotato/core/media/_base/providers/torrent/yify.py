@@ -41,7 +41,7 @@ class Base(TorrentProvider):
         data = self.getJsonData(search_url)
         data = data.get('data')
 
-        if data and data.get('movies'):
+        if isinstance(data, dict) and data.get('movies'):
             try:
                 for result in data.get('movies'):
 

@@ -2,6 +2,7 @@ import json
 import re
 import traceback
 
+from couchpotato import Env
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, tryFloat, splitString
@@ -17,8 +18,8 @@ autoload = 'OMDBAPI'
 class OMDBAPI(MovieProvider):
 
     urls = {
-        'search': 'http://www.omdbapi.com/?%s',
-        'info': 'http://www.omdbapi.com/?i=%s',
+        'search': 'http://www.omdbapi.com/?type=movie&%s',
+        'info': 'http://www.omdbapi.com/?type=movie&i=%s',
     }
 
     http_time_between_calls = 0
@@ -38,7 +39,8 @@ class OMDBAPI(MovieProvider):
             }
 
         cache_key = 'omdbapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}), timeout = 3)
+        url = self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')})
+        cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
             result = self.parseMovie(cached)
@@ -56,7 +58,7 @@ class OMDBAPI(MovieProvider):
             return {}
 
         cache_key = 'omdbapi.cache.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3)
+        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
             result = self.parseMovie(cached)

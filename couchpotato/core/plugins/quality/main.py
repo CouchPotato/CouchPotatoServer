@@ -240,7 +240,7 @@ class QualityPlugin(Plugin):
 
         # Add additional size score if only 1 size validated
         if len(size_scores) == 1:
-            self.calcScore(score, size_scores[0], 8)
+            self.calcScore(score, size_scores[0], 7)
         del size_scores
 
         # Return nothing if all scores are <= 0
@@ -491,6 +491,7 @@ class QualityPlugin(Plugin):
             'Movie Name.2014.720p Web-Dl Aac2.0 h264-ReleaseGroup': {'size': 3800, 'quality': 'brrip'},
             'Movie Name.2014.720p.WEBRip.x264.AC3-ReleaseGroup': {'size': 3000, 'quality': 'scr'},
             'Movie.Name.2014.1080p.HDCAM.-.ReleaseGroup': {'size': 5300, 'quality': 'cam'},
+            'Movie.Name.2014.720p.HDSCR.4PARTS.MP4.AAC.ReleaseGroup': {'size': 2401, 'quality': 'scr'},
         }
 
         correct = 0
