@@ -28,20 +28,41 @@ class PutIO(DownloaderBase):
 
         return super(PutIO, self).__init__()
 
+    # This is a recusive function to check for the folders
+    def recursionFolder(self, client, folder = 0, tfolder = ''):
+        files = client.File.list(folder)
+        for f in files:
+            if f.content_type == 'application/x-directory':
+                if f.name == tfolder:
+                   return f.id
+                else:
+                    result = self.recursionFolder(client, f.id, tfolder)
+                    if result != 0:
+                       return result
+        return 0
+
+    # This will check the root for the folder, and kick of recusively checking sub folder
+    def convertFolder(self, client, folder):
+        if folder == 0:
+            return 0
+        else:
+            return self.recursionFolder(client, 0, folder)
+
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
 
         log.info('Sending "%s" to put.io', data.get('name'))
         url = data.get('url')
-
         client = pio.Client(self.conf('oauth_token'))
+        putioFolder = self.convertFolder(client, self.conf('folder'))
+        log.debug('putioFolder ID is %s', putioFolder)
         # It might be possible to call getFromPutio from the renamer if we can then we don't need to do this.
         # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
-            callbackurl = 'http://' + self.conf('callback_host') + '/' + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
-        resp = client.Transfer.add_url(url, callback_url = callbackurl)
+            callbackurl = 'http://' + self.conf('callback_host') + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
+        resp = client.Transfer.add_url(url, callback_url = callbackurl, parent_id = putioFolder)
         log.debug('resp is %s', resp.id);
         return self.downloadReturnId(resp.id)
 
@@ -124,7 +145,9 @@ class PutIO(DownloaderBase):
         client = pio.Client(self.conf('oauth_token'))
 
         log.debug('About to get file List')
-        files = client.File.list()
+        putioFolder = self.convertFolder(client, self.conf('folder'))
+        log.debug('PutioFolderID is %s', putioFolder)
+        files = client.File.list(parent_id=putioFolder)
         downloaddir = self.conf('download_dir')
 
         for f in files:

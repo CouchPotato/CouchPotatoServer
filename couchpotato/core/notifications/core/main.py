@@ -149,16 +149,15 @@ class CoreNotifier(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
+        n = {
+            '_t': 'notification',
+            'time': int(time.time()),
+        }
+
         try:
             db = get_db()
 
-            data['notification_type'] = listener if listener else 'unknown'
-
-            n = {
-                '_t': 'notification',
-                'time': int(time.time()),
-                'message': toUnicode(message)
-            }
+            n['message'] = toUnicode(message)
 
             if data.get('sticky'):
                 n['sticky'] = True
@@ -171,7 +170,7 @@ class CoreNotifier(Notification):
 
             return True
         except:
-            log.error('Failed notify: %s', traceback.format_exc())
+            log.error('Failed notify "%s": %s', (n, traceback.format_exc()))
 
     def frontend(self, type = 'notification', data = None, message = None):
         if not data: data = {}

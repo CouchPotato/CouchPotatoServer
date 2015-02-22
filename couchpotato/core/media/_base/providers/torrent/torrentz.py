@@ -22,12 +22,12 @@ class Base(TorrentMagnetProvider, RSS):
 
     http_time_between_calls = 0
 
-    def _search(self, media, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
         search_url = self.urls['verified_search'] if self.conf('verified_only') else self.urls['search']
 
         # Create search parameters
-        search_params = self.buildUrl(media)
+        search_params = self.buildUrl(title, media, quality)
 
         smin = quality.get('size_min')
         smax = quality.get('size_max')

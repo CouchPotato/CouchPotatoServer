@@ -154,13 +154,14 @@ class _File(_BaseResource):
         return [cls(f) for f in files]
 
     @classmethod
-    def upload(cls, path, name=None):
+    def upload(cls, path, name=None, parent_id=0):
         with open(path) as f:
             if name:
                 files = {'file': (name, f)}
             else:
                 files = {'file': f}
-            d = cls.client.request('/files/upload', method='POST', files=files)
+            d = cls.client.request('/files/upload', method='POST',
+                                   data={'parent_id': parent_id}, files=files)
 
         f = d['file']
         return cls(f)
@@ -239,7 +240,7 @@ class _Transfer(_BaseResource):
     @classmethod
     def add_url(cls, url, parent_id=0, extract=False, callback_url=None):
         d = cls.client.request('/transfers/add', method='POST', data=dict(
-            url=url, parent_id=parent_id, extract=extract,
+            url=url, save_parent_id=parent_id, extract=extract,
             callback_url=callback_url))
         t = d['transfer']
         return cls(t)
@@ -249,7 +250,7 @@ class _Transfer(_BaseResource):
         with open(path) as f:
             files = {'file': f}
             d = cls.client.request('/files/upload', method='POST', files=files,
-                                   data=dict(parent_id=parent_id,
+                                   data=dict(save_parent_id=parent_id,
                                              extract=extract,
                                              callback_url=callback_url))
         t = d['transfer']

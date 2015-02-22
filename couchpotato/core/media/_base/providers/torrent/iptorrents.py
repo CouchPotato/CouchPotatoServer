@@ -14,11 +14,11 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://www.iptorrents.com/',
-        'base_url': 'https://www.iptorrents.com',
-        'login': 'https://www.iptorrents.com/torrents/',
-        'login_check': 'https://www.iptorrents.com/inbox.php',
-        'search': 'https://www.iptorrents.com/torrents/?%s%%s&q=%s&qf=ti&p=%%d',
+        'test': 'https://iptorrents.eu/',
+        'base_url': 'https://iptorrents.eu',
+        'login': 'https://iptorrents.eu/torrents/',
+        'login_check': 'https://iptorrents.eu/inbox.php',
+        'search': 'https://iptorrents.eu/torrents/?%s%%s&q=%s&qf=ti&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -120,7 +120,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'IPTorrents',
-            'description': '<a href="http://www.iptorrents.com">IPTorrents</a>',
+            'description': '<a href="https://iptorrents.eu">IPTorrents</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABRklEQVR42qWQO0vDUBiG8zeKY3EqQUtNO7g0J6ZJ1+ifKIIFQXAqDYKCyaaYxM3udrZLHdRFhXrZ6liCW6mubfk874EESgqaeOCF7/Y8hEh41aq6yZi2nyZgBGya9XKtZs4No05pAkZV2YbEmyMMsoSxLQeC46wCTdPPY4HruPQyGIhF97qLWsS78Miydn4XdK46NJ9OsQAYBzMIMf8MQ9wtCnTdWCaIDx/u7uljOIQEe0hiIWPamSTLay3+RxOCSPI9+RJAo7Er9r2bnqjBFAqyK+VyK4f5/Cr5ni8OFKVCz49PFI5GdNvvU7ttE1M1zMU+8AMqFksEhrMnQsBDzqmDAwzx2ehRLwT7yyCI+vSC99c3mozH1NxrJgWWtR1BOECfEJSVCm6WCzJGCA7+IWhBsM4zywDPwEp4vCjx2DzBH2ODAfsDb33Ps6dQwJgAAAAASUVORK5CYII=',
             'options': [

@@ -44,10 +44,11 @@ var Charts = new Class({
 
 		if( Cookie.read('suggestions_charts_menu_selected') === 'charts'){
 			self.show();
-			self.fireEvent.delay(0, self, 'created');
 		}
 		else
 			self.el.hide();
+
+		self.fireEvent.delay(0, self, 'created');
 
 	},
 

@@ -68,8 +68,12 @@ class Base(NZBProvider, RSS):
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
 
-            nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
             name = self.getTextElement(nzb, 'title')
+            detail_url = self.getTextElement(nzb, 'guid')
+            nzb_id = detail_url.split('/')[-1:].pop()
+
+            if '://' not in detail_url:
+                detail_url = (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id)
 
             if not name:
                 continue
@@ -103,7 +107,7 @@ class Base(NZBProvider, RSS):
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
-                'detail_url': (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id),
+                'detail_url': detail_url,
                 'content': self.getTextElement(nzb, 'description'),
                 'description': description,
                 'score': host['extra_score'],
@@ -183,7 +187,7 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            data = self.urlopen(url, show_error = False)
+            data = self.urlopen(url, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
             self.limits_reached[host] = False
             return data
         except HTTPError as e:

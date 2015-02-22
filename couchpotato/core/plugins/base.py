@@ -39,7 +39,7 @@ class Plugin(object):
 
     _locks = {}
 
-    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:34.0) Gecko/20100101 Firefox/34.0'
     http_last_use = {}
     http_time_between_calls = 0
     http_failed_request = {}
@@ -196,7 +196,7 @@ class Plugin(object):
         headers['Host'] = headers.get('Host', None)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
-        headers['Connection'] = headers.get('Connection', 'close')
+        headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
         r = Env.get('http_opener')
@@ -206,7 +206,7 @@ class Plugin(object):
             if self.http_failed_disabled[host] > (time.time() - 900):
                 log.info2('Disabled calls to %s for 15 minutes because so many failed requests.', host)
                 if not show_error:
-                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests')
+                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests' % host)
                 else:
                     return ''
             else:
