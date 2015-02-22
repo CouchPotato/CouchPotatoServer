@@ -16,9 +16,9 @@ log = CPLog(__name__)
 class Base(TorrentMagnetProvider):
 
     urls = {
-        'test': 'https://publichd.se',
-        'detail': 'https://publichd.se/index.php?page=torrent-details&id=%s',
-        'search': 'https://publichd.se/index.php',
+        'test': 'https://publichd.to',
+        'detail': 'https://publichd.to/index.php?page=torrent-details&id=%s',
+        'search': 'https://publichd.to/index.php',
     }
     http_time_between_calls = 0
 
@@ -100,7 +100,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'PublicHD',
-            'description': 'Public Torrent site with only HD content. See <a href="https://publichd.se/">PublicHD</a>',
+            'description': 'Public Torrent site with only HD content. See <a href="https://publichd.to/">PublicHD</a>',
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAASFJREFUOI3VkjtLxEAUhb87TNZgoSIoNqYUFUGw9Bdoo5UoItgoLrJFWsHa3sLav6GNoI2NxYqIDwQRC1+FLLgx2SQzFiNLLGyyjR6Y6t773XNmBv69BHgEVMl5I0AL8EoCUlWdE9O4Vt9mnLZW4OFWAOH9Bp5O4e28cOrwXIfaohi9VrP0xALYNuDjE4LAMjYAfT5c3CmOzhSedvVWJoSrKQtLFp1EQGrZ39Z0VcAYCAYtNHKiGNBweW8Id03BuRBWhbhpcUwDQ+M5WoGxbitpIZXwq7TvAxVhdtm2Y2zOw94MdPtABiPDws6GwvNcS5IKxBm+D/rgRJha/0nt74WoCVevDjk6aZmYzovXRJIJh8fOXEfPqIEXOvhIJef+kr4AxLZfW1OtpggAAAAASUVORK5CYII=',
             'wizard': True,
             'options': [
