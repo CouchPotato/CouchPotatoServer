@@ -16,12 +16,12 @@ class TorrentLeech(MovieProvider, Base):
         ([9], ['ts', 'tc']),
         ([10], ['r5', 'scr']),
         ([11], ['dvdrip']),
-        ([14], ['brrip']),
+        ([13, 14], ['brrip']),
         ([12], ['dvdr']),
     ]
 
     def buildUrl(self, title, media, quality):
         return (
             tryUrlencode(title.replace(':', '')),
-            self.getCatId(quality)[0]
+            ','.join([str(x) for x in self.getCatId(quality)])
         )

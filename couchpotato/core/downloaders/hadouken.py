@@ -31,7 +31,7 @@ class Hadouken(DownloaderBase):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.conf('apikey'):
+        if not self.conf('api_key'):
             log.error('Config properties are not filled in correctly, API key is missing.')
             return False
 
