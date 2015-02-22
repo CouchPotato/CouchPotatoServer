@@ -79,7 +79,9 @@ class Updater(Plugin):
                 try:
                     if self.conf('notification'):
                         info = self.updater.info()
-                        version_date = datetime.fromtimestamp(info['update_version']['date'])
+                        version_date = 'the future!'
+                        if info['update_version']['date']:
+                            version_date = datetime.fromtimestamp(info['update_version']['date'])
                         fireEvent('updater.updated', 'Updated to a new version with hash "%s", this version is from %s' % (info['update_version']['hash'], version_date), data = info)
                 except:
                     log.error('Failed notifying for update: %s', traceback.format_exc())
@@ -97,7 +99,9 @@ class Updater(Plugin):
         if self.updater.check():
             if not self.available_notified and self.conf('notification') and not self.conf('automatic'):
                 info = self.updater.info()
-                version_date = datetime.fromtimestamp(info['update_version']['date'])
+                version_date = 'the future!'
+                if info['update_version']['date']:
+                    version_date = datetime.fromtimestamp(info['update_version']['date'])
                 fireEvent('updater.available', message = 'A new update with hash "%s" is available, this version is from %s' % (info['update_version']['hash'], version_date), data = info)
                 self.available_notified = True
             return True
