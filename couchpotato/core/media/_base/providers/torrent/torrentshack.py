@@ -13,12 +13,12 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://theshack.us.to/',
-        'login': 'https://theshack.us.to/login.php',
-        'login_check': 'https://theshack.us.to/inbox.php',
-        'detail': 'https://theshack.us.to/torrent/%s',
-        'search': 'https://theshack.us.to/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
-        'download': 'https://theshack.us.to/%s',
+        'test': 'https://torrentshack.me/',
+        'login': 'https://torrentshack.me/login.php',
+        'login_check': 'https://torrentshack.me/inbox.php',
+        'detail': 'https://torrentshack.me/torrent/%s',
+        'search': 'https://torrentshack.me/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'download': 'https://torrentshack.me/%s',
     }
 
     http_time_between_calls = 1  # Seconds
