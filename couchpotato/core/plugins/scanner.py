@@ -63,8 +63,8 @@ class Scanner(Plugin):
     }
 
     file_sizes = {  # in MB
-        'movie': {'min': 300},
-        'trailer': {'min': 2, 'max': 250},
+        'movie': {'min': 200},
+        'trailer': {'min': 2, 'max': 199},
         'backdrop': {'min': 0, 'max': 5},
     }
 
