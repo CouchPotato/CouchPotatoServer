@@ -236,7 +236,7 @@ class DelugeRPC(object):
             if not torrent_id:
                 torrent_id = self._check_torrent(True, torrent)
 
-            if torrent_id and options['label']:
+            if torrent_id and options['label'] and hasattr(self.client, 'label'):
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception as err:
             log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
@@ -254,7 +254,7 @@ class DelugeRPC(object):
             if not torrent_id:
                 torrent_id = self._check_torrent(False, torrent)
 
-            if torrent_id and options['label']:
+            if torrent_id and options['label'] and hasattr(self.client, 'label'):
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception as err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
