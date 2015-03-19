@@ -271,8 +271,8 @@ class QualityPlugin(Plugin):
         words = words[:-1]
 
         points = {
-            'identifier': 20,
-            'label': 20,
+            'identifier': 25,
+            'label': 25,
             'alternative': 20,
             'tags': 11,
             'ext': 5,
@@ -492,6 +492,7 @@ class QualityPlugin(Plugin):
             'Movie Name.2014.720p.WEBRip.x264.AC3-ReleaseGroup': {'size': 3000, 'quality': 'scr'},
             'Movie.Name.2014.1080p.HDCAM.-.ReleaseGroup': {'size': 5300, 'quality': 'cam'},
             'Movie.Name.2014.720p.HDSCR.4PARTS.MP4.AAC.ReleaseGroup': {'size': 2401, 'quality': 'scr'},
+            'Movie.Name.2014.720p.BluRay.x264-ReleaseGroup': {'size': 10300, 'quality': '720p'}
         }
 
         correct = 0
