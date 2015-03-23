@@ -38,7 +38,7 @@ class Base(TorrentProvider):
 
         search_url = self.urls['search'] % (domain, getIdentifier(movie))
 
-        data = self.getJsonData(search_url)
+        data = self.getJsonData(search_url) or {}
         data = data.get('data')
 
         if isinstance(data, dict) and data.get('movies'):
