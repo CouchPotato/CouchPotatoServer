@@ -27,12 +27,13 @@ class Bluray(Automation, RSS):
 
         if self.conf('backlog'):
 
+            cookie = {'Cookie': 'listlayout_7=full'}
             page = 0
             while True:
                 page += 1
 
                 url = self.backlog_url % page
-                data = self.getHTMLData(url)
+                data = self.getHTMLData(url, headers = cookie)
                 soup = BeautifulSoup(data)
 
                 try:
