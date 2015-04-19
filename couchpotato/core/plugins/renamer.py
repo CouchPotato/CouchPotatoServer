@@ -495,6 +495,10 @@ class Renamer(Plugin):
                     # When a release already exists
                     if release.get('status') == 'done':
 
+                        # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
+                        is_higher = fireEvent('quality.ishigher', \
+                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, single = True)
+
                         # always overwrite if exists if force_overwrite is set
                         if self.conf('force_overwrite'):
                             log.info('release exists for %s, with quality %s. forced overwriting enabled.', (media_title, release.get('quality')))
@@ -503,11 +507,7 @@ class Renamer(Plugin):
                                     remove_files.append(release_file)
                             remove_releases.append(release)
 
-                        # This is where CP removes older, lesser quality releases or releases that are not wanted anymore
-                        is_higher = fireEvent('quality.ishigher', \
-                            group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, single = True)
-
-                        elif  is_higher == 'higher':
+                        elif is_higher == 'higher':
                             log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
