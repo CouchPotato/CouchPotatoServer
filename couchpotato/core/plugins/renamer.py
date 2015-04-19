@@ -499,7 +499,15 @@ class Renamer(Plugin):
                         is_higher = fireEvent('quality.ishigher', \
                             group['meta_data']['quality'], {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, single = True)
 
-                        if is_higher == 'higher':
+                        # always overwrite if exists if force_overwrite is set
+                        if self.conf('force_overwrite'):
+                            log.info('release exists for %s, with quality %s. forced overwriting enabled.', (media_title, release.get('quality')))
+                            for file_type in release.get('files', {}):
+                                for release_file in release['files'][file_type]:
+                                    remove_files.append(release_file)
+                            remove_releases.append(release)
+
+                        elif is_higher == 'higher':
                             log.info('Removing lesser or not wanted quality %s for %s.', (media_title, release.get('quality')))
                             for file_type in release.get('files', {}):
                                 for release_file in release['files'][file_type]:
@@ -886,8 +894,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 replaced = replaced.replace('<' + x + '>', '')
 
         if self.conf('replace_doubles'):
-           replaced = self.replaceDoubles(replaced.lstrip('. '))       
-        
+           replaced = self.replaceDoubles(replaced.lstrip('. '))
+
         for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
@@ -1345,12 +1353,12 @@ config = [{
                     'options': rename_options
                 },
                 {
-                    'advanced': True,                
+                    'advanced': True,
                     'name': 'replace_doubles',
                     'type': 'bool',
                     'label': 'Clean Name',
                     'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/RuudBurger/CouchPotatoServer/issues/2782">#2782</a>).'),
-                    'default': True 
+                    'default': True
                 },
                 {
                     'name': 'unrar',
@@ -1426,6 +1434,14 @@ config = [{
                     'default': True,
                     'type': 'bool',
                     'description': ('Check if there\'s enough available space to rename the files', 'Disable when the filesystem doesn\'t return the proper value'),
+                    'advanced': True,
+                },
+                {
+                    'name': 'force_overwrite',
+                    'label': 'Force Overwrite',
+                    'default': False,
+                    'type': 'bool',
+                    'description': ('Always overwrite existing releases', 'no longer tags releases as .exists, always assumes replacement'),
                     'advanced': True,
                 },
                 {
