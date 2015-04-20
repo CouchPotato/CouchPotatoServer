@@ -3,3 +3,9 @@
 /_source/
 .project
 .pydevproject
+/db_backup
+/cache
+/logs/*
+/database/*
+/custom_plugins/*
+/settings.conf
