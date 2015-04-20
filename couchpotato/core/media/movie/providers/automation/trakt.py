@@ -14,35 +14,29 @@ autoload = 'Trakt'
 class Trakt(Automation):
 
     urls = {
-        'base': 'http://api.trakt.tv/',
-        'watchlist': 'user/watchlist/movies.json/%s/',
+        'base': 'https://api-v2launch.trakt.tv/',
+        'watchlist': 'sync/watchlist/movies/',
     }
 
     def __init__(self):
         super(Trakt, self).__init__()
 
-        addEvent('setting.save.trakt.automation_password', self.sha1Password)
-
-    def sha1Password(self, value):
-        return sha1(value) if value else ''
-
     def getIMDBids(self):
-
         movies = []
         for movie in self.getWatchlist():
-            movies.append(movie.get('imdb_id'))
+            movies.append(movie.get('movie').get('ids').get('imdb'))
 
         return movies
 
     def getWatchlist(self):
-        method = (self.urls['watchlist'] % self.conf('automation_api_key')) + self.conf('automation_username')
+        method = self.urls['watchlist']
         return self.call(method)
 
     def call(self, method_url):
-
         headers = {}
-        if self.conf('automation_password'):
-            headers['Authorization'] = 'Basic %s' % base64.encodestring('%s:%s' % (self.conf('automation_username'), self.conf('automation_password')))[:-1]
+        headers['Authorization'] = 'Bearer %s' % self.conf('automation_api_key')
+        headers['trakt-api-version'] = 2
+        headers['trakt-api-key'] = self.conf('automation_client_id')
 
         data = self.getJsonData(self.urls['base'] + method_url, headers = headers)
         return data if data else []
@@ -56,7 +50,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'trakt_automation',
             'label': 'Trakt',
-            'description': 'import movies from your own watchlist',
+            'description': 'Import movies from your own watchlist',
             'options': [
                 {
                     'name': 'automation_enabled',
@@ -65,17 +59,12 @@ config = [{
                 },
                 {
                     'name': 'automation_api_key',
-                    'label': 'Apikey',
+                    'label': 'ApiKey',
+                    'description': 'Create a new PIN authentication application <a href="http://trakt.tv/oauth/applications">on trakt</a>, and <a href="http://docs.trakt.apiary.io/#reference/authentication-pin">exchange the PIN for a token</a>.'
                 },
                 {
-                    'name': 'automation_username',
-                    'label': 'Username',
-                },
-                {
-                    'name': 'automation_password',
-                    'label': 'Password',
-                    'type': 'password',
-                    'description': 'When you have "Protect my data" checked <a href="http://trakt.tv/settings/account">on trakt</a>.',
+                    'name': 'automation_client_id',
+                    'label': 'ClientID'
                 },
             ],
         },
