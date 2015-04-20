@@ -16,9 +16,9 @@ class Base(TorrentProvider):
     urls = {
         'test': 'https://iptorrents.eu/',
         'base_url': 'https://iptorrents.eu',
-        'login': 'https://iptorrents.eu/torrents/',
+        'login': 'https://iptorrents.eu/',
         'login_check': 'https://iptorrents.eu/inbox.php',
-        'search': 'https://iptorrents.eu/torrents/?%s%%s&q=%s&qf=ti&p=%%d',
+        'search': 'https://iptorrents.eu/t?%s%%s&q=%s&qf=#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
