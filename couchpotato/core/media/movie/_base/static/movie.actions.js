@@ -445,7 +445,7 @@ MA.Trailer = new Class({
 	watch: function(offset){
 		var self = this;
 
-		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18';
+		var data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk'
 		var url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
 				'year': self.get('year'),
@@ -476,13 +476,11 @@ MA.Trailer = new Class({
 		new Request.JSONP({
 			'url': url,
 			'onComplete': function(json){
-				var video_url = json.feed.entry[0].id.$t.split('/'),
-					video_id = video_url[video_url.length-1];
 
 				self.player = new YT.Player(id, {
 					'height': height,
 					'width': size.x,
-					'videoId': video_id,
+					'videoId': json.items[0].id.videoId,
 					'playerVars': {
 						'autoplay': 1,
 						'showsearch': 0,
