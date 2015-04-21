@@ -1,6 +1,6 @@
 import random as rndm
 import time
-from CodernityDB.database import RecordDeleted
+from CodernityDB.database import RecordDeleted, RecordNotFound
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -63,6 +63,10 @@ class Dashboard(Plugin):
                     media = db.get('id', media_id)
                 except RecordDeleted:
                     log.debug('Record already deleted: %s', media_id)
+                    continue
+                
+                except RecordNotFound:
+                    log.debug('Record not found: %s', media_id)
                     continue
 
                 pp = profile_pre.get(media.get('profile_id'))
