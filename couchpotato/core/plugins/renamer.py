@@ -1326,7 +1326,7 @@ config = [{
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Default folder where the movies are moved to.',
+                    'description': 'Default folder where the movies are moved/copied/linked to.',
                 },
                 {
                     'name': 'folder_name',
