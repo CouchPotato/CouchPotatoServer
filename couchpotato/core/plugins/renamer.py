@@ -886,8 +886,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 replaced = replaced.replace('<' + x + '>', '')
 
         if self.conf('replace_doubles'):
-           replaced = self.replaceDoubles(replaced.lstrip('. '))       
-        
+            replaced = self.replaceDoubles(replaced.lstrip('. '))
+
         for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
