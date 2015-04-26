@@ -21,6 +21,13 @@ class Base(TorrentProvider):
         'https://yts.re',
         'https://yts.wf',
         'https://yts.im',
+        'https://yts.to',
+        'https://yify.ml',
+        'https://yify.link',
+        'https://yifytorrent.link',
+        'https://yts.ch',
+        'https://yts.click',
+        'https://yify.me',
     ]
 
     def search(self, movie, quality):
