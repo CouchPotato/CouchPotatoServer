@@ -1,19 +1,37 @@
+import json
+
 from couchpotato import Env
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
+from couchpotato.core.media._base.providers.base import Provider
 from couchpotato.core.media.movie.providers.automation.base import Automation
 
 
 log = CPLog(__name__)
 
 
-class Trakt(Automation):
+class TraktBase(Provider):
 
     client_id = '8a54ed7b5e1b56d874642770ad2e8b73e2d09d6e993c3a92b1e89690bb1c9014'
+    api_url = 'https://api-v2launch.trakt.tv/'
+
+    def call(self, method_url, post_data = None):
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer %s' % self.conf('automation_oauth_token'),
+            'trakt-api-version': 2,
+            'trakt-api-key': self.client_id,
+        }
+
+        post_data = json.dumps(post_data)
+        data = self.getJsonData(self.api_url + method_url, data = post_data or {}, headers = headers)
+        return data if data else []
+
+
+class Trakt(Automation, TraktBase):
 
     urls = {
-        'base': 'https://api-v2launch.trakt.tv/',
         'watchlist': 'sync/watchlist/movies/',
         'oauth': 'https://api.couchpota.to/authorize/trakt/',
     }
@@ -54,14 +72,3 @@ class Trakt(Automation):
         log.debug('oauth_token is: %s', oauth_token)
         self.conf('automation_oauth_token', value = oauth_token)
         return 'redirect', Env.get('web_base') + 'settings/automation/'
-
-    def call(self, method_url):
-        headers = {
-            'Authorization': 'Bearer %s' % self.conf('automation_oauth_token'),
-            'trakt-api-version': 2,
-            'trakt-api-key': self.client_id,
-        }
-
-        data = self.getJsonData(self.urls['base'] + method_url, headers = headers)
-        return data if data else []
-
