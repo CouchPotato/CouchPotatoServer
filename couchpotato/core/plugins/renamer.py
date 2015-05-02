@@ -886,8 +886,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 replaced = replaced.replace('<' + x + '>', '')
 
         if self.conf('replace_doubles'):
-           replaced = self.replaceDoubles(replaced.lstrip('. '))       
-        
+            replaced = self.replaceDoubles(replaced.lstrip('. '))
+
         for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
@@ -1202,7 +1202,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
-                rar_handle = RarFile(archive['file'], custom_path = self.conf('unrar_path'))
+                unrar_path = self.conf('unrar_path')
+                unrar_path = unrar_path if unrar_path and (os.path.isfile(unrar_path) or re.match('^[a-zA-Z0-9_/\.\-]+$', unrar_path)) else None
+
+                rar_handle = RarFile(archive['file'], custom_path = unrar_path)
                 extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
@@ -1326,7 +1329,7 @@ config = [{
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Default folder where the movies are moved to.',
+                    'description': 'Default folder where the movies are moved/copied/linked to.',
                 },
                 {
                     'name': 'folder_name',
