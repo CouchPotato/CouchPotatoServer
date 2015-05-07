@@ -12,7 +12,6 @@ from couchpotato.core.media.show.providers.base import ShowProvider
 from tvdb_api import tvdb_exceptions
 from tvdb_api.tvdb_api import Tvdb, Show
 
-
 log = CPLog(__name__)
 
 autoload = 'TheTVDb'
@@ -26,8 +25,6 @@ class TheTVDb(ShowProvider):
     # TODO: Expose apikey in setting so it can be changed by user
 
     def __init__(self):
-        addEvent('info.search', self.search, priority = 1)
-        addEvent('show.search', self.search, priority = 1)
         addEvent('show.info', self.getShowInfo, priority = 1)
         addEvent('season.info', self.getSeasonInfo, priority = 1)
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
@@ -43,56 +40,6 @@ class TheTVDb(ShowProvider):
     def _setup(self):
         self.tvdb = Tvdb(**self.tvdb_api_parms)
         self.valid_languages = self.tvdb.config['valid_languages']
-
-    def search(self, q, limit = 12, language = 'en'):
-        ''' Find show by name
-        show = {    'id': 74713,
-                    'language': 'en',
-                    'lid': 7,
-                    'seriesid': '74713',
-                    'seriesname': u'Breaking Bad',}
-        '''
-
-        if self.isDisabled():
-            return False
-
-        if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
-            self.tvdb_api_parms['language'] = language
-            self._setup()
-
-        search_string = simplifyString(q)
-        cache_key = 'thetvdb.cache.search.%s.%s' % (search_string, limit)
-        results = self.getCache(cache_key)
-
-        if not results:
-            log.debug('Searching for show: %s', q)
-
-            raw = None
-            try:
-                raw = self.tvdb.search(search_string)
-            except (tvdb_exceptions.tvdb_error, IOError), e:
-                log.error('Failed searching TheTVDB for "%s": %s', (search_string, traceback.format_exc()))
-                return False
-
-            results = []
-            if raw:
-                try:
-                    nr = 0
-                    for show_info in raw:
-
-                        results.append(self._parseShow(show_info))
-                        nr += 1
-                        if nr == limit:
-                            break
-
-                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
-                    self.setCache(cache_key, results)
-                    return results
-                except (tvdb_exceptions.tvdb_error, IOError), e:
-                    log.error('Failed parsing TheTVDB for "%s": %s', (q, traceback.format_exc()))
-                    return False
-
-        return results
 
     def getShow(self, identifier = None):
         show = None
@@ -129,22 +76,17 @@ class TheTVDb(ShowProvider):
 
         return result or {}
 
-    def getSeasonInfo(self, identifier = None, params = {}):
+    def getSeasonInfo(self, identifiers = None, params = {}):
         """Either return a list of all seasons or a single season by number.
         identifier is the show 'id'
         """
-        if not identifier:
-            return False
+        if not identifiers or not identifiers.get('thetvdb'):
+            return None
 
-        season_identifier = params.get('season_identifier', None)
+        season_number = params.get('season_number', None)
+        identifier = tryInt(identifiers.get('thetvdb'))
 
-        # season_identifier must contain the 'show id : season number' since there is no tvdb id
-        # for season and we need a reference to both the show id and season number
-        if season_identifier:
-            try: season_identifier = int(season_identifier.split(':')[1])
-            except: return False
-
-        cache_key = 'thetvdb.cache.%s.%s' % (identifier, season_identifier)
+        cache_key = 'thetvdb.cache.%s.%s' % (identifier, season_number)
         log.debug('Getting SeasonInfo: %s', cache_key)
         result = self.getCache(cache_key) or {}
         if result:
@@ -158,12 +100,12 @@ class TheTVDb(ShowProvider):
 
         result = []
         for number, season in show.items():
-            if season_identifier is not None and number == season_identifier:
-                result = self._parseSeason(show, (number, season))
+            if season_number is not None and number == season_number:
+                result = self._parseSeason(show, number, season)
                 self.setCache(cache_key, result)
                 return result
             else:
-                result.append(self._parseSeason(show, (number, season)))
+                result.append(self._parseSeason(show, number, season))
 
         self.setCache(cache_key, result)
         return result
@@ -172,21 +114,22 @@ class TheTVDb(ShowProvider):
         """Either return a list of all episodes or a single episode.
         If episode_identifer contains an episode number to search for
         """
-        season_identifier = params.get('season_identifier', None)
-        episode_identifier = params.get('episode_identifier', None)
+        season_number = self.getIdentifier(params.get('season_number', None))
+        episode_identifier = self.getIdentifier(params.get('episode_identifiers', None))
+        identifier = self.getIdentifier(identifier)
 
-        if not identifier and season_identifier is None:
+        if not identifier and season_number is None:
             return False
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
-        if season_identifier:
+        if not identifier and season_number:
             try:
-                identifier, season_identifier = season_identifier.split(':')
-                season_identifier = int(season_identifier)
+                identifier, season_number = season_number.split(':')
+                season_number = int(season_number)
             except: return None
 
-        cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_identifier)
+        cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_number)
         log.debug('Getting EpisodeInfo: %s', cache_key)
         result = self.getCache(cache_key) or {}
         if result:
@@ -200,19 +143,25 @@ class TheTVDb(ShowProvider):
 
         result = []
         for number, season in show.items():
-            if season_identifier is not None and number != season_identifier:
+            if season_number is not None and number != season_number:
                 continue
 
             for episode in season.values():
                 if episode_identifier is not None and episode['id'] == toUnicode(episode_identifier):
-                    result = self._parseEpisode(show, episode)
+                    result = self._parseEpisode(episode)
                     self.setCache(cache_key, result)
                     return result
                 else:
-                    result.append(self._parseEpisode(show, episode))
+                    result.append(self._parseEpisode(episode))
 
         self.setCache(cache_key, result)
         return result
+
+    def getIdentifier(self, value):
+        if type(value) is dict:
+            return value.get('thetvdb')
+
+        return value
 
     def _parseShow(self, show):
 
@@ -397,9 +346,9 @@ class TheTVDb(ShowProvider):
     def isDisabled(self):
         if self.conf('api_key') == '':
             log.error('No API key provided.')
-            True
+            return True
         else:
-            False
+            return False
 
 
 config = [{

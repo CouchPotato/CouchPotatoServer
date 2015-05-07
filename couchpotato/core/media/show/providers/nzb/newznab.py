@@ -18,15 +18,15 @@ class Newznab(MultiProvider):
 
 class Season(SeasonProvider, Base):
 
-    def buildUrl(self, media, api_key):
-        search_title = fireEvent('media.search_query', media, include_identifier = False, single = True)
-        identifier = fireEvent('media.identifier', media, single = True)
+    def buildUrl(self, media, host):
+        related = fireEvent('library.related', media, single = True)
+        identifier = fireEvent('library.identifier', media, single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': search_title,
+            'apikey': host['api_key'],
+            'q': related['show']['title'],
             'season': identifier['season'],
-            'apikey': api_key,
             'extended': 1
         })
         return query
@@ -34,16 +34,15 @@ class Season(SeasonProvider, Base):
 
 class Episode(EpisodeProvider, Base):
 
-    def buildUrl(self, media, api_key):
-        search_title = fireEvent('media.search_query', media['show'], include_identifier = False, single = True)
-        identifier = fireEvent('media.identifier', media, single = True)
-
+    def buildUrl(self, media, host):
+        related = fireEvent('library.related', media, single = True)
+        identifier = fireEvent('library.identifier', media, single = True)
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': search_title,
+            'apikey': host['api_key'],
+            'q': related['show']['title'],
             'season': identifier['season'],
             'ep': identifier['episode'],
-            'apikey': api_key,
             'extended': 1
         })
 
