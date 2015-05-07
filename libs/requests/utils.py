@@ -19,12 +19,14 @@ import re
 import sys
 import socket
 import struct
+import warnings
 
 from . import __version__
 from . import certs
 from .compat import parse_http_list as _parse_list_header
 from .compat import (quote, urlparse, bytes, str, OrderedDict, unquote, is_py2,
-                     builtin_str, getproxies, proxy_bypass, urlunparse)
+                     builtin_str, getproxies, proxy_bypass, urlunparse,
+                     basestring)
 from .cookies import RequestsCookieJar, cookiejar_from_dict
 from .structures import CaseInsensitiveDict
 from .exceptions import InvalidURL
@@ -114,7 +116,8 @@ def get_netrc_auth(url):
 def guess_filename(obj):
     """Tries to guess the filename of the given object."""
     name = getattr(obj, 'name', None)
-    if name and name[0] != '<' and name[-1] != '>':
+    if (name and isinstance(name, basestring) and name[0] != '<' and
+            name[-1] != '>'):
         return os.path.basename(name)
 
 
@@ -287,6 +290,11 @@ def get_encodings_from_content(content):
 
     :param content: bytestring to extract encodings from.
     """
+    warnings.warn((
+        'In requests 3.0, get_encodings_from_content will be removed. For '
+        'more information, please see the discussion on issue #2266. (This'
+        ' warning should only appear once.)'),
+        DeprecationWarning)
 
     charset_re = re.compile(r'<meta.*?charset=["\']*(.+?)["\'>]', flags=re.I)
     pragma_re = re.compile(r'<meta.*?content=["\']*;?charset=(.+?)["\'>]', flags=re.I)
@@ -351,12 +359,14 @@ def get_unicode_from_response(r):
     Tried:
 
     1. charset from content-type
-
-    2. every encodings from ``<meta ... charset=XXX>``
-
-    3. fall back and replace all unicode characters
+    2. fall back and replace all unicode characters
 
     """
+    warnings.warn((
+        'In requests 3.0, get_unicode_from_response will be removed. For '
+        'more information, please see the discussion on issue #2266. (This'
+        ' warning should only appear once.)'),
+        DeprecationWarning)
 
     tried_encodings = []
 
@@ -410,10 +420,18 @@ def requote_uri(uri):
     This function passes the given URI through an unquote/quote cycle to
     ensure that it is fully and consistently quoted.
     """
-    # Unquote only the unreserved characters
-    # Then quote only illegal characters (do not quote reserved, unreserved,
-    # or '%')
-    return quote(unquote_unreserved(uri), safe="!#$%&'()*+,/:;=?@[]~")
+    safe_with_percent = "!#$%&'()*+,/:;=?@[]~"
+    safe_without_percent = "!#$&'()*+,/:;=?@[]~"
+    try:
+        # Unquote only the unreserved characters
+        # Then quote only illegal characters (do not quote reserved,
+        # unreserved, or '%')
+        return quote(unquote_unreserved(uri), safe=safe_with_percent)
+    except InvalidURL:
+        # We couldn't unquote the given URI, so let's try quoting it, but
+        # there may be unquoted '%'s in the URI. We need to make sure they're
+        # properly quoted so they do not cause issues elsewhere.
+        return quote(uri, safe=safe_without_percent)
 
 
 def address_in_network(ip, net):
@@ -554,7 +572,8 @@ def default_headers():
     return CaseInsensitiveDict({
         'User-Agent': default_user_agent(),
         'Accept-Encoding': ', '.join(('gzip', 'deflate')),
-        'Accept': '*/*'
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
     })
 
 
@@ -569,7 +588,7 @@ def parse_header_links(value):
 
     replace_chars = " '\""
 
-    for val in value.split(","):
+    for val in re.split(", *<", value):
         try:
             url, params = val.split(";", 1)
         except ValueError:
@@ -671,3 +690,18 @@ def to_native_string(string, encoding='ascii'):
             out = string.decode(encoding)
 
     return out
+
+
+def urldefragauth(url):
+    """
+    Given a url remove the fragment and the authentication part
+    """
+    scheme, netloc, path, params, query, fragment = urlparse(url)
+
+    # see func:`prepend_scheme_if_needed`
+    if not netloc:
+        netloc, path = path, netloc
+
+    netloc = netloc.rsplit('@', 1)[-1]
+
+    return urlunparse((scheme, netloc, path, params, query, ''))

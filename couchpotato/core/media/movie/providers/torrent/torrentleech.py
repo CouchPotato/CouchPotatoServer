@@ -11,17 +11,17 @@ autoload = 'TorrentLeech'
 class TorrentLeech(MovieProvider, Base):
 
     cat_ids = [
-        ([13], ['720p', '1080p']),
+        ([13], ['720p', '1080p', 'bd50']),
         ([8], ['cam']),
         ([9], ['ts', 'tc']),
         ([10], ['r5', 'scr']),
         ([11], ['dvdrip']),
-        ([14], ['brrip']),
+        ([13, 14], ['brrip']),
         ([12], ['dvdr']),
     ]
 
     def buildUrl(self, title, media, quality):
         return (
             tryUrlencode(title.replace(':', '')),
-            self.getCatId(quality)[0]
+            ','.join([str(x) for x in self.getCatId(quality)])
         )

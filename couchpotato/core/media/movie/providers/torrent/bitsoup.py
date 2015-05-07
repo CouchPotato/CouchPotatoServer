@@ -11,7 +11,7 @@ autoload = 'Bitsoup'
 class Bitsoup(MovieProvider, Base):
     cat_ids = [
         ([17], ['3d']),
-        ([41], ['720p', '1080p']),
+        ([80], ['720p', '1080p']),
         ([20], ['dvdr']),
         ([19], ['brrip', 'dvdrip']),
     ]

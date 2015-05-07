@@ -46,7 +46,8 @@ class Automation(Plugin):
                 break
 
             movie_dict = fireEvent('media.get', movie_id, single = True)
-            fireEvent('movie.searcher.single', movie_dict)
+            if movie_dict:
+                fireEvent('movie.searcher.single', movie_dict)
 
         return True
 

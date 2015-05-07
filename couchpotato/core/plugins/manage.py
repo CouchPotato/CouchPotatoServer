@@ -1,13 +1,12 @@
-import ctypes
 import os
-import sys
 import time
 import traceback
 
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import splitString, getTitle, tryInt, getIdentifier
+from couchpotato.core.helpers.variable import splitString, getTitle, tryInt, getIdentifier, getFreeSpace
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -124,7 +123,7 @@ class Manage(Plugin):
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
 
                 onFound = self.createAddToLibrary(folder, added_identifiers)
-                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
+                fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, check_file_date = False, on_found = onFound, single = True)
 
                 # Break if CP wants to shut down
                 if self.shuttingDown():
@@ -136,6 +135,7 @@ class Manage(Plugin):
                 # Get movies with done status
                 total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', release_status = 'done', status_or = True, single = True)
 
+                deleted_releases = []
                 for done_movie in done_movies:
                     if getIdentifier(done_movie) not in added_identifiers:
                         fireEvent('media.delete', media_id = done_movie['_id'], delete_from = 'all')
@@ -165,12 +165,10 @@ class Manage(Plugin):
                                         already_used = used_files.get(release_file)
 
                                         if already_used:
-                                            # delete current one
-                                            if already_used.get('last_edit', 0) < release.get('last_edit', 0):
-                                                fireEvent('release.delete', release['_id'], single = True)
-                                            # delete previous one
-                                            else:
-                                                fireEvent('release.delete', already_used['_id'], single = True)
+                                            release_id = release['_id'] if already_used.get('last_edit', 0) > release.get('last_edit', 0) else already_used['_id']
+                                            if release_id not in deleted_releases:
+                                                fireEvent('release.delete', release_id, single = True)
+                                                deleted_releases.append(release_id)
                                             break
                                         else:
                                             used_files[release_file] = release
@@ -180,6 +178,10 @@ class Manage(Plugin):
                     if self.shuttingDown():
                         break
 
+                if not self.shuttingDown():
+                    db = get_db()
+                    db.reindex()
+
             Env.prop(last_update_key, time.time())
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
@@ -188,6 +190,7 @@ class Manage(Plugin):
 
             delete_me = {}
 
+            # noinspection PyTypeChecker
             for folder in self.in_progress:
                 if self.in_progress[folder]['to_go'] <= 0:
                     delete_me[folder] = True
@@ -217,7 +220,7 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group, update_info = False)
-                fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
+                fireEvent('movie.update', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
 
         return addToLibrary
 
@@ -231,7 +234,8 @@ class Manage(Plugin):
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
-            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict))
+            if movie_dict:
+                fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict))
 
         return afterUpdate
 
@@ -269,31 +273,7 @@ class Manage(Plugin):
                         fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
-
-        free_space = {}
-        for folder in self.directories():
-
-            size = None
-            if os.path.isdir(folder):
-                if os.name == 'nt':
-                    _, total, free = ctypes.c_ulonglong(), ctypes.c_ulonglong(), \
-                                       ctypes.c_ulonglong()
-                    if sys.version_info >= (3,) or isinstance(folder, unicode):
-                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExW #@UndefinedVariable
-                    else:
-                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExA #@UndefinedVariable
-                    ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
-                    if ret == 0:
-                        raise ctypes.WinError()
-                    used = total.value - free.value
-                    return [total.value, used, free.value]
-                else:
-                    s = os.statvfs(folder)
-                    size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
-
-            free_space[folder] = size
-
-        return free_space
+        return getFreeSpace(self.directories())
 
 
 config = [{

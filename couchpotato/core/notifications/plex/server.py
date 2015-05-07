@@ -35,11 +35,46 @@ class PlexServer(object):
         if path.startswith('/'):
             path = path[1:]
 
-        data = self.plex.urlopen('%s/%s' % (
-            self.createHost(self.plex.conf('media_server'), port = 32400),
-            path
-        ))
+        #Maintain support for older Plex installations without myPlex
+        if not self.plex.conf('auth_token') and not self.plex.conf('username') and not self.plex.conf('password'):
+            data = self.plex.urlopen('%s/%s' % (
+                self.createHost(self.plex.conf('media_server'), port = 32400),
+                path
+            ))
+        else:
+            #Fetch X-Plex-Token if it doesn't exist but a username/password do
+            if not self.plex.conf('auth_token') and (self.plex.conf('username') and self.plex.conf('password')):
+                import urllib2, base64
+                log.info("Fetching a new X-Plex-Token from plex.tv")
+                username = self.plex.conf('username')
+                password = self.plex.conf('password')
+                req = urllib2.Request("https://plex.tv/users/sign_in.xml", data="")
+                authheader = "Basic %s" % base64.encodestring('%s:%s' % (username, password))[:-1]
+                req.add_header("Authorization", authheader)
+                req.add_header("X-Plex-Product", "Couchpotato Notifier")
+                req.add_header("X-Plex-Client-Identifier", "b3a6b24dcab2224bdb101fc6aa08ea5e2f3147d6")
+                req.add_header("X-Plex-Version", "1.0")
+                
+                try:
+                    response = urllib2.urlopen(req)
+                except urllib2.URLError, e:
+                    log.info("Error fetching token from plex.tv")
+                
+                try:
+                    auth_tree = etree.parse(response)
+                    token = auth_tree.findall(".//authentication-token")[0].text
+                    self.plex.conf('auth_token', token)
 
+                except (ValueError, IndexError) as e:
+                    log.info("Error parsing plex.tv response: " + ex(e))
+
+            #Add X-Plex-Token header for myPlex support workaround
+            data = self.plex.urlopen('%s/%s?X-Plex-Token=%s' % (
+                self.createHost(self.plex.conf('media_server'), port = 32400),
+                path,
+                self.plex.conf('auth_token')
+            ))
+        
         if data_type == 'xml':
             return etree.fromstring(data)
         else:

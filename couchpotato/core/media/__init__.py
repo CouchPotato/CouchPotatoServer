@@ -1,9 +1,10 @@
 import os
 import traceback
 
-from couchpotato import CPLog
+from couchpotato import CPLog, md5
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.plugins.base import Plugin
 import six
 
@@ -26,9 +27,9 @@ class MediaBase(Plugin):
         def onComplete():
             try:
                 media = fireEvent('media.get', media_id, single = True)
-                event_name = '%s.searcher.single' % media.get('type')
-
-                fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id), manual = True)
+                if media:
+                    event_name = '%s.searcher.single' % media.get('type')
+                    fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id), manual = True)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
 
@@ -39,9 +40,9 @@ class MediaBase(Plugin):
         def notifyFront():
             try:
                 media = fireEvent('media.get', media_id, single = True)
-                event_name = '%s.update' % media.get('type')
-
-                fireEvent('notify.frontend', type = event_name, data = media)
+                if media:
+                    event_name = '%s.update' % media.get('type')
+                    fireEvent('notify.frontend', type = event_name, data = media)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
 
@@ -65,10 +66,13 @@ class MediaBase(Plugin):
 
         return def_title or 'UNKNOWN'
 
-    def getPoster(self, image_urls, existing_files):
-        image_type = 'poster'
+    def getPoster(self, media, image_urls):
+        if 'files' not in media:
+            media['files'] = {}
 
-        # Remove non-existing files
+        existing_files = media['files']
+
+        image_type = 'poster'
         file_type = 'image_%s' % image_type
 
         # Make existing unique
@@ -89,10 +93,18 @@ class MediaBase(Plugin):
             if not isinstance(image, (str, unicode)):
                 continue
 
-            if file_type not in existing_files or len(existing_files.get(file_type, [])) == 0:
+            # Check if it has top image
+            filename = '%s.%s' % (md5(image), getExt(image))
+            existing = existing_files.get(file_type, [])
+            has_latest = False
+            for x in existing:
+                if filename in x:
+                    has_latest = True
+
+            if not has_latest or file_type not in existing_files or len(existing_files.get(file_type, [])) == 0:
                 file_path = fireEvent('file.download', url = image, single = True)
                 if file_path:
-                    existing_files[file_type] = [file_path]
+                    existing_files[file_type] = [toUnicode(file_path)]
                     break
             else:
                 break

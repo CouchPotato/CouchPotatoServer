@@ -50,7 +50,7 @@ var NotificationBase = new Class({
 		, 'top');
 		self.notifications.include(result);
 
-		if((result.data.important !== undefined || result.data.sticky !== undefined) && !result.read){
+		if((result.important !== undefined || result.sticky !== undefined) && !result.read){
 			var sticky = true;
 			App.trigger('message', [result.message, sticky, result])
 		}
@@ -72,7 +72,7 @@ var NotificationBase = new Class({
 
 		if(!force_ids) {
 			var rn = self.notifications.filter(function(n){
-				return !n.read && n.data.important === undefined
+				return !n.read && n.important === undefined
 			});
 
 			var ids = [];
@@ -122,8 +122,11 @@ var NotificationBase = new Class({
 	startPoll: function(){
 		var self = this;
 
-		if(self.stopped || (self.request && self.request.isRunning()))
+		if(self.stopped)
 			return;
+
+		if(self.request && self.request.isRunning())
+			self.request.cancel();
 
 		self.request = Api.request('nonblock/notification.listener', {
     		'onSuccess': function(json){
@@ -149,7 +152,7 @@ var NotificationBase = new Class({
 		var self = this;
 
 		// Process data
-		if(json){
+		if(json && json.result){
 			Array.each(json.result, function(result){
 				App.trigger(result._t || result.type, [result]);
 				if(result.message && result.read === undefined && !init)

@@ -1,3 +1,7 @@
+import os
+import time
+import traceback
+
 from couchpotato.api import api_docs, api_docs_missing, api
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import md5, tryInt
@@ -5,9 +9,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from tornado import template
 from tornado.web import RequestHandler, authenticated
-import os
-import time
-import traceback
 
 
 log = CPLog(__name__)
@@ -39,6 +40,8 @@ class WebHandler(BaseHandler):
             return
 
         try:
+            if route == 'robots.txt':
+                self.set_header('Content-Type', 'text/plain')
             self.write(views[route]())
         except:
             log.error("Failed doing web request '%s': %s", (route, traceback.format_exc()))
@@ -57,6 +60,13 @@ def get_db():
 def index():
     return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
 addView('', index)
+
+
+# Web view
+def robots():
+    return 'User-agent: * \n' \
+           'Disallow: /'
+addView('robots.txt', robots)
 
 
 # API docs

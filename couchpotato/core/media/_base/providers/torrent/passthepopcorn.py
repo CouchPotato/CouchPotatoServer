@@ -64,6 +64,10 @@ class Base(TorrentProvider):
                         torrentdesc += ' HQ'
                         if self.conf('prefer_golden'):
                             torrentscore += 5000
+                    if 'FreeleechType' in torrent:
+                        torrentdesc += ' Freeleech'
+                        if self.conf('prefer_freeleech'):
+                            torrentscore += 7000
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                         if self.conf('prefer_scene'):
@@ -187,8 +191,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'PassThePopcorn',
-            'description': 'See <a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
+            'description': '<a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAARklEQVQoz2NgIAP8BwMiGWRpIN1JNWn/t6T9f532+W8GkNt7vzz9UkfarZVpb68BuWlbnqW1nU7L2DMx7eCoBlpqGOppCQB83zIgIg+wWQAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',
@@ -221,6 +226,14 @@ config = [{
                     'label': 'Prefer golden',
                     'default': 1,
                     'description': 'Favors Golden Popcorn-releases over all other releases.'
+                },
+                {
+                    'name': 'prefer_freeleech',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Prefer Freeleech',
+                    'default': 1,
+                    'description': 'Favors torrents marked as freeleech over all other releases.'
                 },
                 {
                     'name': 'prefer_scene',

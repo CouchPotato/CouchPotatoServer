@@ -54,13 +54,21 @@ var Movie = new Class({
 		// Reload when releases have updated
 		self.global_events['release.update_status'] = function(notification){
 			var data = notification.data;
-			if(data && self.data._id == data.movie_id){
+			if(data && self.data._id == data.media_id){
 
 				if(!self.data.releases)
 					self.data.releases = [];
 
-				self.data.releases.push({'quality': data.quality, 'status': data.status});
-				self.updateReleases();
+				var updated = false;
+				self.data.releases.each(function(release){
+					if(release._id == data._id){
+						release['status'] = data.status;
+						updated = true;
+					}
+				});
+
+				if(updated)
+					self.updateReleases();
 			}
 		};
 
@@ -136,6 +144,21 @@ var Movie = new Class({
 
 		self.el.addClass('status_'+self.get('status'));
 
+		var eta = null,
+			eta_date = null,
+			now = Math.round(+new Date()/1000);
+
+		if(self.data.info.release_date)
+			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
+				if (timestamp > 0 && (eta == null || Math.abs(timestamp - now) < Math.abs(eta - now)))
+					eta = timestamp;
+			});
+
+		if(eta){
+			eta_date = new Date(eta * 1000);
+			eta_date = eta_date.toLocaleString('en-us', { month: "long" }) + ' ' + eta_date.getFullYear();
+		}
+
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox].inlay', {
 				'events': {
@@ -144,7 +167,7 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = (self.data.files && self.data.files.image_poster) ? new Element('img', {
+			self.thumbnail = (self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0) ? new Element('img', {
 				'class': 'type_image poster',
 				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
 			}): null,
@@ -161,6 +184,10 @@ var Movie = new Class({
 					self.description = new Element('div.description.tiny_scroll', {
 						'text': self.data.info.plot
 					}),
+					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {
+						'text': eta_date,
+						'title': 'ETA'
+					}) : null,
 					self.quality = new Element('div.quality', {
 						'events': {
 							'click': function(e){

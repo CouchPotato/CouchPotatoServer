@@ -1,7 +1,9 @@
+from datetime import timedelta
+import time
 import traceback
 from string import ascii_lowercase
 
-from CodernityDB.database import RecordNotFound
+from CodernityDB.database import RecordNotFound, RecordDeleted
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -9,7 +11,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex
+from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex, MediaChildrenIndex, MediaTagIndex
 
 
 log = CPLog(__name__)
@@ -21,6 +23,7 @@ class MediaPlugin(MediaBase):
         'media': MediaIndex,
         'media_search_title': TitleSearchIndex,
         'media_status': MediaStatusIndex,
+        'media_tag': MediaTagIndex,
         'media_by_type': MediaTypeIndex,
         'media_title': TitleIndex,
         'media_startswith': StartsWithIndex,
@@ -40,15 +43,15 @@ class MediaPlugin(MediaBase):
             'desc': 'List media',
             'params': {
                 'type': {'type': 'string', 'desc': 'Media type to filter on.'},
-                'status': {'type': 'array or csv', 'desc': 'Filter movie by status. Example:"active,done"'},
-                'release_status': {'type': 'array or csv', 'desc': 'Filter movie by status of its releases. Example:"snatched,available"'},
-                'limit_offset': {'desc': 'Limit and offset the movie list. Examples: "50" or "50,30"'},
-                'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all movies starting with the letter "a"'},
-                'search': {'desc': 'Search movie title'},
+                'status': {'type': 'array or csv', 'desc': 'Filter media by status. Example:"active,done"'},
+                'release_status': {'type': 'array or csv', 'desc': 'Filter media by status of its releases. Example:"snatched,available"'},
+                'limit_offset': {'desc': 'Limit and offset the media list. Examples: "50" or "50,30"'},
+                'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all media starting with the letter "a"'},
+                'search': {'desc': 'Search media title'},
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'empty': bool, any movies returned or not,
+    'empty': bool, any media returned or not,
     'media': array, media found,
 }"""}
         })
@@ -74,6 +77,7 @@ class MediaPlugin(MediaBase):
         addEvent('app.load', self.addSingleListView, priority = 100)
         addEvent('app.load', self.addSingleCharView, priority = 100)
         addEvent('app.load', self.addSingleDeleteView, priority = 100)
+        addEvent('app.load', self.cleanupFaults)
 
         addEvent('media.get', self.get)
         addEvent('media.with_status', self.withStatus)
@@ -81,6 +85,20 @@ class MediaPlugin(MediaBase):
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
+        addEvent('media.tag', self.tag)
+        addEvent('media.untag', self.unTag)
+
+    # Wrongly tagged media files
+    def cleanupFaults(self):
+        medias = fireEvent('media.with_status', 'ignored', single = True) or []
+
+        db = get_db()
+        for media in medias:
+            try:
+                media['status'] = 'done'
+                db.update(media)
+            except:
+                pass
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -103,7 +121,7 @@ class MediaPlugin(MediaBase):
 
         try:
             media = get_db().get('id', media_id)
-            event = '%s.update_info' % media.get('type')
+            event = '%s.update' % media.get('type')
 
             def handler():
                 fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
@@ -140,7 +158,7 @@ class MediaPlugin(MediaBase):
 
             return media
 
-        except RecordNotFound:
+        except (RecordNotFound, RecordDeleted):
             log.error('Media with id "%s" not found', media_id)
         except:
             raise
@@ -154,30 +172,45 @@ class MediaPlugin(MediaBase):
             'media': media,
         }
 
-    def withStatus(self, status, with_doc = True):
+    def withStatus(self, status, types = None, with_doc = True):
 
         db = get_db()
+
+        if types and not isinstance(types, (list, tuple)):
+            types = [types]
 
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
+            for ms in db.get_many('media_status', s):
+                if with_doc:
+                    try:
+                        doc = db.get('id', ms['_id'])
+
+                        if types and doc.get('type') not in types:
+                            continue
+
+                        yield doc
+                    except (RecordDeleted, RecordNotFound):
+                        log.debug('Record not found, skipping: %s', ms['_id'])
+                    except (ValueError, EOFError):
+                        fireEvent('database.delete_corrupted', ms.get('_id'), traceback_error = traceback.format_exc(0))
+                else:
+                    yield ms
 
     def withIdentifiers(self, identifiers, with_doc = False):
-
         db = get_db()
 
         for x in identifiers:
             try:
-                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
-                return media
+                return db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
             except:
                 pass
 
         log.debug('No media found with identifiers: %s', identifiers)
+        return False
 
-    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
+    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, with_tags = None, starts_with = None, search = None):
 
         db = get_db()
 
@@ -188,6 +221,8 @@ class MediaPlugin(MediaBase):
             release_status = [release_status]
         if types and not isinstance(types, (list, tuple)):
             types = [types]
+        if with_tags and not isinstance(with_tags, (list, tuple)):
+            with_tags = [with_tags]
 
         # query media ids
         if types:
@@ -214,10 +249,16 @@ class MediaPlugin(MediaBase):
 
         # Add search filters
         if starts_with:
-            filter_by['starts_with'] = set()
             starts_with = toUnicode(starts_with.lower())[0]
             starts_with = starts_with if starts_with in ascii_lowercase else '#'
             filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
+
+        # Add tag filter
+        if with_tags:
+            filter_by['with_tags'] = set()
+            for tag in with_tags:
+                for x in db.get_many('media_tag', tag):
+                    filter_by['with_tags'].add(x['_id'])
 
         # Filter with search query
         if search:
@@ -254,6 +295,10 @@ class MediaPlugin(MediaBase):
 
             media = fireEvent('media.get', media_id, single = True)
 
+            # Skip if no media has been found
+            if not media:
+                continue
+
             # Merge releases with movie dict
             medias.append(media)
 
@@ -271,6 +316,7 @@ class MediaPlugin(MediaBase):
             release_status = splitString(kwargs.get('release_status')),
             status_or = kwargs.get('status_or') is not None,
             limit_offset = kwargs.get('limit_offset'),
+            with_tags = splitString(kwargs.get('with_tags')),
             starts_with = kwargs.get('starts_with'),
             search = kwargs.get('search')
         )
@@ -285,9 +331,22 @@ class MediaPlugin(MediaBase):
     def addSingleListView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempList(*args, **kwargs):
-                return self.listView(types = media_type, **kwargs)
-            addApiView('%s.list' % media_type, tempList)
+            tempList = lambda *args, **kwargs : self.listView(type = media_type, **kwargs)
+            addApiView('%s.list' % media_type, tempList, docs = {
+                'desc': 'List media',
+                'params': {
+                    'status': {'type': 'array or csv', 'desc': 'Filter ' + media_type + ' by status. Example:"active,done"'},
+                    'release_status': {'type': 'array or csv', 'desc': 'Filter ' + media_type + ' by status of its releases. Example:"snatched,available"'},
+                    'limit_offset': {'desc': 'Limit and offset the ' + media_type + ' list. Examples: "50" or "50,30"'},
+                    'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all ' + media_type + 's starting with the letter "a"'},
+                    'search': {'desc': 'Search ' + media_type + ' title'},
+                },
+                'return': {'type': 'object', 'example': """{
+        'success': True,
+        'empty': bool, any """ + media_type + """s returned or not,
+        'media': array, media found,
+    }"""}
+            })
 
     def availableChars(self, types = None, status = None, release_status = None):
 
@@ -333,7 +392,7 @@ class MediaPlugin(MediaBase):
             if x['_id'] in media_ids:
                 chars.add(x['key'])
 
-            if len(chars) == 25:
+            if len(chars) == 27:
                 break
 
         return list(chars)
@@ -354,8 +413,7 @@ class MediaPlugin(MediaBase):
     def addSingleCharView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempChar(*args, **kwargs):
-                return self.charView(types = media_type, **kwargs)
+            tempChar = lambda *args, **kwargs : self.charView(type = media_type, **kwargs)
             addApiView('%s.available_chars' % media_type, tempChar)
 
     def delete(self, media_id, delete_from = None):
@@ -389,16 +447,23 @@ class MediaPlugin(MediaBase):
                                 total_deleted += 1
                             new_media_status = 'done'
                         elif delete_from == 'manage':
-                            if release.get('status') == 'done':
+                            if release.get('status') == 'done' or media.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active') or (not new_media_status and delete_from == 'late'):
+                    if (total_releases == total_deleted) or (total_releases == 0 and not new_media_status) or (not new_media_status and delete_from == 'late'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
                         media['status'] = new_media_status
+
+                        # Remove profile (no use for in manage)
+                        if new_media_status == 'done':
+                            media['profile_id'] = None
+                        
                         db.update(media)
+
+                        fireEvent('media.untag', media['_id'], 'recent', single = True)
                     else:
                         fireEvent('media.restatus', media.get('_id'), single = True)
 
@@ -422,11 +487,16 @@ class MediaPlugin(MediaBase):
     def addSingleDeleteView(self):
 
         for media_type in fireEvent('media.types', merge = True):
-            def tempDelete(*args, **kwargs):
-                return self.deleteView(types = media_type, *args, **kwargs)
-            addApiView('%s.delete' % media_type, tempDelete)
+            tempDelete = lambda *args, **kwargs : self.deleteView(type = media_type, **kwargs)
+            addApiView('%s.delete' % media_type, tempDelete, docs = {
+            'desc': 'Delete a ' + media_type + ' from the wanted list',
+            'params': {
+                'id': {'desc': 'Media ID(s) you want to delete.', 'type': 'int (comma separated)'},
+                'delete_from': {'desc': 'Delete ' + media_type + ' from this page', 'type': 'string: all (default), wanted, manage'},
+            }
+        })
 
-    def restatus(self, media_id):
+    def restatus(self, media_id, tag_recent = True, allowed_restatus = None):
 
         try:
             db = get_db()
@@ -438,24 +508,77 @@ class MediaPlugin(MediaBase):
             if not m['profile_id']:
                 m['status'] = 'done'
             else:
-                move_to_wanted = True
+                m['status'] = 'active'
 
-                profile = db.get('id', m['profile_id'])
-                media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                try:
+                    profile = db.get('id', m['profile_id'])
+                    media_releases = fireEvent('release.for_media', m['_id'], single = True)
+                    done_releases = [release for release in media_releases if release.get('status') == 'done']
 
-                for q_identifier in profile['qualities']:
-                    index = profile['qualities'].index(q_identifier)
+                    if done_releases:
 
-                    for release in media_releases:
-                        if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
-                            move_to_wanted = False
+                        # Check if we are finished with the media
+                        for release in done_releases:
+                            if fireEvent('quality.isfinish', {'identifier': release['quality'], 'is_3d': release.get('is_3d', False)}, profile, timedelta(seconds = time.time() - release['last_edit']).days, single = True):
+                                m['status'] = 'done'
+                                break
 
-                m['status'] = 'active' if move_to_wanted else 'done'
+                    elif previous_status == 'done':
+                        m['status'] = 'done'
+
+                except RecordNotFound:
+                    log.debug('Failed restatus, keeping previous: %s', traceback.format_exc())
+                    m['status'] = previous_status
 
             # Only update when status has changed
-            if previous_status != m['status']:
+            if previous_status != m['status'] and (not allowed_restatus or m['status'] in allowed_restatus):
+                db.update(m)
+
+                # Tag media as recent
+                if tag_recent:
+                    self.tag(media_id, 'recent', update_edited = True)
+
+            return m['status']
+        except:
+            log.error('Failed restatus: %s', traceback.format_exc())
+
+    def tag(self, media_id, tag, update_edited = False):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            if update_edited:
+                m['last_edit'] = int(time.time())
+
+            tags = m.get('tags') or []
+            if tag not in tags:
+                tags.append(tag)
+                m['tags'] = tags
                 db.update(m)
 
             return True
         except:
-            log.error('Failed restatus: %s', traceback.format_exc())
+            log.error('Failed tagging: %s', traceback.format_exc())
+
+        return False
+
+    def unTag(self, media_id, tag):
+
+        try:
+            db = get_db()
+            m = db.get('id', media_id)
+
+            tags = m.get('tags') or []
+            if tag in tags:
+                new_tags = list(set(tags))
+                new_tags.remove(tag)
+
+                m['tags'] = new_tags
+                db.update(m)
+
+            return True
+        except:
+            log.error('Failed untagging: %s', traceback.format_exc())
+
+        return False

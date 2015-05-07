@@ -118,7 +118,7 @@ class Core(Plugin):
 
         self.shutdown_started = True
 
-        fireEvent('app.do_shutdown')
+        fireEvent('app.do_shutdown', restart = restart)
         log.debug('Every plugin got shutdown event')
 
         loop = True
@@ -143,9 +143,11 @@ class Core(Plugin):
 
         log.debug('Safe to shutdown/restart')
 
+        loop = IOLoop.current()
+
         try:
-            if not IOLoop.current()._closing:
-                IOLoop.current().stop()
+            if not loop._closing:
+                loop.stop()
         except RuntimeError:
             pass
         except:
@@ -179,13 +181,13 @@ class Core(Plugin):
         return '%sapi/%s' % (self.createBaseUrl(), Env.setting('api_key'))
 
     def version(self):
-        ver = fireEvent('updater.info', single = True)
+        ver = fireEvent('updater.info', single = True) or {'version': {}}
 
         if os.name == 'nt': platf = 'windows'
         elif 'Darwin' in platform.platform(): platf = 'osx'
         else: platf = 'linux'
 
-        return '%s - %s-%s - v2' % (platf, ver.get('version')['type'], ver.get('version')['hash'])
+        return '%s - %s-%s - v2' % (platf, ver.get('version').get('type') or 'unknown', ver.get('version').get('hash') or 'unknown')
 
     def versionView(self, **kwargs):
         return {
@@ -226,6 +228,12 @@ config = [{
                     'default': 5050,
                     'type': 'int',
                     'description': 'The port I should listen to.',
+                },
+                {
+                    'name': 'ipv6',
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Also bind the WebUI to ipv6 address',
                 },
                 {
                     'name': 'ssl_cert',
@@ -284,13 +292,13 @@ config = [{
                     'name': 'permission_folder',
                     'default': '0755',
                     'label': 'Folder CHMOD',
-                    'description': 'Can be either decimal (493) or octal (leading zero: 0755)',
+                    'description': 'Can be either decimal (493) or octal (leading zero: 0755). <a target="_blank" href="http://permissions-calculator.org/">Calculate the correct value</a>',
                 },
                 {
                     'name': 'permission_file',
-                    'default': '0755',
+                    'default': '0644',
                     'label': 'File CHMOD',
-                    'description': 'Same as Folder CHMOD but for files',
+                    'description': 'See Folder CHMOD description, but for files',
                 },
             ],
         },

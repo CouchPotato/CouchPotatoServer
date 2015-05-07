@@ -54,16 +54,22 @@
 	},
 
 	pushState: function(e){
-		if((!e.meta && Browser.platform.mac) || (!e.control && !Browser.platform.mac)){
+		var self = this;
+
+		if((!e.meta && self.isMac()) || (!e.control && !self.isMac())){
 			(e).preventDefault();
 			var url = e.target.get('href');
-			if(History.getPath() != url)
+
+			// Middle click
+			if(e.event && e.event.button == 1)
+				window.open(url);
+			else if(History.getPath() != url)
 				History.push(url);
 		}
 	},
 
 	isMac: function(){
-		return Browser.platform.mac
+		return Browser.platform == 'mac'
 	},
 
 	createLayout: function(){
@@ -272,11 +278,18 @@
 
 		(function(){
 
-			Api.request('app.available', {
-				'onFailure': function(){
-					self.checkAvailable.delay(1000, self, [delay, onAvailable]);
-					self.fireEvent('unload');
+			var onFailure = function(){
+				self.checkAvailable.delay(1000, self, [delay, onAvailable]);
+				self.fireEvent('unload');
+			}
+
+			var request = Api.request('app.available', {
+				'timeout': 2000,
+				'onTimeout': function(){
+					request.cancel();
+					onFailure();
 				},
+				'onFailure': onFailure,
 				'onSuccess': function(){
 					if(onAvailable)
 						onAvailable();
@@ -318,11 +331,12 @@
 	},
 
 	openDerefered: function(e, el){
+		var self = this;
 		(e).stop();
 
 		var url = 'http://www.dereferer.org/?' + el.get('href');
 
-		if(el.get('target') == '_blank' || (e.meta && Browser.platform.mac) || (e.control && !Browser.platform.mac))
+		if(el.get('target') == '_blank' || (e.meta && self.isMac()) || (e.control && !self.isMac()))
 			window.open(url);
 		else
 			window.location = url;

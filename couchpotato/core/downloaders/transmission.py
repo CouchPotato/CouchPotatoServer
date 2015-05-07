@@ -23,19 +23,32 @@ class Transmission(DownloaderBase):
     log = CPLog(__name__)
     trpc = None
 
-    def connect(self, reconnect = False):
+    def connect(self):
         # Load host from config and split out port.
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        host = cleanHost(self.conf('host')).rstrip('/').rsplit(':', 1)
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.trpc or reconnect:
-            self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
-
+        self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
         return self.trpc
 
     def download(self, data = None, media = None, filedata = None):
+        """
+        Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
@@ -80,19 +93,32 @@ class Transmission(DownloaderBase):
             log.error('Failed sending torrent to Transmission')
             return False
 
+        data = remote_torrent.get('torrent-added') or remote_torrent.get('torrent-duplicate')
+
         # Change settings of added torrents
         if torrent_params:
-            self.trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
+            self.trpc.set_torrent(data['hashString'], torrent_params)
 
         log.info('Torrent sent to Transmission successfully.')
-        return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
+        return self.downloadReturnId(data['hashString'])
 
     def test(self):
-        if self.connect(True) and self.trpc.get_session():
+        """ Check if connection works
+        :return: bool
+        """
+
+        if self.connect() and self.trpc.get_session():
             return True
         return False
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
 
         log.debug('Checking Transmission download status.')
 
@@ -120,6 +146,8 @@ class Transmission(DownloaderBase):
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
                     status = 'failed'
                 elif torrent['status'] == 0 and torrent['percentDone'] == 1:
+                    status = 'completed'
+                elif torrent['status'] == 16 and torrent['percentDone'] == 1: 
                     status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
@@ -164,11 +192,11 @@ class Transmission(DownloaderBase):
 class TransmissionRPC(object):
 
     """TransmissionRPC lite library"""
-    def __init__(self, host = 'localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
+    def __init__(self, host = 'http://localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
 
         super(TransmissionRPC, self).__init__()
 
-        self.url = 'http://' + host + ':' + str(port) + '/' + rpc_url + '/rpc'
+        self.url = host + ':' + str(port) + '/' + rpc_url + '/rpc'
         self.tag = 0
         self.session_id = 0
         self.session = {}
@@ -276,8 +304,8 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:9091',
-                    'description': 'Hostname with port. Usually <strong>localhost:9091</strong>',
+                    'default': 'http://localhost:9091',
+                    'description': 'Hostname with port. Usually <strong>http://localhost:9091</strong>',
                 },
                 {
                     'name': 'rpc_url',

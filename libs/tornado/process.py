@@ -39,7 +39,7 @@ from tornado.util import errno_from_exception
 try:
     import multiprocessing
 except ImportError:
-    # Multiprocessing is not availble on Google App Engine.
+    # Multiprocessing is not available on Google App Engine.
     multiprocessing = None
 
 try:
@@ -191,6 +191,9 @@ class Subprocess(object):
       ``tornado.process.Subprocess.STREAM``, which will make the corresponding
       attribute of the resulting Subprocess a `.PipeIOStream`.
     * A new keyword argument ``io_loop`` may be used to pass in an IOLoop.
+
+    .. versionchanged:: 4.1
+       The ``io_loop`` argument is deprecated.
     """
     STREAM = object()
 
@@ -240,7 +243,7 @@ class Subprocess(object):
 
         The callback takes one argument, the return code of the process.
 
-        This method uses a ``SIGCHILD`` handler, which is a global setting
+        This method uses a ``SIGCHLD`` handler, which is a global setting
         and may conflict if you have other libraries trying to handle the
         same signal.  If you are using more than one ``IOLoop`` it may
         be necessary to call `Subprocess.initialize` first to designate
@@ -257,12 +260,15 @@ class Subprocess(object):
 
     @classmethod
     def initialize(cls, io_loop=None):
-        """Initializes the ``SIGCHILD`` handler.
+        """Initializes the ``SIGCHLD`` handler.
 
         The signal handler is run on an `.IOLoop` to avoid locking issues.
         Note that the `.IOLoop` used for signal handling need not be the
         same one used by individual Subprocess objects (as long as the
         ``IOLoops`` are each running in separate threads).
+
+        .. versionchanged:: 4.1
+           The ``io_loop`` argument is deprecated.
         """
         if cls._initialized:
             return
@@ -275,7 +281,7 @@ class Subprocess(object):
 
     @classmethod
     def uninitialize(cls):
-        """Removes the ``SIGCHILD`` handler."""
+        """Removes the ``SIGCHLD`` handler."""
         if not cls._initialized:
             return
         signal.signal(signal.SIGCHLD, cls._old_sigchld)

@@ -4,6 +4,7 @@ from couchpotato import tryInt
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.base import MovieProvider
+from requests import HTTPError
 
 
 log = CPLog(__name__)
@@ -14,7 +15,7 @@ autoload = 'FanartTV'
 class FanartTV(MovieProvider):
 
     urls = {
-        'api': 'http://api.fanart.tv/webservice/movie/b28b14e9be662e027cfbc7c3dd600405/%s/JSON/all/1/2'
+        'api': 'http://webservice.fanart.tv/v3/movies/%s?api_key=b28b14e9be662e027cfbc7c3dd600405'
     }
 
     MAX_EXTRAFANART = 20
@@ -23,23 +24,23 @@ class FanartTV(MovieProvider):
     def __init__(self):
         addEvent('movie.info', self.getArt, priority = 1)
 
-    def getArt(self, identifier = None, **kwargs):
+    def getArt(self, identifier = None, extended = True, **kwargs):
 
-        log.debug("Getting Extra Artwork from Fanart.tv...")
-        if not identifier:
+        if not identifier or not extended:
             return {}
 
         images = {}
 
         try:
             url = self.urls['api'] % identifier
-            fanart_data = self.getJsonData(url)
+            fanart_data = self.getJsonData(url, show_error = False)
 
             if fanart_data:
-                name, resource = fanart_data.items()[0]
-                log.debug('Found images for %s', name)
-                images = self._parseMovie(resource)
-
+                log.debug('Found images for %s', fanart_data.get('name'))
+                images = self._parseMovie(fanart_data)
+        except HTTPError as e:
+            log.debug('Failed getting extra art for %s: %s',
+                      (identifier, e))
         except:
             log.error('Failed getting extra art for %s: %s',
                       (identifier, traceback.format_exc()))
@@ -95,7 +96,7 @@ class FanartTV(MovieProvider):
         for image in images:
             if tryInt(image.get('likes')) > highscore:
                 highscore = tryInt(image.get('likes'))
-                image_url = image.get('url')
+                image_url = image.get('url') or image.get('href')
 
         return image_url
 
@@ -118,7 +119,9 @@ class FanartTV(MovieProvider):
                 if tryInt(image.get('likes')) > highscore:
                     highscore = tryInt(image.get('likes'))
                     best = image
-            image_urls.append(best.get('url'))
+            url = best.get('url') or best.get('href')
+            if url:
+                image_urls.append(url)
             pool.remove(best)
 
         return image_urls

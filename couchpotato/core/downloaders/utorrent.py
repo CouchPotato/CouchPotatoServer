@@ -51,6 +51,21 @@ class uTorrent(DownloaderBase):
         return self.utorrent_api
 
     def download(self, data = None, media = None, filedata = None):
+        """
+        Send a torrent/nzb file to the downloader
+
+        :param data: dict returned from provider
+            Contains the release information
+        :param media: media dict with information
+            Used for creating the filename when possible
+        :param filedata: downloaded torrent/nzb filedata
+            The file gets downloaded in the searcher and send to this function
+            This is done to have failed checking before using the downloader, so the downloader
+            doesn't need to worry about that
+        :return: boolean
+            One faile returns false, but the downloaded should log his own errors
+        """
+
         if not media: media = {}
         if not data: data = {}
 
@@ -120,6 +135,10 @@ class uTorrent(DownloaderBase):
         return self.downloadReturnId(torrent_hash)
 
     def test(self):
+        """ Check if connection works
+        :return: bool
+        """
+
         if self.connect():
             build_version = self.utorrent_api.get_build()
             if not build_version:
@@ -131,6 +150,13 @@ class uTorrent(DownloaderBase):
         return False
 
     def getAllDownloadStatus(self, ids):
+        """ Get status of all active downloads
+
+        :param ids: list of (mixed) downloader ids
+            Used to match the releases for this downloader as there could be
+            other downloaders active that it should ignore
+        :return: list of releases
+        """
 
         log.debug('Checking uTorrent download status.')
 

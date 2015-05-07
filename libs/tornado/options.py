@@ -79,7 +79,7 @@ import sys
 import os
 import textwrap
 
-from tornado.escape import _unicode
+from tornado.escape import _unicode, native_str
 from tornado.log import define_logging_options
 from tornado import stack_context
 from tornado.util import basestring_type, exec_in
@@ -204,6 +204,13 @@ class OptionParser(object):
                         (name, self._options[name].file_name))
         frame = sys._getframe(0)
         options_file = frame.f_code.co_filename
+
+        # Can be called directly, or through top level define() fn, in which
+        # case, step up above that frame to look for real caller.
+        if (frame.f_back.f_code.co_filename == options_file and
+                frame.f_back.f_code.co_name == 'define'):
+            frame = frame.f_back
+
         file_name = frame.f_back.f_code.co_filename
         if file_name == options_file:
             file_name = ""
@@ -271,10 +278,14 @@ class OptionParser(object):
         If ``final`` is ``False``, parse callbacks will not be run.
         This is useful for applications that wish to combine configurations
         from multiple sources.
+
+        .. versionchanged:: 4.1
+           Config files are now always interpreted as utf-8 instead of
+           the system default encoding.
         """
         config = {}
-        with open(path) as f:
-            exec_in(f.read(), config, config)
+        with open(path, 'rb') as f:
+            exec_in(native_str(f.read()), config, config)
         for name in config:
             if name in self._options:
                 self._options[name].set(config[name])

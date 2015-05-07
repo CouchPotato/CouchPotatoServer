@@ -1,7 +1,7 @@
-import os
 import traceback
 import time
 
+from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -27,6 +27,10 @@ class MovieBase(MovieTypeBase):
 
         addApiView('movie.add', self.addView, docs = {
             'desc': 'Add new movie to the wanted list',
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'movie': object
+}"""},
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
@@ -45,7 +49,7 @@ class MovieBase(MovieTypeBase):
         })
 
         addEvent('movie.add', self.add)
-        addEvent('movie.update_info', self.updateInfo)
+        addEvent('movie.update', self.update)
         addEvent('movie.update_release_dates', self.updateReleaseDate)
 
     def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
@@ -61,7 +65,7 @@ class MovieBase(MovieTypeBase):
             return False
         elif not params.get('info'):
             try:
-                is_movie = fireEvent('movie.is_movie', identifier = params.get('identifier'), single = True)
+                is_movie = fireEvent('movie.is_movie', identifier = params.get('identifier'), adding = True, single = True)
                 if not is_movie:
                     msg = 'Can\'t add movie, seems to be a TV show.'
                     log.error(msg)
@@ -90,7 +94,7 @@ class MovieBase(MovieTypeBase):
 
         # Default profile and category
         default_profile = {}
-        if not params.get('profile_id'):
+        if (not params.get('profile_id') and status != 'done') or params.get('ignore_previous', False):
             default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
@@ -117,8 +121,17 @@ class MovieBase(MovieTypeBase):
             media['info'] = info
 
             new = False
+            previous_profile = None
             try:
                 m = db.get('media', 'imdb-%s' % params.get('identifier'), with_doc = True)['doc']
+
+                try:
+                    db.get('id', m.get('profile_id'))
+                    previous_profile = m.get('profile_id')
+                except RecordNotFound:
+                    pass
+                except:
+                    log.error('Failed getting previous profile: %s', traceback.format_exc())
             except:
                 new = True
                 m = db.insert(media)
@@ -141,14 +154,14 @@ class MovieBase(MovieTypeBase):
                 for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'seeding', 'done']:
                         if params.get('ignore_previous', False):
-                            release['status'] = 'ignored'
-                            db.update(release)
+                            fireEvent('release.update_status', release['_id'], status = 'ignored')
                         else:
                             fireEvent('release.delete', release['_id'], single = True)
 
-                m['profile_id'] = params.get('profile_id', default_profile.get('id'))
+                m['profile_id'] = (params.get('profile_id') or default_profile.get('_id')) if not previous_profile else previous_profile
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
                 m['last_edit'] = int(time.time())
+                m['tags'] = []
 
                 do_search = True
                 db.update(m)
@@ -161,7 +174,7 @@ class MovieBase(MovieTypeBase):
             # Trigger update info
             if added and update_after:
                 # Do full update to get images etc
-                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
+                fireEventAsync('movie.update', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in fireEvent('release.for_media', m['_id'], single = True):
@@ -169,6 +182,9 @@ class MovieBase(MovieTypeBase):
                     db.delete(rel)
 
             movie_dict = fireEvent('media.get', m['_id'], single = True)
+            if not movie_dict:
+                log.debug('Failed adding media, can\'t find it anymore')
+                return False
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])
@@ -225,7 +241,7 @@ class MovieBase(MovieTypeBase):
 
                     db.update(m)
 
-                    fireEvent('media.restatus', m['_id'])
+                    fireEvent('media.restatus', m['_id'], single = True)
 
                     m = db.get('id', media_id)
 
@@ -245,7 +261,7 @@ class MovieBase(MovieTypeBase):
             'success': False,
         }
 
-    def updateInfo(self, media_id = None, identifier = None, default_title = None, extended = False):
+    def update(self, media_id = None, identifier = None, default_title = None, extended = False):
         """
         Update movie information inside media['doc']['info']
 
@@ -258,6 +274,10 @@ class MovieBase(MovieTypeBase):
         if self.shuttingDown():
             return
 
+        lock_key = 'media.get.%s' % media_id if media_id else identifier
+        self.acquireLock(lock_key)
+
+        media = {}
         try:
             db = get_db()
 
@@ -301,42 +321,16 @@ class MovieBase(MovieTypeBase):
                 media['title'] = def_title
 
             # Files
-            images = info.get('images', [])
-            media['files'] = media.get('files', {})
-            for image_type in ['poster']:
+            image_urls = info.get('images', [])
 
-                # Remove non-existing files
-                file_type = 'image_%s' % image_type
-                existing_files = list(set(media['files'].get(file_type, [])))
-                for ef in media['files'].get(file_type, []):
-                    if not os.path.isfile(ef):
-                        existing_files.remove(ef)
-
-                # Replace new files list
-                media['files'][file_type] = existing_files
-                if len(existing_files) == 0:
-                    del media['files'][file_type]
-
-                # Loop over type
-                for image in images.get(image_type, []):
-                    if not isinstance(image, (str, unicode)):
-                        continue
-
-                    if file_type not in media['files'] or len(media['files'].get(file_type, [])) == 0:
-                        file_path = fireEvent('file.download', url = image, single = True)
-                        if file_path:
-                            media['files'][file_type] = [file_path]
-                            break
-                    else:
-                        break
+            self.getPoster(media, image_urls)
 
             db.update(media)
-
-            return media
         except:
             log.error('Failed update media: %s', traceback.format_exc())
 
-        return {}
+        self.releaseLock(lock_key)
+        return media
 
     def updateReleaseDate(self, media_id):
         """
@@ -352,7 +346,7 @@ class MovieBase(MovieTypeBase):
             media = db.get('id', media_id)
 
             if not media.get('info'):
-                media = self.updateInfo(media_id)
+                media = self.update(media_id)
                 dates = media.get('info', {}).get('release_date')
             else:
                 dates = media.get('info').get('release_date')

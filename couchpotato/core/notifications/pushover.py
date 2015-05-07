@@ -1,7 +1,5 @@
-from httplib import HTTPSConnection
-
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getTitle, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 
@@ -13,44 +11,34 @@ autoload = 'Pushover'
 
 class Pushover(Notification):
 
-    app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
+    api_url = 'https://api.pushover.net'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
-        http_handler = HTTPSConnection("api.pushover.net:443")
-
         api_data = {
             'user': self.conf('user_key'),
-            'token': self.app_token,
+            'token': self.conf('api_token'),
             'message': toUnicode(message),
             'priority': self.conf('priority'),
             'sound': self.conf('sound'),
         }
 
-        if data and data.get('identifier'):
+        if data and getIdentifier(data):
             api_data.update({
-                'url': toUnicode('http://www.imdb.com/title/%s/' % data['identifier']),
+                'url': toUnicode('http://www.imdb.com/title/%s/' % getIdentifier(data)),
                 'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 
-        http_handler.request('POST', '/1/messages.json',
-                             headers = {'Content-type': 'application/x-www-form-urlencoded'},
-                             body = tryUrlencode(api_data)
-        )
-
-        response = http_handler.getresponse()
-        request_status = response.status
-
-        if request_status == 200:
-            log.info('Pushover notifications sent.')
+        try:
+            data = self.urlopen('%s/%s' % (self.api_url, '1/messages.json'),
+                headers = {'Content-type': 'application/x-www-form-urlencoded'},
+                data = api_data)
+            log.info2('Pushover responded with: %s', data)
             return True
-        elif request_status == 401:
-            log.error('Pushover auth failed: %s', response.reason)
+        except:
             return False
-        else:
-            log.error('Pushover notification failed.')
-            return False
+
 
 
 config = [{
@@ -71,10 +59,16 @@ config = [{
                     'description': 'Register on pushover.net to get one.'
                 },
                 {
+                    'name': 'api_token',
+                    'description': '<a href="https://pushover.net/apps/clone/couchpotato" target="_blank">Register on pushover.net</a> to get one.',
+                    'advanced': True,
+                    'default': 'YkxHMYDZp285L265L3IwH3LmzkTaCy',
+                },
+                {
                     'name': 'priority',
                     'default': 0,
                     'type': 'dropdown',
-                    'values': [('Normal', 0), ('High', 1)],
+                    'values': [('Lowest', -2), ('Low', -1), ('Normal', 0), ('High', 1)],
                 },
                 {
                     'name': 'on_snatch',

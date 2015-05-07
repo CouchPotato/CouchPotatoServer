@@ -13,12 +13,12 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'http://www.torrentleech.org/',
-        'login': 'http://www.torrentleech.org/user/account/login/',
-        'login_check': 'http://torrentleech.org/user/messages',
-        'detail': 'http://www.torrentleech.org/torrent/%s',
-        'search': 'http://www.torrentleech.org/torrents/browse/index/query/%s/categories/%d',
-        'download': 'http://www.torrentleech.org%s',
+        'test': 'https://www.torrentleech.org/',
+        'login': 'https://www.torrentleech.org/user/account/login/',
+        'login_check': 'https://torrentleech.org/user/messages',
+        'detail': 'https://www.torrentleech.org/torrent/%s',
+        'search': 'https://www.torrentleech.org/torrents/browse/index/query/%s/categories/%s',
+        'download': 'https://www.torrentleech.org%s',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -80,8 +80,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'TorrentLeech',
-            'description': 'See <a href="http://torrentleech.org">TorrentLeech</a>',
+            'description': '<a href="http://torrentleech.org">TorrentLeech</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACHUlEQVR4AZVSO48SYRSdGTCBEMKzILLAWiybkKAGMZRUUJEoDZX7B9zsbuQPYEEjNLTQkYgJDwsoSaxspEBsCITXjjNAIKi8AkzceXgmbHQ1NJ5iMufmO9/9zrmXlCSJ+B8o75J8Pp/NZj0eTzweBy0Wi4PBYD6f12o1r9ebTCZx+22HcrnMsuxms7m6urTZ7LPZDMVYLBZ8ZV3yo8aq9Pq0wzCMTqe77dDv9y8uLyAWBH6xWOyL0K/56fcb+rrPgPZ6PZfLRe1fsl6vCUmGKIqoqNXqdDr9Dbjps9znUV0uTqdTjuPkDoVCIfcuJ4gizjMMm8u9vW+1nr04czqdK56c37CbKY9j2+1WEARZ0Gq1RFHAz2q1qlQqXxoN69HRcDjUarW8ZD6QUigUOnY8uKYH8N1sNkul9yiGw+F6vS4Rxn8EsodEIqHRaOSnq9T7ajQazWQycEIR1AEBYDabSZJyHDucJyegwWBQr9ebTCaKvHd4cCQANUU9evwQ1Ofz4YvUKUI43GE8HouSiFiNRhOowWBIpVLyHITJkuW3PwgAEf3pgIwxF5r+OplMEsk3CPT5szCMnY7EwUdhwUh/CXiej0Qi3idPz89fdrpdbsfBzH7S3Q9K5pP4c0sAKpVKoVAQGO1ut+t0OoFAQHkH2Da/3/+but3uarWK0ZMQoNdyucRutdttmqZxMTzY7XaYxsrgtUjEZrNhkSwWyy/0NCatZumrNQAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',

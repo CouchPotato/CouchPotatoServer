@@ -9,6 +9,7 @@ import traceback
 import warnings
 import re
 import tarfile
+import shutil
 
 from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
@@ -17,8 +18,9 @@ from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import getDataDir, tryInt
+from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
+from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 
@@ -87,6 +89,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Do db stuff
     db_path = sp(os.path.join(data_dir, 'database'))
+    old_db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Remove database folder if both exists
+    if os.path.isdir(db_path) and os.path.isfile(old_db_path):
+        db = SuperThreadSafeDatabase(db_path)
+        db.open()
+        db.destroy()
 
     # Check if database exists
     db = SuperThreadSafeDatabase(db_path)
@@ -100,14 +109,20 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
         for root, dirs, files in os.walk(backup_path):
-            for backup_file in sorted(files):
-                ints = re.findall('\d+', backup_file)
+            # Only consider files being a direct child of the backup_path
+            if root == backup_path:
+                for backup_file in sorted(files):
+                    ints = re.findall('\d+', backup_file)
 
-                # Delete non zip files
-                if len(ints) != 1:
-                    os.remove(os.path.join(backup_path, backup_file))
-                else:
-                    existing_backups.append((int(ints[0]), backup_file))
+                    # Delete non zip files
+                    if len(ints) != 1:
+                        try: os.remove(os.path.join(root, backup_file))
+                        except: pass
+                    else:
+                        existing_backups.append((int(ints[0]), backup_file))
+            else:
+                # Delete stray directories.
+                shutil.rmtree(root)
 
         # Remove all but the last 5
         for eb in existing_backups[:-backup_count]:
@@ -137,12 +152,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not os.path.exists(python_cache):
         os.mkdir(python_cache)
 
+    session = requests.Session()
+    session.max_redirects = 5
+
     # Register environment settings
     Env.set('app_dir', sp(base_path))
     Env.set('data_dir', sp(data_dir))
     Env.set('log_path', sp(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db', db)
-    Env.set('http_opener', requests.Session())
+    Env.set('http_opener', session)
     Env.set('cache_dir', cache_dir)
     Env.set('cache', FileSystemCache(python_cache))
     Env.set('console_log', options.console_log)
@@ -166,6 +184,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     for logger_name in ['gntp']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
+
+    # Disable SSL warning
+    disable_warnings()
 
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
@@ -195,6 +216,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     log = CPLog(__name__)
     log.debug('Started with options %s', options)
 
+    # Check available space
+    try:
+        total_space, available_space = getFreeSpace(data_dir)
+        if available_space < 100:
+            log.error('Shutting down as CP needs some space to work. You\'ll get corrupted data otherwise. Only %sMB left', available_space)
+            return
+    except:
+        log.error('Failed getting diskspace: %s', traceback.format_exc())
+
     def customwarn(message, category, filename, lineno, file = None, line = None):
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
@@ -214,11 +244,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Basic config
     host = Env.setting('host', default = '0.0.0.0')
-    # app.debug = development
+    host6 = Env.setting('host6', default = '::')
+
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5050)),
         'host': host if host and len(host) > 0 else '0.0.0.0',
+        'host6': host6 if host6 and len(host6) > 0 else '::',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
     }
@@ -277,22 +309,23 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loop = IOLoop.current()
 
     # Reload hook
-    def test():
+    def reload_hook():
         fireEvent('app.shutdown')
-    add_reload_hook(test)
+    add_reload_hook(reload_hook)
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
+    ssl_options = None
     if config['ssl_cert'] and config['ssl_key']:
-        server = HTTPServer(application, no_keep_alive = True, ssl_options = {
+        ssl_options = {
             'certfile': config['ssl_cert'],
             'keyfile': config['ssl_key'],
-        })
-    else:
-        server = HTTPServer(application, no_keep_alive = True)
+        }
+
+    server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
     try_restart = True
     restart_tries = 5
@@ -300,7 +333,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     while try_restart:
         try:
             server.listen(config['port'], config['host'])
+
+            if Env.setting('ipv6', default = False):
+                try: server.listen(config['port'], config['host6'])
+                except: log.info2('Tried to bind to IPV6 but failed')
+
             loop.start()
+            server.close_all_connections()
+            server.stop()
+            loop.close(all_fds = True)
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
@@ -314,6 +355,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                         continue
                     else:
                         return
+            except ValueError:
+                return
             except:
                 pass
 

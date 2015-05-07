@@ -3,7 +3,7 @@ import re
 
 from bs4 import SoupStrainer, BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import mergeDicts, getTitle
+from couchpotato.core.helpers.variable import mergeDicts, getTitle, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.trailer.base import TrailerProvider
 from requests import HTTPError
@@ -21,6 +21,7 @@ class HDTrailers(TrailerProvider):
         'backup': 'http://www.hd-trailers.net/blog/',
     }
     providers = ['apple.ico', 'yahoo.ico', 'moviefone.ico', 'myspace.ico', 'favicon.ico']
+    only_tables_tags = SoupStrainer('table')
 
     def search(self, group):
 
@@ -28,7 +29,7 @@ class HDTrailers(TrailerProvider):
 
         url = self.urls['api'] % self.movieUrlName(movie_name)
         try:
-            data = self.getCache('hdtrailers.%s' % group['identifier'], url, show_error = False)
+            data = self.getCache('hdtrailers.%s' % getIdentifier(group), url, show_error = False)
         except HTTPError:
             log.debug('No page found for: %s', movie_name)
             data = None
@@ -58,7 +59,7 @@ class HDTrailers(TrailerProvider):
 
         url = "%s?%s" % (self.urls['backup'], tryUrlencode({'s':movie_name}))
         try:
-            data = self.getCache('hdtrailers.alt.%s' % group['identifier'], url, show_error = False)
+            data = self.getCache('hdtrailers.alt.%s' % getIdentifier(group), url, show_error = False)
         except HTTPError:
             log.debug('No alternative page found for: %s', movie_name)
             data = None
@@ -67,8 +68,7 @@ class HDTrailers(TrailerProvider):
             return results
 
         try:
-            tables = SoupStrainer('div')
-            html = BeautifulSoup(data, parse_only = tables)
+            html = BeautifulSoup(data, parse_only = self.only_tables_tags)
             result_table = html.find_all('h2', text = re.compile(movie_name))
 
             for h2 in result_table:
@@ -90,8 +90,7 @@ class HDTrailers(TrailerProvider):
 
         results = {'480p':[], '720p':[], '1080p':[]}
         try:
-            tables = SoupStrainer('table')
-            html = BeautifulSoup(data, parse_only = tables)
+            html = BeautifulSoup(data, parse_only = self.only_tables_tags)
             result_table = html.find('table', attrs = {'class':'bottomTable'})
 
             for tr in result_table.find_all('tr'):

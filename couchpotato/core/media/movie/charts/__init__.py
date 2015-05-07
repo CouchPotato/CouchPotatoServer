@@ -22,13 +22,6 @@ config = [{
                     'description': 'Maximum number of items displayed from each chart.',
                 },
                 {
-                    'name': 'update_interval',
-                    'default': 12,
-                    'type': 'int',
-                    'advanced': True,
-                    'description': '(hours)',
-                },
-                {
                     'name': 'hide_wanted',
                     'default': False,
                     'type': 'bool',

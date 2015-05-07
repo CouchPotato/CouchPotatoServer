@@ -1,6 +1,6 @@
 import traceback
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -20,6 +20,10 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    only_tables_tags = SoupStrainer('table')
+
+    torrent_name_cell = 1
+    torrent_download_cell = 2
 
     def _searchOnTitle(self, title, movie, quality, results):
 
@@ -27,7 +31,7 @@ class Base(TorrentProvider):
         data = self.getHTMLData(url)
 
         if data:
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, 'html.parser', parse_only = self.only_tables_tags)
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
@@ -39,8 +43,8 @@ class Base(TorrentProvider):
 
                     all_cells = result.find_all('td')
 
-                    torrent = all_cells[1].find('a')
-                    download = all_cells[3].find('a')
+                    torrent = all_cells[self.torrent_name_cell].find('a')
+                    download = all_cells[self.torrent_download_cell].find('a')
 
                     torrent_id = torrent['href']
                     torrent_id = torrent_id.replace('details.php?id=', '')
@@ -48,9 +52,9 @@ class Base(TorrentProvider):
 
                     torrent_name = torrent.getText()
 
-                    torrent_size = self.parseSize(all_cells[7].getText())
-                    torrent_seeders = tryInt(all_cells[9].getText())
-                    torrent_leechers = tryInt(all_cells[10].getText())
+                    torrent_size = self.parseSize(all_cells[8].getText())
+                    torrent_seeders = tryInt(all_cells[10].getText())
+                    torrent_leechers = tryInt(all_cells[11].getText())
                     torrent_url = self.urls['baseurl'] % download['href']
                     torrent_detail_url = self.urls['baseurl'] % torrent['href']
 
@@ -87,8 +91,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'Bitsoup',
-            'description': 'See <a href="https://bitsoup.me">Bitsoup</a>',
+            'description': '<a href="https://bitsoup.me">Bitsoup</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAB8ElEQVR4AbWSS2sTURiGz3euk0mswaE37HhNhIrajQheFgF3rgR/lAt/gOBCXNZlo6AbqfUWRVCxi04wqUnTRibpJLaJzdzOOZ6WUumyC5/VHOb9eN/FA91uFx0FjI4IPfgiGLTWH73tn348GKmN7ijD0d2b41fO5qJEaX24AWNIUrVQCTTJ3Llx6vbV6Vtzk7Gi9+ebi996guFDDYAQAVj4FExP5qdOZB49W62t/zH3hECcwsPnbWeMXz6Xi2K1f0ApeK3hMCHHbP5gvvoriBgFAAQJEAxhjJ4u+YWTNsVI6b1JgtPWZkoIefKy4fcii2OTw2BABs7wj3bYDlLL4rvjGWOdTser1j5Xf7c3Q/MbHQYApxItvnm31mhQQ71eX2vUB76/vsWB2hg0QuogrMwLIG8P3InM2/eVGXeDViqVwWB79vRU2lgJYmdHcgXCTAXQFJTN5HguvDCR2Hxsxe8EvT54nlcul5vNpqDIEgwRQanAhAAABgRIyiQcjpIkkTOuWyqVoN/vSylX67XXH74uV1vHRUyxxFqbLBCSmBpiXSq6xcL5QrGYzWZ3XQIAwdlOJB+/aL764ucdmncYs0WsCI7kvTnn+qyDMEnTVCn1Tz5KsBFg6fvWcmsUAcnYNC/g2hnromvvqbHvxv+39S+MX+bWkFXwAgAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',

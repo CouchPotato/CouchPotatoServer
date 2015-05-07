@@ -33,7 +33,7 @@ import time
 
 from tornado.escape import native_str, parse_qs_bytes, utf8
 from tornado.log import gen_log
-from tornado.util import ObjectDict, bytes_type
+from tornado.util import ObjectDict
 
 try:
     import Cookie  # py2
@@ -60,6 +60,11 @@ except ImportError:
     # ssl is unavailable on app engine.
     class SSLError(Exception):
         pass
+
+
+# RFC 7230 section 3.5: a recipient MAY recognize a single LF as a line
+# terminator and ignore any preceding CR.
+_CRLF_RE = re.compile(r'\r?\n')
 
 
 class _NormalizedHeaderCache(dict):
@@ -193,7 +198,7 @@ class HTTPHeaders(dict):
         [('Content-Length', '42'), ('Content-Type', 'text/html')]
         """
         h = cls()
-        for line in headers.splitlines():
+        for line in _CRLF_RE.split(headers):
             if line:
                 h.parse_line(line)
         return h
@@ -319,7 +324,7 @@ class HTTPServerRequest(object):
        are typically kept open in HTTP/1.1, multiple requests can be handled
        sequentially on a single connection.
 
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
        Moved from ``tornado.httpserver.HTTPRequest``.
     """
     def __init__(self, method=None, uri=None, version="HTTP/1.0", headers=None,
@@ -331,11 +336,11 @@ class HTTPServerRequest(object):
         self.uri = uri
         self.version = version
         self.headers = headers or HTTPHeaders()
-        self.body = body or ""
+        self.body = body or b""
 
         # set remote IP and protocol
         context = getattr(connection, 'context', None)
-        self.remote_ip = getattr(context, 'remote_ip')
+        self.remote_ip = getattr(context, 'remote_ip', None)
         self.protocol = getattr(context, 'protocol', "http")
 
         self.host = host or self.headers.get("Host") or "127.0.0.1"
@@ -352,7 +357,7 @@ class HTTPServerRequest(object):
     def supports_http_1_1(self):
         """Returns True if this request supports HTTP/1.1 semantics.
 
-        .. deprecated:: 3.3
+        .. deprecated:: 4.0
            Applications are less likely to need this information with the
            introduction of `.HTTPConnection`.  If you still need it, access
            the ``version`` attribute directly.
@@ -375,17 +380,17 @@ class HTTPServerRequest(object):
     def write(self, chunk, callback=None):
         """Writes the given chunk to the response stream.
 
-        .. deprecated:: 3.3
+        .. deprecated:: 4.0
            Use ``request.connection`` and the `.HTTPConnection` methods
            to write the response.
         """
-        assert isinstance(chunk, bytes_type)
+        assert isinstance(chunk, bytes)
         self.connection.write(chunk, callback=callback)
 
     def finish(self):
         """Finishes this HTTP request on the open connection.
 
-        .. deprecated:: 3.3
+        .. deprecated:: 4.0
            Use ``request.connection`` and the `.HTTPConnection` methods
            to write the response.
         """
@@ -445,19 +450,19 @@ class HTTPServerRequest(object):
             self.__class__.__name__, args, dict(self.headers))
 
 
-class HTTPInputException(Exception):
+class HTTPInputError(Exception):
     """Exception class for malformed HTTP requests or responses
     from remote sources.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     pass
 
 
-class HTTPOutputException(Exception):
+class HTTPOutputError(Exception):
     """Exception class for errors in HTTP output.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     pass
 
@@ -465,7 +470,7 @@ class HTTPOutputException(Exception):
 class HTTPServerConnectionDelegate(object):
     """Implement this interface to handle requests from `.HTTPServer`.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     def start_request(self, server_conn, request_conn):
         """This method is called by the server when a new request has started.
@@ -491,7 +496,7 @@ class HTTPServerConnectionDelegate(object):
 class HTTPMessageDelegate(object):
     """Implement this interface to handle an HTTP request or response.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     def headers_received(self, start_line, headers):
         """Called when the HTTP headers have been received and parsed.
@@ -531,7 +536,7 @@ class HTTPMessageDelegate(object):
 class HTTPConnection(object):
     """Applications use this interface to write their responses.
 
-    .. versionadded:: 3.3
+    .. versionadded:: 4.0
     """
     def write_headers(self, start_line, headers, chunk=None, callback=None):
         """Write an HTTP header block.
@@ -542,6 +547,8 @@ class HTTPConnection(object):
             so that small responses can be written in the same call as their
             headers.
         :arg callback: a callback to be run when the write is complete.
+
+        The ``version`` field of ``start_line`` is ignored.
 
         Returns a `.Future` if no callback is given.
         """
@@ -562,11 +569,18 @@ class HTTPConnection(object):
 
 
 def url_concat(url, args):
-    """Concatenate url and argument dictionary regardless of whether
+    """Concatenate url and arguments regardless of whether
     url has existing query parameters.
 
+    ``args`` may be either a dictionary or a list of key-value pairs
+    (the latter allows for multiple values with the same key.
+
+    >>> url_concat("http://example.com/foo", dict(c="d"))
+    'http://example.com/foo?c=d'
     >>> url_concat("http://example.com/foo?a=b", dict(c="d"))
     'http://example.com/foo?a=b&c=d'
+    >>> url_concat("http://example.com/foo?a=b", [("c", "d"), ("c", "d2")])
+    'http://example.com/foo?a=b&c=d&c=d2'
     """
     if not args:
         return url
@@ -682,14 +696,17 @@ def parse_body_arguments(content_type, body, arguments, files, headers=None):
             if values:
                 arguments.setdefault(name, []).extend(values)
     elif content_type.startswith("multipart/form-data"):
-        fields = content_type.split(";")
-        for field in fields:
-            k, sep, v = field.strip().partition("=")
-            if k == "boundary" and v:
-                parse_multipart_form_data(utf8(v), body, arguments, files)
-                break
-        else:
-            gen_log.warning("Invalid multipart/form-data")
+        try:
+            fields = content_type.split(";")
+            for field in fields:
+                k, sep, v = field.strip().partition("=")
+                if k == "boundary" and v:
+                    parse_multipart_form_data(utf8(v), body, arguments, files)
+                    break
+            else:
+                raise ValueError("multipart boundary not found")
+        except Exception as e:
+            gen_log.warning("Invalid multipart/form-data: %s", e)
 
 
 def parse_multipart_form_data(boundary, data, arguments, files):
@@ -774,9 +791,9 @@ def parse_request_start_line(line):
     try:
         method, path, version = line.split(" ")
     except ValueError:
-        raise HTTPInputException("Malformed HTTP request line")
-    if not version.startswith("HTTP/"):
-        raise HTTPInputException(
+        raise HTTPInputError("Malformed HTTP request line")
+    if not re.match(r"^HTTP/1\.[0-9]$", version):
+        raise HTTPInputError(
             "Malformed HTTP version in HTTP Request-Line: %r" % version)
     return RequestStartLine(method, path, version)
 
@@ -794,15 +811,17 @@ def parse_response_start_line(line):
     ResponseStartLine(version='HTTP/1.1', code=200, reason='OK')
     """
     line = native_str(line)
-    match = re.match("(HTTP/1.[01]) ([0-9]+) ([^\r]*)", line)
+    match = re.match("(HTTP/1.[0-9]) ([0-9]+) ([^\r]*)", line)
     if not match:
-        raise HTTPInputException("Error parsing response start line")
+        raise HTTPInputError("Error parsing response start line")
     return ResponseStartLine(match.group(1), int(match.group(2)),
                              match.group(3))
 
 # _parseparam and _parse_header are copied and modified from python2.7's cgi.py
 # The original 2.7 version of this code did not correctly support some
 # combinations of semicolons and double quotes.
+# It has also been modified to support valueless parameters as seen in
+# websocket extension negotiations.
 
 
 def _parseparam(s):
@@ -836,9 +855,47 @@ def _parse_header(line):
                 value = value[1:-1]
                 value = value.replace('\\\\', '\\').replace('\\"', '"')
             pdict[name] = value
+        else:
+            pdict[p] = None
     return key, pdict
+
+
+def _encode_header(key, pdict):
+    """Inverse of _parse_header.
+
+    >>> _encode_header('permessage-deflate',
+    ...     {'client_max_window_bits': 15, 'client_no_context_takeover': None})
+    'permessage-deflate; client_max_window_bits=15; client_no_context_takeover'
+    """
+    if not pdict:
+        return key
+    out = [key]
+    # Sort the parameters just to make it easy to test.
+    for k, v in sorted(pdict.items()):
+        if v is None:
+            out.append(k)
+        else:
+            # TODO: quote if necessary.
+            out.append('%s=%s' % (k, v))
+    return '; '.join(out)
 
 
 def doctests():
     import doctest
     return doctest.DocTestSuite()
+
+def split_host_and_port(netloc):
+    """Returns ``(host, port)`` tuple from ``netloc``.
+
+    Returned ``port`` will be ``None`` if not present.
+
+    .. versionadded:: 4.1
+    """
+    match = re.match(r'^(.+):(\d+)$', netloc)
+    if match:
+        host = match.group(1)
+        port = int(match.group(2))
+    else:
+        host = netloc
+        port = None
+    return (host, port)

@@ -37,19 +37,36 @@ var Profile = new Class({
 					'placeholder': 'Profile name'
 				})
 			),
-			new Element('div.wait_for.ctrlHolder').adopt(
-				new Element('span', {'text':'Wait'}),
-				new Element('input.inlay.xsmall', {
-					'type':'text',
-					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
-				}),
-				new Element('span', {'text':'day(s) for a better quality.'})
-			),
 			new Element('div.qualities.ctrlHolder').adopt(
 				new Element('label', {'text': 'Search for'}),
 				self.type_container = new Element('ol.types'),
 				new Element('div.formHint', {
 					'html': "Search these qualities (2 minimum), from top to bottom. Use the checkbox, to stop searching after it found this quality."
+				})
+			),
+			new Element('div.wait_for.ctrlHolder').adopt(
+				// "Wait the entered number of days for a checked quality, before downloading a lower quality release."
+				new Element('span', {'text':'Wait'}),
+				new Element('input.inlay.wait_for_input.xsmall', {
+					'type':'text',
+					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
+				}),
+				new Element('span', {'text':'day(s) for a better quality '}),
+				new Element('span.advanced', {'text':'and keep searching'}),
+
+				// "After a checked quality is found and downloaded, continue searching for even better quality releases for the entered number of days."
+				new Element('input.inlay.xsmall.stop_after_input.advanced', {
+					'type':'text',
+					'value': data.stop_after && data.stop_after.length > 0 ? data.stop_after[0] : 0
+				}),
+				new Element('span.advanced', {'text':'day(s) for a better (checked) quality.'}),
+
+				// Minimum score of
+				new Element('span.advanced', {'html':'<br/>Releases need a minimum score of'}),
+				new Element('input.advanced.inlay.xsmall.minimum_score_input', {
+					'size': 4,
+					'type':'text',
+					'value': data.minimum_score || 1
 				})
 			)
 		);
@@ -116,7 +133,9 @@ var Profile = new Class({
 		var data = {
 			'id' : self.data._id,
 			'label' : self.el.getElement('.quality_label input').get('value'),
-			'wait_for' : self.el.getElement('.wait_for input').get('value'),
+			'wait_for' : self.el.getElement('.wait_for_input').get('value'),
+			'stop_after' : self.el.getElement('.stop_after_input').get('value'),
+			'minimum_score' : self.el.getElement('.minimum_score_input').get('value'),
 			'types': []
 		};
 

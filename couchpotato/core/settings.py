@@ -71,15 +71,7 @@ class Settings(object):
         self.connectEvents()
 
     def databaseSetup(self):
-        from couchpotato import get_db
-
-        db = get_db()
-
-        try:
-            db.add_index(PropertyIndex(db.path, 'property'))
-        except:
-            self.log.debug('Index for properties already exists')
-            db.edit_index(PropertyIndex(db.path, 'property'))
+        fireEvent('database.setup_index', 'property', PropertyIndex)
 
     def parser(self):
         return self.p
@@ -165,7 +157,15 @@ class Settings(object):
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
+
+                is_password = False
+                try: is_password = self.types[section][option_name] == 'password'
+                except: pass
+
                 values[section][option_name] = self.get(option_name, section)
+                if is_password and values[section][option_name]:
+                    values[section][option_name] = len(values[section][option_name]) * '*'
+
         return values
 
     def save(self):

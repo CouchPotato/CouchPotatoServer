@@ -10,11 +10,11 @@ unfinished callbacks on the event loop that fail when it resumes)
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
-import datetime
 import functools
 
-# _Timeout is used for its timedelta_to_seconds method for py26 compatibility.
-from tornado.ioloop import IOLoop, _Timeout
+import tornado.concurrent
+from tornado.gen import convert_yielded
+from tornado.ioloop import IOLoop
 from tornado import stack_context
 
 try:
@@ -109,21 +109,13 @@ class BaseAsyncIOLoop(IOLoop):
     def stop(self):
         self.asyncio_loop.stop()
 
-    def _run_callback(self, callback, *args, **kwargs):
-        try:
-            callback(*args, **kwargs)
-        except Exception:
-            self.handle_callback_exception(callback)
-
-    def add_timeout(self, deadline, callback):
-        if isinstance(deadline, (int, float)):
-            delay = max(deadline - self.time(), 0)
-        elif isinstance(deadline, datetime.timedelta):
-            delay = _Timeout.timedelta_to_seconds(deadline)
-        else:
-            raise TypeError("Unsupported deadline %r", deadline)
-        return self.asyncio_loop.call_later(delay, self._run_callback,
-                                            stack_context.wrap(callback))
+    def call_at(self, when, callback, *args, **kwargs):
+        # asyncio.call_at supports *args but not **kwargs, so bind them here.
+        # We do not synchronize self.time and asyncio_loop.time, so
+        # convert from absolute to relative.
+        return self.asyncio_loop.call_later(
+            max(0, when - self.time()), self._run_callback,
+            functools.partial(stack_context.wrap(callback), *args, **kwargs))
 
     def remove_timeout(self, timeout):
         timeout.cancel()
@@ -131,13 +123,9 @@ class BaseAsyncIOLoop(IOLoop):
     def add_callback(self, callback, *args, **kwargs):
         if self.closing:
             raise RuntimeError("IOLoop is closing")
-        if kwargs:
-            self.asyncio_loop.call_soon_threadsafe(functools.partial(
-                self._run_callback, stack_context.wrap(callback),
-                *args, **kwargs))
-        else:
-            self.asyncio_loop.call_soon_threadsafe(
-                self._run_callback, stack_context.wrap(callback), *args)
+        self.asyncio_loop.call_soon_threadsafe(
+            self._run_callback,
+            functools.partial(stack_context.wrap(callback), *args, **kwargs))
 
     add_callback_from_signal = add_callback
 
@@ -152,3 +140,18 @@ class AsyncIOLoop(BaseAsyncIOLoop):
     def initialize(self):
         super(AsyncIOLoop, self).initialize(asyncio.new_event_loop(),
                                             close_loop=True)
+
+def to_tornado_future(asyncio_future):
+    """Convert an ``asyncio.Future`` to a `tornado.concurrent.Future`."""
+    tf = tornado.concurrent.Future()
+    tornado.concurrent.chain_future(asyncio_future, tf)
+    return tf
+
+def to_asyncio_future(tornado_future):
+    """Convert a `tornado.concurrent.Future` to an ``asyncio.Future``."""
+    af = asyncio.Future()
+    tornado.concurrent.chain_future(tornado_future, af)
+    return af
+
+if hasattr(convert_yielded, 'register'):
+    convert_yielded.register(asyncio.Future, to_tornado_future)

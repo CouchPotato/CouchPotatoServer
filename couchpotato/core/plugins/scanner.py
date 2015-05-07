@@ -11,7 +11,6 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
 import enzyme
@@ -64,8 +63,8 @@ class Scanner(Plugin):
     }
 
     file_sizes = {  # in MB
-        'movie': {'min': 300},
-        'trailer': {'min': 2, 'max': 250},
+        'movie': {'min': 200},
+        'trailer': {'min': 2, 'max': 199},
         'backdrop': {'min': 0, 'max': 5},
     }
 
@@ -105,7 +104,7 @@ class Scanner(Plugin):
         'HDTV': ['hdtv']
     }
 
-    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|ou|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|half.sbs|full.sbs|ou|half.ou|full.ou|extended|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
             '|hdtvrip|webdl|web.dl|webrip|web.rip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|hc|\[.*\])(?=[ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
@@ -121,7 +120,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$'  #*a.mkv
     ]
 
-    cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
+    cp_imdb = '\.cp\((?P<id>tt[0-9]+),?\s?(?P<random>[A-Za-z0-9]+)?\)'
 
     def __init__(self):
 
@@ -132,7 +131,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
+    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, check_file_date = True, on_found = None):
 
         folder = sp(folder)
 
@@ -146,7 +145,6 @@ class Scanner(Plugin):
 
         # Scan all files of the folder if no files are set
         if not files:
-            check_file_date = True
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder, followlinks=True):
@@ -457,6 +455,7 @@ class Scanner(Plugin):
                 meta = self.getMeta(cur_file)
 
                 try:
+                    data['titles'] = meta.get('titles', [])
                     data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
                     data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
                     data['audio_channels'] = meta.get('audio_channels', 2.0)
@@ -492,7 +491,7 @@ class Scanner(Plugin):
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
-        filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        filename = re.sub(self.cp_imdb, '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
         if data['quality'].get('is_3d', 0):
@@ -527,16 +526,33 @@ class Scanner(Plugin):
             try: ac = self.audio_codec_map.get(p.audio[0].codec)
             except: pass
 
+            # Find title in video headers
+            titles = []
+
+            try:
+                if p.title and self.findYear(p.title):
+                    titles.append(ss(p.title))
+            except:
+                log.error('Failed getting title from meta: %s', traceback.format_exc())
+
+            for video in p.video:
+                try:
+                    if video.title and self.findYear(video.title):
+                        titles.append(ss(video.title))
+                except:
+                    log.error('Failed getting title from meta: %s', traceback.format_exc())
+
             return {
+                'titles': list(set(titles)),
                 'video': vc,
                 'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
                 'audio_channels': p.audio[0].channels,
             }
-        except ParseError:
+        except enzyme.exceptions.ParseError:
             log.debug('Failed to parse meta for %s', filename)
-        except NoParserError:
+        except enzyme.exceptions.NoParserError:
             log.debug('No parser found for %s', filename)
         except:
             log.debug('Failed parsing %s', filename)
@@ -553,7 +569,7 @@ class Scanner(Plugin):
             scan_result = []
             for p in paths:
                 if not group['is_dvd']:
-                    video = Video.from_path(toUnicode(p))
+                    video = Video.from_path(sp(p))
                     video_result = [(video, video.scan())]
                     scan_result.extend(video_result)
 
@@ -634,7 +650,14 @@ class Scanner(Plugin):
 
                     name_year = self.getReleaseNameYear(identifier, file_name = filename if not group['is_dvd'] else None)
                     if name_year.get('name') and name_year.get('year'):
-                        movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
+                        search_q = '%(name)s %(year)s' % name_year
+                        movie = fireEvent('movie.search', q = search_q, merge = True, limit = 1)
+
+                        # Try with other
+                        if len(movie) == 0 and name_year.get('other') and name_year['other'].get('name') and name_year['other'].get('year'):
+                            search_q2 = '%(name)s %(year)s' % name_year.get('other')
+                            if search_q2 != search_q:
+                                movie = fireEvent('movie.search', q = search_q2, merge = True, limit = 1)
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
@@ -670,7 +693,7 @@ class Scanner(Plugin):
 
     def removeCPTag(self, name):
         try:
-            return re.sub(self.cp_imdb, '', name)
+            return re.sub(self.cp_imdb, '', name).strip()
         except:
             pass
         return name
@@ -903,6 +926,7 @@ class Scanner(Plugin):
                 log.debug('Could not detect via guessit "%s": %s', (file_name, traceback.format_exc()))
 
         # Backup to simple
+        release_name = os.path.basename(release_name.replace('\\', '/'))
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
@@ -937,8 +961,11 @@ class Scanner(Plugin):
                 pass
 
         if cp_guess.get('year') == guess.get('year') and len(cp_guess.get('name', '')) > len(guess.get('name', '')):
+            cp_guess['other'] = guess
             return cp_guess
         elif guess == {}:
+            cp_guess['other'] = guess
             return cp_guess
 
+        guess['other'] = cp_guess
         return guess

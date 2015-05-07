@@ -13,12 +13,12 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://torrentshack.net/',
-        'login': 'https://torrentshack.net/login.php',
-        'login_check': 'https://torrentshack.net/inbox.php',
-        'detail': 'https://torrentshack.net/torrent/%s',
-        'search': 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
-        'download': 'https://torrentshack.net/%s',
+        'test': 'https://torrentshack.me/',
+        'login': 'https://torrentshack.me/login.php',
+        'login_check': 'https://torrentshack.me/inbox.php',
+        'detail': 'https://torrentshack.me/torrent/%s',
+        'search': 'https://torrentshack.me/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'download': 'https://torrentshack.me/%s',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -42,15 +42,17 @@ class Base(TorrentProvider):
 
                     link = result.find('span', attrs = {'class': 'torrent_name_link'}).parent
                     url = result.find('td', attrs = {'class': 'torrent_td'}).find('a')
+                    size = result.find('td', attrs = {'class': 'size'}).contents[0].strip('\n ')
+                    tds = result.find_all('td')
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),
                         'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
-                        'size': self.parseSize(result.find_all('td')[4].string),
-                        'seeders': tryInt(result.find_all('td')[6].string),
-                        'leechers': tryInt(result.find_all('td')[7].string),
+                        'size': self.parseSize(size),
+                        'seeders': tryInt(tds[len(tds)-2].string),
+                        'leechers': tryInt(tds[len(tds)-1].string),
                     })
 
             except:
@@ -80,7 +82,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'TorrentShack',
-            'description': 'See <a href="https://www.torrentshack.net/">TorrentShack</a>',
+            'description': '<a href="https://torrentshack.me/">TorrentShack</a>',
+            'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABmElEQVQoFQXBzY2cVRiE0afqvd84CQiAnxWWtyxsS6ThINBYg2Dc7mZBMEjE4mzs6e9WcY5+ePNuVFJJodQAoLo+SaWCy9rcV8cmjah3CI6iYu7oRU30kE5xxELRfamklY3k1NL19sSm7vPzP/ZdNZzKVDaY2sPZJBh9fv5ITrmG2+Vp4e1sPchVqTCQZJnVXi+/L4uuAJGly1+Pw8CprLbi8Om7tbT19/XRqJUk11JP9uHj9ulxhXbvJbI9qJvr5YkGXFG2IBT8tXczt+sfzDZCp3765f3t9tHEHGEDACma77+8o4oATKk+/PfW9YmHruRFjWoVSFsVsGu1YSKq6Oc37+n98unPZSRlY7vsKDqN+92X3yR9+PdXee3iJNKMStqdcZqoTJbUSi5JOkpfRlhSI0mSpEmCFKoU7FqSNOLAk54uGwCStMUCgLrVic62g7oDoFmmdI+P3S0pDe1xvDqb6XrZqbtzShWNoh9fv/XQHaDdM9OqrZi2M7M3UrB2vlkPS1IbdEBk7UiSoD6VlZ6aKWer4aH4f/AvKoHUTjuyAAAAAElFTkSuQmCC',
             'options': [
                 {
                     'name': 'enabled',

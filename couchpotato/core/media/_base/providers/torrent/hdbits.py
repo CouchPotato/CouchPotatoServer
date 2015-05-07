@@ -29,6 +29,9 @@ class Base(TorrentProvider):
         }
         post_data.update(params)
 
+        if self.conf('internal_only'):
+            post_data.update({'origin': [1]})
+
         try:
             result = self.getJsonData(self.urls['api'], data = json.dumps(post_data))
 
@@ -71,7 +74,9 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'HDBits',
-            'description': 'See <a href="http://hdbits.org">HDBits</a>',
+            'wizard': True,
+            'description': '<a href="http://hdbits.org">HDBits</a>',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABi0lEQVR4AZWSzUsbQRjGdyabTcvSNPTSHlpQQeMHJApC8CJRvHgQQU969+LJP8G7f4N3DwpeFRQvRr0EKaUl0ATSpkigUNFsMl/r9NmZLCEHA/nNO5PfvMPDm0DI6fV3ZxiolEICe1oZCBVCCmBPKwOh2ErKBHGE4KYEXBpSLkUlqO4LcM7f+6nVhRnOhSkOz/hexk+tL+YL0yPF2YmN4tynD++4gTLGkNNac9YFLoREBR1+cnF3dFY6v/m6PD+FaXiNJtgA4xYbABxiGrz6+6HWaI5/+Qh37YS0/3Znc8UxwNGBIIBX22z+/ZdJ+4wzyjpR4PEpODg8tgUXBv2iWUzSpa12B0IR6n6lvt8Aek2lZHb084+fdRNgrwY8z81PjhVy2d2ttUrtV/lbBa+JXGEpDMPnoF2tN1QYRqVUtf6nFbThb7wk7le395elcqhASLb39okDiHY00VCtCTEHwSiH4AI0lkOiT1dwMeSfT3SRxiQWNO7Zwj1egkoVIQFMKvSiC3bcjXq9Jf8DcDIRT3hh10kAAAAASUVORK5CYII=',
             'options': [
                 {
                     'name': 'enabled',
@@ -108,6 +113,14 @@ config = [{
                     'default': 0,
                     'description': 'Starting score for each release found via this provider.',
                 },
+                {
+                    'name': 'internal_only',
+                    'advanced': True,
+                    'label': 'Internal Only',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Only download releases marked as HDBits internal'
+                }
             ],
         },
     ],

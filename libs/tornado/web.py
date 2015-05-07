@@ -35,8 +35,7 @@ Here is a simple "Hello, world" example app::
         application.listen(8888)
         tornado.ioloop.IOLoop.instance().start()
 
-See the :doc:`Tornado overview <overview>` for more details and a good getting
-started guide.
+See the :doc:`guide` for additional information.
 
 Thread-safety notes
 -------------------
@@ -48,6 +47,7 @@ not thread-safe.  In particular, methods such as
 you use multiple threads it is important to use `.IOLoop.add_callback`
 to transfer control back to the main thread before finishing the
 request.
+
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
@@ -72,6 +72,7 @@ import time
 import tornado
 import traceback
 import types
+from io import BytesIO
 
 from tornado.concurrent import Future, is_future
 from tornado import escape
@@ -83,12 +84,9 @@ from tornado.log import access_log, app_log, gen_log
 from tornado import stack_context
 from tornado import template
 from tornado.escape import utf8, _unicode
-from tornado.util import bytes_type, import_object, ObjectDict, raise_exc_info, unicode_type, _websocket_mask
+from tornado.util import import_object, ObjectDict, raise_exc_info, unicode_type, _websocket_mask
+from tornado.httputil import split_host_and_port
 
-try:
-    from io import BytesIO  # python 3
-except ImportError:
-    from cStringIO import StringIO as BytesIO  # python 2
 
 try:
     import Cookie  # py2
@@ -270,6 +268,7 @@ class RequestHandler(object):
         if _has_stream_request_body(self.__class__):
             if not self.request.body.done():
                 self.request.body.set_exception(iostream.StreamClosedError())
+                self.request.body.exception()
 
     def clear(self):
         """Resets all headers and content for this response."""
@@ -344,7 +343,7 @@ class RequestHandler(object):
     _INVALID_HEADER_CHAR_RE = re.compile(br"[\x00-\x1f]")
 
     def _convert_header_value(self, value):
-        if isinstance(value, bytes_type):
+        if isinstance(value, bytes):
             pass
         elif isinstance(value, unicode_type):
             value = value.encode('utf-8')
@@ -652,7 +651,7 @@ class RequestHandler(object):
             raise RuntimeError("Cannot write() after finish().  May be caused "
                                "by using async operations without the "
                                "@asynchronous decorator.")
-        if not isinstance(chunk, (bytes_type, unicode_type, dict)):
+        if not isinstance(chunk, (bytes, unicode_type, dict)):
             raise TypeError("write() only accepts bytes, unicode, and dict objects")
         if isinstance(chunk, dict):
             chunk = escape.json_encode(chunk)
@@ -677,7 +676,7 @@ class RequestHandler(object):
                 js_embed.append(utf8(embed_part))
             file_part = module.javascript_files()
             if file_part:
-                if isinstance(file_part, (unicode_type, bytes_type)):
+                if isinstance(file_part, (unicode_type, bytes)):
                     js_files.append(file_part)
                 else:
                     js_files.extend(file_part)
@@ -686,7 +685,7 @@ class RequestHandler(object):
                 css_embed.append(utf8(embed_part))
             file_part = module.css_files()
             if file_part:
-                if isinstance(file_part, (unicode_type, bytes_type)):
+                if isinstance(file_part, (unicode_type, bytes)):
                     css_files.append(file_part)
                 else:
                     css_files.extend(file_part)
@@ -820,7 +819,7 @@ class RequestHandler(object):
         if another flush occurs before the previous flush's callback
         has been run, the previous callback will be discarded.
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
            Now returns a `.Future` if no callback is given.
         """
         chunk = b"".join(self._write_buffer)
@@ -842,7 +841,7 @@ class RequestHandler(object):
                 for cookie in self._new_cookie.values():
                     self.add_header("Set-Cookie", cookie.OutputString(None))
 
-            start_line = httputil.ResponseStartLine(self.request.version,
+            start_line = httputil.ResponseStartLine('',
                                                     self._status_code,
                                                     self._reason)
             return self.request.connection.write_headers(
@@ -919,7 +918,7 @@ class RequestHandler(object):
             return
         self.clear()
 
-        reason = None
+        reason = kwargs.get('reason')
         if 'exc_info' in kwargs:
             exception = kwargs['exc_info'][1]
             if isinstance(exception, HTTPError) and exception.reason:
@@ -943,26 +942,7 @@ class RequestHandler(object):
         ``kwargs["exc_info"]``.  Note that this exception may not be
         the "current" exception for purposes of methods like
         ``sys.exc_info()`` or ``traceback.format_exc``.
-
-        For historical reasons, if a method ``get_error_html`` exists,
-        it will be used instead of the default ``write_error`` implementation.
-        ``get_error_html`` returned a string instead of producing output
-        normally, and had different semantics for exception handling.
-        Users of ``get_error_html`` are encouraged to convert their code
-        to override ``write_error`` instead.
         """
-        if hasattr(self, 'get_error_html'):
-            if 'exc_info' in kwargs:
-                exc_info = kwargs.pop('exc_info')
-                kwargs['exception'] = exc_info[1]
-                try:
-                    # Put the traceback into sys.exc_info()
-                    raise_exc_info(exc_info)
-                except Exception:
-                    self.finish(self.get_error_html(status_code, **kwargs))
-            else:
-                self.finish(self.get_error_html(status_code, **kwargs))
-            return
         if self.settings.get("serve_traceback") and "exc_info" in kwargs:
             # in debug mode, try to send a traceback
             self.set_header('Content-Type', 'text/plain')
@@ -978,12 +958,15 @@ class RequestHandler(object):
 
     @property
     def locale(self):
-        """The local for the current session.
+        """The locale for the current session.
 
         Determined by either `get_user_locale`, which you can override to
         set the locale based on, e.g., a user preference stored in a
         database, or `get_browser_locale`, which uses the ``Accept-Language``
         header.
+
+        .. versionchanged: 4.1
+           Added a property setter.
         """
         if not hasattr(self, "_locale"):
             self._locale = self.get_user_locale()
@@ -991,6 +974,10 @@ class RequestHandler(object):
                 self._locale = self.get_browser_locale()
                 assert self._locale
         return self._locale
+
+    @locale.setter
+    def locale(self, value):
+        self._locale = value
 
     def get_user_locale(self):
         """Override to determine the locale from the authenticated user.
@@ -1134,26 +1121,35 @@ class RequestHandler(object):
         """Convert a cookie string into a the tuple form returned by
         _get_raw_xsrf_token.
         """
-        m = _signed_value_version_re.match(utf8(cookie))
-        if m:
-            version = int(m.group(1))
-            if version == 2:
-                _, mask, masked_token, timestamp = cookie.split("|")
-                mask = binascii.a2b_hex(utf8(mask))
-                token = _websocket_mask(
-                    mask, binascii.a2b_hex(utf8(masked_token)))
-                timestamp = int(timestamp)
-                return version, token, timestamp
+
+        try:
+            m = _signed_value_version_re.match(utf8(cookie))
+
+            if m:
+                version = int(m.group(1))
+                if version == 2:
+                    _, mask, masked_token, timestamp = cookie.split("|")
+
+                    mask = binascii.a2b_hex(utf8(mask))
+                    token = _websocket_mask(
+                        mask, binascii.a2b_hex(utf8(masked_token)))
+                    timestamp = int(timestamp)
+                    return version, token, timestamp
+                else:
+                    # Treat unknown versions as not present instead of failing.
+                    raise Exception("Unknown xsrf cookie version")
             else:
-                # Treat unknown versions as not present instead of failing.
-                return None, None, None
-        elif len(cookie) == 32:
-            version = 1
-            token = binascii.a2b_hex(utf8(cookie))
-            # We don't have a usable timestamp in older versions.
-            timestamp = int(time.time())
-            return (version, token, timestamp)
-        else:
+                version = 1
+                try:
+                    token = binascii.a2b_hex(utf8(cookie))
+                except (binascii.Error, TypeError):
+                    token = utf8(cookie)
+                # We don't have a usable timestamp in older versions.
+                timestamp = int(time.time())
+                return (version, token, timestamp)
+        except Exception:
+            # Catch exceptions and return nothing instead of failing.
+            gen_log.debug("Uncaught exception in _decode_xsrf_token", exc_info=True)
             return None, None, None
 
     def check_xsrf_cookie(self):
@@ -1241,27 +1237,6 @@ class RequestHandler(object):
             base = ""
 
         return base + get_url(self.settings, path, **kwargs)
-
-    def async_callback(self, callback, *args, **kwargs):
-        """Obsolete - catches exceptions from the wrapped function.
-
-        This function is unnecessary since Tornado 1.1.
-        """
-        if callback is None:
-            return None
-        if args or kwargs:
-            callback = functools.partial(callback, *args, **kwargs)
-
-        def wrapper(*args, **kwargs):
-            try:
-                return callback(*args, **kwargs)
-            except Exception as e:
-                if self._headers_written:
-                    app_log.error("Exception after headers written",
-                                  exc_info=True)
-                else:
-                    self._handle_request_exception(e)
-        return wrapper
 
     def require_setting(self, name, feature="this feature"):
         """Raises an exception if the given app setting is not defined."""
@@ -1405,6 +1380,11 @@ class RequestHandler(object):
             " (" + self.request.remote_ip + ")"
 
     def _handle_request_exception(self, e):
+        if isinstance(e, Finish):
+            # Not an error; just finish the request without logging.
+            if not self._finished:
+                self.finish()
+            return
         self.log_exception(*sys.exc_info())
         if self._finished:
             # Extra errors after the request has been finished should
@@ -1507,7 +1487,7 @@ def asynchronous(method):
         with stack_context.ExceptionStackContext(
                 self._stack_context_handle_exception):
             result = method(self, *args, **kwargs)
-            if isinstance(result, Future):
+            if is_future(result):
                 # If @asynchronous is used with @gen.coroutine, (but
                 # not @gen.engine), we can automatically finish the
                 # request when the future resolves.  Additionally,
@@ -1548,7 +1528,7 @@ def stream_request_body(cls):
       the entire body has been read.
 
     There is a subtle interaction between ``data_received`` and asynchronous
-    ``prepare``: The first call to ``data_recieved`` may occur at any point
+    ``prepare``: The first call to ``data_received`` may occur at any point
     after the call to ``prepare`` has returned *or yielded*.
     """
     if not issubclass(cls, RequestHandler):
@@ -1662,7 +1642,7 @@ class Application(httputil.HTTPServerConnectionDelegate):
                  **settings):
         if transforms is None:
             self.transforms = []
-            if settings.get("gzip"):
+            if settings.get("compress_response") or settings.get("gzip"):
                 self.transforms.append(GZipContentEncoding)
         else:
             self.transforms = transforms
@@ -1759,7 +1739,7 @@ class Application(httputil.HTTPServerConnectionDelegate):
         self.transforms.append(transform_class)
 
     def _get_host_handlers(self, request):
-        host = request.host.lower().split(':')[0]
+        host = split_host_and_port(request.host.lower())[0]
         matches = []
         for pattern, handlers in self.handlers:
             if pattern.match(host):
@@ -1800,9 +1780,9 @@ class Application(httputil.HTTPServerConnectionDelegate):
                 except TypeError:
                     pass
 
-    def start_request(self, connection):
+    def start_request(self, server_conn, request_conn):
         # Modern HTTPServer interface
-        return _RequestDispatcher(self, connection)
+        return _RequestDispatcher(self, request_conn)
 
     def __call__(self, request):
         # Legacy HTTPServer interface
@@ -1875,7 +1855,7 @@ class _RequestDispatcher(httputil.HTTPMessageDelegate):
         handlers = app._get_host_handlers(self.request)
         if not handlers:
             self.handler_class = RedirectHandler
-            self.handler_kwargs = dict(url="http://" + app.default_host + "/")
+            self.handler_kwargs = dict(url="%s://%s/" % (self.request.protocol, app.default_host))
             return
         for spec in handlers:
             match = spec.regex.match(self.request.path)
@@ -1944,8 +1924,10 @@ class _RequestDispatcher(httputil.HTTPMessageDelegate):
         # trapped in the Future it returns (which we are ignoring here).
         # However, that shouldn't happen because _execute has a blanket
         # except handler, and we cannot easily access the IOLoop here to
-        # call add_future.
-        self.handler._execute(transforms, *self.path_args, **self.path_kwargs)
+        # call add_future (because of the requirement to remain compatible
+        # with WSGI)
+        f = self.handler._execute(transforms, *self.path_args, **self.path_kwargs)
+        f.add_done_callback(lambda f: f.exception())
         # If we are streaming the request body, then execute() is finished
         # when the handler has prepared to receive the body.  If not,
         # it doesn't matter when execute() finishes (so we return None)
@@ -1958,6 +1940,9 @@ class HTTPError(Exception):
     Raising an `HTTPError` is a convenient alternative to calling
     `RequestHandler.send_error` since it automatically ends the
     current function.
+
+    To customize the response sent with an `HTTPError`, override
+    `RequestHandler.write_error`.
 
     :arg int status_code: HTTP status code.  Must be listed in
         `httplib.responses <http.client.responses>` unless the ``reason``
@@ -1985,6 +1970,25 @@ class HTTPError(Exception):
             return message + " (" + (self.log_message % self.args) + ")"
         else:
             return message
+
+
+class Finish(Exception):
+    """An exception that ends the request without producing an error response.
+
+    When `Finish` is raised in a `RequestHandler`, the request will end
+    (calling `RequestHandler.finish` if it hasn't already been called),
+    but the outgoing response will not be modified and the error-handling
+    methods (including `RequestHandler.write_error`) will not be called.
+
+    This can be a more convenient way to implement custom error pages
+    than overriding ``write_error`` (especially in library code)::
+
+        if self.current_user is None:
+            self.set_status(401)
+            self.set_header('WWW-Authenticate', 'Basic realm="something"')
+            raise Finish()
+    """
+    pass
 
 
 class MissingArgumentError(HTTPError):
@@ -2177,11 +2181,14 @@ class StaticFileHandler(RequestHandler):
 
         if include_body:
             content = self.get_content(self.absolute_path, start, end)
-            if isinstance(content, bytes_type):
+            if isinstance(content, bytes):
                 content = [content]
             for chunk in content:
-                self.write(chunk)
-                yield self.flush()
+                try:
+                    self.write(chunk)
+                    yield self.flush()
+                except iostream.StreamClosedError:
+                    return
         else:
             assert self.request.method == "HEAD"
 
@@ -2348,7 +2355,7 @@ class StaticFileHandler(RequestHandler):
         """
         data = cls.get_content(abspath)
         hasher = hashlib.md5()
-        if isinstance(data, bytes_type):
+        if isinstance(data, bytes):
             hasher.update(data)
         else:
             for chunk in data:
@@ -2367,7 +2374,7 @@ class StaticFileHandler(RequestHandler):
 
         .. versionadded:: 3.1
 
-        .. versionchanged:: 3.3
+        .. versionchanged:: 4.0
            This method is now always called, instead of only when
            partial results are requested.
         """
@@ -2514,9 +2521,9 @@ class FallbackHandler(RequestHandler):
 class OutputTransform(object):
     """A transform modifies the result of an HTTP request (e.g., GZip encoding)
 
-    A new transform instance is created for every request. See the
-    GZipContentEncoding example below if you want to implement a
-    new Transform.
+    Applications are not expected to create their own OutputTransforms
+    or interact with them directly; the framework chooses which transforms
+    (if any) to apply.
     """
     def __init__(self, request):
         pass
@@ -2533,7 +2540,7 @@ class GZipContentEncoding(OutputTransform):
 
     See http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11
 
-    .. versionchanged:: 3.3
+    .. versionchanged:: 4.0
         Now compresses all mime types beginning with ``text/``, instead
         of just a whitelist. (the whitelist is still used for certain
         non-text mime types).
@@ -2560,7 +2567,6 @@ class GZipContentEncoding(OutputTransform):
             ctype = _unicode(headers.get("Content-Type", "")).split(";")[0]
             self._gzipping = self._compressible_type(ctype) and \
                 (not finishing or len(chunk) >= self.MIN_LENGTH) and \
-                (finishing or "Content-Length" not in headers) and \
                 ("Content-Encoding" not in headers)
         if self._gzipping:
             headers["Content-Encoding"] = "gzip"
@@ -2568,7 +2574,14 @@ class GZipContentEncoding(OutputTransform):
             self._gzip_file = gzip.GzipFile(mode="w", fileobj=self._gzip_value)
             chunk = self.transform_chunk(chunk, finishing)
             if "Content-Length" in headers:
-                headers["Content-Length"] = str(len(chunk))
+                # The original content length is no longer correct.
+                # If this is the last (and only) chunk, we can set the new
+                # content-length; otherwise we remove it and fall back to
+                # chunked encoding.
+                if finishing:
+                    headers["Content-Length"] = str(len(chunk))
+                else:
+                    del headers["Content-Length"]
         return status_code, headers, chunk
 
     def transform_chunk(self, chunk, finishing):
@@ -2620,6 +2633,8 @@ class UIModule(object):
     UI modules often execute additional queries, and they can include
     additional CSS and JavaScript that will be included in the output
     page, which is automatically inserted on page render.
+
+    Subclasses of UIModule must override the `render` method.
     """
     def __init__(self, handler):
         self.handler = handler
@@ -2632,31 +2647,43 @@ class UIModule(object):
         return self.handler.current_user
 
     def render(self, *args, **kwargs):
-        """Overridden in subclasses to return this module's output."""
+        """Override in subclasses to return this module's output."""
         raise NotImplementedError()
 
     def embedded_javascript(self):
-        """Returns a JavaScript string that will be embedded in the page."""
+        """Override to return a JavaScript string to be embedded in the page."""
         return None
 
     def javascript_files(self):
-        """Returns a list of JavaScript files required by this module."""
+        """Override to return a list of JavaScript files needed by this module.
+
+        If the return values are relative paths, they will be passed to
+        `RequestHandler.static_url`; otherwise they will be used as-is.
+        """
         return None
 
     def embedded_css(self):
-        """Returns a CSS string that will be embedded in the page."""
+        """Override to return a CSS string that will be embedded in the page."""
         return None
 
     def css_files(self):
-        """Returns a list of CSS files required by this module."""
+        """Override to returns a list of CSS files required by this module.
+
+        If the return values are relative paths, they will be passed to
+        `RequestHandler.static_url`; otherwise they will be used as-is.
+        """
         return None
 
     def html_head(self):
-        """Returns a CSS string that will be put in the <head/> element"""
+        """Override to return an HTML string that will be put in the <head/>
+        element.
+        """
         return None
 
     def html_body(self):
-        """Returns an HTML string that will be put in the <body/> element"""
+        """Override to return an HTML string that will be put at the end of
+        the <body/> element.
+        """
         return None
 
     def render_string(self, path, **kwargs):
@@ -2717,7 +2744,7 @@ class TemplateModule(UIModule):
     def javascript_files(self):
         result = []
         for f in self._get_resources("javascript_files"):
-            if isinstance(f, (unicode_type, bytes_type)):
+            if isinstance(f, (unicode_type, bytes)):
                 result.append(f)
             else:
                 result.extend(f)
@@ -2729,7 +2756,7 @@ class TemplateModule(UIModule):
     def css_files(self):
         result = []
         for f in self._get_resources("css_files"):
-            if isinstance(f, (unicode_type, bytes_type)):
+            if isinstance(f, (unicode_type, bytes)):
                 result.append(f)
             else:
                 result.extend(f)
@@ -2767,7 +2794,7 @@ class URLSpec(object):
           in the regex will be passed in to the handler's get/post/etc
           methods as arguments.
 
-        * ``handler_class``: `RequestHandler` subclass to be invoked.
+        * ``handler``: `RequestHandler` subclass to be invoked.
 
         * ``kwargs`` (optional): A dictionary of additional arguments
           to be passed to the handler's constructor.
@@ -2834,7 +2861,7 @@ class URLSpec(object):
             return self._path
         converted_args = []
         for a in args:
-            if not isinstance(a, (unicode_type, bytes_type)):
+            if not isinstance(a, (unicode_type, bytes)):
                 a = str(a)
             converted_args.append(escape.url_escape(utf8(a), plus=False))
         return self._path % tuple(converted_args)

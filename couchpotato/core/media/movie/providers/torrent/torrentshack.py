@@ -22,8 +22,8 @@ class TorrentShack(MovieProvider, Base):
     #   Movies-SD Pack - 983 (not included)
 
     cat_ids = [
-        ([970], ['bd50']),
-        ([300], ['720p', '1080p']),
+        ([970, 320], ['bd50']),
+        ([300, 320], ['720p', '1080p']),
         ([350], ['dvdr']),
         ([400], ['brrip', 'dvdrip']),
     ]

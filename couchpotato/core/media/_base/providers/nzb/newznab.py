@@ -27,7 +27,7 @@ class Base(NZBProvider, RSS):
     passwords_regex = 'password|wachtwoord'
     limits_reached = {}
 
-    http_time_between_calls = 1  # Seconds
+    http_time_between_calls = 2  # Seconds
 
     def search(self, media, quality):
         hosts = self.getHosts()
@@ -45,7 +45,7 @@ class Base(NZBProvider, RSS):
     def _searchOnHost(self, host, media, quality, results):
 
         query = self.buildUrl(media, host)
-        url = '%s&%s' % (self.getUrl(host['host']), query)
+        url = '%s%s' % (self.getUrl(host['host']), query)
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
@@ -68,8 +68,12 @@ class Base(NZBProvider, RSS):
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
 
-            nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
             name = self.getTextElement(nzb, 'title')
+            detail_url = self.getTextElement(nzb, 'guid')
+            nzb_id = detail_url.split('/')[-1:].pop()
+
+            if '://' not in detail_url:
+                detail_url = (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id)
 
             if not name:
                 continue
@@ -83,7 +87,7 @@ class Base(NZBProvider, RSS):
                 try:
                     # Get details for extended description to retrieve passwords
                     query = self.buildDetailsUrl(nzb_id, host['api_key'])
-                    url = '%s&%s' % (self.getUrl(host['host']), query)
+                    url = '%s%s' % (self.getUrl(host['host']), query)
                     nzb_details = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})[0]
 
                     description = self.getTextElement(nzb_details, 'description')
@@ -103,7 +107,7 @@ class Base(NZBProvider, RSS):
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
-                'detail_url': (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id),
+                'detail_url': detail_url,
                 'content': self.getTextElement(nzb, 'description'),
                 'description': description,
                 'score': host['extra_score'],
@@ -183,15 +187,16 @@ class Base(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            data = self.urlopen(url, show_error = False)
+            data = self.urlopen(url, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
             self.limits_reached[host] = False
             return data
         except HTTPError as e:
-            if e.code == 503:
+            sc = e.response.status_code
+            if sc in [503, 429]:
                 response = e.read().lower()
-                if 'maximum api' in response or 'download limit' in response:
+                if sc == 429 or 'maximum api' in response or 'download limit' in response:
                     if not self.limits_reached.get(host):
-                        log.error('Limit reached for newznab provider: %s', host)
+                        log.error('Limit reached / to many requests for newznab provider: %s', host)
                     self.limits_reached[host] = time.time()
                     return 'try_next'
 
@@ -220,8 +225,9 @@ config = [{
             'description': 'Enable <a href="http://newznab.com/" target="_blank">NewzNab</a> such as <a href="https://nzb.su" target="_blank">NZB.su</a>, \
                 <a href="https://nzbs.org" target="_blank">NZBs.org</a>, <a href="http://dognzb.cr/" target="_blank">DOGnzb.cr</a>, \
                 <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a>, <a href="https://nzbgeek.info/" target="_blank">NZBGeek</a>, \
-                <a href="https://smackdownonyou.com" target="_blank">SmackDown</a>, <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>',
+                <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>',
             'wizard': True,
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAACVBMVEVjhwD///86aRovd/sBAAAAMklEQVQI12NgAIPQUCCRmQkjssDEShiRuRIqwZqZGcDAGBrqANUhGgIkWAOABKMDxCAA24UK50b26SAAAAAASUVORK5CYII=',
             'options': [
                 {
                     'name': 'enabled',
@@ -230,30 +236,30 @@ config = [{
                 },
                 {
                     'name': 'use',
-                    'default': '0,0,0,0,0,0'
+                    'default': '0,0,0,0,0'
                 },
                 {
                     'name': 'host',
-                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://index.nzbgeek.info, https://smackdownonyou.com, https://www.nzbfinder.ws',
+                    'default': 'api.nzb.su,api.dognzb.cr,nzbs.org,https://api.nzbgeek.info,https://www.nzbfinder.ws',
                     'description': 'The hostname of your newznab provider',
                 },
                 {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',
-                    'default': '0,0,0,0,0,0',
+                    'default': '0,0,0,0,0',
                     'description': 'Starting score for each release found via this provider.',
                 },
                 {
                     'name': 'custom_tag',
                     'advanced': True,
                     'label': 'Custom tag',
-                    'default': ',,,,,',
+                    'default': ',,,,',
                     'description': 'Add custom tags, for example add rls=1 to get only scene releases from nzbs.org',
                 },
                 {
                     'name': 'api_key',
-                    'default': ',,,,,',
+                    'default': ',,,,',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',

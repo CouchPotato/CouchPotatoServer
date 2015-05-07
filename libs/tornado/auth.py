@@ -51,7 +51,7 @@ Example usage for Google OpenID::
                     response_type='code',
                     extra_params={'approval_prompt': 'auto'})
 
-.. versionchanged:: 3.3
+.. versionchanged:: 4.0
    All of the callback interfaces in this module are now guaranteed
    to run their callback with an argument of ``None`` on error.
    Previously some functions would do this while others would simply
@@ -76,7 +76,7 @@ from tornado import escape
 from tornado.httputil import url_concat
 from tornado.log import gen_log
 from tornado.stack_context import ExceptionStackContext
-from tornado.util import bytes_type, u, unicode_type, ArgReplacer
+from tornado.util import u, unicode_type, ArgReplacer
 
 try:
     import urlparse  # py2
@@ -333,7 +333,7 @@ class OAuthMixin(object):
 
         The ``callback_uri`` may be omitted if you have previously
         registered a callback URI with the third-party service.  For
-        some sevices (including Friendfeed), you must use a
+        some services (including Friendfeed), you must use a
         previously-registered callback URI and cannot specify a
         callback via this method.
 
@@ -883,9 +883,10 @@ class FriendFeedMixin(OAuthMixin):
 class GoogleMixin(OpenIdMixin, OAuthMixin):
     """Google Open ID / OAuth authentication.
 
-    *Deprecated:* New applications should use `GoogleOAuth2Mixin`
-    below instead of this class. As of May 19, 2014, Google has stopped
-    supporting registration-free authentication.
+    .. deprecated:: 4.0
+       New applications should use `GoogleOAuth2Mixin`
+       below instead of this class. As of May 19, 2014, Google has stopped
+       supporting registration-free authentication.
 
     No application registration is necessary to use Google for
     authentication or to access Google resources on behalf of a user.
@@ -1053,9 +1054,10 @@ class GoogleOAuth2Mixin(OAuth2Mixin):
 class FacebookMixin(object):
     """Facebook Connect authentication.
 
-    *Deprecated:* New applications should use `FacebookGraphMixin`
-    below instead of this class.  This class does not support the
-    Future-based interface seen on other classes in this module.
+    .. deprecated:: 1.1
+       New applications should use `FacebookGraphMixin`
+       below instead of this class.  This class does not support the
+       Future-based interface seen on other classes in this module.
 
     To authenticate with Facebook, register your application with
     Facebook at http://www.facebook.com/developers/apps.php. Then
@@ -1110,7 +1112,7 @@ class FacebookMixin(object):
             args["cancel_url"] = urlparse.urljoin(
                 self.request.full_url(), cancel_uri)
         if extended_permissions:
-            if isinstance(extended_permissions, (unicode_type, bytes_type)):
+            if isinstance(extended_permissions, (unicode_type, bytes)):
                 extended_permissions = [extended_permissions]
             args["req_perms"] = ",".join(extended_permissions)
         self.redirect("http://www.facebook.com/login.php?" +

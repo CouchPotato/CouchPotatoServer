@@ -111,6 +111,7 @@ class _Connector(object):
             if self.timeout is not None:
                 # If the first attempt failed, don't wait for the
                 # timeout to try an address from the secondary queue.
+                self.io_loop.remove_timeout(self.timeout)
                 self.on_timeout()
             return
         self.clear_timeout()
@@ -135,6 +136,9 @@ class _Connector(object):
 
 class TCPClient(object):
     """A non-blocking TCP connection factory.
+
+    .. versionchanged:: 4.1
+       The ``io_loop`` argument is deprecated.
     """
     def __init__(self, resolver=None, io_loop=None):
         self.io_loop = io_loop or IOLoop.current()
@@ -163,7 +167,7 @@ class TCPClient(object):
             functools.partial(self._create_stream, max_buffer_size))
         af, addr, stream = yield connector.start()
         # TODO: For better performance we could cache the (af, addr)
-        # information here and re-use it on sbusequent connections to
+        # information here and re-use it on subsequent connections to
         # the same host. (http://tools.ietf.org/html/rfc6555#section-4.2)
         if ssl_options is not None:
             stream = yield stream.start_tls(False, ssl_options=ssl_options,
