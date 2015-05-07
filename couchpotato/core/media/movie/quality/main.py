@@ -1,212 +1,44 @@
-from math import fabs, ceil
-import traceback
 import re
 
-from CodernityDB.database import RecordNotFound
-from couchpotato import get_db
-from couchpotato.api import addApiView
+from couchpotato import CPLog
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt, splitString, tryFloat
-from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.plugins.quality.index import QualityIndex
-
+from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.variable import getExt, splitString, tryInt
+from couchpotato.core.media._base.quality.base import QualityBase
 
 log = CPLog(__name__)
 
+autoload = 'MovieQuality'
 
-class QualityPlugin(Plugin):
 
-    _database = {
-        'quality': QualityIndex
-    }
+class MovieQuality(QualityBase):
+    type = 'movie'
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'median_size': 40000, 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
-        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'median_size': 10000, 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264', '1080']},
-        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'median_size': 5500, 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264', '720']},
-        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'median_size': 2000, 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip'), 'hdtv', 'hdrip'], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'median_size': 4500, 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'median_size': 1500, 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'median_size': 700, 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr', 'webrip', ('web', 'rip')], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': []},
-        {'identifier': 'r5', 'size': (600, 1000), 'median_size': 700, 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p', '1080p'], 'ext':[]},
-        {'identifier': 'tc', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p', '1080p'], 'ext':[]},
-        {'identifier': 'ts', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p', '1080p'], 'ext':[]},
-        {'identifier': 'cam', 'size': (600, 1000), 'median_size': 700, 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p', '1080p'], 'ext':[]},
-
-        # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
-        # BluRay
-        {'identifier': 'bluray_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bluray_720p', 'hd': True, 'size': (800, 5000), 'label': 'BluRay - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BDRip
-        {'identifier': 'bdrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'bdrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BDRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # BRRip
-        {'identifier': 'brrip_1080p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'brrip_720p', 'hd': True, 'size': (800, 5000), 'label': 'BRRip - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # WEB-DL
-        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'webdl_480p', 'hd': True, 'size': (100, 5000), 'label': 'WEB-DL - 480p', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        # HDTV
-        {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
-        {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25', ('br', 'disk')], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip')], 'allow': ['720p', '1080p'], 'ext':['mp4', 'avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
+        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
+        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p'], 'ext':[]},
+        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p'], 'ext':[]},
+        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p'], 'ext':[]},
+        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p'], 'ext':[]},
     ]
-    pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
-    threed_tags = {
-        'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
-        'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
-        '3d': ['2d3d', '3d2d', '3d'],
-    }
-
-    cached_qualities = None
-    cached_order = None
 
     def __init__(self):
-        addEvent('quality.all', self.all)
-        addEvent('quality.single', self.single)
+        super(MovieQuality, self).__init__()
+
         addEvent('quality.guess', self.guess)
-        addEvent('quality.pre_releases', self.preReleases)
-        addEvent('quality.order', self.getOrder)
-        addEvent('quality.ishigher', self.isHigher)
-        addEvent('quality.isfinish', self.isFinish)
-        addEvent('quality.fill', self.fill)
-
-        addApiView('quality.size.save', self.saveSize)
-        addApiView('quality.list', self.allView, docs = {
-            'desc': 'List all available qualities',
-            'return': {'type': 'object', 'example': """{
-            'success': True,
-            'list': array, qualities
-}"""}
-        })
-
-        addEvent('app.initialize', self.fill, priority = 10)
 
         addEvent('app.test', self.doTest)
 
-        self.order = []
-        self.addOrder()
+    def guess(self, files, extra = None, size = None, types = None):
+        if types and self.type not in types:
+            return
 
-    def addOrder(self):
-        self.order = []
-        for q in self.qualities:
-            self.order.append(q.get('identifier'))
-
-    def getOrder(self):
-        return self.order
-
-    def preReleases(self):
-        return self.pre_releases
-
-    def allView(self, **kwargs):
-
-        return {
-            'success': True,
-            'list': self.all()
-        }
-
-    def all(self):
-
-        if self.cached_qualities:
-            return self.cached_qualities
-
-        db = get_db()
-
-        temp = []
-        for quality in self.qualities:
-            quality_doc = db.get('quality', quality.get('identifier'), with_doc = True)['doc']
-            q = mergeDicts(quality, quality_doc)
-            temp.append(q)
-
-        if len(temp) == len(self.qualities):
-            self.cached_qualities = temp
-
-        return temp
-
-    def single(self, identifier = ''):
-
-        db = get_db()
-        quality_dict = {}
-
-        quality = db.get('quality', identifier, with_doc = True)['doc']
-        if quality:
-            quality_dict = mergeDicts(self.getQuality(quality['identifier']), quality)
-
-        return quality_dict
-
-    def getQuality(self, identifier):
-
-        for q in self.qualities:
-            if identifier == q.get('identifier'):
-                return q
-
-    def saveSize(self, **kwargs):
-
-        try:
-            db = get_db()
-            quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
-
-            if quality:
-                quality['doc'][kwargs.get('value_type')] = tryInt(kwargs.get('value'))
-                db.update(quality['doc'])
-
-            self.cached_qualities = None
-
-            return {
-                'success': True
-            }
-        except:
-            log.error('Failed: %s', traceback.format_exc())
-
-        return {
-            'success': False
-        }
-
-    def fill(self):
-
-        try:
-            db = get_db()
-
-            order = 0
-            for q in self.qualities:
-
-                existing = None
-                try:
-                    existing = db.get('quality', q.get('identifier'))
-                except RecordNotFound:
-                    pass
-
-                if not existing:
-                    db.insert({
-                        '_t': 'quality',
-                        'order': order,
-                        'identifier': q.get('identifier'),
-                        'size_min': tryInt(q.get('size')[0]),
-                        'size_max': tryInt(q.get('size')[1]),
-                    })
-
-                    log.info('Creating profile: %s', q.get('label'))
-                    db.insert({
-                        '_t': 'profile',
-                        'order': order + 20,  # Make sure it goes behind other profiles
-                        'core': True,
-                        'qualities': [q.get('identifier')],
-                        'label': toUnicode(q.get('label')),
-                        'finish': [True],
-                        'wait_for': [0],
-                    })
-
-                order += 1
-
-            return True
-        except:
-            log.error('Failed: %s', traceback.format_exc())
-
-        return False
-
-    def guess(self, files, extra = None, size = None, use_cache = True):
         if not extra: extra = {}
 
         # Create hash for cache
@@ -417,49 +249,6 @@ class QualityPlugin(Plugin):
                 if quality.get('identifier') != q.get('identifier') and score.get(q.get('identifier')):
                     score[q.get('identifier')]['score'] -= 1
 
-    def isFinish(self, quality, profile, release_age = 0):
-        if not isinstance(profile, dict) or not profile.get('qualities'):
-            # No profile so anything (scanned) is good enough
-            return True
-
-        try:
-            index = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else False) == bool(quality.get('is_3d', False))][0]
-
-            if index == 0 or (profile['finish'][index] and int(release_age) >= int(profile.get('stop_after', [0])[0])):
-                return True
-
-            return False
-        except:
-            return False
-
-    def isHigher(self, quality, compare_with, profile = None):
-        if not isinstance(profile, dict) or not profile.get('qualities'):
-            profile = fireEvent('profile.default', single = True)
-
-        # Try to find quality in profile, if not found: a quality we do not want is lower than anything else
-        try:
-            quality_order = [i for i, identifier in enumerate(profile['qualities']) if identifier == quality['identifier'] and bool(profile['3d'][i] if profile.get('3d') else 0) == bool(quality.get('is_3d', 0))][0]
-        except:
-            log.debug('Quality %s not found in profile identifiers %s', (quality['identifier'] + (' 3D' if quality.get('is_3d', 0) else ''), \
-                [identifier + (' 3D' if (profile['3d'][i] if profile.get('3d') else 0) else '') for i, identifier in enumerate(profile['qualities'])]))
-            return 'lower'
-
-        # Try to find compare quality in profile, if not found: anything is higher than a not wanted quality
-        try:
-            compare_order = [i for i, identifier in enumerate(profile['qualities']) if identifier == compare_with['identifier'] and bool(profile['3d'][i] if profile.get('3d') else 0) == bool(compare_with.get('is_3d', 0))][0]
-        except:
-            log.debug('Compare quality %s not found in profile identifiers %s', (compare_with['identifier'] + (' 3D' if compare_with.get('is_3d', 0) else ''), \
-                [identifier + (' 3D' if (profile['3d'][i] if profile.get('3d') else 0) else '') for i, identifier in enumerate(profile['qualities'])]))
-            return 'higher'
-
-        # Note to self: a lower number means higher quality
-        if quality_order > compare_order:
-            return 'lower'
-        elif quality_order == compare_order:
-            return 'equal'
-        else:
-            return 'higher'
-
     def doTest(self):
 
         tests = {
@@ -519,8 +308,8 @@ class QualityPlugin(Plugin):
             success = test_quality.get('identifier') == tests[name]['quality'] and test_quality.get('is_3d') == tests[name].get('is_3d', False)
             if not success:
                 log.error('%s failed check, thinks it\'s "%s" expecting "%s"', (name,
-                                                                            test_quality.get('identifier') + (' 3D' if test_quality.get('is_3d') else ''),
-                                                                            tests[name]['quality'] + (' 3D' if tests[name].get('is_3d') else '')
+                                                                                test_quality.get('identifier') + (' 3D' if test_quality.get('is_3d') else ''),
+                                                                                tests[name]['quality'] + (' 3D' if tests[name].get('is_3d') else '')
                 ))
 
             correct += success
@@ -530,5 +319,3 @@ class QualityPlugin(Plugin):
             return True
         else:
             log.error('Quality test failed: %s out of %s succeeded', (correct, len(tests)))
-
-

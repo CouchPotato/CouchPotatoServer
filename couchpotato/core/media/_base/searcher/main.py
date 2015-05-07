@@ -84,13 +84,14 @@ class Searcher(SearcherBase):
 
         return search_protocols
 
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None, types = None):
         if not preferred_quality: preferred_quality = {}
 
         found = {}
 
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), single = True)
+        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), types = types, single = True)
+
         if guess:
             found[guess['identifier']] = True
 
@@ -111,7 +112,7 @@ class Searcher(SearcherBase):
                 found['dvdrip'] = True
 
         # Allow other qualities
-        for allowed in preferred_quality.get('allow'):
+        for allowed in preferred_quality.get('allow', []):
             if found.get(allowed):
                 del found[allowed]
 
@@ -120,14 +121,14 @@ class Searcher(SearcherBase):
 
         return found
 
-    def correct3D(self, nzb, preferred_quality = None):
+    def correct3D(self, nzb, preferred_quality = None, types = None):
         if not preferred_quality: preferred_quality = {}
         if not preferred_quality.get('custom'): return
 
         threed = preferred_quality['custom'].get('3d')
 
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        guess = fireEvent('quality.guess', [nzb.get('name')], types = types, single = True)
 
         if guess:
             return threed == guess.get('is_3d')

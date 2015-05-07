@@ -47,7 +47,7 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
             'result': fireEvent('%s.searcher.single' % self.getType(), media, single = True)
         }
 
-    def single(self, media, profile = None, quality_order = None, search_protocols = None, manual = False):
+    def single(self, media, profile = None, search_protocols = None, manual = False):
         db = get_db()
 
         related = fireEvent('library.related', media, single = True)
@@ -62,9 +62,6 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
         if not profile and related['show']['profile_id']:
             profile = db.get('id', related['show']['profile_id'])
-
-        if not quality_order:
-            quality_order = fireEvent('quality.order', single = True)
 
         # TODO: check episode status
         # TODO: check air date
@@ -93,14 +90,19 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
             # See if better quality is available
             for release in releases:
-                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
-                    has_better_quality += 1
+                if release['status'] not in ['available', 'ignored', 'failed']:
+                    is_higher = fireEvent('quality.ishigher', \
+                                          {'identifier': q_identifier, 'is_3d': quality_custom.get('3d', 0)}, \
+                                          {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, \
+                                          profile, single = True)
+                    if is_higher != 'higher':
+                        has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
                 log.info('Searching for %s in %s', (query, q_identifier))
-                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+                quality = fireEvent('quality.single', identifier = q_identifier, types = ['show'], single = True)
                 quality['custom'] = quality_custom
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
@@ -131,8 +133,7 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
             log.info2('Too early to search for %s, %s', (too_early_to_search, query))
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
-        if media.get('type') != 'show.episode':
-            return
+        if media.get('type') != 'show.episode': return
 
         retention = Env.setting('retention', section = 'nzb')
 
@@ -142,6 +143,14 @@ class EpisodeSearcher(SearcherBase, ShowTypeBase):
 
         # Check for required and ignored words
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
+            return False
+
+        preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
+
+        # Contains lower quality string
+        contains_other = fireEvent('searcher.contains_other_quality', release, preferred_quality = preferred_quality, types = [self._type], single = True)
+        if contains_other != False:
+            log.info2('Wrong: %s, looking for %s, found %s', (release['name'], quality['label'], [x for x in contains_other] if contains_other else 'no quality'))
             return False
 
         # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)

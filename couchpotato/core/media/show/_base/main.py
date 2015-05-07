@@ -105,7 +105,7 @@ class ShowBase(MediaBase):
         # Update media with info
         self.updateInfo(media, info)
 
-        existing_show = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True)
+        existing_show = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True, types = [self._type], single = True)
 
         db = get_db()
 
@@ -233,8 +233,6 @@ class ShowBase(MediaBase):
         return {}
 
     def updateInfo(self, media, info):
-        db = get_db()
-
         # Remove season info for later use (save separately)
         info.pop('in_wanted', None)
         info.pop('in_library', None)

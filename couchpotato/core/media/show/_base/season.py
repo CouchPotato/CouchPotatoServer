@@ -12,6 +12,8 @@ autoload = 'Season'
 
 class Season(MediaBase):
 
+    _type = 'show.season'
+
     def __init__(self):
         addEvent('show.season.add', self.add)
         addEvent('show.season.update', self.update)
@@ -34,7 +36,7 @@ class Season(MediaBase):
         }
 
         # Check if season already exists
-        existing_season = fireEvent('media.with_identifiers', identifiers, with_doc = True, single = True)
+        existing_season = fireEvent('media.with_identifiers', identifiers, with_doc = True, types = [self._type], single = True)
 
         db = get_db()
 

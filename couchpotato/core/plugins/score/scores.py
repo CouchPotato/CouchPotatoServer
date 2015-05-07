@@ -76,7 +76,7 @@ def namePositionScore(nzb_name, movie_name):
     score = 0
 
     nzb_words = re.split('\W+', simplifyString(nzb_name))
-    qualities = fireEvent('quality.all', single = True)
+    qualities = fireEvent('quality.all', merge = True)
 
     try:
         nzb_name = re.search(r'([\'"])[^\1]*\1', nzb_name).group(0)
@@ -108,7 +108,7 @@ def namePositionScore(nzb_name, movie_name):
                 found_quality = quality['identifier']
 
             # Alt in words
-            for alt in quality['alternative']:
+            for alt in quality.get('alternative', []):
                 if alt in nzb_words:
                     found_quality = alt
                     break
