@@ -2,9 +2,11 @@ import re
 import traceback
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt, getIdentifier
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.core.helpers.encoding import tryUrlencode
 
 
 log = CPLog(__name__)
@@ -12,9 +14,20 @@ log = CPLog(__name__)
 
 class Base(TorrentMagnetProvider):
 
+    COLUMN_NAME = 0
+    COLUMN_SIZE = 1
+    COLUMN_FILES = 2 # Unused
+    COLUMN_AGE = 3
+    COLUMN_SEEDS = 4
+    COLUMN_LEECHERS = 5
+
+    MAX_PAGES = 2
+
+    # The url for the first page containing search results is not postfixed
+    # with a page number, but providing it is allowed.
     urls = {
-        'detail': '%s/%s',
-        'search': '%s/%s-i%s/',
+        'detail': '%s/%%s',
+        'search': '%s/usearch/%s/%d/',
     }
 
     cat_ids = [
@@ -24,6 +37,7 @@ class Base(TorrentMagnetProvider):
         (['x264', '720p', '1080p', 'blu-ray', 'hdrip'], ['bd50', '1080p', '720p', 'brrip']),
         (['dvdrip'], ['dvdrip']),
         (['dvd'], ['dvdr']),
+        (['hdtv'], ['hdtv'])
     ]
 
     http_time_between_calls = 1  # Seconds
@@ -39,63 +53,104 @@ class Base(TorrentMagnetProvider):
         'http://kickassto.come.in',
     ]
 
-    def _search(self, media, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', getIdentifier(media).replace('tt', '')))
+    def _searchOnTitle(self, title, media, quality, results):
+        # _searchOnTitle can be safely implemented here because the existence
+        # of a _search method on the provider is checked first, in which case
+        # the KickassTorrents movie provider searches for the movie using the
+        # IMDB identifier as a key.
 
-        if data:
+        cat_ids = self.getCatId(quality)
 
-            cat_ids = self.getCatId(quality)
-            table_order = ['name', 'size', None, 'age', 'seeds', 'leechers']
+        base_detail_url = self.urls['detail'] % (self.getDomain())
+
+        page = 1
+        pages = 1
+        referer_url = None
+        while page <= pages and page <= self.MAX_PAGES:
+            # The use of buildUrl might be required in the future to scan
+            # multiple pages of show results.
+            url = self.buildUrl(title = title, media = media, page = page)
+            if url and referer_url and url == referer_url:
+                break
+
+            data = self.getHTMLData(url)
 
             try:
                 html = BeautifulSoup(data)
-                resultdiv = html.find('div', attrs = {'class': 'tabs'})
-                for result in resultdiv.find_all('div', recursive = False):
-                    if result.get('id').lower().strip('tab-') not in cat_ids:
-                        continue
-
+                table = html.find('table', attrs = {'class': 'data'})
+                for tr in table.find_all('tr', attrs={'class': ['odd', 'even']}):
                     try:
-                        for temp in result.find_all('tr'):
-                            if temp['class'] is 'firstr' or not temp.get('id'):
-                                continue
+                        result = { }
+                        column = 0
+                        for td in tr.find_all('td'):
+                            if column == self.COLUMN_NAME:
+                                link = td.find('a', 'cellMainLink')
+                                for tag in link.findAll(True):
+                                    tag.unwrap()
 
-                            new = {}
+                                result['id'] = tr['id'][-7:]
+                                result['name'] = link.text
+                                result['url'] = td.find('a', 'imagnet')['href']
+                                result['detail_url'] = base_detail_url % (link['href'][1:])
+                                if td.find('a', 'iverify'):
+                                    result['verified'] = True
+                                    result['score'] = 100
+                                else:
+                                    result['verified'] = False
+                                    result['score'] = 0
+                            elif column == self.COLUMN_SIZE:
+                                result['size'] = self.parseSize(td.text)
+                            elif column == self.COLUMN_AGE:
+                                result['age'] = self.ageToDays(td.text)
+                            elif column == self.COLUMN_SEEDS:
+                                result['seeders'] = tryInt(td.text, 0)
+                            elif column == self.COLUMN_LEECHERS:
+                                result['leechers'] = tryInt(td.text, 0)
 
-                            nr = 0
-                            for td in temp.find_all('td'):
-                                column_name = table_order[nr]
-                                if column_name:
+                            column += 1
 
-                                    if column_name == 'name':
-                                        link = td.find('div', {'class': 'torrentname'}).find_all('a')[2]
-                                        new['id'] = temp.get('id')[-7:]
-                                        new['name'] = link.text
-                                        new['url'] = td.find('a', 'imagnet')['href']
-                                        new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
-                                        new['verified'] = True if td.find('a', 'iverify') else False
-                                        new['score'] = 100 if new['verified'] else 0
-                                    elif column_name is 'size':
-                                        new['size'] = self.parseSize(td.text)
-                                    elif column_name is 'age':
-                                        new['age'] = self.ageToDays(td.text)
-                                    elif column_name is 'seeds':
-                                        new['seeders'] = tryInt(td.text)
-                                    elif column_name is 'leechers':
-                                        new['leechers'] = tryInt(td.text)
+                        if result:
+                            # The name must at least contain one category identifier
+                            score = 0
+                            for cat_id in cat_ids:
+                                if cat_id.lower() in result['name'].lower():
+                                    score += 1
+                                    break
 
-                                nr += 1
+                            if result['verified'] or not self.conf('only_verified'):
+                                score += 1
 
-                            # Only store verified torrents
-                            if self.conf('only_verified') and not new['verified']:
-                                continue
+                            if score == 2:
+                                results.append(result)
 
-                            results.append(new)
+                        buttons = html.find('div', 'pages')
+                        if buttons:
+                            pages = len(buttons.find_all(True, recursive = False))
                     except:
                         log.error('Failed parsing KickAssTorrents: %s', traceback.format_exc())
 
+                page += 1
+                referer_url = url
+
             except AttributeError:
                 log.debug('No search results found.')
+
+    def buildUrl(self, *args, **kwargs):
+        # KickassTorrents also supports the "season:X episode:Y" parameters
+        # which would arguably make the search more robust, but we cannot use
+        # this mechanism because it might break searching for daily talk shows
+        # and the like, e.g. Jimmy Fallon.
+        media = kwargs.get('media', None)
+        title = kwargs.get('title', None)
+        page = kwargs.get('page', 1)
+        if not title and media:
+            title = fireEvent('library.query', media, single = True)
+        if not title:
+            return False
+        assert isinstance(page, (int, long))
+
+        return self.urls['search'] % (self.getDomain(), tryUrlencode(title), page)
 
     def ageToDays(self, age_str):
         age = 0
@@ -122,7 +177,6 @@ class Base(TorrentMagnetProvider):
 
     def correctProxy(self, data):
         return 'search query' in data.lower()
-
 
 config = [{
     'name': 'kickasstorrents',
