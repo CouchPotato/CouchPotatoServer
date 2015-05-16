@@ -27,7 +27,7 @@ class Base(NZBProvider, RSS):
     passwords_regex = 'password|wachtwoord'
     limits_reached = {}
 
-    http_time_between_calls = 1  # Seconds
+    http_time_between_calls = 2  # Seconds
 
     def search(self, media, quality):
         hosts = self.getHosts()

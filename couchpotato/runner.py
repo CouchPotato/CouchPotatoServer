@@ -334,8 +334,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
 
-            try: server.listen(config['port'], config['host6'])
-            except: log.info2('Tried to bind to IPV6 but failed')
+            if Env.setting('ipv6', default = False):
+                try: server.listen(config['port'], config['host6'])
+                except: log.info2('Tried to bind to IPV6 but failed')
 
             loop.start()
             server.close_all_connections()

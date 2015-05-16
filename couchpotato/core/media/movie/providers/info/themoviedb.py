@@ -173,7 +173,8 @@ class TheMovieDb(MovieProvider):
         image_url = ''
         try:
             path = movie.get('%s_path' % type)
-            image_url = '%s%s%s' % (self.configuration['images']['secure_base_url'], size, path)
+            if path:
+                image_url = '%s%s%s' % (self.configuration['images']['secure_base_url'], size, path)
         except:
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 

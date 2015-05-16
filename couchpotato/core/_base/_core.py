@@ -230,6 +230,12 @@ config = [{
                     'description': 'The port I should listen to.',
                 },
                 {
+                    'name': 'ipv6',
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Also bind the WebUI to ipv6 address',
+                },
+                {
                     'name': 'ssl_cert',
                     'description': 'Path to SSL server.crt',
                     'advanced': True,
