@@ -26,9 +26,10 @@ var MovieDetails = new Class({
 			self.content = new Element('div.content').grab(
 				new Element('div.head').adopt(
 					new Element('h1').grab(
-						new Element('span.icon-dropdown', {
-							'data-change': 'title',
-							'text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : '')
+						self.title_dropdown = new BlockMenu(self, {
+							'class': 'title',
+							'button_text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : ''),
+							'button_class': 'icon-dropdown'
 						})
 					),
 					self.buttons = new Element('div.buttons')
@@ -40,6 +41,35 @@ var MovieDetails = new Class({
 			'text': parent.get('plot')
 		}));
 
+
+		// Title dropdown
+		var titles = parent.get('info').titles;
+		$(self.title_dropdown).addEvents({
+			'click:relay(li a)': function(e, el){
+				(e).stopPropagation();
+
+				// Update category
+				Api.request('movie.edit', {
+					'data': {
+						'id': parent.get('_id'),
+						'default_title': el.get('text')
+					}
+				});
+
+				$(self.title_dropdown).getElements('.icon-ok').removeClass('icon-ok');
+				el.addClass('icon-ok');
+
+				self.title_dropdown.button.set('text', el.get('text') + (parent.get('year') ? ' (' + parent.get('year') + ')' : ''));
+
+			}
+		});
+
+		titles.each(function(t){
+			self.title_dropdown.addLink(new Element('a', {
+				'text': t,
+				'class': parent.get('title') == t ? 'icon-ok' : ''
+			}));
+		});
 
 	},
 

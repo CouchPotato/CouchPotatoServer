@@ -273,6 +273,7 @@
 					top: $header_height - 10px;
 					padding-top: 4px;
 					border-radius: $border_radius $border_radius 0 0;
+					font-size: 14px;
 
 					&:before {
 						top: 0;
@@ -292,6 +293,13 @@
 						&:hover {
 							color: $primary_color;
 						}
+					}
+				}
+
+				&.title {
+					.wrapper {
+						left: 0;
+						right: auto;
 					}
 				}
 
