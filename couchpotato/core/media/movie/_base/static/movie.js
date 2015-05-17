@@ -16,6 +16,17 @@ var Movie = new Class({
 				'click': function(e){
 					(e).stop();
 					self.openDetails();
+				},
+				'mouseenter': function(){
+					if(self.actions.length > 0) return;
+					self.options.actions.each(function(a){
+						var action = new a(self),
+							button = action.getButton();
+						if(button)
+							self.actions_el.grab(button);
+
+						self.actions.push(action);
+					});
 				}
 			}
 		});
@@ -25,6 +36,9 @@ var Movie = new Class({
 		self.parent(self, options);
 
 		self.addEvents();
+
+		//if(data.identifiers.imdb == 'tt2713180')
+		//	self.openDetails();
 	},
 
 	openDetails: function(){
@@ -42,9 +56,9 @@ var Movie = new Class({
 					self.details.addSection(action.getLabel(), details);
 				}
 				else {
-					var button = action.getButton();
+					var button = action.getDetailButton();
 					if(button){
-						//self.details.addButton(button.clone(true).cloneEvents(button));
+						self.details.addButton(button);
 					}
 				}
 			});
@@ -210,6 +224,13 @@ var Movie = new Class({
 						}),
 						self.year = new Element('div.year', {
 							'text': self.data.info.year || 'n/a'
+						}),
+						self.actions_el = new Element('div.actions', {
+							'events': {
+								'click': function(e){
+									(e).stopPropagation();
+								}
+							}
 						})
 					),
 					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {
@@ -225,14 +246,7 @@ var Movie = new Class({
 							}
 						}
 					})
-				),
-				self.actions_el = new Element('div.actions', {
-					'events': {
-						'click': function(e){
-							(e).stopPropagation();
-						}
-					}
-				})
+				)
 			)
 		);
 
@@ -255,15 +269,6 @@ var Movie = new Class({
 
 		// Add releases
 		self.updateReleases();
-
-		self.options.actions.each(function(a){
-			var action = new a(self),
-				button = action.getButton();
-			if(button)
-				self.actions_el.grab(button);
-
-			self.actions.push(action);
-		});
 
 	},
 

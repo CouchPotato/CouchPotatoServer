@@ -10,6 +10,9 @@ var MovieDetails = new Class({
 
 		self.sections = {};
 
+		var category = parent.get('category'),
+			profile = parent.profile;
+
 		self.el = new Element('div',{
 			'class': 'page active movie_details level_' + (options.level || 0)
 		}).adopt(
@@ -20,17 +23,23 @@ var MovieDetails = new Class({
 			}).grab(
 				new Element('a.close.icon-left-arrow')
 			),
-			self.content = new Element('div.content').adopt(
-				new Element('h1', {
-					'text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : '')
-				}),
-				self.buttons = new Element('div.buttons')
+			self.content = new Element('div.content').grab(
+				new Element('div.head').adopt(
+					new Element('h1').grab(
+						new Element('span.icon-dropdown', {
+							'data-change': 'title',
+							'text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : '')
+						})
+					),
+					self.buttons = new Element('div.buttons')
+				)
 			)
 		);
 
 		self.addSection('description', new Element('div', {
 			'text': parent.get('plot')
 		}));
+
 
 	},
 

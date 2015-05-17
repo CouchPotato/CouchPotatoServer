@@ -1,4 +1,4 @@
-@import "couchpotato/static/style/mixins";
+@import "couchpotato/static/style/_mixins";
 
 .page.movies {
 	z-index: 21; // Sets navigation above
@@ -44,7 +44,7 @@
 
 					.year {
 						display: inline-block;
-						margin-left: 10px;
+						margin: 0 10px;
 						opacity: .5;
 					}
 				}
@@ -59,6 +59,32 @@
 					margin: 2px 0 0 2px;
 				}
 			}
+		}
+
+		.actions {
+			position: absolute;
+			right: $padding/2;
+			top: 0;
+			bottom: 0;
+			display: none;
+
+			a {
+				height: 100%;
+				display: block;
+				background: $background_color;
+				padding: $padding / 2;
+				width: auto;
+				float: right;
+				color: $text_color;
+
+				&:hover {
+					color: $primary_color;
+				}
+			}
+		}
+
+		&:hover .actions {
+			display: block;
 		}
 	}
 }
@@ -206,13 +232,76 @@
 		border-radius: 3px 0 0 3px;
 		overflow-y: auto;
 
-		h1 {
-			margin: 0;
+		> .head {
+			@include flexbox();
+			flex-flow: row nowrap;
 			padding: 0 $padding;
-			font-size: 24px;
 			line-height: $header_height;
-			color: rgba(0,0,0,.5);
-			font-weight: 300;
+
+			h1 {
+				@include flex(1 auto);
+				margin: 0;
+				font-size: 24px;
+				color: rgba(0,0,0,.5);
+				font-weight: 300;
+			}
+
+			.more_menu {
+				display: inline-block;
+
+				> a {
+					line-height: $header_height;
+				}
+
+				.icon-dropdown {
+					position: relative;
+					padding: 0 $padding 0 0;
+					cursor: pointer;
+
+					&:before {
+						position: absolute;
+						right: 0;
+						opacity: .2;
+					}
+
+					&:hover:before {
+						opacity: 1;
+					}
+				}
+
+				.wrapper {
+					top: $header_height - 10px;
+					padding-top: 4px;
+					border-radius: $border_radius $border_radius 0 0;
+
+					&:before {
+						top: 0;
+						left: auto;
+						right: 22px;
+					}
+
+					ul {
+						border-radius: $border_radius $border_radius 0 0;
+						max-height: 215px;
+						overflow-y: auto;
+					}
+
+					a {
+						cursor: pointer;
+
+						&:hover {
+							color: $primary_color;
+						}
+					}
+				}
+
+			}
+
+			.category {
+			}
+
+			.buttons {
+			}
 		}
 
 		.section {
@@ -319,10 +408,23 @@
 
 		.counter, .more_menu, .actions {
 			float: left;
+
+			> a {
+				display: inline-block;
+				width: 30px;
+				line-height: 80px;
+				text-align: center;
+				cursor: pointer;
+
+				&:hover {
+					color: $primary_color;
+				}
+			}
 		}
 
 		.counter {
 			line-height: $header_height;
+			padding: 0 $padding/2;
 		}
 
 		.actions {

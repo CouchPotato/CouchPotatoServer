@@ -6,6 +6,7 @@ var MovieAction = new Class({
 	label: 'UNKNOWN',
 	button: null,
 	details: null,
+	detail_button: null,
 
 	initialize: function(movie, options){
 		var self = this;
@@ -27,6 +28,10 @@ var MovieAction = new Class({
 
 	getDetails: function(){
 		return this.details || null;
+	},
+
+	getDetailButton: function(){
+		return this.detail_button || null;
 	},
 
 	getLabel: function(){
@@ -137,6 +142,7 @@ MA.Release = new Class({
 
 	getDetails: function(refresh){
 		var self = this;
+		if(self.movie.data.releases.length === 0) return;
 
 		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(
@@ -495,6 +501,119 @@ MA.Trailer = new Class({
 		}, 1800);
 	}
 
+
+});
+
+MA.Category = new Class({
+
+	Extends: MovieAction,
+
+	create: function(){
+		var self = this;
+
+		var category = self.movie.get('category');
+
+		self.detail_button = new BlockMenu(self, {
+			'class': 'category',
+			'button_text': category ? category.label : 'No category',
+			'button_class': 'icon-dropdown'
+		});
+
+		var categories = CategoryList.getAll();
+		if(categories.length > 0){
+
+			$(self.detail_button).addEvents({
+				'click:relay(li a)': function(e, el){
+					(e).stopPropagation();
+
+					// Update category
+					Api.request('movie.edit', {
+						'data': {
+							'id': self.movie.get('_id'),
+							'category_id': el.get('data-id')
+						}
+					});
+
+					$(self.detail_button).getElements('.icon-ok').removeClass('icon-ok');
+					el.addClass('icon-ok');
+
+					self.detail_button.button.set('text', el.get('text'));
+
+				}
+			});
+
+			self.detail_button.addLink(new Element('a[text=No category]', {
+				'class': !category ? 'icon-ok' : '',
+				'data-id': ''
+			}));
+			categories.each(function(c){
+				self.detail_button.addLink(new Element('a', {
+					'text': c.get('label'),
+					'class': category && category._id == c.get('_id') ? 'icon-ok' : '',
+					'data-id': c.get('_id')
+				}));
+			});
+		}
+		else {
+			$(self.detail_button).hide();
+		}
+
+	}
+
+});
+
+
+MA.Profile = new Class({
+
+	Extends: MovieAction,
+
+	create: function(){
+		var self = this;
+
+		var profile = self.movie.profile;
+
+		self.detail_button = new BlockMenu(self, {
+			'class': 'profile',
+			'button_text': profile ? profile.get('label') : 'No profile',
+			'button_class': 'icon-dropdown'
+		});
+
+		var profiles = Quality.getActiveProfiles();
+		if(profiles.length > 0){
+
+			$(self.detail_button).addEvents({
+				'click:relay(li a)': function(e, el){
+					(e).stopPropagation();
+
+					// Update category
+					Api.request('movie.edit', {
+						'data': {
+							'id': self.movie.get('_id'),
+							'profile_id': el.get('data-id')
+						}
+					});
+
+					$(self.detail_button).getElements('.icon-ok').removeClass('icon-ok');
+					el.addClass('icon-ok');
+
+					self.detail_button.button.set('text', el.get('text'));
+
+				}
+			});
+
+			profiles.each(function(pr){
+				self.detail_button.addLink(new Element('a', {
+					'text': pr.get('label'),
+					'class': profile && profile.get('_id') == pr.get('_id') ? 'icon-ok' : '',
+					'data-id': pr.get('_id')
+				}));
+			});
+		}
+		else {
+			$(self.detail_button).hide();
+		}
+
+	}
 
 });
 

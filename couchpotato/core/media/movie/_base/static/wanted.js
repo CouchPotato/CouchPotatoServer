@@ -32,7 +32,7 @@ var MoviesWanted = new Class({
 			self.list = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
-				'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Edit, MA.Refresh, MA.Readd, MA.Delete],
+				'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
 				'add_new': true,
 				'menu': [self.manual_search, self.scan_folder],
 				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
