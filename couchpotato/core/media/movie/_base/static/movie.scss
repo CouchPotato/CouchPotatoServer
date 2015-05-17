@@ -73,6 +73,7 @@
 		float: left;
 		margin-bottom: $padding;
 		position: relative;
+		cursor: pointer;
 
 		&:nth-child(4n+4){
 			@include span(last);
@@ -203,6 +204,7 @@
 		background: $background_color;
 		z-index: 200;
 		border-radius: 3px 0 0 3px;
+		overflow-y: auto;
 
 		h1 {
 			margin: 0;
@@ -225,24 +227,77 @@
 			margin-bottom: $padding/2;
 		}
 
-		.item span {
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			text-align: center;
-		}
+		.item {
 
-		.item .name {
-            @include flex(1 auto);
-			text-align: left;
+			&:not(.head):hover {
+				background: $theme_off;
+			}
+
+			span {
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				text-align: center;
+				padding: $padding/3 0;
+			}
+
+			.name {
+				@include flex(1 auto);
+				text-align: left;
+			}
+			
+			&.ignored  {
+				span:not(.actions) {
+					opacity: .3;
+				}
+
+				.name {
+					text-decoration: line-through;
+				}
+			}
+
+			.actions {
+				padding: 0;
+
+				a {
+					display: inline-block;
+					vertical-align: top;
+					padding: $padding/3;
+					min-width: 26px;
+					color: $text_color;
+					cursor: pointer;
+
+					&:hover {
+						color: $primary_color;
+					}
+				}
+			}
 		}
+		
 		.status { min-width: 70px; max-width: 70px; }
 		.quality { min-width: 60px; max-width: 60px; }
 		.size { min-width: 40px; max-width: 40px; }
 		.age { min-width: 40px; max-width: 40px; }
 		.score { min-width: 45px; max-width: 45px; }
 		.provider { min-width: 110px; max-width: 110px; }
+		.actions { min-width: 80px; max-width: 80px; }
 
+	}
+
+	.trailer_container {
+		position: relative;
+		padding-bottom: 56.25%;
+		height: 0;
+		overflow: hidden;
+		max-width: 100%;
+
+		iframe, object, embed {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
 	}
 }
 

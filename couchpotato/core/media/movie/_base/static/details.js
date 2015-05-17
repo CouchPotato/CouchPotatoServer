@@ -3,6 +3,7 @@ var MovieDetails = new Class({
 	Extends: BlockBase,
 
 	sections: null,
+	buttons: null,
 
 	initialize: function(parent, options){
 		var self = this;
@@ -19,10 +20,11 @@ var MovieDetails = new Class({
 			}).grab(
 				new Element('a.close.icon-left-arrow')
 			),
-			self.content = new Element('div.content').grab(
+			self.content = new Element('div.content').adopt(
 				new Element('h1', {
 					'text': parent.getTitle() + (parent.get('year') ? ' (' + parent.get('year') + ')' : '')
-				})
+				}),
+				self.buttons = new Element('div.buttons')
 			)
 		);
 
@@ -41,6 +43,12 @@ var MovieDetails = new Class({
 				'class': 'section section_' + name
 			}).grab(section_el)
 		);
+	},
+
+	addButton: function(button){
+		var self = this;
+
+		self.buttons.grab(button);
 	},
 
 	close: function(){

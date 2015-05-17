@@ -25,9 +25,6 @@ var Movie = new Class({
 		self.parent(self, options);
 
 		self.addEvents();
-
-		if(data.identifiers.imdb == 'tt1228705')
-			self.openDetails();
 	},
 
 	openDetails: function(){
@@ -41,8 +38,15 @@ var Movie = new Class({
 			// Add action items
 			self.actions.each(function(action, nr){
 				var details = action.getDetails();
-				if(details)
+				if(details){
 					self.details.addSection(action.getLabel(), details);
+				}
+				else {
+					var button = action.getButton();
+					if(button){
+						//self.details.addButton(button.clone(true).cloneEvents(button));
+					}
+				}
 			});
 		}
 
@@ -252,8 +256,8 @@ var Movie = new Class({
 		// Add releases
 		self.updateReleases();
 
-		self.options.actions.each(function(action){
-			var action = new action(self),
+		self.options.actions.each(function(a){
+			var action = new a(self),
 				button = action.getButton();
 			if(button)
 				self.actions_el.grab(button);

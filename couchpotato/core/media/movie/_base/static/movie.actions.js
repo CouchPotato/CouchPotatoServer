@@ -151,7 +151,8 @@ MA.Release = new Class({
 				new Element('span.size', {'text': 'Size'}),
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
-				new Element('span.provider', {'text': 'Provider'})
+				new Element('span.provider', {'text': 'Provider'}),
+				new Element('span.actions')
 			).inject(self.release_container);
 
 			if(self.movie.data.releases)
@@ -185,27 +186,33 @@ MA.Release = new Class({
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),
 						new Element('span.provider', { 'text': provider, 'title': provider }),
-						info.detail_url ? new Element('a.info.icon2', {
-							'href': info.detail_url,
-							'target': '_blank'
-						}) : new Element('a'),
-						new Element('a.download.icon2', {
-							'events': {
-								'click': function(e){
-									(e).preventDefault();
-									if(!this.hasClass('completed'))
-										self.download(release);
+						new Element('span.actions').adopt(
+							info.detail_url ? new Element('a.icon-info', {
+								'href': info.detail_url,
+								'target': '_blank'
+							}) : new Element('a'),
+							new Element('a.icon-download', {
+								'events': {
+									'click': function(e){
+										(e).preventDefault();
+										if(!this.hasClass('completed'))
+											self.download(release);
+									}
 								}
-							}
-						}),
-						new Element('a.delete.icon2', {
-							'events': {
-								'click': function(e){
-									(e).preventDefault();
-									self.ignore(release);
+							}),
+							new Element('a', {
+								'class': release.status == 'ignored' ? 'icon-redo' : 'icon-cancel',
+								'events': {
+									'click': function(e){
+										(e).preventDefault();
+										self.ignore(release);
+
+										this.toggleClass('icon-redo');
+										this.toggleClass('icon-cancel');
+									}
 								}
-							}
-						})
+							})
+						)
 					).inject(self.release_container);
 
 					if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
@@ -224,9 +231,12 @@ MA.Release = new Class({
 
 						release.el.set('class', 'item ' + new_status);
 
-						var status_el = release.el.getElement('.release_status');
-						status_el.set('class', 'release_status ' + new_status);
-						status_el.set('text', new_status);
+						release.el.getElement(':last-child')
+							.set('class', notification.data.status == 'ignored' ? 'icon-redo' : 'icon-cancel');
+
+						var status_el = release.el.getElement('.status');
+							status_el.set('class', 'status ' + new_status);
+							status_el.set('text', new_status);
 
 						if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
 							q = self.addQuality(release.quality_id);
@@ -317,13 +327,13 @@ MA.Release = new Class({
 			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
 
 			self.trynext_container.adopt(
-				has_available ? [new Element('a.icon2.readd', {
+				has_available ? [new Element('a.icon-redo', {
 					'text': has_snatched ? 'Download another release' : 'Download the best release',
 					'events': {
 						'click': self.tryNextRelease.bind(self)
 					}
 				}),
-				new Element('a.icon2.download', {
+				new Element('a.icon-download', {
 					'text': 'pick one yourself',
 					'events': {
 						'click': function(){
@@ -331,7 +341,7 @@ MA.Release = new Class({
 						}
 					}
 				})] : null,
-				new Element('a.icon2.completed', {
+				new Element('a.icon-ok', {
 					'text': 'mark this movie done',
 					'events': {
 						'click': self.markMovieDone.bind(self)
@@ -350,7 +360,7 @@ MA.Release = new Class({
 		var self = this;
 
 		var release_el = self.release_container.getElement('#release_'+release._id),
-			icon = release_el.getElement('.download.icon2');
+			icon = release_el.getElement('.icon-download');
 
 		if(icon)
 			icon.addClass('icon spinner').removeClass('download');
@@ -442,13 +452,7 @@ MA.Trailer = new Class({
 				.grab(self.player_container);
 		}
 
-		return self.player_container;
-	},
-
-	watch: function(){
-		var self = this;
-
-		var data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk'
+		var data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
 		var url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
 				'year': self.get('year')
@@ -459,30 +463,16 @@ MA.Trailer = new Class({
 			'onComplete': function(json){
 
 				self.player = new YT.Player(id, {
-					'height': height,
-					'width': size.x,
+					'height': '100%',
+					'width': '100%',
 					'videoId': json.items[0].id.videoId,
 					'playerVars': {
-						'autoplay': 1,
 						'showsearch': 0,
+						'showinfo': 0,
 						'wmode': 'transparent',
 						'iv_load_policy': 3
 					}
 				});
-
-				var quality_set = false;
-				var change_quality = function(state){
-					if(!quality_set && (state.data == 1 || state.data || 2)){
-						try {
-							self.player.setPlaybackQuality('hd720');
-							quality_set = true;
-						}
-						catch(e){
-
-						}
-					}
-				};
-				self.player.addEventListener('onStateChange', change_quality);
 
 			}
 		}).send();
