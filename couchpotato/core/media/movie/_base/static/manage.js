@@ -33,7 +33,7 @@ var MoviesManage = new Class({
 					'release_status': 'done',
 					'status_or': 1
 				},
-				'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Readd, MA.Edit, MA.Delete],
+				'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Readd, MA.Delete],
 				'menu': [self.refresh_button, self.refresh_quick],
 				'on_empty_element': new Element('div.empty_manage').adopt(
 					new Element('div', {

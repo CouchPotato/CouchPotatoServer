@@ -498,7 +498,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view3');
+		return Cookie.read(self.options.identifier+'_view');
 	},
 
 	search: function(){

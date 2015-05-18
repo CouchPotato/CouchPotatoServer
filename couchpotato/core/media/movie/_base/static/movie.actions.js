@@ -142,7 +142,7 @@ MA.Release = new Class({
 
 	getDetails: function(refresh){
 		var self = this;
-		if(self.movie.data.releases.length === 0) return;
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0) return;
 
 		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(

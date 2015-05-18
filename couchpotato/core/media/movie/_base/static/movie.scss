@@ -10,6 +10,39 @@
 	padding: 0;
 }
 
+.movie {
+
+	.quality {
+		span {
+			background: rgba(0,0,0,.2);
+			color: #FFF;
+			border-radius: 1px;
+			padding: 2px 4px;
+
+			&.failed {
+				background: #99563e;
+			}
+
+			&.ignored {
+				background: rgba(0,0,0,.2);
+			}
+
+			&.available {
+				background: #2f8199;
+			}
+
+			&.snatched {
+				background: #41997f;
+			}
+
+			&.downloaded {
+				background: #54994a;
+			}
+		}
+	}
+
+}
+
 .list_list {
 	font-weight: 300;
 
@@ -51,11 +84,7 @@
 
 				.quality span {
 					float: left;
-					color: #FFF;
 					font-size: .7em;
-					padding: 2px 4px;
-					background: rgba(0,0,0,.2);
-					border-radius: 1px;
 					margin: 2px 0 0 2px;
 				}
 			}
@@ -145,11 +174,7 @@
 					overflow: hidden;
 
 					span {
-						color: #FFF;
 						font-size: .8em;
-						padding: 2px 4px;
-						background: rgba(0,0,0,.2);
-						border-radius: 1px;
 						margin-right: 2px;
 					}
 				}
@@ -216,7 +241,6 @@
 			line-height: $header_height;
 			color: #FFF;
 			width: $gab-width;
-			cursor: pointer;
 			height: 100%;
 		}
 	}
@@ -244,10 +268,13 @@
 				font-size: 24px;
 				color: rgba(0,0,0,.5);
 				font-weight: 300;
+				
+				overflow: hidden;
 			}
 
 			.more_menu {
 				display: inline-block;
+				max-width: 100%;
 
 				> a {
 					line-height: $header_height;
@@ -256,7 +283,6 @@
 				.icon-dropdown {
 					position: relative;
 					padding: 0 $padding 0 0;
-					cursor: pointer;
 
 					&:before {
 						position: absolute;
@@ -288,18 +314,36 @@
 					}
 
 					a {
-						cursor: pointer;
+						padding-right: $padding * 1.5;
 
-						&:hover {
+						&:before {
+							position: absolute;
+							right: $padding/2;
+						}
+
+						&:hover, &.icon-ok {
 							color: $primary_color;
 						}
 					}
 				}
 
 				&.title {
+					> a {
+						display: inline-block;
+						text-overflow: ellipsis;
+						overflow: hidden;
+						white-space: nowrap;
+						width: 100%;
+					}
+
 					.wrapper {
 						left: 0;
 						right: auto;
+
+						&:before {
+							left: 22px;
+							right: auto;
+						}
 					}
 				}
 
@@ -362,7 +406,6 @@
 					padding: $padding/3;
 					min-width: 26px;
 					color: $text_color;
-					cursor: pointer;
 
 					&:hover {
 						color: $primary_color;
@@ -422,7 +465,6 @@
 				width: 30px;
 				line-height: 80px;
 				text-align: center;
-				cursor: pointer;
 
 				&:hover {
 					color: $primary_color;

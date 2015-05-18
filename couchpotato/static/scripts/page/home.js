@@ -39,7 +39,7 @@ Page.Home = new Class({
 			'identifier': 'snatched',
 			'load_more': false,
 			'view': 'list',
-			'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Refresh, MA.Delete],
+			'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
 			'title': 'Snatched & Available',
 			'description': 'These movies have been snatched or have finished downloading',
 			'on_empty_element': new Element('div').adopt(
@@ -93,49 +93,14 @@ Page.Home = new Class({
 			'filter': {
 				'random': true
 			},
-			'actions': [MA.IMDB, MA.Refresh],
+			'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Delete, MA.Category, MA.Profile],
 			'load_more': false,
-			'view': 'thumbs',
+			'view': 'thumb',
 			'force_view': true,
 			'api_call': 'dashboard.soon',
 			'onLoaded': function(){
 				self.chain.callChain();
 			}
-		});
-
-		// Make all thumbnails the same size
-		self.soon_list.addEvent('loaded', function(){
-			var images = $(self.soon_list).getElements('.poster, .no_thumbnail'),
-				timer,
-				highest = 100;
-
-			images.each(function(img){
-				img.addEvent('load', function(){
-					var height = img.getSize().y;
-					if(!highest || highest < height){
-						highest = height;
-						if(timer) clearTimeout(timer);
-						timer = (function(){
-							images.setStyle('height', highest);
-						}).delay(50);
-					}
-				});
-			});
-
-			$(window).addEvent('resize', function(){
-				if(timer) clearTimeout(timer);
-				timer = (function(){
-					var highest = 100;
-					images.each(function(img){
-						img.setStyle('height', null);
-						var height = img.getSize().y;
-						if(!highest || highest < height)
-							highest = height;
-					});
-					images.setStyle('height', highest);
-				}).delay(300);
-			});
-
 		});
 
 		$(self.soon_list).inject(self.el);
@@ -145,14 +110,36 @@ Page.Home = new Class({
 	createSuggestions: function(){
 		var self = this;
 
-		// Suggest
-		self.suggestions_list = new SuggestList({
-			'onCreated': function(){
+		// Coming Soon
+		self.suggestions_list = new MovieList({
+			'navigation': false,
+			'identifier': 'soon',
+			'limit': 12,
+			'title': 'Available soon',
+			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
+			'filter': {
+				'random': true
+			},
+			'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Delete, MA.Category, MA.Profile],
+			'load_more': false,
+			'view': 'thumb',
+			'force_view': true,
+			'api_call': 'suggestion.view',
+			'onLoaded': function(){
 				self.chain.callChain();
 			}
 		});
 
 		$(self.suggestions_list).inject(self.el);
+
+		// Suggest
+		//self.suggestions_list = new SuggestList({
+		//	'onCreated': function(){
+		//		self.chain.callChain();
+		//	}
+		//});
+		//
+		//$(self.suggestions_list).inject(self.el);
 
 	},
 
@@ -232,7 +219,7 @@ Page.Home = new Class({
 			'loader': false,
 			'load_more': false,
 			'view': 'list',
-			'actions': [MA.IMDB, MA.Trailer, MA.Edit, MA.Refresh, MA.Delete],
+			'actions': [MA.IMDB, MA.Trailer, MA.Refresh, MA.Delete, MA.Category, MA.Profile],
 			'api_call': 'dashboard.soon',
 			'onLoaded': function(){
 				self.chain.callChain();
