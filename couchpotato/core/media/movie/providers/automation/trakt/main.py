@@ -24,7 +24,9 @@ class TraktBase(Provider):
             'trakt-api-key': self.client_id,
         }
 
-        post_data = json.dumps(post_data)
+        if post_data:
+            post_data = json.dumps(post_data)
+
         data = self.getJsonData(self.api_url + method_url, data = post_data or {}, headers = headers)
         return data if data else []
 
