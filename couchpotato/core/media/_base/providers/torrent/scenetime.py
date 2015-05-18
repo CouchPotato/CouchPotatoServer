@@ -50,16 +50,16 @@ class Base(TorrentProvider):
                 
                 for result in entries[1:]:
                     cells = result.find_all('td')
-		    link = result.find('a', attrs = {'class': 'index'})
-		    torrent_id = link['href'].replace('download.php/','').split('/')[0]
-		    torrent_file = link['href'].replace('download.php/','').split('/')[1]
-		    size = self.parseSize(cells[5].contents[0] + cells[5].contents[2])
-		    name_row = cells[1].contents[0]
-		    name = name_row.getText()
-		    seeders_row = cells[6].contents[0]
-		    seeders = seeders_row.getText()		     
-		    
-		    
+                    link = result.find('a', attrs = {'class': 'index'})
+                    torrent_id = link['href'].replace('download.php/','').split('/')[0]
+                    torrent_file = link['href'].replace('download.php/','').split('/')[1]
+                    size = self.parseSize(cells[5].contents[0] + cells[5].contents[2])
+                    name_row = cells[1].contents[0]
+                    name = name_row.getText()
+                    seeders_row = cells[6].contents[0]
+                    seeders = seeders_row.getText()		     
+                    
+                    
                     results.append({
                         'id': torrent_id,
                         'name': name,
