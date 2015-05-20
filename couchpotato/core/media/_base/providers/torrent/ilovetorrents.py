@@ -88,7 +88,7 @@ class Base(TorrentProvider):
                             id = re.search('id=(?P<id>\d+)&', link).group('id')
                             url = self.urls['download'] % download
 
-                            fileSize = self.parseSize(result.select('td.rowhead')[5].text)
+                            fileSize = self.parseSize(result.select('td.rowhead')[8].text)
                             results.append({
                                 'id': id,
                                 'name': toUnicode(prelink.find('b').text),
