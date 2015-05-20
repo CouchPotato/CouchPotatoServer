@@ -23,7 +23,7 @@ class Base(TorrentProvider):
     }
 
     cat_ids = [
-        (['41'], ['720p', '1080p', 'brrip']),
+        (['80'], ['720p', '1080p', 'brrip']),
         (['19'], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         (['20'], ['dvdr'])
     ]
