@@ -24,18 +24,19 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://dieroschtibay.org',
-        'https://thebay.al',
-        'https://thepiratebay.se',
-        'http://thepiratebay.se.net',
-        'http://thebootlegbay.com',
-        'http://tpb.ninja.so',
+        'https://thepiratebay.mn',
+        'https://thepiratebay.gd',
+        'https://thepiratebay.bg',
+        'https://thepiratebay.la',
+        'https://thepiratebay.am',
+        'https://thepiratebay.gs',
         'http://proxybay.fr',
         'http://pirateproxy.in',
-        'http://piratebay.skey.sk',
-        'http://pirateproxy.be',
-        'http://bayproxy.li',
         'http://proxybay.pw',
+        'https://pirateproxy.sx',
+        'https://tpbproxy.co',
+        'https://arrr.xyz',
+        'http://tpb.dashitz.com',
     ]
 
     def _search(self, media, quality, results):
