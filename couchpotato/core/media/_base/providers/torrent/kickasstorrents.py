@@ -30,8 +30,7 @@ class Base(TorrentMagnetProvider):
     cat_backup_id = None
 
     proxy_list = [
-        'https://kickass.to',
-        'http://kickass.pw',
+        'https://kat.cr',
         'http://katproxy.ws',
         'http://kickass.bitproxy.eu',
         'http://katph.eu',
