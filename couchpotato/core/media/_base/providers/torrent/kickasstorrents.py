@@ -31,9 +31,7 @@ class Base(TorrentMagnetProvider):
 
     proxy_list = [
         'https://kat.cr',
-        'http://katproxy.ws',
-        'http://kickass.bitproxy.eu',
-        'http://katph.eu',
+        'http://katproxy.com',
     ]
 
     def _search(self, media, quality, results):
