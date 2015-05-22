@@ -1,7 +1,3 @@
-import base64
-import urllib2
-import json
-
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
 
@@ -13,9 +9,6 @@ autoload = 'Hummingbird'
 
 class Hummingbird(Automation):
 
-	def __init__(self):
-		super(Hummingbird, self).__init__()
-
 	def getIMDBids(self):
 		movies = []
 		for movie in self.getWatchlist():
@@ -25,30 +18,29 @@ class Hummingbird(Automation):
 		return movies
 
 	def getWatchlist(self):
-		url = "http://hummingbird.me/api/v1/users/%s/library" % self.conf('automation_username')
-		try:
-			data = json.load(urllib2.urlopen(url))
-		except ValueError:
-			log.error('Error getting list from hummingbird.')
+		if not self.conf('automation_username'):
+			log.error('You need to fill in a username')
+			return []
 
-		chosen = [self.conf('automation_list_current'), self.conf('automation_list_plan'), self.conf('automation_list_completed'), self.conf('automation_list_hold'), self.conf('automation_list_dropped')]
+		url = "http://hummingbird.me/api/v1/users/%s/library" % self.conf('automation_username')
+		data = self.getJsonData(url)
+
+		chosen_filter = {
+			'automation_list_current': 'currently-watching',
+			'automation_list_plan': 'plan-to-watch',
+			'automation_list_completed': 'completed',
+			'automation_list_hold': 'on-hold',
+			'automation_list_dropped': 'dropped',
+		}
+
 		chosen_lists = []
-		if chosen[0] == True:
-			chosen_lists.append('currently-watching')
-		if chosen[1] == True:
-			chosen_lists.append('plan-to-watch')
-		if chosen[2] == True:
-			chosen_lists.append('completed')
-		if chosen[3] == True:
-			chosen_lists.append('on-hold')
-		if chosen[4] == True:
-			chosen_lists.append('dropped')
-		
+		for x in chosen_filter:
+			if self.conf(x):
+				chosen_lists.append(chosen_filter[x])
+
 		entries = []
 		for item in data:
-			if item['status'] not in chosen_lists:
-				continue
-			if item['anime']['show_type'] != 'Movie':
+			if item['anime']['show_type'] != 'Movie' or item['status'] not in chosen_lists:
 				continue
 			title = item['anime']['title']
 			year = item['anime']['started_airing']
@@ -86,7 +78,7 @@ config = [{
 					'name': 'automation_list_plan',
 					'type': 'bool',
 					'label': 'Plan to Watch',
-					'default': False,
+					'default': True,
 				},
 				{
 					'name': 'automation_list_completed',
