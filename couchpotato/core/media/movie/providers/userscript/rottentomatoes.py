@@ -1,6 +1,7 @@
 import re
 import traceback
 
+from couchpotato import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
 
@@ -15,7 +16,7 @@ class RottenTomatoes(UserscriptBase):
     includes = ['*://www.rottentomatoes.com/m/*']
     excludes = ['*://www.rottentomatoes.com/m/*/*/']
 
-    version = 2
+    version = 3
 
     def getMovie(self, url):
 
@@ -25,16 +26,10 @@ class RottenTomatoes(UserscriptBase):
             return
 
         try:
-            name = None
-            year = None
-            metas = re.findall("property=\"(video:release_date|og:title)\" content=\"([^\"]*)\"", data)
-
-            for meta in metas:
-                mname, mvalue = meta
-                if mname == 'og:title':
-                    name = mvalue.decode('unicode_escape')
-                elif mname == 'video:release_date':
-                    year = mvalue[:4]
+            title = re.findall("<title>(.*)</title>", data)
+            name_year = fireEvent('scanner.name_year', title[0].split(' - Rotten')[0].decode('unicode_escape'), single = True)
+            name = name_year.get('name')
+            year = name_year.get('year')
 
             if name and year:
                 return self.search(name, year)

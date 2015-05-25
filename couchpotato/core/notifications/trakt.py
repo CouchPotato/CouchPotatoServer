@@ -16,7 +16,7 @@ class Trakt(Notification, TraktBase):
         'test': 'sync/last_activities',
     }
 
-    listen_to = ['movie.snatched']
+    listen_to = ['renamer.after']
     enabled_option = 'notification_enabled'
 
     def notify(self, message = '', data = None, listener = None):
