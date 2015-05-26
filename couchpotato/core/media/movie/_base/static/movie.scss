@@ -121,21 +121,32 @@
 .thumb_list {
 
 	font-size: 12px;
-	padding: 0 $padding;
+	padding: 0 $padding/2;
+
+	> div {
+		display: flex;
+		flex-wrap: wrap;
+	}
 
 	.movie {
-		@include span(6);
-		float: left;
 		margin-bottom: $padding;
 		position: relative;
 		cursor: pointer;
+		flex: 1 1 auto;
+		max-width: 16.666666667%;
+		border: 0 solid transparent;
+		border-width: 0 $padding/2;
 
-		&:nth-child(4n+4){
-			@include span(last);
+		@include media-desktop {
+			max-width: 20%;
 		}
 
-		&:nth-child(4n+5){
-			clear: both;
+		@include media-tablet {
+			max-width: 33.333%;
+		}
+
+		@include media-phablet {
+			max-width: 50%;
 		}
 
 		.poster {
@@ -268,7 +279,7 @@
 				font-size: 24px;
 				color: rgba(0,0,0,.5);
 				font-weight: 300;
-				
+
 				overflow: hidden;
 			}
 
@@ -386,7 +397,7 @@
 				@include flex(1 auto);
 				text-align: left;
 			}
-			
+
 			&.ignored  {
 				span:not(.actions) {
 					opacity: .3;
@@ -413,7 +424,7 @@
 				}
 			}
 		}
-		
+
 		.status { min-width: 70px; max-width: 70px; }
 		.quality { min-width: 60px; max-width: 60px; }
 		.size { min-width: 40px; max-width: 40px; }

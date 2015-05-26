@@ -60,6 +60,11 @@ input, textarea, select {
     min-width: $header_width;
     position: relative;
 
+    @include media-phablet {
+        width: $header_width_mobile;
+        min-width: $header_width_mobile;
+    }
+
     a {
         color: #FFF;
         letter-spacing: 1px;
@@ -78,6 +83,7 @@ input, textarea, select {
             font-size: 38px;
             line-height: $header_height;
             height: $header_height;
+            opacity: .1;
 
             span {
                 position: absolute;
@@ -104,6 +110,17 @@ input, textarea, select {
                     }
                 }
             }
+
+            @include media-phablet {
+                line-height: $header_width_mobile;
+                height: $header_width_mobile;
+
+                &:after {
+                    content: 'CP';
+                }
+
+                span { display: none; }
+            }
         }
 
         ul {
@@ -113,6 +130,11 @@ input, textarea, select {
             li a {
                 padding: $padding/2 $padding;
                 display: block;
+
+                @include media-phablet {
+                    padding: $padding/2 0;
+                    text-align: center;
+                }
             }
         }
 
@@ -132,12 +154,17 @@ input, textarea, select {
             width: 100%;
             text-align: center;
             line-height: 44px;
+            font-size: 20px;
         }
     }
 
     .notification_menu {
         left: 50%;
         @include translateX(-50%);
+
+        @include media-phablet {
+            bottom: 50px;
+        }
 
         .button:before {
             font-size: 20px;
@@ -179,6 +206,12 @@ input, textarea, select {
     .menu  {
         left: $padding / 3;
 
+        @include media-phablet {
+            bottom: 94px;
+            left: 50%;
+            @include translateX(-50%);
+        }
+
         .button:before {
             font-size: 20px;
             top: -2px;
@@ -187,6 +220,12 @@ input, textarea, select {
 
     .search_form {
         right: $padding / 3;
+
+        @include media-phablet {
+            right: auto;
+            left: 50%;
+            @include translateX(-50%);
+        }
     }
 
     .more_menu {
@@ -259,6 +298,11 @@ input, textarea, select {
         border-radius: $border_radius 0 0 0;
         z-index: 100;
 
+        @include media-phablet {
+            height: $header_width_mobile;
+            left: $header_width_mobile;
+        }
+
         ul {
             @include flex(1 auto);
             list-style: none;
@@ -271,6 +315,10 @@ input, textarea, select {
                     line-height: $header_height;
                     padding: $padding;
                     color: rgba(0,0,0,.5);
+
+                    @include media-phablet {
+                        line-height: $header_width_mobile;
+                    }
                 }
             }
 
