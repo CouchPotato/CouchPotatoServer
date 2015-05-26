@@ -1,4 +1,3 @@
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
@@ -20,16 +19,10 @@ class Moviemeter(Automation, RSS):
         rss_movies = self.getRSSData(self.rss_url)
 
         for movie in rss_movies:
+            imdb = self.search(self.getTextElement(movie, 'title'))
 
-            title = self.getTextElement(movie, 'title')
-            name_year = fireEvent('scanner.name_year', title, single = True)
-            if name_year.get('name') and name_year.get('year'):
-                imdb = self.search(name_year.get('name'), name_year.get('year'))
-
-                if imdb and self.isMinimalMovie(imdb):
-                    movies.append(imdb['imdb'])
-            else:
-                log.error('Failed getting name and year from: %s', title)
+            if imdb and self.isMinimalMovie(imdb):
+                movies.append(imdb['imdb'])
 
         return movies
 
