@@ -4,9 +4,8 @@
 * {
     margin: 0;
     padding: 0;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
+    text-rendering: optimizeSpeed;
 }
 
 body, html {
@@ -83,7 +82,6 @@ input, textarea, select {
             font-size: 38px;
             line-height: $header_height;
             height: $header_height;
-            opacity: .1;
 
             span {
                 position: absolute;
@@ -173,6 +171,10 @@ input, textarea, select {
 
         .wrapper {
 			width: 320px;
+
+            @include media-phablet {
+                width: 250px;
+            }
         }
 
         ul {
@@ -316,7 +318,9 @@ input, textarea, select {
                     color: rgba(0,0,0,.5);
 
                     @include media-phablet {
+                        font-size: 18px;
                         line-height: $header_width_mobile;
+                        padding: $padding/2;
                     }
                 }
             }
@@ -454,6 +458,7 @@ input, textarea, select {
 		font-size: 1.1em;
 		font-weight: normal;
 		transform: scale(0);
+        transform-origin: 100% 50%;
         background: $primary_color;
         margin-bottom: 4px;
         border-radius: $border_radius;

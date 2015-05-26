@@ -8,6 +8,10 @@
 .page.movies_wanted, .page.movies_manage {
 	top: $header_height;
 	padding: 0;
+	
+	@include media-phablet {
+		top: $header_width_mobile;
+	}
 }
 
 .movie {
@@ -67,13 +71,38 @@
 		.data {
 			padding: $padding/2 $padding;
 
+
+			@include media-phablet {
+				padding: $padding/2;
+			}
+
 			.info {
 
 				display: flex;
 				flex-flow: row nowrap;
 
+				@include media-phablet {
+					display: block;
+				}
+
 				.title {
 					flex: 1 auto;
+
+					@include media-phablet {
+						display: flex;
+						flex-flow: row nowrap;
+					}
+
+					span {
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+
+						@include media-phablet {
+							width: 100%;
+						}
+
+					}
 
 					.year {
 						display: inline-block;
@@ -82,10 +111,19 @@
 					}
 				}
 
-				.quality span {
-					float: left;
-					font-size: .7em;
-					margin: 2px 0 0 2px;
+				.quality {
+					clear: both;
+					overflow: hidden;
+
+					span {
+						float: left;
+						font-size: .7em;
+						margin: 2px 0 0 2px;
+
+						@include media-phablet {
+							margin: 2px 2px 0 0;
+						}
+					}
 				}
 			}
 		}
@@ -114,6 +152,10 @@
 
 		&:hover .actions {
 			display: block;
+
+			@include media-phablet {
+				display: none;
+			}
 		}
 	}
 }
@@ -141,9 +183,13 @@
 		position: relative;
 		cursor: pointer;
 		flex: 1 1 auto;
-		max-width: 16.666666667%;
+		max-width: 14.285%;
 		border: 0 solid transparent;
 		border-width: 0 $padding/2;
+
+		@include media-desktop-plus {
+			max-width: 16.666666667%;
+		}
 
 		@include media-desktop {
 			max-width: 20%;
@@ -220,6 +266,10 @@
 
 		&:hover .actions {
 			display: block;
+
+			@include media-phablet {
+				display: none;
+			}
 		}
 
 		.mask {
@@ -478,6 +528,10 @@
 
 
 .alph_nav {
+
+	@include media-phablet {
+		display: none;
+	}
 
 	.mass_edit_form {
 		display: none;

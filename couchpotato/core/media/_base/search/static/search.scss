@@ -72,6 +72,10 @@
 		.wrapper {
 			display: block;
 			width: 380px;
+
+			@include media-phablet {
+				width: 250px;
+			}
 		}
 
 		.input {
@@ -101,6 +105,10 @@
 				height: 50px;
 				position: relative;
 
+				@include media-phablet {
+					font-size: 12px;
+				}
+
 				.options {
 					position: absolute;
 					height: 100%;
@@ -109,6 +117,10 @@
 					right: 0;
 					padding: 10px;
 					background: rgba(0,0,0,.3);
+
+					@include media-phablet {
+						left: 0;
+					}
 
 					> .in_library_wanted {
 						margin-top: -7px;
@@ -129,6 +141,10 @@
 						margin-right: 10px;
 						min-width: 70px;
 						flex: 1 auto;
+
+						@include media-phablet {
+							min-width: 0;
+						}
 					}
 
 					.button {
@@ -152,6 +168,10 @@
 					display: block;
 					margin: 0;
 					vertical-align: top;
+
+					@include media-phablet {
+						display: none;
+					}
 				}
 
 				.data {
@@ -165,6 +185,10 @@
 					transition: all .4s cubic-bezier(0.9,0,0.1,1);
 					transform: translateX(0);
 					background: $background_color;
+
+					@include media-phablet {
+						left: 0;
+					}
 
 					&.open {
 						transform: translateX(100%);
