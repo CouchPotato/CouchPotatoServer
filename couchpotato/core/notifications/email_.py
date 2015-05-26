@@ -31,8 +31,8 @@ class Email(Notification):
         starttls = self.conf('starttls')
 
         # Make the basic message
-        message = MIMEText(toUnicode(message), _charset = Env.get('encoding'))
         message['Subject'] = '%s: %s' % (self.default_title, toUnicode(message))
+        message = MIMEText(toUnicode(message), _charset = Env.get('encoding'))
         message['From'] = from_address
         message['To'] = to_address
         message['Date'] = formatdate(localtime = 1)
