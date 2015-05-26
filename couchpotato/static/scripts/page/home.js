@@ -12,7 +12,9 @@ Page.Home = new Class({
 
 			// Reset lists
 			self.available_list.update();
-			self.late_list.update();
+
+			if(self.late_list)
+				self.late_list.update();
 
 			return;
 		}
