@@ -22,7 +22,7 @@ body, html {
 }
 
 body {
-    @include flexbox();
+    display: flex;
     flex-flow: row nowrap;
 }
 
@@ -90,22 +90,22 @@ input, textarea, select {
                 display: block;
                 height: 100%;
                 left: 50%;
-                @include transition(all 200ms $cubic);
-                @include translateX(-50%);
+                transition: all 200ms $cubic;
+                transform: translateX(-50%);
 
                 &:nth-child(even){
-                    @include translateX(45%);
+                    transform: translateX(45%);
                     opacity: 0;
                 }
             }
 
             &:hover {
                 span{
-                    @include translateX(-153%);
+                    transform: translateX(-153%);
                     opacity: 0;
 
                     &:nth-child(even){
-                        @include translateX(-50%);
+                        transform: translateX(-50%);
                         opacity: 1;
                     }
                 }
@@ -143,7 +143,7 @@ input, textarea, select {
 
     .menu, .search_form, .notification_menu  {
         position: absolute;
-        z-index: 200;
+        z-index: 21;
         bottom: $padding / 3;
         width: 44px;
         height: 44px;
@@ -160,7 +160,7 @@ input, textarea, select {
 
     .notification_menu {
         left: 50%;
-        @include translateX(-50%);
+        transform: translateX(-50%);
 
         @include media-phablet {
             bottom: 50px;
@@ -209,7 +209,7 @@ input, textarea, select {
         @include media-phablet {
             bottom: 94px;
             left: 50%;
-            @include translateX(-50%);
+            transform: translateX(-50%);
         }
 
         .button:before {
@@ -224,7 +224,7 @@ input, textarea, select {
         @include media-phablet {
             right: auto;
             left: 50%;
-            @include translateX(-50%);
+            transform: translateX(-50%);
         }
     }
 
@@ -242,7 +242,7 @@ input, textarea, select {
 
 /* Content */
 .content {
-    @include flex(1 auto);
+    flex: 1 auto;
 
     background: $background_color;
     border-radius: $border_radius 0 0 $border_radius;
@@ -288,7 +288,7 @@ input, textarea, select {
     }
 
     .navigation {
-        @include flexbox();
+        display: flex;
         position: fixed;
         top: 0;
         height: $header_height;
@@ -296,7 +296,6 @@ input, textarea, select {
         right: 0;
         background: $background_color;
         border-radius: $border_radius 0 0 0;
-        z-index: 100;
 
         @include media-phablet {
             height: $header_width_mobile;
@@ -304,7 +303,7 @@ input, textarea, select {
         }
 
         ul {
-            @include flex(1 auto);
+            flex: 1 auto;
             list-style: none;
 
             li {
@@ -374,7 +373,7 @@ input, textarea, select {
         border-radius: $border_radius 0 0 $border_radius;
 
         &:before {
-            @include transform(rotate(45deg) translateY(-60%));
+            transform: rotate(45deg) translateY(-60%);
             content: '';
             display: block;
             position: absolute;
@@ -391,7 +390,7 @@ input, textarea, select {
         }
 
         ul {
-            @include transform(translateZ(0));
+            transform: translateZ(0);
             background: $background_color;
             position: relative;
             z-index: 2;
@@ -496,7 +495,7 @@ input, textarea, select {
 /* Mask */
 .mask{
 	background: rgba(0,0,0, .8);
-	z-index: 100;
+	z-index: 1000;
 	text-align: center;
     position: absolute;
     top: 0;
@@ -517,23 +516,22 @@ input, textarea, select {
         margin-top: -($spinner_size/2);
         margin-left: -($spinner_size/2);
         outline: 1px solid transparent;
-
-        @include animation(rotating 2.5s $cubic infinite normal);
+        animation: rotating 2.5s $cubic infinite normal;
     }
 }
 
 @keyframes rotating {
     0% {
-        @include transform(rotate(0deg) scale(1.6));
+        transform: rotate(0deg) scale(1.6);
         border-radius: 1px;
     }
     48% {
-        @include transform(rotate(360deg) scale(1));
+        transform: rotate(360deg) scale(1);
         border-radius: 50%;
     }
     52% {}
     100% {
-        @include transform(rotate(720deg) scale(1.6));
+        transform: rotate(720deg) scale(1.6);
         border-radius: 1px;
     }
 }
@@ -545,7 +543,7 @@ input, textarea, select {
     }
 
     .item {
-        @include flexbox();
+        display: flex;
         border-bottom: 1px solid rgba(0,0,0,.2);
 
         &:last-child {

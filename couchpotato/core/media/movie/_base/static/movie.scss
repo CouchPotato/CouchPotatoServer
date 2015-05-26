@@ -69,11 +69,11 @@
 
 			.info {
 
-				@include flexbox();
+				display: flex;
 				flex-flow: row nowrap;
 
 				.title {
-					@include flex(1 auto);
+					flex: 1 auto;
 
 					.year {
 						display: inline-block;
@@ -123,6 +123,14 @@
 	font-size: 12px;
 	padding: 0 $padding/2;
 
+	@include media-tablet {
+		padding: 0 $padding/4;
+	}
+
+	@include media-phablet {
+		padding: 0 $padding/6;
+	}
+
 	> div {
 		display: flex;
 		flex-wrap: wrap;
@@ -143,6 +151,7 @@
 
 		@include media-tablet {
 			max-width: 33.333%;
+			border-width: 0 $padding/4;
 		}
 
 		@include media-phablet {
@@ -163,11 +172,11 @@
 				height: 44px;
 
 				.title {
-					@include flexbox();
+					display: flex;
 					padding: 3px 0;
 
 					span {
-						@include flex(1 auto);
+						flex: 1 auto;
 						white-space: nowrap;
 						overflow: hidden;
 						text-overflow: ellipsis;
@@ -236,6 +245,10 @@
 
 	$gab-width: $header_width/3;
 
+	@include media-phablet {
+		left: 0;
+	}
+
 	.overlay {
 		position: fixed;
 		top: 0;
@@ -245,6 +258,10 @@
 		background: rgba(0,0,0,.6);
 		border-radius: 3px 0 0 3px;
 
+		@include media-phablet {
+			left: 0;
+		}
+
 		.close {
 			display: inline-block;
 			text-align: center;
@@ -253,6 +270,10 @@
 			color: #FFF;
 			width: $gab-width;
 			height: 100%;
+
+			@include media-phablet {
+				width: $header_width_mobile;
+			}
 		}
 	}
 
@@ -263,18 +284,21 @@
 		right: 0;
 		left: $header_width + $gab-width;
 		background: $background_color;
-		z-index: 200;
 		border-radius: 3px 0 0 3px;
 		overflow-y: auto;
 
+		@include media-phablet {
+			left: $header_width_mobile;
+		}
+
 		> .head {
-			@include flexbox();
+			display: flex;
 			flex-flow: row nowrap;
 			padding: 0 $padding;
 			line-height: $header_height;
 
 			h1 {
-				@include flex(1 auto);
+				flex: 1 auto;
 				margin: 0;
 				font-size: 24px;
 				color: rgba(0,0,0,.5);
@@ -394,7 +418,7 @@
 			}
 
 			.name {
-				@include flex(1 auto);
+				flex: 1 auto;
 				text-align: left;
 			}
 

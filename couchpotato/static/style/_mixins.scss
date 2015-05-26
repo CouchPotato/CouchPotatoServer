@@ -7,21 +7,11 @@ $text_color: #000;
 
 $header_height: 80px;
 $header_width: 132px;
-$header_width_mobile: 44px;
+$header_width_mobile: 66px;
 $padding: 20px;
 $border_radius: 3px;
 
 $cubic: cubic-bezier(0.9,0,0.1,1);
-
-@import "susy";
-@import "compass/css3/transition";
-@import "compass/css3/transform";
-@import "compass/css3/animation";
-
-$susy: (
-	columns: 24,
-	gutters: 70px/70px
-);
 
 $mq-phone: 320px !default;
 $mq-phablet: 480px !default;
@@ -57,28 +47,4 @@ $mq-desktop-plus: 1382px !default;
 	@media (max-width : $mq-desktop-plus) {
 		@content;
 	}
-}
-
-@mixin flexbox() {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
-}
-
-@mixin flex($values) {
-  -webkit-box-flex: $values;
-  -moz-box-flex:  $values;
-  -webkit-flex:  $values;
-  -ms-flex:  $values;
-  flex:  $values;
-}
-
-@mixin order($val) {
-  -webkit-box-ordinal-group: $val;
-  -moz-box-ordinal-group: $val;
-  -ms-flex-order: $val;
-  -webkit-order: $val;
-  order: $val;
 }

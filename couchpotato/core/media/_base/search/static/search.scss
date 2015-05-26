@@ -2,7 +2,7 @@
 
 .search_form {
 	display: inline-block;
-	z-index: 200;
+	z-index: 11;
 	width: 44px;
 	position: relative;
 
@@ -15,9 +15,7 @@
 		text-align: center;
 		color: #FFF;
 		font-size: 20px;
-
-		@include translateY(-50%);
-
+		transform: translateY(-50%);
 	}
 
 	.wrapper {
@@ -30,7 +28,7 @@
         box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
 
 		&:before {
-			@include transform(rotate(45deg));
+			transform: rotate(45deg);
 			content: '';
 			display: block;
 			position: absolute;
@@ -118,7 +116,7 @@
 
 					> div {
 						border: 0;
-						@include flexbox();
+						display: flex;
 					}
 
 					.thumbnail {
@@ -130,11 +128,11 @@
 						display: inline-block;
 						margin-right: 10px;
 						min-width: 70px;
-						@include flex(1 auto);
+						flex: 1 auto;
 					}
 
 					.button {
-						@include flex(1 auto);
+						flex: 1 auto;
 						vertical-align: middle;
 						display: inline-block;
 					}
@@ -165,11 +163,11 @@
 					cursor: pointer;
 					border-top: 1px solid rgba(255,255,255, 0.08);
 					transition: all .4s cubic-bezier(0.9,0,0.1,1);
-					@include translateX(0%);
+					transform: translateX(0);
 					background: $background_color;
 
 					&.open {
-						@include translateX(100%);
+						transform: translateX(100%);
 					}
 
 					.in_wanted,
@@ -194,7 +192,7 @@
 							padding: 0;
 							position: absolute;
 							width: 100%;
-        					@include flexbox();
+        					display: flex;
 
 							.title {
 								display: inline-block;
@@ -202,7 +200,7 @@
 								text-overflow: ellipsis;
 								overflow: hidden;
 								white-space: nowrap;
-    							@include flex(1 auto);
+    							flex: 1 auto;
 							}
 
 							.year {
