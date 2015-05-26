@@ -134,7 +134,15 @@ var PageBase = new Class({
 	},
 
 	hide: function(){
-		this.el.removeClass('active');
+		var self = this;
+
+		self.el.removeClass('active');
+
+		if(self.sub_pages){
+			self.sub_pages.each(function(sub_page){
+				sub_page['class'].hide();
+			});
+		}
 	},
 
 	toElement: function(){
