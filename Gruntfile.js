@@ -102,7 +102,7 @@ module.exports = function(grunt){
 			options: {
 				logConcurrentOutput: true
 			},
-			tasks: ['shell:runCouchPotato', 'sass:server', 'autoprefixer', 'cssmin', 'watch']
+			tasks: ['shell:runCouchPotato', 'watch']
 		}
 
 	});
@@ -116,6 +116,6 @@ module.exports = function(grunt){
 	grunt.loadNpmTasks('grunt-concurrent');
 	grunt.loadNpmTasks('grunt-shell');
 
-	grunt.registerTask('default', ['concurrent']);
+	grunt.registerTask('default', ['sass:server', 'autoprefixer', 'cssmin', 'concurrent']);
 
 };
