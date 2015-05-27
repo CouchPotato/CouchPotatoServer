@@ -101,15 +101,22 @@ MA.IMDB = new Class({
 
 		self.id = self.movie.getIdentifier ? self.movie.getIdentifier() : self.get('imdb');
 
-		self.button = new Element('a.imdb', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+		if(!self.id) self.disable();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.imdb', {
 			'text': 'IMDB',
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
 			'href': 'http://www.imdb.com/title/'+self.id+'/',
 			'target': '_blank'
 		});
-
-		if(!self.id) self.disable();
-	}
+	},
 
 });
 
@@ -748,14 +755,20 @@ MA.Refresh = new Class({
 	create: function(){
 		var self = this;
 
-		self.button = new Element('a.refresh', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+		return new Element('a.refresh', {
 			'text': 'Refresh',
 			'title': 'Refresh the movie info and do a forced search',
 			'events': {
 				'click': self.doRefresh.bind(self)
 			}
 		});
-
 	},
 
 	doRefresh: function(e){
