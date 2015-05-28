@@ -596,9 +596,11 @@
 						font-size: .9em;
 					}
 
-					&.icon-info:after { content: "more info"; }
-					&.icon-download:after { content: "download"; }
-					&.icon-cancel:after { content: "ignore"; }
+					@include media-phablet {
+						&.icon-info:after { content: "more info"; }
+						&.icon-download:after { content: "download"; }
+						&.icon-cancel:after { content: "ignore"; }
+					}
 				}
 			}
 		}
