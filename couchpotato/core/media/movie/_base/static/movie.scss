@@ -473,6 +473,11 @@
 				a {
 					display: inline-block;
 					padding: 0 10px 10px;
+					color: $primary_color;
+
+					&:hover {
+						color: #000;
+					}
 				}
 
 			}
@@ -609,11 +614,42 @@
 	}
 
 	.trailer_container {
+		background: $theme_off;
 		position: relative;
 		padding-bottom: 56.25%;
 		height: 0;
 		overflow: hidden;
 		max-width: 100%;
+		cursor: pointer;
+		transition: all 300ms;
+
+		&:hover {
+			background: $primary_color;
+			color: #FFF;
+		}
+
+		.icon-play {
+			font-size: 22px;
+			position: absolute;
+			text-align: center;
+			width: 100%;
+			top: 50%;
+			transform: translateY(-50%);
+
+			span {
+				position: absolute;
+				font-size: 16px;
+				top: 50%;
+				left: 50%;
+				margin-left: 10px;
+				transform: translateY(-50%);
+
+				&:first-child {
+					margin-left: 0;
+					transform: translate(-150%, -50%);
+				}
+			}
+		}
 
 		iframe, object, embed {
 			position: absolute;

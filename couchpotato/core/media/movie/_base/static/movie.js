@@ -37,8 +37,10 @@ var Movie = new Class({
 
 		self.addEvents();
 
-		//if(data.identifiers.imdb == 'tt2713180')
-		//	self.openDetails();
+		if(data.identifiers.imdb == 'tt3181822'){
+			self.el.fireEvent('mouseenter');
+			self.openDetails();
+		}
 	},
 
 	openDetails: function(){
@@ -204,6 +206,20 @@ var Movie = new Class({
 			eta_date = eta_date.toLocaleString('en-us', { month: "long" }) + ' ' + eta_date.getFullYear();
 		}
 
+		var thumbnail = null;
+		if(self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0){
+			thumbnail = new Element('img', {
+				'class': 'type_image poster',
+				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
+			});
+		}
+		else if(self.data.info && self.data.info.images && self.data.info.images.poster && self.data.info.images.poster.length > 0){
+			thumbnail = new Element('img', {
+				'class': 'type_image poster',
+				'src': self.data.info.images.poster[0]
+			});
+		}
+
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox].inlay', {
 				'events': {
@@ -212,10 +228,7 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = (self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0) ? new Element('img', {
-				'class': 'type_image poster',
-				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
-			}): null,
+			self.thumbnail = thumbnail,
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(

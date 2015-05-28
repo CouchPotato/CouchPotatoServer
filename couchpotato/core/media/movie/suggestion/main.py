@@ -1,6 +1,7 @@
+import time
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier, getTitle
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 
@@ -14,6 +15,12 @@ class Suggestion(Plugin):
 
         addApiView('suggestion.view', self.suggestView)
         addApiView('suggestion.ignore', self.ignoreView)
+
+        def test():
+            time.sleep(1)
+            self.suggestView()
+
+        addEvent('app.load', test)
 
     def suggestView(self, limit = 6, **kwargs):
 
@@ -38,10 +45,22 @@ class Suggestion(Plugin):
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
             self.setCache('suggestion_cached', suggestions, timeout = 6048000)  # Cache for 10 weeks
 
+
+        medias = []
+        for suggestion in suggestions[:int(limit)]:
+            medias.append({
+                'status': 'suggested',
+                'title': getTitle(suggestion),
+                'type': 'movie',
+                'info': suggestion,
+                'identifiers': {
+                    'imdb': suggestion.get('imdb')
+                }
+            })
+
         return {
             'success': True,
-            'count': len(suggestions),
-            'suggestions': suggestions[:int(limit)]
+            'movies': medias
         }
 
     def ignoreView(self, imdb = None, limit = 6, remove_only = False, mark_seen = False, **kwargs):

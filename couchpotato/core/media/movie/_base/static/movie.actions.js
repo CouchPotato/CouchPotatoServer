@@ -453,33 +453,42 @@ MA.Trailer = new Class({
 		var self = this;
 
 		if(!self.player_container){
-			var id = 'trailer-'+randomString();
-			self.player_container = new Element('div.icon-play[id='+id+']', {
+			self.id = 'trailer-'+randomString();
+			self.player_container = new Element('div.icon-play[id='+self.id+']', {
 				'events': {
-					'click': function(e){
-						self.watch(id);
-					}
+					'click': self.watch.bind(self)
 				}
-			});
+			}).adopt(new Element('span[text="play"]'), new Element('span[text="trailer"]'));
+
 			self.container = new Element('div.trailer_container')
 				.grab(self.player_container);
 		}
 
-		var data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
+		return self.container;
+
+	},
+
+	watch: function(){
+		var self = this,
+			data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
+
 		var url = data_url.substitute({
-				'title': encodeURI(self.getTitle()),
-				'year': self.get('year')
-			});
+			'title': encodeURI(self.getTitle()),
+			'year': self.get('year')
+		});
+
+		var spinner = new Element('div.mask').grab(new Element('div.spinner')).inject(self.container);
 
 		new Request.JSONP({
 			'url': url,
 			'onComplete': function(json){
 
-				self.player = new YT.Player(id, {
+				self.player = new YT.Player(self.id, {
 					'height': '100%',
 					'width': '100%',
 					'videoId': json.items[0].id.videoId,
 					'playerVars': {
+						'autoplay': 1,
 						'showsearch': 0,
 						'showinfo': 0,
 						'wmode': 'transparent',
@@ -487,25 +496,10 @@ MA.Trailer = new Class({
 					}
 				});
 
+				spinner.hide();
+
 			}
 		}).send();
-
-		return self.container;
-
-	},
-
-	stop: function(){
-		var self = this;
-
-		self.player.stopVideo();
-		self.container.addClass('hide');
-		self.close_button.addClass('hide');
-		$(self.movie).setStyle('height', null);
-
-		setTimeout(function(){
-			self.container.destroy();
-			self.close_button.destroy();
-		}, 1800);
 	}
 
 
@@ -780,6 +774,110 @@ MA.Refresh = new Class({
 				'id': self.movie.get('_id')
 			}
 		});
+	}
+
+});
+
+MA.Add = new Class({
+
+	Extends: MovieAction,
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+		p('add');
+	},
+
+	createButton: function(){
+		var self = this;
+		return new Element('a.add', {
+			'text': 'Add movie',
+			'title': 'Re-add the movie and mark all previous snatched/downloaded as ignored',
+			'events': {
+				'click': self.doAdd.bind(self)
+			}
+		});
+
+	},
+
+	doAdd: function(e){
+		var self = this;
+		(e).preventDefault();
+
+		var m = new BlockSearchMovieItem(movie, {
+			'onAdded': function(){
+				//self.afterAdded(m, movie);
+			}
+		});
+
+		p(m);
+	}
+
+});
+
+MA.SuggestSeen = new Class({
+
+	Extends: MovieAction,
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.add', {
+			'text': 'Already seen',
+			'title': 'Already seen it!',
+			'events': {
+				'click': self.markAsSeen.bind(self)
+			}
+		});
+
+	},
+
+	markAsSeen: function(e){
+		var self = this;
+		(e).preventDefault();
+
+	}
+
+});
+
+MA.SuggestIgnore = new Class({
+
+	Extends: MovieAction,
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.add', {
+			'text': 'Ignore',
+			'title': 'Don\'t suggest this movie anymore',
+			'events': {
+				'click': self.markAsIgnored.bind(self)
+			}
+		});
+
+	},
+
+	markAsIgnored: function(e){
+		var self = this;
+		(e).preventDefault();
+
 	}
 
 });

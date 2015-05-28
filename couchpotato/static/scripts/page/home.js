@@ -115,14 +115,11 @@ Page.Home = new Class({
 		// Coming Soon
 		self.suggestions_list = new MovieList({
 			'navigation': false,
-			'identifier': 'soon',
+			'identifier': 'suggest',
 			'limit': 12,
-			'title': 'Available soon',
-			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
-			'filter': {
-				'random': true
-			},
-			'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Delete, MA.Category, MA.Profile],
+			'title': 'Suggestions',
+			'description': 'Based on your current wanted and managed items',
+			'actions': [MA.Add, MA.SuggestIgnore, MA.SuggestSeen, MA.IMDB, MA.Trailer],
 			'load_more': false,
 			'view': 'thumb',
 			'force_view': true,
@@ -133,15 +130,6 @@ Page.Home = new Class({
 		});
 
 		$(self.suggestions_list).inject(self.el);
-
-		// Suggest
-		//self.suggestions_list = new SuggestList({
-		//	'onCreated': function(){
-		//		self.chain.callChain();
-		//	}
-		//});
-		//
-		//$(self.suggestions_list).inject(self.el);
 
 	},
 

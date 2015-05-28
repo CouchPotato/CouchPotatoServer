@@ -82,6 +82,7 @@ input, textarea, select {
             font-size: 38px;
             line-height: $header_height;
             height: $header_height;
+			opacity: .1;
             transition: background 200ms $cubic;
 
             span {
