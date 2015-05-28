@@ -47,6 +47,22 @@
 
 }
 
+.list_list, .thumb_list {
+	position: relative;
+
+	> .description {
+		position: absolute;
+		top: 0;
+		right: $padding;
+		width: auto;
+		line-height: $header_height;
+
+		@include media-tablet {
+			display: none;
+		}
+	}
+}
+
 .list_list {
 	font-weight: 300;
 
@@ -189,10 +205,12 @@
 
 		@include media-desktop-plus {
 			max-width: 16.666666667%;
+			border-width: 0 $padding/2.5;
 		}
 
 		@include media-desktop {
 			max-width: 20%;
+			border-width: 0 $padding/3;
 		}
 
 		@include media-tablet {
@@ -202,6 +220,7 @@
 
 		@include media-phablet {
 			max-width: 50%;
+			border-width: 0 $padding/5;
 		}
 
 		.poster {

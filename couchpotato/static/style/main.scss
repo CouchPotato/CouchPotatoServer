@@ -523,6 +523,8 @@ input, textarea, select {
     right: 0;
     bottom: 0;
     left: 0;
+    opacity: 0;
+    transition: opacity 1000ms;
 
     $spinner_size: 22px;
 
@@ -538,6 +540,23 @@ input, textarea, select {
         margin-left: -($spinner_size/2);
         outline: 1px solid transparent;
         animation: rotating 2.5s $cubic infinite normal;
+        transform: scale(0);
+    }
+
+    &.show {
+        opacity: 1;
+
+        .spinner {
+            transform: scale(1);
+        }
+    }
+
+    &.hide {
+        opacity: 0;
+
+        .spinner {
+            transform: scale(0);
+        }
     }
 }
 

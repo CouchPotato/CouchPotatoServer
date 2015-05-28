@@ -539,15 +539,15 @@ var MovieList = new Class({
 
 		if(self.movies.length === 0 && self.options.loader){
 
-			self.loader_first = new Element('div.loading').adopt(
+			self.loader_first = new Element('div.mask.loading').adopt(
 				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
 			).inject(self.el, 'top');
+			createSpinner(self.loader_first);
 
-			createSpinner(self.loader_first, {
-				radius: 4,
-				length: 4,
-				width: 1
-			});
+			var lfc = self.loader_first;
+			setTimeout(function(){
+				lfc.addClass('show');
+			}, 10);
 
 			self.el.setStyle('min-height', 93);
 
@@ -566,11 +566,11 @@ var MovieList = new Class({
 
 				if(self.loader_first){
 					var lf = self.loader_first;
-					self.loader_first.addClass('hide');
 					self.loader_first = null;
+					//lf.addClass('hide');
 					setTimeout(function(){
 						lf.destroy();
-					}, 20000);
+					}, 3000);
 					self.el.setStyle('min-height', null);
 				}
 
