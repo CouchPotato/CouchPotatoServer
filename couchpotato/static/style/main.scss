@@ -82,6 +82,7 @@ input, textarea, select {
             font-size: 38px;
             line-height: $header_height;
             height: $header_height;
+            transition: background 200ms $cubic;
 
             span {
                 position: absolute;
@@ -98,6 +99,8 @@ input, textarea, select {
             }
 
             &:hover {
+                background: darken($primary_color, 4);
+
                 span{
                     transform: translateX(-153%);
                     opacity: 0;
@@ -145,6 +148,10 @@ input, textarea, select {
         bottom: $padding / 3;
         width: 44px;
         height: 44px;
+
+        .wrapper {
+            min-width: 170px;
+        }
 
         > a {
             display: inline-block;
@@ -405,6 +412,11 @@ input, textarea, select {
         ul li {
             display: block;
             line-height: 1em;
+            border-top: 1px solid $theme_off;
+
+            &:first-child {
+                border-top: 0;
+            }
 
             a {
                 display: block;
@@ -412,7 +424,10 @@ input, textarea, select {
                 padding: $padding/4 $padding/2;
                 font-size: 1em;
                 line-height: 22px;
-                white-space: nowrap;
+
+                &:hover {
+
+                }
             }
 
             &:first-child a {

@@ -8,7 +8,7 @@
 .page.movies_wanted, .page.movies_manage {
 	top: $header_height;
 	padding: 0;
-	
+
 	@include media-phablet {
 		top: $header_width_mobile;
 	}
@@ -377,6 +377,10 @@
 
 				> a {
 					line-height: $header_height;
+
+					@include media-phablet {
+						line-height: 1em;
+					}
 				}
 
 				.icon-dropdown {
@@ -399,6 +403,10 @@
 					padding-top: 4px;
 					border-radius: $border_radius $border_radius 0 0;
 					font-size: 14px;
+
+					@include media-phablet {
+						top: 25px;
+					}
 
 					&:before {
 						top: 0;
@@ -439,6 +447,11 @@
 						left: 0;
 						right: auto;
 
+						@include media-phablet {
+							top: 30px;
+							max-width: 240px;
+						}
+
 						&:before {
 							left: 22px;
 							right: auto;
@@ -455,6 +468,11 @@
 
 				@include media-phablet {
 					margin-left: auto;
+				}
+
+				a {
+					display: inline-block;
+					padding: 0 10px 10px;
 				}
 
 			}
