@@ -614,49 +614,109 @@
 	}
 
 	.trailer_container {
-		background: $theme_off;
+		$play-size: 110px;
+
+		background: #000;
 		position: relative;
 		padding-bottom: 56.25%;
 		height: 0;
 		overflow: hidden;
 		max-width: 100%;
 		cursor: pointer;
-		transition: all 300ms;
 
-		&:hover {
-			background: $primary_color;
-			color: #FFF;
+		.background {
+			opacity: .6;
+			transition: all 300ms;
+			filter: blur(10px);
+			transform: scale(1.05) translateZ(0);
+			background: no-repeat center;
+			background-size: cover;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 1;
 		}
 
 		.icon-play {
-			font-size: 22px;
+
+			opacity: 0.9;
 			position: absolute;
+			z-index: 2;
 			text-align: center;
 			width: 100%;
 			top: 50%;
 			transform: translateY(-50%);
+			transition: all 300ms;
+			color: #FFF;
+			font-size: $play-size;
+
+			@include media-desktop {
+				font-size: $play-size/2;
+			}
+
+			@include media-phablet {
+				font-size: $play-size/3.5;
+			}
 
 			span {
+				transition: all 300ms;
+				opacity: 0.9;
 				position: absolute;
-				font-size: 16px;
+				font-size: 1em;
 				top: 50%;
 				left: 50%;
-				margin-left: 10px;
-				transform: translateY(-50%);
+				margin-left: $play-size/2;
+				transform: translateY(-54%);
+
+				@include media-desktop {
+					margin-left: $play-size/4;
+				}
+
+				@include media-phablet {
+					margin-left: $play-size/7;
+				}
 
 				&:first-child {
-					margin-left: 0;
-					transform: translate(-150%, -50%);
+					margin-left: -($play-size/2);
+					transform: translate(-100%, -54%);
+
+					@include media-desktop {
+						margin-left: -($play-size/4);
+					}
+
+					@include media-phablet {
+						margin-left: -($play-size/7);
+					}
 				}
 			}
 		}
 
-		iframe, object, embed {
+		&:hover {
+			color: $primary_color;
+
+			.background {
+				filter: blur(0);
+				opacity: 1;
+			}
+
+			.icon-play {
+				opacity: 1;
+
+				span {
+					opacity: 1;
+				}
+			}
+		}
+
+		iframe {
 			position: absolute;
 			top: 0;
 			left: 0;
 			width: 100%;
 			height: 100%;
+			border: 0;
 		}
 	}
 }

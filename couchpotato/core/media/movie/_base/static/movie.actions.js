@@ -450,7 +450,9 @@ MA.Trailer = new Class({
 	label: 'Trailer',
 
 	getDetails: function(){
-		var self = this;
+		var self = this,
+			data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
+
 
 		if(!self.player_container){
 			self.id = 'trailer-'+randomString();
@@ -458,10 +460,30 @@ MA.Trailer = new Class({
 				'events': {
 					'click': self.watch.bind(self)
 				}
-			}).adopt(new Element('span[text="play"]'), new Element('span[text="trailer"]'));
+			}).adopt(
+				new Element('span[text="watch"]'),
+				new Element('span[text="trailer"]')
+			);
 
 			self.container = new Element('div.trailer_container')
 				.grab(self.player_container);
+
+			var url = data_url.substitute({
+				'title': encodeURI(self.getTitle()),
+				'year': self.get('year')
+			});
+
+			new Request.JSONP({
+				'url': url,
+				'onComplete': function(json){
+					self.video_id = json.items[0].id.videoId;
+					self.container.grab(new Element('div.background', {
+						'styles': {
+							'background-image': 'url('+json.items[0].snippet.thumbnails.high.url+')'
+						}
+					}));
+				}
+			}).send();
 		}
 
 		return self.container;
@@ -469,37 +491,9 @@ MA.Trailer = new Class({
 	},
 
 	watch: function(){
-		var self = this,
-			data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
+		var self = this;
 
-		var url = data_url.substitute({
-			'title': encodeURI(self.getTitle()),
-			'year': self.get('year')
-		});
-
-		var spinner = new Element('div.mask').grab(new Element('div.spinner')).inject(self.container);
-
-		new Request.JSONP({
-			'url': url,
-			'onComplete': function(json){
-
-				self.player = new YT.Player(self.id, {
-					'height': '100%',
-					'width': '100%',
-					'videoId': json.items[0].id.videoId,
-					'playerVars': {
-						'autoplay': 1,
-						'showsearch': 0,
-						'showinfo': 0,
-						'wmode': 'transparent',
-						'iv_load_policy': 3
-					}
-				});
-
-				spinner.hide();
-
-			}
-		}).send();
+		self.container.set('html', '<iframe src="https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720" />');
 	}
 
 
@@ -788,13 +782,12 @@ MA.Add = new Class({
 		self.button = self.createButton();
 		self.detail_button = self.createButton();
 
-		p('add');
 	},
 
 	createButton: function(){
 		var self = this;
 		return new Element('a.add', {
-			'text': 'Add movie',
+			'text': 'Add',
 			'title': 'Re-add the movie and mark all previous snatched/downloaded as ignored',
 			'events': {
 				'click': self.doAdd.bind(self)
