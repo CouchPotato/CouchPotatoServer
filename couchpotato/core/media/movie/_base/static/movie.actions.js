@@ -775,38 +775,33 @@ MA.Refresh = new Class({
 MA.Add = new Class({
 
 	Extends: MovieAction,
+	label: 'Add',
 
 	create: function() {
 		var self = this;
 
-		self.button = self.createButton();
-		self.detail_button = self.createButton();
-
-	},
-
-	createButton: function(){
-		var self = this;
-		return new Element('a.add', {
+		self.button = new Element('a.add', {
 			'text': 'Add',
 			'title': 'Re-add the movie and mark all previous snatched/downloaded as ignored',
 			'events': {
-				'click': self.doAdd.bind(self)
+				'click': function(){
+					self.movie.openDetails();
+				}
 			}
 		});
 
 	},
 
-	doAdd: function(e){
+	getDetails: function(){
 		var self = this;
-		(e).preventDefault();
 
-		var m = new BlockSearchMovieItem(movie, {
+		var m = new BlockSearchMovieItem(self.movie.data.info, {
 			'onAdded': function(){
-				//self.afterAdded(m, movie);
 			}
 		});
+m.showOptions();
 
-		p(m);
+		return m;
 	}
 
 });

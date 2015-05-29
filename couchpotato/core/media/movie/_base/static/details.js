@@ -96,7 +96,7 @@ var MovieDetails = new Class({
 		var ended = function() {
 			self.el.dispose();
 			self.el.removeEventListener('transitionend', ended);
-		}
+		};
 		self.el.addEventListener('transitionend', ended, false);
 
 		// animate out

@@ -64,7 +64,7 @@ input, textarea, select {
     @include media-phablet {
         width: $header_width_mobile;
         min-width: $header_width_mobile;
-		z-index: 1;
+		z-index: 21;
     }
 
     a {

@@ -64,7 +64,7 @@ var Question = new Class( {
 		var ended = function() {
 			self.container.dispose();
 			self.container.removeEventListener('transitionend', ended);
-		}
+		};
 		self.container.addEventListener('transitionend', ended, false);
 
 		// animate out

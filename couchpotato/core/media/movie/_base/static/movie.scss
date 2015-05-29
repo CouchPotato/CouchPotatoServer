@@ -551,6 +551,38 @@
 		}
 	}
 
+	.section_add {
+		background: $theme_off;
+
+		.options > div {
+			display: flex;
+
+			select {
+				vertical-align: middle;
+				display: inline-block;
+				margin-right: 10px;
+				min-width: 70px;
+				flex: 1 auto;
+
+				@include media-phablet {
+					min-width: 0;
+				}
+			}
+
+			.button {
+				background: #FFF;
+				flex: 1 auto;
+				vertical-align: middle;
+				display: inline-block;
+				text-align: center;
+			}
+
+		}
+		.thumbnail, .data {
+			display: none;
+		}
+	}
+
 	.releases {
 
 		.buttons {
