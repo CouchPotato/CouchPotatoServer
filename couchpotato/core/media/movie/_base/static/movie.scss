@@ -203,14 +203,16 @@
 
 	> div {
 		display: flex;
-		flex-wrap: wrap;
+		flex-flow: row wrap;
+		align-items: stretch;
 	}
 
 	.movie {
 		margin-bottom: $padding;
 		position: relative;
 		cursor: pointer;
-		flex: 1 1 auto;
+		flex: 1 auto;
+		width: 150px;
 		max-width: 14.285%;
 		border: 0 solid transparent;
 		border-width: 0 $padding/2;
@@ -237,9 +239,11 @@
 
 		.poster {
 			border-radius: $border_radius;
+			background: $theme_off center no-repeat;
+			background-size: cover;
 			overflow: hidden;
 			width: 100%;
-			float: left;
+			padding-bottom: 150%;
 		}
 
 		.data {

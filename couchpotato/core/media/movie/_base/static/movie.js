@@ -215,15 +215,19 @@ var Movie = new Class({
 
 		var thumbnail = null;
 		if(self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0){
-			thumbnail = new Element('img', {
+			thumbnail = new Element('div', {
 				'class': 'type_image poster',
-				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
+				'styles': {
+					'background-image': 'url(' + Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop() +')'
+				}
 			});
 		}
 		else if(self.data.info && self.data.info.images && self.data.info.images.poster && self.data.info.images.poster.length > 0){
-			thumbnail = new Element('img', {
+			thumbnail = new Element('div', {
 				'class': 'type_image poster',
-				'src': self.data.info.images.poster[0]
+				'styles': {
+					'background-image': 'url(' + self.data.info.images.poster[0] +')'
+				}
 			});
 		}
 
