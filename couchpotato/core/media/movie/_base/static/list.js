@@ -549,7 +549,7 @@ var MovieList = new Class({
 				lfc.addClass('show');
 			}, 10);
 
-			self.el.setStyle('min-height', 93);
+			self.el.setStyle('min-height', 120);
 
 		}
 
@@ -567,10 +567,11 @@ var MovieList = new Class({
 				if(self.loader_first){
 					var lf = self.loader_first;
 					self.loader_first = null;
-					//lf.addClass('hide');
+					lf.removeClass('show');
+
 					setTimeout(function(){
 						lf.destroy();
-					}, 3000);
+					}, 1000);
 					self.el.setStyle('min-height', null);
 				}
 

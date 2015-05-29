@@ -91,6 +91,12 @@
       "src": "fontawesome"
     },
     {
+      "uid": "94103e1b3f1e8cf514178ec5912b4469",
+      "css": "dropdown",
+      "code": 59409,
+      "src": "fontawesome"
+    },
+    {
       "uid": "c311c48d79488965b0fab7f9cd12b6b5",
       "css": "left-arrow",
       "code": 59392,
@@ -99,7 +105,7 @@
     {
       "uid": "cb13afd4722a849d48056540bb74c47e",
       "css": "play",
-      "code": 59409,
+      "code": 59410,
       "src": "entypo"
     },
     {

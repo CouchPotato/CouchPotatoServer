@@ -17,14 +17,20 @@ var Question = new Class( {
 	createQuestion : function() {
 		var self = this;
 
-		self.container = new Element('div.mask.question').adopt(
-			new Element('h3', {
-				'html': this.question
-			}),
-			new Element('div.hint', {
-				'html': this.hint
-			})
-		).fade('hide').inject(document.body).fade('in');
+		self.container = new Element('div.mask.question')
+			.grab(self.inner = new Element('div.inner').adopt(
+				new Element('h3', {
+					'html': this.question
+				}),
+				new Element('div.hint', {
+					'html': this.hint
+				})
+			)
+		).inject(document.body);
+
+		setTimeout(function(){
+			self.container.addClass('show');
+		}, 10);
 
 	},
 
@@ -33,7 +39,7 @@ var Question = new Class( {
 
 		var answer = new Element('a', Object.merge(options, {
 			'class' : 'answer button '+(options['class'] || '')+(options.cancel ? ' cancel' : '')
-		})).inject(this.container);
+		})).inject(this.inner);
 
 		if (options.cancel) {
 			answer.addEvent('click', self.close.bind(self));
@@ -54,8 +60,15 @@ var Question = new Class( {
 
 	close : function() {
 		var self = this;
-		self.container.fade('out');
-		(function(){self.container.destroy();}).delay(1000);
+
+		var ended = function() {
+			self.container.dispose();
+			self.container.removeEventListener('transitionend', ended);
+		}
+		self.container.addEventListener('transitionend', ended, false);
+
+		// animate out
+		self.container.removeClass('show');
 	},
 
 	toElement : function() {

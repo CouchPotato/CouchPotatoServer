@@ -2,12 +2,13 @@ var Movie = new Class({
 
 	Extends: BlockBase,
 
-	actions: [],
+	actions: null,
 	details: null,
 
 	initialize: function(list, options, data){
 		var self = this;
 
+		self.actions = [];
 		self.data = data;
 		self.list = list;
 
@@ -37,10 +38,10 @@ var Movie = new Class({
 
 		self.addEvents();
 
-		if(data.identifiers.imdb == 'tt3181822'){
-			self.el.fireEvent('mouseenter');
-			self.openDetails();
-		}
+		//if(data.identifiers.imdb == 'tt3181822'){
+		//	self.el.fireEvent('mouseenter');
+		//	self.openDetails();
+		//}
 	},
 
 	openDetails: function(){
@@ -65,6 +66,11 @@ var Movie = new Class({
 				}
 			});
 		}
+
+		// animate in
+		setTimeout(function(){
+			$(self.details).addClass('show');
+		}, 10);
 
 		App.getPageContainer().grab(self.details);
 	},
@@ -176,6 +182,7 @@ var Movie = new Class({
 	update: function(notification){
 		var self = this;
 
+		self.actions = [];
 		self.data = notification.data;
 		self.el.empty();
 

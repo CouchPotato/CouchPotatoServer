@@ -93,7 +93,14 @@ var MovieDetails = new Class({
 	close: function(){
 		var self = this;
 
-		self.el.dispose();
+		var ended = function() {
+			self.el.dispose();
+			self.el.removeEventListener('transitionend', ended);
+		}
+		self.el.addEventListener('transitionend', ended, false);
+
+		// animate out
+		self.el.removeClass('show');
 	}
 
 });
