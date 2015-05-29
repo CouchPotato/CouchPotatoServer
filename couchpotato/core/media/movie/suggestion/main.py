@@ -79,10 +79,20 @@ class Suggestion(Plugin):
 
             new_suggestions = self.updateSuggestionCache(ignore_imdb = imdb, limit = limit, ignored = ignored, seen = seen)
 
+        # Only return new (last) item
+        media = {
+            'status': 'suggested',
+            'title': getTitle(new_suggestions[limit]),
+            'type': 'movie',
+            'info': new_suggestions[limit],
+            'identifiers': {
+                'imdb': new_suggestions[limit].get('imdb')
+            }
+        }
+
         return {
             'result': True,
-            'ignore_count': len(ignored),
-            'suggestions': new_suggestions[limit - 1:limit]
+            'movie': media
         }
 
     def updateSuggestionCache(self, ignore_imdb = None, limit = 6, ignored = None, seen = None):

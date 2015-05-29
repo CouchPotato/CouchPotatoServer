@@ -772,9 +772,30 @@ MA.Refresh = new Class({
 
 });
 
-MA.Add = new Class({
+var SuggestBase = new Class({
 
 	Extends: MovieAction,
+
+	getIMDB: function(){
+		return this.movie.data.info.imdb;
+	},
+
+	refresh: function(json){
+		var self = this;
+
+		self.movie.list.addMovies([json.movie], 1)
+
+		var last_added = self.movie.list.movies[self.movie.list.movies.length-1];
+		$(last_added).inject(self.movie, 'before');
+
+		self.movie.destroy();
+	}
+
+});
+
+MA.Add = new Class({
+
+	Extends: SuggestBase,
 	label: 'Add',
 
 	create: function() {
@@ -797,9 +818,18 @@ MA.Add = new Class({
 
 		var m = new BlockSearchMovieItem(self.movie.data.info, {
 			'onAdded': function(){
+
+				Api.request('suggestion.ignore', {
+					'data': {
+						'imdb': self.movie.data.info.imdb,
+						'remove_only': true
+					},
+					'onComplete': self.refresh.bind(self)
+				});
+
 			}
 		});
-m.showOptions();
+		m.showOptions();
 
 		return m;
 	}
@@ -808,7 +838,7 @@ m.showOptions();
 
 MA.SuggestSeen = new Class({
 
-	Extends: MovieAction,
+	Extends: SuggestBase,
 
 	create: function() {
 		var self = this;
@@ -834,13 +864,20 @@ MA.SuggestSeen = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		Api.request('suggestion.ignore', {
+			'data': {
+				'imdb': self.getIMDB(),
+				'mark_seen': 1
+			},
+			'onComplete': self.refresh.bind(self)
+		});
 	}
 
 });
 
 MA.SuggestIgnore = new Class({
 
-	Extends: MovieAction,
+	Extends: SuggestBase,
 
 	create: function() {
 		var self = this;
@@ -866,6 +903,12 @@ MA.SuggestIgnore = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		Api.request('suggestion.ignore', {
+			'data': {
+				'imdb': self.getIMDB()
+			},
+			'onComplete': self.refresh.bind(self)
+		});
 	}
 
 });
