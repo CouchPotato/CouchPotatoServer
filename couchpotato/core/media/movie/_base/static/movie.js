@@ -333,7 +333,7 @@ var Movie = new Class({
 
 		if(self.data.title)
 			return self.getUnprefixedTitle(self.data.title);
-		else if(self.data.info.titles.length > 0)
+		else if(self.data.info && self.data.info.titles && self.data.info.titles.length > 0)
 			return self.getUnprefixedTitle(self.data.info.titles[0]);
 
 		return 'Unknown movie';
