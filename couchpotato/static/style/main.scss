@@ -86,7 +86,6 @@ input, textarea, select {
             font-size: 38px;
             line-height: $header_height;
             height: $header_height;
-			opacity: .1;
             transition: background 200ms $cubic;
 
             span {
@@ -327,19 +326,36 @@ input, textarea, select {
         display: block;
     }
 
+    h1, h2, h3, h4 {
+        font-weight: 300;
+    }
+
+    h2 {
+        font-size: 24px;
+        padding: $padding;
+
+        @include media-phablet {
+            font-size: 18px;
+            line-height: $header_width_mobile;
+            padding: $padding/2;
+        }
+    }
+
     .navigation {
+        z-index: 2;
         display: flex;
+        align-items: center;
         position: fixed;
         top: 0;
         height: $header_height;
-        left: $header_width;
-        right: 0;
+        left: $header_width + $padding;
+        right: $padding;
         background: $background_color;
         border-radius: $border_radius 0 0 0;
 
         @include media-phablet {
             height: $header_width_mobile;
-            left: $header_width_mobile;
+            left: $header_width_mobile + $padding;
         }
 
         ul {
@@ -361,6 +377,10 @@ input, textarea, select {
                         padding: $padding/2;
                     }
                 }
+
+                &:first-child {
+                    margin-left: -$padding;
+                }
             }
 
             .active a {
@@ -368,16 +388,10 @@ input, textarea, select {
             }
         }
 
-    }
+        h2 {
+            padding: $padding $padding $padding 0;
+        }
 
-    h1, h2, h3, h4 {
-        font-weight: 300;
-    }
-
-    h2 {
-        font-size: 24px;
-        padding: $padding;
-        color: rgba(0,0,0,.5);
     }
 
 }
@@ -489,7 +503,7 @@ input, textarea, select {
 	right: 0;
 	bottom: 0;
 	width: 320px;
-	z-index: 20;
+	z-index: 2000;
 	overflow: hidden;
 	font-size: 14px;
 	font-weight: bold;
@@ -581,8 +595,8 @@ input, textarea, select {
 }
 
 /* Mask */
-.mask{
-	background: rgba(0,0,0, .8);
+.mask {
+	background: rgba(0,0,0,.8);
 	z-index: 1000;
 	text-align: center;
     position: absolute;

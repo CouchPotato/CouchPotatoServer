@@ -828,7 +828,6 @@
 	}
 
 	.menus {
-		margin-right: $padding;
 
 		.button {
 			padding: 0 $padding/2;
@@ -909,6 +908,7 @@
 					text-align: center;
 					color: rgba(0,0,0,.2);
 					cursor: default;
+					border: 0;
 
 					&.active {
 						background: $theme_off;

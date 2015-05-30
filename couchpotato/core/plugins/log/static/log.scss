@@ -1,153 +1,137 @@
-.page.log .nav {
-	display: block;
-	text-align: center;
-	padding: 0 0 30px;
-	margin: 0;
-	font-size: 20px;
-	position: fixed;
-	width: 100%;
-	bottom: 0;
-	left: 0;
-	background: #4E5969;
-	z-index: 100;
-}
+@import "couchpotato/static/style/_mixins";
 
-	.page.log .nav li {
-		display: inline-block;
-		padding: 5px 10px;
+.page.log {
+
+	.nav {
+		text-align: right;
+		padding: 0;
 		margin: 0;
-	}
 
-	.page.log .nav li.select,
-	.page.log .nav li.clear {
-		cursor: pointer;
-	}
+		li {
+			display: inline-block;
+			padding: 5px 10px;
+			margin: 0;
 
-		.page.log .nav li:hover:not(.active):not(.filter) {
-			background: rgba(255, 255, 255, 0.1);
-		}
-
-		.page.log .nav li.active {
-			font-weight: bold;
-			cursor: default;
-			background: rgba(255,255,255,.1);
-		}
-
-		@media all and (max-width: 480px) {
-			.page.log .nav {
-				font-size: 14px;
+			&.select, &.clear {
+				cursor: pointer;
 			}
 
-				.page.log .nav li {
-					padding: 5px;
-				}
-		}
+			&:hover:not(.active):not(.filter) {
+				background: rgba(255, 255, 255, 0.1);
+			}
 
-	.page.log .nav li.hint {
-		text-align: center;
-		width: 400px;
-		left: 50%;
-		margin-left: -200px;
+			&.active {
+				font-weight: bold;
+				cursor: default;
+				background: rgba(255,255,255,.1);
+			}
+		}
+	}
+
+	.hint {
 		font-style: italic;
-		font-size: 11px;
-		position: absolute;
-		right: 20px;
 		opacity: .5;
-		bottom: 5px;
 	}
 
-.page.log .loading {
-	text-align: center;
-	font-size: 20px;
-	padding: 50px;
-}
-
-.page.log .container {
-	padding: 30px 0 60px;
-	overflow: hidden;
-	line-height: 150%;
-	font-size: 11px;
-	color: #FFF;
-}
-
-	.page.log .container select {
-		vertical-align: top;
+	.loading {
+		text-align: center;
+		font-size: 20px;
+		padding: 50px;
 	}
 
-	.page.log .container .time {
-		clear: both;
-		color: lightgrey;
-		font-size: 10px;
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		position: relative;
+	.container {
+		padding: $padding;
 		overflow: hidden;
-		padding: 0 3px;
-		font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
-	}
-		.page.log .container .time.highlight {
-			background: rgba(255, 255, 255, 0.1);
-		}
-		.page.log .container .time span {
-			padding: 5px 0 3px;
-			display: inline-block;
-			vertical-align: middle;
+		line-height: 150%;
+
+		select {
+			vertical-align: top;
 		}
 
-		.page.log[data-filter=INFO] .error,
-		.page.log[data-filter=INFO] .debug,
-		.page.log[data-filter=ERROR] .debug,
-		.page.log[data-filter=ERROR] .info,
-		.page.log[data-filter=DEBUG] .info,
-		.page.log[data-filter=DEBUG] .error {
-			display: none;
+		.time {
+			clear: both;
+			font-size: 11px;
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			position: relative;
+			overflow: hidden;
+			padding: 0 3px;
+			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
+
+			&.highlight {
+				background: $theme_off;
+			}
+
+			span {
+				padding: 5px 0 3px;
+				display: inline-block;
+				vertical-align: middle;
+			}
+
+			::selection {
+				background-color: #000;
+				color: #FFF;
+			}
 		}
 
-	.page.log .container .type {
-		margin-left: 10px;
+		.type {
+			margin-left: 10px;
+		}
+
+		.message {
+			float: right;
+			width: 86%;
+			white-space: pre-wrap;
+		}
+
+
+		.error { color: #FFA4A4; }
+		.debug span { opacity: .6; }
 	}
 
-	.page.log .container .message {
-		float: right;
-		width: 86%;
-		white-space: pre-wrap;
+
+
+	&[data-filter=INFO] .error,
+	&[data-filter=INFO] .debug,
+	&[data-filter=ERROR] .debug,
+	&[data-filter=ERROR] .info,
+	&[data-filter=DEBUG] .info,
+	&[data-filter=DEBUG] .error {
+		display: none;
 	}
-
-	.page.log .container .error { color: #FFA4A4; }
-	.page.log .container .debug span { opacity: .6; }
-
-.do_report {
-	position: absolute;
-	padding: 10px;
 }
 
-.page.log .report {
+.report_popup.report_popup {
 	position: fixed;
-	width: 100%;
-	height: 100%;
-	background: rgba(0,0,0,.7);
 	left: 0;
+	right: 0;
+	bottom: 0;
 	top: 0;
 	z-index: 99999;
 	font-size: 14px;
-}
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 1;
+	color: #FFF;
+	pointer-events: auto;
 
-	.page.log .report .button {
+	.button {
 		display: inline-block;
 		margin: 10px 0;
 		padding: 10px;
+		color: $background_color;
 	}
 
-	.page.log .report .bug {
-		width: 800px;
+	.bug {
+		width: 80%;
 		height: 80%;
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		margin: 0 0 0 -400px;
-		transform: translate(0, -50%);
-	}
+		max-height: 800px;
+		max-width: 800px;
 
-		.page.log .report .bug textarea {
+		display: flex;
+		flex-flow: column nowrap;
+
+		textarea {
 			display: block;
 			width: 100%;
 			background: #FFF;
@@ -157,43 +141,13 @@
 			height: 70%;
 			font-size: 12px;
 		}
+	}
+}
 
-.page.log .container .time ::-webkit-selection {
-	background-color: #000;
+.do_report.do_report {
+	z-index: 10000;
+	position: absolute;
+	padding: 10px;
+	background: $primary_color;
 	color: #FFF;
-}
-
-.page.log .container .time ::-moz-selection {
-	background-color: #000;
-	color: #FFF;
-}
-
-.page.log .container .time ::-ms-selection {
-	background-color: #000;
-	color: #FFF;
-}
-
-.page.log .container .time.highlight ::selection {
-	background-color: transparent;
-	color: inherit;
-}
-
-.page.log .container .time.highlight ::-webkit-selection {
-	background-color: transparent;
-	color: inherit;
-}
-
-.page.log .container .time.highlight ::-moz-selection {
-	background-color: transparent;
-	color: inherit;
-}
-
-.page.log .container .time.highlight ::-ms-selection {
-	background-color: transparent;
-	color: inherit;
-}
-
-.page.log .container .time.highlight ::selection {
-	background-color: transparent;
-	color: inherit;
 }

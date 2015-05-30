@@ -33,6 +33,7 @@ Page.Log = new Class({
 		var self = this;
 
 		if (self.log) self.log.destroy();
+
 		self.log = new Element('div.container.loading', {
 			'text': 'loading...',
 			'events': {
@@ -52,13 +53,20 @@ Page.Log = new Class({
 				self.log.adopt(self.log_items);
 				self.log.removeClass('loading');
 
+				var navigation = new Element('div.navigation').adopt(
+					new Element('h2[text=Logs]'),
+					new Element('div.hint', {
+						'text': 'Select multiple lines & report an issue'
+					})
+				);
+
 				var nav = new Element('ul.nav', {
 					'events': {
 						'click:relay(li.select)': function (e, el) {
 							self.getLogs(parseInt(el.get('text')) - 1);
 						}
 					}
-				});
+				}).inject(navigation);
 
 				// Type selection
 				new Element('li.filter').grab(
@@ -101,13 +109,8 @@ Page.Log = new Class({
 					}
 				}).inject(nav);
 
-				// Hint
-				new Element('li.hint', {
-					'text': 'Select multiple lines & report an issue'
-				}).inject(nav);
-
 				// Add to page
-				nav.inject(self.log, 'top');
+				navigation.inject(self.el, 'top');
 
 				self.scrollToBottom();
 			}
@@ -212,7 +215,7 @@ Page.Log = new Class({
 				.replace('{version}', version ? version.version.repr : '...'),
 			textarea;
 
-		var overlay = new Element('div.report', {
+		var overlay = new Element('div.mask.report_popup', {
 			'method': 'post',
 			'events': {
 				'click': function(e){
@@ -269,7 +272,7 @@ Page.Log = new Class({
 			)
 		);
 
-		overlay.inject(self.log);
+		overlay.inject(document.body);
 	},
 
 	getSelected: function(){
