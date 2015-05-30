@@ -57,7 +57,7 @@
 .list_list>.loading .spinner,.thumb_list>.loading .spinner{background-color:#000}
 .list_list{font-weight:300}
 .list_list .poster{display:none}
-.list_list .movie{display:block;border-top:1px solid #eaeaea;position:relative;cursor:pointer}
+.list_list .movie{display:block;border-bottom:1px solid #eaeaea;position:relative;cursor:pointer}
 .list_list .movie:last-child{border-bottom:none}
 .list_list .movie:hover{background:rgba(0,0,0,.1)}
 .list_list .movie .data{padding:10px 20px}
@@ -546,8 +546,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:3.33px 5px;backgroun
 .page .navigation ul li a{font-size:24px;line-height:80px;padding:20px;color:rgba(0,0,0,.5)}
 @media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:66px;padding:10px}
 }
-.page .navigation ul li:first-child{margin-left:-20px}
 .page .navigation ul .active a{color:#000}
+.page .navigation>ul>li:first-child{margin-left:-20px}
 .page .navigation h2{padding:20px 20px 20px 0}
 .level_1{z-index:10}
 .level_2{z-index:20}

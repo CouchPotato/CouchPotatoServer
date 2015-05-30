@@ -377,15 +377,15 @@ input, textarea, select {
                         padding: $padding/2;
                     }
                 }
-
-                &:first-child {
-                    margin-left: -$padding;
-                }
             }
 
             .active a {
                 color: #000;
             }
+        }
+
+        > ul > li:first-child {
+            margin-left: -$padding;
         }
 
         h2 {
