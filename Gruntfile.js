@@ -64,6 +64,9 @@ module.exports = function(grunt){
 
 		cssmin: {
 			dist: {
+				options: {
+					keepBreaks: true
+				},
 				files: {
 					'<%= config.css_dest %>': ['<%= config.tmp %>/styles/**/*.css']
 				}
