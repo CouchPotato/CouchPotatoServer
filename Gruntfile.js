@@ -72,7 +72,8 @@ module.exports = function(grunt){
 
 		shell: {
 			runCouchPotato: {
-				command: 'python CouchPotato.py'
+				command: 'python CouchPotato.py',
+				maxBuffer: 1048576
 			}
 		},
 
