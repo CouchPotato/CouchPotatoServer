@@ -192,7 +192,7 @@ var Category = new Class({
 			}),
 			new Element('.category_label.ctrlHolder').adopt(
 				new Element('label', {'text':'Name'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.label,
 					'placeholder': 'Example: Kids, Horror or His'
@@ -201,7 +201,7 @@ var Category = new Class({
 			),
 			new Element('.category_preferred.ctrlHolder').adopt(
 				new Element('label', {'text':'Preferred'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.preferred,
 					'placeholder': 'Blu-ray, DTS'
@@ -209,7 +209,7 @@ var Category = new Class({
 			),
 			new Element('.category_required.ctrlHolder').adopt(
 				new Element('label', {'text':'Required'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.required,
 					'placeholder': 'Example: DTS, AC3 & English'
@@ -217,7 +217,7 @@ var Category = new Class({
 			),
 			new Element('.category_ignored.ctrlHolder').adopt(
 				new Element('label', {'text':'Ignored'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.ignored,
 					'placeholder': 'Example: dubbed, swesub, french'

@@ -131,7 +131,7 @@ Page.Settings = new Class({
 				new Element('span', {
 					'text': 'Show advanced settings'
 				}),
-				self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+				self.advanced_toggle = new Element('input[type=checkbox]', {
 					'checked': +Cookie.read('advanced_toggle_checked'),
 					'events': {
 						'change': self.showAdvanced.bind(self)
@@ -480,7 +480,7 @@ Option.String = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue(),
@@ -502,9 +502,11 @@ Option.Dropdown = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('select', {
-				'name': self.postName()
-			})
+			new Element('div.select_wrapper.icon-dropdown').grab(
+				self.input = new Element('select', {
+					'name': self.postName()
+				})
+			)
 		);
 
 		Object.each(self.options.values, function(value){
@@ -515,11 +517,6 @@ Option.Dropdown = new Class({
 		});
 
 		self.input.set('value', self.getSettingValue());
-
-		var dd = new Form.Dropdown(self.input, {
-			'onChange': self.changed.bind(self)
-		});
-		self.input = dd.input;
 	}
 });
 
@@ -535,7 +532,7 @@ Option.Checkbox = new Class({
 
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'name': self.postName(),
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
@@ -562,7 +559,7 @@ Option.Password = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue() ? '********' : '',
@@ -589,7 +586,7 @@ Option.Enabler = new Class({
 		var self = this;
 
 		self.el.adopt(
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
 				'id': 'r-'+randomString()
@@ -649,7 +646,7 @@ Option.Directory = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.directory_inlay = new Element('span.directory.inlay', {
+			self.directory_inlay = new Element('span.directory', {
 				'events': {
 					'click': self.showBrowser.bind(self)
 				}
@@ -767,7 +764,7 @@ Option.Directory = new Class({
 					new Element('label', {
 						'text': 'Hidden folders'
 					}).adopt(
-						self.show_hidden = new Element('input[type=checkbox].inlay', {
+						self.show_hidden = new Element('input[type=checkbox]', {
 							'events': {
 								'change': function(){
 									self.getDirs();
@@ -1068,7 +1065,7 @@ Option.Choice = new Class({
 		var value = self.getValue();
 		var matches = value.match(/<([^>]*)>/g);
 
-		self.tag_input = new Element('ul.inlay', {
+		self.tag_input = new Element('ul', {
 			'events': {
 				'click': function(e){
 					if(e.target == self.tag_input){
@@ -1475,7 +1472,7 @@ Option.Combined = new Class({
 			var value = values[name] || '';
 
 			if(name.indexOf('use') != -1){
-				var checkbox = new Element('input[type=checkbox].inlay.'+name, {
+				var checkbox = new Element('input[type=checkbox].'+name, {
 					'checked': +value,
 					'events': {
 						'click': self.saveCombined.bind(self),
@@ -1487,7 +1484,7 @@ Option.Combined = new Class({
 			}
 			else {
 				value_count++;
-				new Element('input[type=text].inlay.'+name, {
+				new Element('input[type=text].'+name, {
 					'value': value,
 					'placeholder': self.labels[name] || name,
 					'events': {

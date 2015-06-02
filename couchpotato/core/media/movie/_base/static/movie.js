@@ -232,7 +232,7 @@ var Movie = new Class({
 		}
 
 		self.el.adopt(
-			self.select_checkbox = new Element('input[type=checkbox].inlay', {
+			self.select_checkbox = new Element('input[type=checkbox]', {
 				'events': {
 					'change': function(){
 						self.fireEvent('select');
@@ -240,7 +240,7 @@ var Movie = new Class({
 				}
 			}),
 			self.thumbnail = thumbnail,
-			self.data_container = new Element('div.data.inlay.light').adopt(
+			self.data_container = new Element('div.data.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
 						self.title = new Element('span', {
