@@ -127,21 +127,22 @@ Page.Settings = new Class({
 				}
 			}
 		}).adopt(
-			new Element('label.advanced_toggle').adopt(
+			new Element('div.advanced_toggle').adopt(
 				new Element('span', {
 					'text': 'Show advanced settings'
 				}),
-				self.advanced_toggle = new Element('input[type=checkbox]', {
-					'checked': +Cookie.read('advanced_toggle_checked'),
-					'events': {
-						'change': self.showAdvanced.bind(self)
-					}
-				})
+				new Element('label.switch').adopt(
+					self.advanced_toggle = new Element('input[type=checkbox]', {
+						'checked': +Cookie.read('advanced_toggle_checked'),
+						'events': {
+							'change': self.showAdvanced.bind(self)
+						}
+					}),
+					new Element('div.toggle')
+				)
 			)
 		);
 		self.showAdvanced();
-
-		new Form.Check(self.advanced_toggle);
 
 		// Add content to tabs
 		var options = [];
@@ -312,11 +313,7 @@ Page.Settings = new Class({
 	},
 
 	createList: function(content_container){
-		return new Element('div.option_list').grab(
-			new Element('h3', {
-				'text': 'Enable another'
-			})
-		).inject(content_container);
+		return new Element('div.option_list').inject(content_container);
 	}
 
 });
@@ -586,14 +583,16 @@ Option.Enabler = new Class({
 		var self = this;
 
 		self.el.adopt(
-			self.input = new Element('input', {
-				'type': 'checkbox',
-				'checked': self.getSettingValue(),
-				'id': 'r-'+randomString()
-			})
+			new Element('label.switch').adopt(
+				self.input = new Element('input', {
+					'type': 'checkbox',
+					'checked': self.getSettingValue(),
+					'id': 'r-'+randomString()
+				}),
+				new Element('div.toggle')
+			)
 		);
 
-		new Form.Check(self.input);
 	},
 
 	changed: function(){
@@ -607,8 +606,8 @@ Option.Enabler = new Class({
 
 		self.parentFieldset[ enabled ? 'removeClass' : 'addClass']('disabled');
 
-		if(self.parentList)
-			self.parentFieldset.inject(self.parentList.getElement('h3'), enabled ? 'before' : 'after');
+		//if(self.parentList)
+		//	self.parentFieldset.inject(self.parentList.getElement('h3'), enabled ? 'before' : 'after');
 
 	},
 
