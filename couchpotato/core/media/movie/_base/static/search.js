@@ -24,7 +24,7 @@ var BlockSearchMovieItem = new Class({
 				'height': null,
 				'width': null
 			}) : null,
-			self.options_el = new Element('div.options.inlay'),
+			self.options_el = new Element('div.options'),
 			self.data_container = new Element('div.data', {
 				'events': {
 					'click': self.showOptions.bind(self)

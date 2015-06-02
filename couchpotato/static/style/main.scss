@@ -33,9 +33,10 @@ a {
 input, textarea, select {
     font-size: 1em;
     font-weight: 300;
-    padding: $padding/6 $padding/4;
+    padding: $padding/3;
     background: $background_color;
-    border: 1px solid #f2f2f2;
+    border: 1px solid darken($theme_off, 20);
+
 }
 
 .button {
@@ -80,6 +81,7 @@ input, textarea, select {
             text-align: center;
             position: relative;
 			overflow: hidden;
+            opacity: .1;
 
             font-family: Lobster, serif;
             color: #FFF;

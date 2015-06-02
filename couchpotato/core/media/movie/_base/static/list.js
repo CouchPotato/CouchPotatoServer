@@ -189,7 +189,7 @@ var MovieList = new Class({
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
 				new Element('span.select').adopt(
-					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
+					self.mass_edit_select = new Element('input[type=checkbox]', {
 						'events': {
 							'change': self.massEditToggleAll.bind(self)
 						}

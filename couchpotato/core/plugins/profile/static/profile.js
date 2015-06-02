@@ -31,7 +31,7 @@ var Profile = new Class({
 			}),
 			new Element('.quality_label.ctrlHolder').adopt(
 				new Element('label', {'text':'Name'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.label,
 					'placeholder': 'Profile name'
@@ -47,7 +47,7 @@ var Profile = new Class({
 			new Element('div.wait_for.ctrlHolder').adopt(
 				// "Wait the entered number of days for a checked quality, before downloading a lower quality release."
 				new Element('span', {'text':'Wait'}),
-				new Element('input.inlay.wait_for_input.xsmall', {
+				new Element('input.wait_for_input.xsmall', {
 					'type':'text',
 					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
 				}),
@@ -55,7 +55,7 @@ var Profile = new Class({
 				new Element('span.advanced', {'text':'and keep searching'}),
 
 				// "After a checked quality is found and downloaded, continue searching for even better quality releases for the entered number of days."
-				new Element('input.inlay.xsmall.stop_after_input.advanced', {
+				new Element('input.xsmall.stop_after_input.advanced', {
 					'type':'text',
 					'value': data.stop_after && data.stop_after.length > 0 ? data.stop_after[0] : 0
 				}),
@@ -63,7 +63,7 @@ var Profile = new Class({
 
 				// Minimum score of
 				new Element('span.advanced', {'html':'<br/>Releases need a minimum score of'}),
-				new Element('input.advanced.inlay.xsmall.minimum_score_input', {
+				new Element('input.advanced.xsmall.minimum_score_input', {
 					'size': 4,
 					'type':'text',
 					'value': data.minimum_score || 1
@@ -275,7 +275,7 @@ Profile.Type = new Class({
 			),
 			self.finish_container = new Element('label.finish').adopt(
 				new Element('span.finish').grab(
-					self.finish = new Element('input.inlay.finish[type=checkbox]', {
+					self.finish = new Element('input.finish[type=checkbox]', {
 						'checked': data.finish !== undefined ? data.finish : 1,
 						'events': {
 							'change': function(){
@@ -294,7 +294,7 @@ Profile.Type = new Class({
 			),
 			self['3d_container'] = new Element('label.threed').adopt(
 				new Element('span.3d').grab(
-					self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
+					self['3d'] = new Element('input.3d[type=checkbox]', {
 						'checked': data['3d'] !== undefined ? data['3d'] : 0,
 						'events': {
 							'change': function(){

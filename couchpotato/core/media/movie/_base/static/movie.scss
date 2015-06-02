@@ -16,6 +16,13 @@
 
 .movie {
 
+	.check {
+		position: absolute;
+		top: 0;
+		left: $padding;
+		display: none;
+	}
+
 	.quality {
 		span {
 			background: rgba(0,0,0,.2);
@@ -314,13 +321,6 @@
 		}
 	}
 
-}
-
-.check {
-	position: absolute;
-	top: 0;
-	left: $padding;
-	display: none;
 }
 
 .eta {

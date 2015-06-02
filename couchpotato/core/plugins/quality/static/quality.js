@@ -123,7 +123,7 @@ var QualityBase = new Class({
 		Array.each(self.profiles, function(profile){
 			var check;
 			new Element('li', {'data-id': profile.data._id}).adopt(
-				check = new Element('input.inlay[type=checkbox]', {
+				check = new Element('input[type=checkbox]', {
 					'checked': !profile.data.hide,
 					'events': {
 						'change': self.saveProfileOrdering.bind(self)
@@ -199,7 +199,7 @@ var QualityBase = new Class({
 		Array.each(self.qualities, function(quality){
 			new Element('div.ctrlHolder.item').adopt(
 				new Element('span.label', {'text': quality.label}),
-				new Element('input.min.inlay[type=text]', {
+				new Element('input.min[type=text]', {
 					'value': quality.size_min,
 					'events': {
 						'keyup': function(e){
@@ -207,7 +207,7 @@ var QualityBase = new Class({
 						}
 					}
 				}),
-				new Element('input.max.inlay[type=text]', {
+				new Element('input.max[type=text]', {
 					'value': quality.size_max,
 					'events': {
 						'keyup': function(e){
