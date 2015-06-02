@@ -172,6 +172,10 @@
 				float: right;
 				color: $text_color;
 
+				&:before {
+					display: none;
+				}
+
 				&:hover {
 					color: $primary_color;
 				}
@@ -286,16 +290,35 @@
 			position: absolute;
 			top: $padding / 2;
 			right: $padding / 2;
-			display: none;
+			text-align: right;
 
-			a {
+			.action {
+				position: relative;
 				display: block;
-				background: $background_color;
-				padding: $padding / 3;
-				width: auto;
 				margin-bottom: 1px;
-				clear: both;
-				float: right;
+				width: auto;
+				
+
+				a {
+					display: inline-block;
+					width: auto;
+					background: $background_color;
+					padding: $padding / 3;
+					opacity: 0;
+				}
+
+
+				.icon {
+					color: #FFF;
+					position: absolute;
+					height: 100%;
+					width: 33px;
+					top: 0;
+					bottom: 0;
+					right: 0;
+					font-size: 20px;
+					text-align: center;
+				}
 			}
 		}
 

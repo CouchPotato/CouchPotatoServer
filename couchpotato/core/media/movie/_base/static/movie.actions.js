@@ -4,6 +4,7 @@ var MovieAction = new Class({
 
 	class_name: 'action',
 	label: 'UNKNOWN',
+	icon: null,
 	button: null,
 	details: null,
 	detail_button: null,
@@ -16,8 +17,17 @@ var MovieAction = new Class({
 
 		self.create();
 
-		if(self.button)
-			self.button.addClass(self.class_name);
+		if(self.button){
+			var wrapper = new Element('div', {
+				'class': self.class_name
+			})
+			self.button.inject(wrapper);
+
+			if(self.icon)
+				new Element('span.icon.icon-'+self.icon).inject(self.button);
+
+			self.button = wrapper;
+		}
 	},
 
 	create: function(){},
@@ -612,133 +622,10 @@ MA.Profile = new Class({
 
 });
 
-MA.Edit = new Class({
-
-	Extends: MovieAction,
-
-	create: function(){
-		var self = this;
-
-		self.button = new Element('a.edit', {
-			'text': 'Edit',
-			'title': 'Change movie information, like title and quality.',
-			'events': {
-				'click': self.editMovie.bind(self)
-			}
-		});
-
-	},
-
-	editMovie: function(e){
-		var self = this;
-		(e).preventDefault();
-
-		if(!self.options_container){
-			self.options_container = new Element('div.options').adopt(
-				new Element('div.form').adopt(
-					self.title_select = new Element('select', {
-						'name': 'title'
-					}),
-					self.profile_select = new Element('select', {
-						'name': 'profile'
-					}),
-					self.category_select = new Element('select', {
-						'name': 'category'
-					}).grab(
-						new Element('option', {'value': -1, 'text': 'None'})
-					),
-					new Element('a.button.edit', {
-						'text': 'Save & Search',
-						'events': {
-							'click': self.save.bind(self)
-						}
-					})
-				)
-			).inject(self.movie, 'top');
-
-			Array.each(self.movie.data.info.titles, function(title){
-				new Element('option', {
-					'text': title
-				}).inject(self.title_select);
-
-				if(title == self.movie.data.title)
-					self.title_select.set('value', title);
-			});
-
-
-			// Fill categories
-			var categories = CategoryList.getAll();
-
-			if(categories.length === 0)
-				self.category_select.hide();
-			else {
-				self.category_select.show();
-				categories.each(function(category){
-
-					var category_id = category.data._id;
-
-					new Element('option', {
-						'value': category_id,
-						'text': category.data.label
-					}).inject(self.category_select);
-
-					if(self.movie.category && self.movie.category.data && self.movie.category.data._id == category_id)
-						self.category_select.set('value', category_id);
-
-				});
-			}
-
-			// Fill profiles
-			var profiles = Quality.getActiveProfiles();
-			if(profiles.length == 1)
-				self.profile_select.hide();
-
-			profiles.each(function(profile){
-
-				var profile_id = profile.get('_id');
-
-				new Element('option', {
-					'value': profile_id,
-					'text': profile.label ? profile.label : profile.data.label
-				}).inject(self.profile_select);
-
-				if(self.movie.get('profile_id') == profile_id)
-					self.profile_select.set('value', profile_id);
-
-			});
-
-		}
-
-		self.movie.slide('in', self.options_container);
-	},
-
-	save: function(e){
-		(e).preventDefault();
-		var self = this;
-
-		Api.request('movie.edit', {
-			'data': {
-				'id': self.movie.get('_id'),
-				'default_title': self.title_select.get('value'),
-				'profile_id': self.profile_select.get('value'),
-				'category_id': self.category_select.get('value')
-			},
-			'useSpinner': true,
-			'spinnerTarget': $(self.movie),
-			'onComplete': function(){
-				self.movie.quality.set('text', self.profile_select.getSelected()[0].get('text'));
-				self.movie.title.set('text', self.title_select.getSelected()[0].get('text'));
-			}
-		});
-
-		self.movie.slide('out');
-	}
-
-});
-
 MA.Refresh = new Class({
 
 	Extends: MovieAction,
+	icon: 'refresh',
 
 	create: function(){
 		var self = this;
@@ -797,6 +684,7 @@ MA.Add = new Class({
 
 	Extends: SuggestBase,
 	label: 'Add',
+	icon: 'plus',
 
 	create: function() {
 		var self = this;
@@ -839,6 +727,7 @@ MA.Add = new Class({
 MA.SuggestSeen = new Class({
 
 	Extends: SuggestBase,
+	icon: 'eye',
 
 	create: function() {
 		var self = this;
@@ -878,6 +767,7 @@ MA.SuggestSeen = new Class({
 MA.SuggestIgnore = new Class({
 
 	Extends: SuggestBase,
+	icon: 'error',
 
 	create: function() {
 		var self = this;
