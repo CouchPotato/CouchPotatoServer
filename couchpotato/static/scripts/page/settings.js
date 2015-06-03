@@ -119,17 +119,11 @@ Page.Settings = new Class({
 	create: function(json){
 		var self = this;
 
-		self.tabs_container = new Element('ul.tabs');
-		self.containers = new Element('form.uniForm.containers', {
-			'events': {
-				'click:relay(.enabler.disabled h2)': function(e, el){
-					el.getPrevious().getElements('.check').fireEvent('click');
-				}
-			}
-		}).adopt(
+		self.navigation = new Element('div.navigation').adopt(
+			new Element('h2[text=Settings]'),
 			new Element('div.advanced_toggle').adopt(
 				new Element('span', {
-					'text': 'Show advanced settings'
+					'text': 'Show advanced'
 				}),
 				new Element('label.switch').adopt(
 					self.advanced_toggle = new Element('input[type=checkbox]', {
@@ -142,6 +136,16 @@ Page.Settings = new Class({
 				)
 			)
 		);
+
+		self.tabs_container = new Element('ul.tabs');
+
+		self.containers = new Element('form.uniForm.containers', {
+			'events': {
+				'click:relay(.enabler.disabled h2)': function(e, el){
+					el.getPrevious().getElements('.check').fireEvent('click');
+				}
+			}
+		});
 		self.showAdvanced();
 
 		// Add content to tabs
@@ -205,6 +209,7 @@ Page.Settings = new Class({
 
 		setTimeout(function(){
 			self.el.adopt(
+				self.navigation,
 				self.tabs_container,
 				self.containers
 			);

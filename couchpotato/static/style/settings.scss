@@ -1,21 +1,62 @@
 @import "_mixins";
 
 .page.settings {
+	top: $header_height;
+	display: flex;
+
+	@include media-phablet {
+		display: block;
+	}
+
+	.navigation {
+		display: flex;
+		justify-content: space-between;
+
+		.advanced_toggle {
+			display: flex;
+			align-items: center;
+
+			span {
+				margin-right: $padding / 2;
+			}
+		}
+	}
 
 	.tab_content {
 		display: none;
-		width: 100%;
-		max-width: 650px;
 
 		&.active {
 			display: block;
 		}
 	}
 
-	.advanced_toggle {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
+	.tabs {
+		margin: 0 $padding;
+		list-style: none;
+		font-size: 24px;
+
+		ul {
+			list-style: none;
+			font-size: initial;
+		}
+
+		li {
+			a {
+				color: rgba(0,0,0,.5);
+			}
+
+			&.active {
+				a {
+					color: #000;
+				}
+			}
+		}
+
+	}
+
+	form.containers {
+		margin: 0 $padding 0 0;
+		flex: 1 1 auto;
 	}
 
 	fieldset {
@@ -54,7 +95,12 @@
 			padding: $padding/3 $padding;
 			border-bottom: 1px solid $theme_off;
 			display: flex;
+			flex-flow: row nowrap;
 			align-items: center;
+
+			@include media-phablet {
+				flex-flow: row wrap;
+			}
 
 			&:last-child {
 				border-bottom: 0;
@@ -102,6 +148,11 @@
 					color: $primary_color;
 					text-decoration: underline;
 				}
+
+				@include media-phablet {
+					min-width: 100%;
+					margin-left: 0;
+				}
 			}
 
 			&.test_button a {
@@ -145,7 +196,7 @@
 
 	&.show_advanced {
 		fieldset.advanced,
-		fieldset .ctrlHolder.advanced {
+		fieldset:not(.disabled) > .ctrlHolder.advanced {
 			display: flex;
 		}
 	}
@@ -156,12 +207,13 @@
 		background: $switch_active;
 		border: 1px solid $switch_active;
 		box-shadow: inset 0 0 0 1px #FFF;
-		height: 33px;
+		height: 22px;
 		width: 66px;
 		min-width: 0 !important;
 		padding: 2px;
 		transition: all 250ms;
 		cursor: pointer;
+		border-radius: 3px;
 
 		input {
 			display: none;
@@ -173,12 +225,9 @@
 			width: 40%;
 			transition: transform 250ms;
 			transform: translateX(150%);
+			border-radius: 2px;
 		}
 
-		&:hover {
-			background: darken($switch_active, 20);
-			border-color: darken($switch_active, 20);
-		}
 	}
 
 	fieldset.enabler.disabled .switch,
@@ -199,14 +248,19 @@
 
 	/** Options list **/
 	.option_list {
+		background: #FFF;
 
-		fieldset:before {
+		fieldset {
 			position: relative;
+		}
+
+		fieldset:after {
+			position: absolute;
 			content: '';
 			display: block;
 			width: 100%;
 			border-bottom: 1px solid $theme_off;
-			top: -$padding/2;
+			bottom: -$padding/2;
 
 			&:last-child {
 				border-bottom: 0;
@@ -216,10 +270,10 @@
 		h2 {
 			font-size: 1em;
 			font-weight: 400;
-		}
 
-		.switch {
-			height: 22px;
+			.hint {
+				font-weight: 300;
+			}
 		}
 	}
 

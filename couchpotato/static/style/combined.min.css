@@ -298,7 +298,7 @@
 @media all and (max-width:600px){.suggestions .media_result{width:100%}
 }
 .suggestions .media_result .data{left:100px;background:#4e5969;border:none}
-#category_ordering li:last-child,#profile_ordering li:last-child,.api_docs .api .params tr:last-child td,.api_docs .api .params tr:last-child th,.page.settings fieldset,.profile .types li:last-child{border:0}
+#category_ordering li:last-child,#profile_ordering li:last-child,.api_docs .api .params tr:last-child td,.api_docs .api .params tr:last-child th,.profile .types li:last-child{border:0}
 .suggestions .media_result .data .info{top:10px;left:15px;right:15px;bottom:10px;overflow:hidden}
 .suggestions .media_result .data .info h2{white-space:normal;max-height:120px;font-size:18px;line-height:18px}
 .suggestions .media_result .data .info .genres,.suggestions .media_result .data .info .rating,.suggestions .media_result .data .info .year{position:static;display:block;padding:0;opacity:.6}
@@ -544,7 +544,6 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.home{padding:0 0 20px}
 .page.active{display:block}
 .page h1,.page h2,.page h3,.page h4{font-weight:300}
-.messages,.table .head{font-weight:700}
 .page h2{font-size:24px;padding:20px}
 .page .navigation{z-index:2;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;-webkit-border-radius:3px 0 0;border-radius:3px 0 0}
 .more_menu,.more_menu .button:before{position:relative}
@@ -576,7 +575,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .more_menu .wrapper ul li:first-child a{padding-top:10px}
 .more_menu .wrapper ul li:last-child a{padding-bottom:10px}
 .more_menu.show .wrapper{display:block}
-.messages{position:fixed;width:320px;z-index:2000;overflow:hidden;font-size:14px;padding:5px}
+.messages{position:fixed;width:320px;z-index:2000;overflow:hidden;font-size:14px;font-weight:700;padding:5px}
 .messages .message{overflow:hidden;-webkit-transition:all .6s cubic-bezier(.9,0,.1,1);transition:all .6s cubic-bezier(.9,0,.1,1);width:100%;position:relative;max-height:0;font-size:1.1em;font-weight:400;-webkit-transform:scale(0);-ms-transform:scale(0);transform:scale(0);-webkit-transform-origin:100% 50%;-ms-transform-origin:100% 50%;transform-origin:100% 50%;background:#ac0000;margin-bottom:4px;-webkit-border-radius:3px;border-radius:3px;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .messages .message .inner{padding:15px 30px 15px 20px;background:#FFF;margin-bottom:4px;-webkit-border-radius:3px;border-radius:3px}
 .messages .message.sticky{background-color:#ac0000}
@@ -593,6 +592,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .mask .message,.mask .spinner{position:absolute;top:50%;left:50%}
 .mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px;opacity:.5}
 .mask .spinner{width:22px;height:22px;display:block;background:#fff;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;transform:scale(0)}
+.page.settings,.table .item{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox}
 .mask.show{pointer-events:auto;opacity:1}
 .mask.show .spinner{-webkit-transform:scale(1);-ms-transform:scale(1);transform:scale(1)}
 .mask.hide{opacity:0}
@@ -605,22 +605,36 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 48%{-webkit-transform:rotate(360deg)scale(1);transform:rotate(360deg)scale(1);-webkit-border-radius:50%;border-radius:50%}
 100%{-webkit-transform:rotate(720deg)scale(1.6);transform:rotate(720deg)scale(1.6);-webkit-border-radius:1px;border-radius:1px}
 }
-.table .item{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;border-bottom:1px solid rgba(0,0,0,.2)}
+.table .head{font-weight:700}
+.table .item{display:flex;border-bottom:1px solid rgba(0,0,0,.2)}
 .table .item:last-child{border-bottom:none}
 .table .item span{padding:1px 2px}
 .table .item span:first-child{padding-left:0}
 .table .item span:last-child{padding-right:0}
-.page.settings .tab_content{display:none;width:100%;max-width:650px}
+.page.settings{top:80px;display:flex}
+@media (max-width:480px){.page.settings{display:block}
+}
+.page.settings .navigation,.page.settings .navigation .advanced_toggle{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox}
+.page.settings .navigation{display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;-moz-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}
+.page.settings .navigation .advanced_toggle{display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}
+.page.settings .navigation .advanced_toggle span{margin-right:10px}
+.page.settings .tab_content{display:none}
 .page.settings .tab_content.active{display:block}
-.page.settings .advanced_toggle,.page.settings fieldset .ctrlHolder,.page.settings fieldset h2{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox}
-.page.settings .advanced_toggle{display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:end;-webkit-justify-content:flex-end;-moz-box-pack:end;-ms-flex-pack:end;justify-content:flex-end}
-.page.settings fieldset{margin-bottom:20px;position:relative}
+.page.settings fieldset .ctrlHolder,.page.settings fieldset h2{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox}
+.page.settings .tabs{margin:0 20px;list-style:none;font-size:24px}
+.page.settings .tabs ul{list-style:none;font-size:initial}
+.page.settings .tabs li a{color:rgba(0,0,0,.5)}
+.page.settings .tabs li.active a{color:#000}
+.page.settings form.containers{margin:0 20px 0 0;-webkit-box-flex:1;-webkit-flex:1 1 auto;-moz-box-flex:1;-ms-flex:1 1 auto;flex:1 1 auto}
+.page.settings fieldset{border:0;margin-bottom:20px;position:relative}
 .page.settings fieldset h2{display:flex;-webkit-box-align:baseline;-webkit-align-items:baseline;-moz-box-align:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 20px}
 .page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
 .page.settings fieldset h2 .hint{margin-left:10px;font-size:1rem}
 .page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline}
-.page.settings fieldset .ctrlHolder{padding:6.67px 20px;border-bottom:1px solid #eaeaea;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}
+.page.settings fieldset .ctrlHolder{padding:6.67px 20px;border-bottom:1px solid #eaeaea;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}
+@media (max-width:480px){.page.settings fieldset .ctrlHolder{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap}
+}
 .page.settings fieldset .ctrlHolder:last-child{border-bottom:0}
 .page.settings fieldset .ctrlHolder label{display:inline-block;min-width:150px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{min-width:200px}
@@ -629,24 +643,27 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset .ctrlHolder .select_wrapper:before{pointer-events:none;position:absolute;right:10px;height:100%;line-height:0;margin-top:-3px}
 .page.settings fieldset .ctrlHolder .formHint{opacity:.8;margin-left:20px}
 .page.settings fieldset .ctrlHolder .formHint a{font-weight:400;color:#ac0000;text-decoration:underline}
+@media (max-width:480px){.page.settings fieldset .ctrlHolder .formHint{min-width:100%;margin-left:0}
+}
 .page.settings fieldset .ctrlHolder.test_button a{margin:0}
 .page.settings fieldset.disabled .ctrlHolder{display:none}
 .page.settings fieldset.disabled>.ctrlHolder:first-child,.page.settings fieldset.enabler{display:block}
 .page.settings fieldset.enabler>:first-child{position:absolute;right:0;top:0;border:0;padding:0}
 .page.settings fieldset.enabler>:first-child~h2{margin-right:86px}
 .page.settings fieldset .ctrlHolder.advanced,.page.settings fieldset.advanced{display:none;color:#ac0000}
-.page.settings.show_advanced fieldset .ctrlHolder.advanced,.page.settings.show_advanced fieldset.advanced{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}
-.page.settings .switch{display:inline-block;background:#ac0000;border:1px solid #ac0000;-webkit-box-shadow:inset 0 0 0 1px #FFF;box-shadow:inset 0 0 0 1px #FFF;height:33px;width:66px;min-width:0!important;padding:2px;-webkit-transition:all 250ms;transition:all 250ms;cursor:pointer}
+.page.settings.show_advanced fieldset.advanced,.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}
+.page.settings .switch{display:inline-block;background:#ac0000;border:1px solid #ac0000;-webkit-box-shadow:inset 0 0 0 1px #FFF;box-shadow:inset 0 0 0 1px #FFF;height:22px;width:66px;min-width:0!important;padding:2px;-webkit-transition:all 250ms;transition:all 250ms;cursor:pointer;-webkit-border-radius:3px;border-radius:3px}
 .page.settings .switch input{display:none}
-.page.settings .switch .toggle{background:#FFF;height:100%;width:40%;-webkit-transition:-webkit-transform 250ms;transition:transform 250ms;-webkit-transform:translateX(150%);-ms-transform:translateX(150%);transform:translateX(150%)}
-.page.settings .switch:hover{background:#460000;border-color:#460000}
+.page.settings .switch .toggle{background:#FFF;height:100%;width:40%;-webkit-transition:-webkit-transform 250ms;transition:transform 250ms;-webkit-transform:translateX(150%);-ms-transform:translateX(150%);transform:translateX(150%);-webkit-border-radius:2px;border-radius:2px}
 .page.settings fieldset.enabler.disabled .switch,.page.settings:not(.show_advanced) .advanced_toggle .switch{background:#eaeaea;border-color:#eaeaea}
 .page.settings fieldset.enabler.disabled .switch .toggle,.page.settings:not(.show_advanced) .advanced_toggle .switch .toggle{-webkit-transform:translateX(0);-ms-transform:translateX(0);transform:translateX(0)}
 .page.settings fieldset.enabler.disabled .switch:hover,.page.settings:not(.show_advanced) .advanced_toggle .switch:hover{background:#b7b7b7;border-color:#b7b7b7}
-.page.settings .option_list fieldset:before{position:relative;content:'';display:block;width:100%;border-bottom:1px solid #eaeaea;top:-10px}
-.page.settings .option_list fieldset:before:last-child{border-bottom:0}
+.page.settings .option_list{background:#FFF}
+.page.settings .option_list fieldset{position:relative}
+.page.settings .option_list fieldset:after{position:absolute;content:'';display:block;width:100%;border-bottom:1px solid #eaeaea;bottom:-10px}
+.page.settings .option_list fieldset:after:last-child{border-bottom:0}
 .page.settings .option_list h2{font-size:1em;font-weight:400}
-.page.settings .option_list .switch{height:22px}
+.page.settings .option_list h2 .hint{font-weight:300}
 .uniForm legend{font-weight:700;font-size:100%;margin:0;padding:1.5em 0}
 .uniForm .ctrlHolder{padding:1em;border-bottom:1px solid #efefef}
 .uniForm .ctrlHolder.focused{background:#fffcdf}
