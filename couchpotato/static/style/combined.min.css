@@ -598,7 +598,6 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset.enabler.disabled .switch:hover,.page.settings:not(.show_advanced) .advanced_toggle .switch:hover{background:#b7b7b7;border-color:#b7b7b7}
 .page.settings .option_list{background:#FFF}
 .page.settings .option_list fieldset{position:relative}
-.page.settings .option_list fieldset h2 .ctrlHolder{background:red}
 .page.settings .option_list fieldset h2 .group_label{min-width:100px}
 .page.settings .option_list fieldset.disabled h2{padding:0 20px}
 .page.settings .option_list fieldset:after{position:absolute;content:'';display:block;width:100%;border-bottom:1px solid #eaeaea;bottom:-10px}
@@ -638,3 +637,20 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .group_userscript .bookmarklet{display:block;float:left;padding:20px 15px 0 20px}
 .page.settings .group_userscript .bookmarklet span{margin-left:10px;display:inline-block}
 .page.settings .group_userscript img{display:block;clear:both;float:left;margin:20px;width:100%;max-width:680px}
+.page.settings .directory_list{z-index:2;position:absolute;width:450px;margin:28px 0 20px 18.4%;background:#eaeaea;-webkit-box-shadow:0 20px 40px -20px rgba(0,0,0,.55);box-shadow:0 20px 40px -20px rgba(0,0,0,.55)}
+.page.settings .directory_list .pointer{border-right:6px solid transparent;border-left:6px solid transparent;border-bottom:6px solid #eaeaea;display:block;position:absolute;width:0;margin:-6px 0 0 45%}
+.page.settings .directory_list ul{width:92%;height:300px;overflow:auto;margin:0 4%;font-size:16px}
+.page.settings .directory_list li{padding:4px 30px 4px 10px;cursor:pointer;margin:0!important;border-top:1px solid rgba(255,255,255,.1);background:url(../images/right.arrow.png) 98% center no-repeat;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.page.settings .directory_list li.blur{opacity:.3}
+.page.settings .directory_list li:last-child{border-bottom:1px solid rgba(255,255,255,.1)}
+.page.settings .directory_list li:hover{color:#ac0000}
+.page.settings .directory_list li.empty{background:0 0;height:100px;text-align:center;font-style:italic;border:none;line-height:100px;cursor:default;color:#BBB;text-shadow:none;font-size:12px}
+.page.settings .directory_list .actions{clear:both;padding:4% 4% 2%;min-height:45px;position:relative;width:100%;text-align:right}
+.page.settings .directory_list .actions label{float:right;width:auto;padding:0}
+.page.settings .directory_list .actions .inlay{margin:0 0 0 7px}
+.page.settings .directory_list .actions .back{font-weight:700;width:160px;display:inline-block;padding:0;line-height:120%;vertical-align:top;position:absolute;text-align:left;left:4%}
+.page.settings .directory_list .actions:last-child{float:right;padding:4%}
+.page.settings .directory_list .actions:last-child>span{padding:0 5px;text-shadow:none}
+.page.settings .directory_list .actions:last-child>.clear{left:4%;position:absolute;background-color:#af3128}
+.page.settings .directory_list .actions:last-child>.cancel{font-weight:700;color:#ddd}
+.page.settings .directory_list .actions:last-child>.save{background:#9dc156}

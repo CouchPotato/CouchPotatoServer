@@ -50,7 +50,7 @@ Page.Settings = new Class({
 		// Subtab
 		var subtab = null;
 		Object.each(self.params, function(param, subtab_name){
-			subtab = subtab_name;
+			subtab = param;
 		});
 
 		self.el.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
