@@ -44,6 +44,7 @@ Page.Settings = new Class({
 		var a = hide ? 'removeClass' : 'addClass';
 		var c = 'active';
 
+		tab_name = tab_name.split('/')[0];
 		var t = self.tabs[tab_name] || self.tabs[self.action] || self.tabs.general;
 
 		// Subtab
@@ -1483,8 +1484,6 @@ Option.Combined = new Class({
 						'change': self.saveCombined.bind(self)
 					}
 				}).inject(item);
-
-				new Form.Check(checkbox);
 			}
 			else {
 				value_count++;
@@ -1506,7 +1505,7 @@ Option.Combined = new Class({
 
 		item[value_empty == value_count ? 'addClass' : 'removeClass']('is_empty');
 
-		new Element('a.icon2.delete', {
+		new Element('a.icon-cancel.delete', {
 			'events': {
 				'click': self.deleteCombinedItem.bind(self)
 			}

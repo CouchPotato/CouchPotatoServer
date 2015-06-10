@@ -97,10 +97,11 @@ var UserscriptSettingTab = new Class({
 					new Element('span', {
 						'text': '⇽ Drag this to your bookmarks'
 					})
-				)
-			).setStyles({
-				'background-image': "url('https://couchpota.to/media/images/userscript.gif')"
-			});
+				),
+				new Element('img', {
+					'src': 'https://couchpota.to/media/images/userscript.gif'
+				})
+			);
 
 		});
 

@@ -15,6 +15,7 @@
 		.advanced_toggle {
 			display: flex;
 			align-items: center;
+			margin-right: $padding;
 
 			span {
 				margin-right: $padding / 2;
@@ -67,7 +68,7 @@
 		h2 {
 			display: flex;
 			align-items: baseline;
-			padding: 0 $padding;
+			padding: $padding $padding $padding/2;
 
 			.icon {
 				margin-right: $padding/2;
@@ -88,6 +89,12 @@
 					color: $primary_color;
 					text-decoration: underline;
 				}
+			}
+		}
+
+		&:first-child {
+			h2 {
+				padding-top: 0;
 			}
 		}
 
@@ -127,6 +134,7 @@
 
 				select {
 					cursor: pointer;
+					-moz-appearance: none;
 				}
 
 				&:before {
@@ -155,8 +163,14 @@
 				}
 			}
 
-			&.test_button a {
-				margin: 0;
+			&.test_button {
+				a {
+					margin: 0;
+				}
+
+				.success {
+					margin-left: $padding / 2;
+				}
 			}
 		}
 
@@ -252,6 +266,17 @@
 
 		fieldset {
 			position: relative;
+
+			h2 {
+
+				.group_label {
+					min-width: 100px;
+				}
+			}
+
+			&.disabled h2 {
+				padding: 0 $padding;
+			}
 		}
 
 		fieldset:after {
@@ -274,6 +299,190 @@
 			.hint {
 				font-weight: 300;
 			}
+		}
+	}
+
+
+	.combined_table {
+		margin-top: $padding;
+
+		.head {
+			margin: 0 ($padding/2) 0 ($padding+26px);
+			font-size: .8em;
+
+			abbr {
+				display: inline-block;
+				font-weight: bold;
+				border-bottom: 1px dotted #fff;
+				line-height: 140%;
+				cursor: help;
+				margin-right: $padding/2;
+				text-align: center;
+
+				&:first-child {
+					display: none;
+				}
+			}
+		}
+
+		input {
+			min-width: 0 !important;
+			display: inline-block;
+			margin-right: $padding/2;
+		}
+
+		.use { }
+		.host, .automation_ids, .automation_urls { width: 200px; }
+		.api_key, .pass_key { width: 150px; }
+		.name { width: 150px; }
+		.extra_score, .seed_ratio, .seed_time { width: 70px; text-align: center; }
+		.custom_tag { width: 120px; text-align: center; }
+
+		.ctrlHolder {
+			margin: 0 0 0 $padding;
+			padding-left: 0;
+
+			.delete {
+				display: none;
+				font-size: 20px;
+				width: 22px;
+				height: 22px;
+				line-height: 20px;
+				text-align: center;
+				vertical-align: middle;
+			}
+
+			&:hover .delete {
+				display: inline-block;
+			}
+
+			&.is_empty .delete,
+			&.is_empty input[type=checkbox] {
+				visibility: hidden;
+			}
+		}
+
+	}
+	.disabled .combined_table { display: none; }
+
+
+	.tab_about {
+		.usenet {
+			padding: $padding $padding 0;
+			font-size: 1.5em;
+			line-height: 1.3em;
+
+			a {
+				color: $primary_color;
+				padding: 0 5px;
+			}
+
+			ul {
+				list-style: none;
+				float: left;
+				width: 50%;
+				margin: 10px 0;
+				padding: 0;
+			}
+
+			li {
+				font-size: .8em;
+
+				&:before {
+					margin-right: 10px;
+				}
+			}
+		}
+
+		.donate {
+			float: left;
+			width: 42%;
+			text-align: center;
+			font-size: 17px;
+			padding: 0 0 0 4%;
+			margin: 20px 0 0;
+			border-left: 1px solid rgba(0,0,0,.2);
+
+			form {
+				padding: 10px 0 0;
+			}
+		}
+
+		.info {
+			padding: $padding;
+			margin: 0;
+			overflow: hidden;
+
+			dt {
+				clear: both;
+				float: left;
+				width: 17%;
+				font-weight: bold;
+			}
+
+			dd {
+				float: right;
+				width: 80%;
+				padding: 0;
+				margin: 0;
+				font-style: italic;
+
+				&.version { cursor: pointer; }
+			}
+		}
+
+		.group_actions {
+
+			> div {
+				padding: $padding;
+				text-align: center;
+			}
+
+			a {
+				margin: 0 10px;
+				font-size: 20px;
+			}
+		}
+	}
+
+
+	.group_userscript {
+
+		h2 .hint {
+			display: block;
+			margin: 0 !important;
+		}
+
+		.userscript {
+			float: left;
+			margin: 14px 0 0 $padding;
+			height: 36px;
+			line-height: 25px;
+		}
+
+		.or {
+			float: left;
+			margin: $padding -10px 0 10px;
+		}
+
+		.bookmarklet {
+			display: block;
+			float: left;
+			padding: $padding 15px 0 $padding;
+
+			span {
+				margin-left: 10px;
+				display: inline-block;
+			}
+		}
+
+		img {
+			display: block;
+			clear: both;
+			float: left;
+			margin: $padding;
+			width: 100%;
+			max-width: 680px;
 		}
 	}
 

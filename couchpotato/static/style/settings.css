@@ -657,7 +657,8 @@
 		display: inline-block;
 	}
 
-	.page .combined_table .ctrlHolder.is_empty .delete, .page.settings .combined_table .ctrlHolder.is_empty .check {
+	.page .combined_table .ctrlHolder.is_empty .delete,
+	.page.settings .combined_table .ctrlHolder.is_empty .check {
 		visibility: hidden;
 }
 

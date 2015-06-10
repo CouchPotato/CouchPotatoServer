@@ -96,11 +96,11 @@ var AboutSettingTab = new Class({
 					'text': '. For as low as $7.95 per month, you’ll get:'
 				}),
 				new Element('ul').adopt(
-					new Element('li', {
+					new Element('li.icon-ok', {
 						'text': Math.ceil((today.getTime()-millennium.getTime())/(one_day))+" days retention"
 					}),
-					new Element('li[text=No speed or download limits]'),
-					new Element('li[text=Free SSL Encrypted connections]')
+					new Element('li.icon-ok[text=No speed or download limits]'),
+					new Element('li.icon-ok[text=Free SSL Encrypted connections]')
 				)
 			),
 			new Element('div.donate', {
