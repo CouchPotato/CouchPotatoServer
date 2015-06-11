@@ -543,8 +543,6 @@ Option.Checkbox = new Class({
 			})
 		);
 
-		new Form.Check(self.input);
-
 	},
 
 	getValue: function(){
@@ -759,67 +757,67 @@ Option.Directory = new Class({
 		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
 				new Element('div.pointer'),
-				new Element('div.actions').adopt(
-					self.back_button = new Element('a.back', {
-						'html': '',
+				new Element('div.wrapper').adopt(
+					new Element('div.actions').adopt(
+						self.back_button = new Element('a.back', {
+							'html': '',
+							'events': {
+								'click': self.previousDirectory.bind(self)
+							}
+						}),
+						new Element('label', {
+							'text': 'Hidden folders'
+						}).adopt(
+							self.show_hidden = new Element('input[type=checkbox]', {
+								'events': {
+									'change': function(){
+										self.getDirs();
+									}
+								}
+							})
+						)
+					),
+					self.dir_list = new Element('ul', {
 						'events': {
-							'click': self.previousDirectory.bind(self)
+							'click:relay(li:not(.empty))': function(e, el){
+								(e).preventDefault();
+								self.selectDirectory(el.get('data-value'));
+							},
+							'mousewheel': function(e){
+								(e).stopPropagation();
+							}
 						}
 					}),
-					new Element('label', {
-						'text': 'Hidden folders'
-					}).adopt(
-						self.show_hidden = new Element('input[type=checkbox]', {
+					new Element('div.actions').adopt(
+						new Element('a.clear.button', {
+							'text': 'Clear',
 							'events': {
-								'change': function(){
-									self.getDirs();
+								'click': function(e){
+									self.input.set('value', '');
+									self.hideBrowser(e, true);
+								}
+							}
+						}),
+						new Element('a.cancel', {
+							'text': 'Cancel',
+							'events': {
+								'click': self.hideBrowser.bind(self)
+							}
+						}),
+						new Element('span', {
+							'text': 'or'
+						}),
+						self.save_button = new Element('a.button.save', {
+							'text': 'Save',
+							'events': {
+								'click': function(e){
+									self.hideBrowser(e, true);
 								}
 							}
 						})
 					)
-				),
-				self.dir_list = new Element('ul', {
-					'events': {
-						'click:relay(li:not(.empty))': function(e, el){
-							(e).preventDefault();
-							self.selectDirectory(el.get('data-value'));
-						},
-						'mousewheel': function(e){
-							(e).stopPropagation();
-						}
-					}
-				}),
-				new Element('div.actions').adopt(
-					new Element('a.clear.button', {
-						'text': 'Clear',
-						'events': {
-							'click': function(e){
-								self.input.set('value', '');
-								self.hideBrowser(e, true);
-							}
-						}
-					}),
-					new Element('a.cancel', {
-						'text': 'Cancel',
-						'events': {
-							'click': self.hideBrowser.bind(self)
-						}
-					}),
-					new Element('span', {
-						'text': 'or'
-					}),
-					self.save_button = new Element('a.button.save', {
-						'text': 'Save',
-						'events': {
-							'click': function(e){
-								self.hideBrowser(e, true);
-							}
-						}
-					})
 				)
 			).inject(self.directory_inlay, 'before');
-
-			new Form.Check(self.show_hidden);
 		}
 
 		self.initial_directory = self.input.get('value');

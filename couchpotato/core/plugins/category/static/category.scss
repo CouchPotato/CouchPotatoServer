@@ -1,13 +1,14 @@
+@import "couchpotato/static/style/_mixins";
+
 .add_new_category {
 	padding: 20px;
 	display: block;
 	text-align: center;
 	font-size: 20px;
-	border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
 .category {
-	border-bottom: 1px solid rgba(255,255,255,0.2);
+	margin-bottom: 20px;
 	position: relative;
 }
 
@@ -28,8 +29,6 @@
 	}
 
 	.category .formHint {
-		width: 250px !important;
-		margin: 0 !important;
 		opacity: 0.1;
 	}
 	.category:hover .formHint {
@@ -51,8 +50,9 @@
 			cursor: -webkit-grab;
 			cursor: -moz-grab;
 			cursor: grab;
-			border-bottom: 1px solid rgba(255,255,255,0.2);
-			padding: 0 5px;
+			border-bottom: 1px solid $theme_off;
+			padding: 5px;
+			list-style: none;
 		}
 		#category_ordering li:last-child { border: 0; }
 
@@ -69,14 +69,9 @@
 			}
 
 			#category_ordering li .handle {
-				background: url('../../images/handle.png') center;
 				width: 20px;
 				float: right;
 			}
 
 	#category_ordering .formHint {
-		clear: none;
-		float: right;
-		width: 250px;
-		margin: 0;
 	}

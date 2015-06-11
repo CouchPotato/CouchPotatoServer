@@ -283,20 +283,19 @@
 .suggestions .media_result:hover .actions{display:block}
 .suggestions .media_result:hover h2 .title{opacity:0}
 .suggestions .media_result .data.open .actions{display:none}
-.suggestions .media_result .actions a{margin-left:10px;vertical-align:middle}.add_new_category{padding:20px;display:block;text-align:center;font-size:20px;border-bottom:1px solid rgba(255,255,255,.2)}
-.category{border-bottom:1px solid rgba(255,255,255,.2);position:relative}
+.suggestions .media_result .actions a{margin-left:10px;vertical-align:middle}.add_new_category{padding:20px;display:block;text-align:center;font-size:20px}
+.category{margin-bottom:20px;position:relative}
 .category>.delete{position:absolute;padding:16px;right:0;cursor:pointer;opacity:.6;color:#fd5353}
 .category>.delete:hover{opacity:1}
 .category .ctrlHolder:hover{background:0 0}
-.category .formHint{width:250px!important;margin:0!important;opacity:.1}
+.category .formHint{opacity:.1}
 .category:hover .formHint{opacity:1}
 #category_ordering ul{float:left;margin:0;width:275px;padding:0}
-#category_ordering li{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab;border-bottom:1px solid rgba(255,255,255,.2);padding:0 5px}
+#category_ordering li{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab;border-bottom:1px solid #eaeaea;padding:5px;list-style:none}
 #category_ordering li:last-child{border:0}
 #category_ordering li .check{margin:2px 10px 0 0;vertical-align:top}
 #category_ordering li>span{display:inline-block;height:20px;vertical-align:top;line-height:20px}
-#category_ordering li .handle{background:url(../../images/handle.png) center;width:20px;float:right}
-#category_ordering .formHint{clear:none;float:right;width:250px;margin:0}.page.log .nav{text-align:right;padding:0;margin:0}
+#category_ordering li .handle{width:20px;float:right}.page.log .nav{text-align:right;padding:0;margin:0}
 .page.log .nav li{display:inline-block;padding:5px 10px;margin:0}
 .page.log .nav li.clear,.page.log .nav li.select{cursor:pointer}
 .page.log .nav li:hover:not(.active):not(.filter){background:rgba(255,255,255,.1)}
@@ -637,20 +636,21 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .group_userscript .bookmarklet{display:block;float:left;padding:20px 15px 0 20px}
 .page.settings .group_userscript .bookmarklet span{margin-left:10px;display:inline-block}
 .page.settings .group_userscript img{display:block;clear:both;float:left;margin:20px;width:100%;max-width:680px}
-.page.settings .directory_list{z-index:2;position:absolute;width:450px;margin:28px 0 20px 18.4%;background:#eaeaea;-webkit-box-shadow:0 20px 40px -20px rgba(0,0,0,.55);box-shadow:0 20px 40px -20px rgba(0,0,0,.55)}
-.page.settings .directory_list .pointer{border-right:6px solid transparent;border-left:6px solid transparent;border-bottom:6px solid #eaeaea;display:block;position:absolute;width:0;margin:-6px 0 0 45%}
-.page.settings .directory_list ul{width:92%;height:300px;overflow:auto;margin:0 4%;font-size:16px}
-.page.settings .directory_list li{padding:4px 30px 4px 10px;cursor:pointer;margin:0!important;border-top:1px solid rgba(255,255,255,.1);background:url(../images/right.arrow.png) 98% center no-repeat;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.page.settings .directory_list{z-index:2;position:absolute;width:450px;margin:28px 0 20px;background:#ac0000;-webkit-box-shadow:0 0 15px 2px rgba(0,0,0,.15);box-shadow:0 0 15px 2px rgba(0,0,0,.15);-webkit-border-radius:3px 3px 0 0;border-radius:3px 3px 0 0}
+.page.settings .directory_list .pointer{border-right:6px solid transparent;border-left:6px solid transparent;border-bottom:6px solid #ac0000;display:block;position:absolute;width:0;margin:-6px 0 0 100px}
+.page.settings .directory_list .wrapper{background:#FFF;-webkit-border-radius:3px 3px 0 0;border-radius:3px 3px 0 0;margin-top:5px}
+.page.settings .directory_list ul{width:92%;height:300px;overflow:auto;margin:0 20px}
+.page.settings .directory_list li{padding:4px 20px 4px 0;cursor:pointer;margin:0!important;border-top:1px solid rgba(255,255,255,.1);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .page.settings .directory_list li.blur{opacity:.3}
 .page.settings .directory_list li:last-child{border-bottom:1px solid rgba(255,255,255,.1)}
 .page.settings .directory_list li:hover{color:#ac0000}
 .page.settings .directory_list li.empty{background:0 0;height:100px;text-align:center;font-style:italic;border:none;line-height:100px;cursor:default;color:#BBB;text-shadow:none;font-size:12px}
-.page.settings .directory_list .actions{clear:both;padding:4% 4% 2%;min-height:45px;position:relative;width:100%;text-align:right}
+.page.settings .directory_list .actions{clear:both;padding:20px;min-height:45px;position:relative;width:100%;text-align:right}
 .page.settings .directory_list .actions label{float:right;width:auto;padding:0}
-.page.settings .directory_list .actions .inlay{margin:0 0 0 7px}
-.page.settings .directory_list .actions .back{font-weight:700;width:160px;display:inline-block;padding:0;line-height:120%;vertical-align:top;position:absolute;text-align:left;left:4%}
-.page.settings .directory_list .actions:last-child{float:right;padding:4%}
+.page.settings .directory_list .actions label input{margin-left:10px}
+.page.settings .directory_list .actions .back{font-weight:700;width:160px;display:inline-block;padding:0;line-height:120%;vertical-align:top;position:absolute;text-align:left;left:20px}
+.page.settings .directory_list .actions:last-child{padding:20px}
 .page.settings .directory_list .actions:last-child>span{padding:0 5px;text-shadow:none}
-.page.settings .directory_list .actions:last-child>.clear{left:4%;position:absolute;background-color:#af3128}
-.page.settings .directory_list .actions:last-child>.cancel{font-weight:700;color:#ddd}
-.page.settings .directory_list .actions:last-child>.save{background:#9dc156}
+.page.settings .directory_list .actions:last-child>.clear{left:20px;position:absolute;top:50%;-webkit-transform:translateY(-50%);-ms-transform:translateY(-50%);transform:translateY(-50%);margin:0}
+.page.settings .directory_list .actions:last-child>.cancel{color:rgba(0,0,0,.4)}
+.page.settings .directory_list .actions:last-child>.save{margin-right:0}
