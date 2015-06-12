@@ -45,11 +45,12 @@ Page.Home = new Class({
 			'description': 'These movies have been snatched or have finished downloading',
 			'on_empty_element': new Element('div').adopt(
 				new Element('h2', {'text': 'Snatched & Available'}),
-				new Element('span', {
-					'html': 'No snatched movies or anything!? Damn.. <a>Maybe add a movie.</a>',
+				new Element('span.no_movies', {
+					'html': 'No snatched movies or anything!? Damn.. <a href="#">Maybe add a movie.</a>',
 					'events': {
-						'click': function(){
-							$(document.body).getElement('.search_form input').focus();
+						'click': function(e){
+							(e).preventDefault();
+							$(document.body).getElement('.search_form .icon-search').click();
 						}
 					}
 				})

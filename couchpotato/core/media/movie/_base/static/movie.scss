@@ -52,10 +52,21 @@
 		}
 	}
 
+	&.status_suggested {
+		.quality {
+			display: none;
+		}
+	}
+
 }
 
-.list_list, .thumb_list {
+.movies {
 	position: relative;
+
+	.no_movies {
+		text-align: center;
+		padding: $padding;
+	}
 
 	> .description {
 		position: absolute;
@@ -170,6 +181,10 @@
 			bottom: 0;
 			display: none;
 
+			.action {
+				display: inline-block;
+			}
+
 			a {
 				height: 100%;
 				display: block;
@@ -185,6 +200,10 @@
 
 				&:hover {
 					color: $primary_color;
+				}
+
+				.icon {
+					display: none;
 				}
 			}
 		}
@@ -202,7 +221,10 @@
 .thumb_list {
 
 	font-size: 12px;
-	padding: 0 $padding/2;
+
+	> div:last-child {
+		padding: 0 $padding/2;
+	}
 
 	@include media-tablet {
 		padding: 0 $padding/4;
@@ -261,7 +283,6 @@
 			clear: both;
 
 			.info {
-				height: 44px;
 
 				.title {
 					display: flex;
@@ -294,43 +315,46 @@
 		}
 
 		.actions {
+			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,.9) 100%);
+			transition: all 250ms;
+			opacity: 0;
 			position: absolute;
-			top: $padding / 2;
-			right: $padding / 2;
+			top: 0;
+			right: 0;
+			bottom: 24px;
+			left: 0;
 			text-align: right;
+			border-radius: $border_radius;
 
 			.action {
 				position: relative;
 				display: block;
 				margin-bottom: 1px;
 				width: auto;
-				
+				margin-right: $padding/2;
 
-				a {
-					display: inline-block;
-					width: auto;
-					background: $background_color;
-					padding: $padding / 3;
-					opacity: 0;
+				&:first-child {
+					margin-top: $padding/2;
 				}
 
-
-				.icon {
+				a {
+					transition: all 150ms $cubic;
+					display: inline-block;
+					width: auto;
+					padding: $padding / 3;
 					color: #FFF;
-					position: absolute;
-					height: 100%;
-					width: 33px;
-					top: 0;
-					bottom: 0;
-					right: 0;
-					font-size: 20px;
-					text-align: center;
+					border-radius: $border_radius - 1px;
+
+					&:hover {
+						background: #FFF;
+						color: $primary_color;
+					}
 				}
 			}
 		}
 
 		&:hover .actions {
-			display: block;
+			opacity: 1;
 
 			@include media-phablet {
 				display: none;
@@ -366,7 +390,7 @@
 		right: 0;
 		left: $header_width;
 		background: rgba(0,0,0,.6);
-		border-radius: 3px 0 0 3px;
+		border-radius: $border_radius 0 0 $border_radius;
 		opacity: 0;
 		transition: opacity 800ms;
 
@@ -399,7 +423,7 @@
 		right: 0;
 		left: $header_width + $gab-width;
 		background: $background_color;
-		border-radius: 3px 0 0 3px;
+		border-radius: $border_radius 0 0 $border_radius;
 		overflow-y: auto;
 		transform: translateX(100%);
 		transition: transform 250ms $cubic;

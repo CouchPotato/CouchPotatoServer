@@ -240,6 +240,13 @@ var Movie = new Class({
 				}
 			}),
 			self.thumbnail = thumbnail,
+			self.actions_el = new Element('div.actions', {
+				'events': {
+					'click': function(e){
+						(e).stopPropagation();
+					}
+				}
+			}),
 			self.data_container = new Element('div.data.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
@@ -248,13 +255,6 @@ var Movie = new Class({
 						}),
 						self.year = new Element('div.year', {
 							'text': self.data.info.year || 'n/a'
-						}),
-						self.actions_el = new Element('div.actions', {
-							'events': {
-								'click': function(e){
-									(e).stopPropagation();
-								}
-							}
 						})
 					),
 					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {

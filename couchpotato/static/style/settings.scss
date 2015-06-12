@@ -2,7 +2,10 @@
 
 .page.settings {
 	top: $header_height;
-	display: flex;
+	
+	&.active {
+		display: flex;
+	}
 
 	@include media-phablet {
 		display: block;
@@ -227,7 +230,7 @@
 		padding: 2px;
 		transition: all 250ms;
 		cursor: pointer;
-		border-radius: 3px;
+		border-radius: $border_radius;
 
 		input {
 			display: none;
@@ -239,7 +242,7 @@
 			width: 40%;
 			transition: transform 250ms;
 			transform: translateX(150%);
-			border-radius: 2px;
+			border-radius: $border_radius - 1px;
 		}
 
 	}

@@ -23,8 +23,13 @@ var MovieAction = new Class({
 			})
 			self.button.inject(wrapper);
 
-			if(self.icon)
-				new Element('span.icon.icon-'+self.icon).inject(self.button);
+			//if(self.icon){
+			//	var label = self.button.get('text');
+			//	self.button.addClass('with-icon').empty().adopt(
+			//		new Element('span.inner').set('text', label),
+			//		new Element('span.icon.icon-'+self.icon).inject(self.button)
+			//	);
+			//}
 
 			self.button = wrapper;
 		}
