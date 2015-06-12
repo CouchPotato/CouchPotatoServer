@@ -125,7 +125,7 @@ var CategoryListBase = new Class({
 				new Element('span.category_label', {
 					'text': category.data.label
 				}),
-				new Element('span.handle')
+				new Element('span.handle.icon-handle')
 			).inject(category_list);
 
 		});

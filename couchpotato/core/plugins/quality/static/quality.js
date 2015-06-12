@@ -132,11 +132,8 @@ var QualityBase = new Class({
 				new Element('span.profile_label', {
 					'text': profile.data.label
 				}),
-				new Element('span.handle')
+				new Element('span.handle.icon-handle')
 			).inject(self.profiles_list);
-
-			new Form.Check(check);
-
 		});
 
 		// Sortable

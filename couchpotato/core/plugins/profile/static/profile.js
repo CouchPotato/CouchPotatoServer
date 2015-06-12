@@ -270,56 +270,48 @@ Profile.Type = new Class({
 		var data = self.data;
 
 		self.el = new Element('li.type').adopt(
-			new Element('span.quality_type').grab(
+			new Element('span.quality_type.select_wrapper.icon-dropdown').grab(
 				self.fillQualities()
 			),
 			self.finish_container = new Element('label.finish').adopt(
-				new Element('span.finish').grab(
-					self.finish = new Element('input.finish[type=checkbox]', {
-						'checked': data.finish !== undefined ? data.finish : 1,
-						'events': {
-							'change': function(){
-								if(self.el == self.el.getParent().getElement(':first-child')){
-									self.finish_class.check();
-									alert('Top quality always finishes the search');
-									return;
-								}
-
-								self.fireEvent('change');
+				self.finish = new Element('input.finish[type=checkbox]', {
+					'checked': data.finish !== undefined ? data.finish : 1,
+					'events': {
+						'change': function(){
+							if(self.el == self.el.getParent().getElement(':first-child')){
+								alert('Top quality always finishes the search');
+								return;
 							}
+
+							self.fireEvent('change');
 						}
-					})
-				),
+					}
+				}),
 				new Element('span.check_label[text=finish]')
 			),
 			self['3d_container'] = new Element('label.threed').adopt(
-				new Element('span.3d').grab(
-					self['3d'] = new Element('input.3d[type=checkbox]', {
-						'checked': data['3d'] !== undefined ? data['3d'] : 0,
-						'events': {
-							'change': function(){
-								self.fireEvent('change');
-							}
+				self['3d'] = new Element('input.3d[type=checkbox]', {
+					'checked': data['3d'] !== undefined ? data['3d'] : 0,
+					'events': {
+						'change': function(){
+							self.fireEvent('change');
 						}
-					})
-				),
+					}
+				}),
 				new Element('span.check_label[text=3D]')
 			),
-			new Element('span.delete.icon2', {
+			new Element('span.delete.icon-cancel', {
 				'events': {
 					'click': self.del.bind(self)
 				}
 			}),
-			new Element('span.handle')
+			new Element('span.handle.icon-handle')
 		);
 
 		self.el[self.data.quality ? 'removeClass' : 'addClass']('is_empty');
 
 		if(self.data.quality && Quality.getQuality(self.data.quality).allow_3d)
 			self.el.addClass('allow_3d');
-
-		self.finish_class = new Form.Check(self.finish);
-		self['3d_class'] = new Form.Check(self['3d']);
 
 	},
 

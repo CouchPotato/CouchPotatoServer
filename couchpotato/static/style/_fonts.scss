@@ -1,11 +1,11 @@
 /* Fonts */
 @font-face {
     font-family: 'icons';
-    src: url('../fonts/icons.eot?74719541');
-    src: url('../fonts/icons.eot?74719541#iefix') format('embedded-opentype'),
-    url('../fonts/icons.woff?74719541') format('woff'),
-    url('../fonts/icons.ttf?74719541') format('truetype'),
-    url('../fonts/icons.svg?74719541#icons') format('svg');
+    src: url('../fonts/icons.eot?74719542');
+    src: url('../fonts/icons.eot?74719542#iefix') format('embedded-opentype'),
+    url('../fonts/icons.woff?747195412') format('woff'),
+    url('../fonts/icons.ttf?74719542') format('truetype'),
+    url('../fonts/icons.svg?74719542#icons') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -44,6 +44,7 @@
 .icon-refresh:before { content: '\e816'; }
 .icon-home:before { content: '\e817'; }
 .icon-movie:before { content: '\e818'; }
+.icon-menu:before, .icon-handle:before { content: '\e819'; }
 
 @font-face {
     font-family: 'OpenSans';

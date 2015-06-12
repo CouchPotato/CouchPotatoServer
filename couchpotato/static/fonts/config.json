@@ -127,6 +127,12 @@
       "src": "fontawesome"
     },
     {
+      "uid": "2cfb3f2b46b34a1790aec0aa846297b6",
+      "css": "menu",
+      "code": 59417,
+      "src": "entypo"
+    },
+    {
       "uid": "c311c48d79488965b0fab7f9cd12b6b5",
       "css": "left-arrow",
       "code": 59392,

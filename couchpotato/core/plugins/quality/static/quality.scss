@@ -1,26 +1,19 @@
+@import "couchpotato/static/style/_mixins";
+
 .group_sizes {
 
-}
+	.item {
+		.label {
+			min-width: 150px;
+		}
 
-	.group_sizes .head {
-		font-weight: bold;
+		.min, .max {
+			display: inline-block;
+			width: 70px !important;
+			min-width: 0 !important;
+			margin-right: $padding/2;
+			text-align: center;
+		}
 	}
 
-		.group_sizes .ctrlHolder {
-			padding-top: 4px !important;
-			padding-bottom: 4px !important;
-			font-size: 12px;
-		}
-
-		.group_sizes .label {
-			max-width: 120px;
-		}
-
-		.group_sizes .min, .group_sizes .max {
-			text-align: center;
-			width: 50px;
-			max-width: 50px;
-			margin: 0 5px !important;
-			padding: 0 3px;
-			display: inline-block;
-		}
+}
