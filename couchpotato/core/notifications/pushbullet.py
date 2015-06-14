@@ -19,14 +19,8 @@ class Pushbullet(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
-        devices = self.getDevices()
-        if devices is None:
-            return False
-
         # Get all the device IDs linked to this user
-        if not len(devices):
-            devices = [None]
-
+        devices = self.getDevices() or [None]
         successful = 0
         for device in devices:
             response = self.request(
@@ -43,10 +37,23 @@ class Pushbullet(Notification):
             else:
                 log.error('Unable to push notification to Pushbullet device with ID %s' % device)
 
+        for channel in self.getChannels():
+            response = self.request(
+                'pushes',
+                cache = False,
+                channel_tag = channel,
+                type = 'note',
+                title = self.default_title,
+                body = toUnicode(message)
+            )
+
         return successful == len(devices)
 
     def getDevices(self):
         return splitString(self.conf('devices'))
+
+    def getChannels(self):
+        return splitString(self.conf('channels'))
 
     def request(self, method, cache = True, **kwargs):
         try:
@@ -92,6 +99,12 @@ config = [{
                     'default': '',
                     'advanced': True,
                     'description': 'IDs of devices to send notifications to, empty = all devices'
+                },
+                {
+                    'name': 'channels',
+                    'default': '',
+                    'advanced': True,
+                    'description': 'IDs of channels to send notifications to, empty = no channels'
                 },
                 {
                     'name': 'on_snatch',
