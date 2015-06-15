@@ -243,7 +243,7 @@ var Movie = new Class({
 			self.thumbnail = thumbnail.grab(
 				self.actions_el = new Element('div.actions', {
 					'events': {
-						'click': function(e){
+						'click:relay(.action)': function(e){
 							(e).stopPropagation();
 						}
 					}
