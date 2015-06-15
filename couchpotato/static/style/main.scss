@@ -118,6 +118,7 @@ input, textarea, select {
             }
 
             @include media-phablet {
+                font-size: 28px;
                 line-height: $header_width_mobile;
                 height: $header_width_mobile;
 
@@ -140,6 +141,23 @@ input, textarea, select {
                 @include media-phablet {
                     padding: $padding/2 0;
                     text-align: center;
+                    font-size: 0px;
+                }
+
+                &:before {
+                    display: none;
+                    text-align: center;
+                    font-size: 18px;
+                    width: 24px;
+
+                    @include media-phablet {
+                        width: 100%;
+                        display: block;
+                    }
+                }
+
+                &.icon-home:before {
+                    font-size: 24px;
                 }
             }
         }

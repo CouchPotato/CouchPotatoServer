@@ -9,6 +9,7 @@ var PageBase = new Class({
 	order: 1,
 	has_tab: true,
 	name: '',
+	icon: null,
 
 	parent_page: null,
 	sub_pages: null,
@@ -45,7 +46,8 @@ var PageBase = new Class({
 			self.tab = nav.addTab(self.name, {
 				'href': App.createUrl(self.getPageUrl()),
 				'title': self.title,
-				'text': self.name.capitalize()
+				'text': self.name.capitalize(),
+				'class': self.icon ? 'icon-' + self.icon : null
 			});
 		}
 

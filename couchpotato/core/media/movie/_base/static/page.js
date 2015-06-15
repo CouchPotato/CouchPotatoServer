@@ -3,6 +3,7 @@ Page.Movies = new Class({
 	Extends: PageBase,
 
 	name: 'movies',
+	icon: 'movie',
 	sub_pages: ['Wanted', 'Manage'],
 	default_page: 'Wanted',
 	current_page: null,

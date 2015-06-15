@@ -4,6 +4,7 @@ Page.Home = new Class({
 
 	name: 'home',
 	title: 'Manage new stuff for things and such',
+	icon: 'home',
 
 	indexAction: function () {
 		var self = this;

@@ -39,7 +39,7 @@
 .search_form.focused.filled .results_container,.search_form.shown.filled .results_container{display:block}
 .search_form.focused.filled .input,.search_form.shown.filled .input{-webkit-border-radius:0 0 0 3px;border-radius:0 0 0 3px}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0}
-@media (max-width:480px){.page.movies_manage,.page.movies_wanted{top:66px}
+@media (max-width:480px){.page.movies_manage,.page.movies_wanted{top:44px}
 }
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
 .movie{-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
@@ -123,15 +123,15 @@
 .page.movie_details .overlay .close{display:inline-block;text-align:center;font-size:60px;line-height:80px;color:#FFF;width:44px;height:100%;opacity:0;transform:translateX(100%);-webkit-transition:opacity 300ms,-webkit-transform 300ms cubic-bezier(.9,0,.1,1);transition:opacity 300ms,transform 300ms cubic-bezier(.9,0,.1,1)}
 .page.movie_details .content,.page.movie_details .overlay .close{-webkit-transform:translateX(100%);-ms-transform:translateX(100%)}
 @media (max-width:480px){.page.movie_details .overlay{left:0}
-.page.movie_details .overlay .close{width:66px}
+.page.movie_details .overlay .close{width:44px}
 }
 .page.movie_details .content{left:176px;background:#FFF;border-radius:3px 0 0 3px;overflow-y:auto;transform:translateX(100%);-webkit-transition:-webkit-transform 250ms cubic-bezier(.9,0,.1,1);transition:transform 250ms cubic-bezier(.9,0,.1,1)}
 .page.movie_details .content>.head{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;padding:0 20px;line-height:80px}
-@media (max-width:480px){.page.movie_details .content{left:66px}
+@media (max-width:480px){.page.movie_details .content{left:44px}
 .page.movie_details .content>.head{-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap;padding:0 10px;line-height:1em}
 }
 .page.movie_details .content>.head h1{-webkit-box-flex:1;-webkit-flex:1 auto;-moz-box-flex:1;-ms-flex:1 auto;flex:1 auto;margin:0;font-size:24px;color:rgba(0,0,0,.5);font-weight:300;max-width:100%}
-@media (max-width:480px){.page.movie_details .content>.head h1{min-width:100%;line-height:66px}
+@media (max-width:480px){.page.movie_details .content>.head h1{min-width:100%;line-height:44px}
 .page.movie_details .content>.head h1 .more_menu{width:100%}
 }
 .page.movie_details .content>.head .more_menu{display:inline-block;max-width:100%}
@@ -499,13 +499,19 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .navigation .logo:hover{background:#980000}
 .header .navigation .logo:hover span{-webkit-transform:translateX(-153%);-ms-transform:translateX(-153%);transform:translateX(-153%);opacity:0}
 .header .navigation .logo:hover span:nth-child(even){-webkit-transform:translateX(-50%);-ms-transform:translateX(-50%);transform:translateX(-50%);opacity:1}
-@media (max-width:480px){.header{width:66px;min-width:66px;z-index:21}
-.header .navigation .logo{line-height:66px;height:66px}
+@media (max-width:480px){.header{width:44px;min-width:44px;z-index:21}
+.header .navigation .logo{font-size:28px;line-height:44px;height:44px}
 .header .navigation .logo:after{content:'CP'}
 .header .navigation .logo span{display:none}
 }
 .header .navigation ul{padding:0;margin:0}
 .header .navigation ul li a{padding:10px 20px;display:block}
+@media (max-width:480px){.header .navigation ul li a{padding:10px 0;text-align:center;font-size:0}
+}
+.header .navigation ul li a:before{display:none;text-align:center;font-size:18px;width:24px}
+@media (max-width:480px){.header .navigation ul li a:before{width:100%;display:block}
+}
+.header .navigation ul li a.icon-home:before{font-size:24px}
 .header .menu,.header .notification_menu,.header .search_form{position:absolute;z-index:21;bottom:6.67px;width:44px;height:44px}
 .header .menu .wrapper,.header .notification_menu .wrapper,.header .search_form .wrapper{min-width:170px}
 .header .menu>a,.header .notification_menu>a,.header .search_form>a{display:inline-block;height:100%;width:100%;text-align:center;line-height:44px;font-size:20px}
@@ -513,8 +519,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .notification_menu .button:before{font-size:20px;top:-2px}
 .header .notification_menu .badge{position:absolute;color:#FFF;top:5px;right:0;background:#ac0000;-webkit-border-radius:50%;border-radius:50%;width:18px;height:18px;line-height:16px;text-align:center;font-size:10px;font-weight:lighter}
 .header .notification_menu .wrapper{width:320px}
-@media (max-width:480px){.header .navigation ul li a{padding:10px 0;text-align:center}
-.header .notification_menu{bottom:50px}
+@media (max-width:480px){.header .notification_menu{bottom:50px}
 .header .notification_menu .wrapper{width:250px}
 }
 .header .notification_menu ul{min-height:60px;max-height:300px;overflow:auto}
@@ -544,12 +549,12 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page .navigation{z-index:2;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;-webkit-border-radius:3px 0 0;border-radius:3px 0 0}
 .more_menu,.more_menu .button:before{position:relative}
 .more_menu .button,.page .navigation ul li{display:inline-block}
-@media (max-width:480px){.page h2{font-size:18px;line-height:66px;padding:10px}
-.page .navigation{height:66px;left:86px}
+@media (max-width:480px){.page h2{font-size:18px;line-height:44px;padding:10px}
+.page .navigation{height:44px;left:64px}
 }
 .page .navigation ul{-webkit-box-flex:1;-webkit-flex:1 auto;-moz-box-flex:1;-ms-flex:1 auto;flex:1 auto;list-style:none}
 .page .navigation ul li a{font-size:24px;line-height:80px;padding:20px;color:rgba(0,0,0,.5)}
-@media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:66px;padding:10px}
+@media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:44px;padding:10px}
 }
 .page .navigation ul .active a{color:#000}
 .page .navigation>ul>li:first-child{margin-left:-20px}
