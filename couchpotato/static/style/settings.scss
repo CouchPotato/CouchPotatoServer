@@ -5,10 +5,10 @@
 	
 	&.active {
 		display: flex;
-	}
 
-	@include media-phablet {
-		display: block;
+		@include media-phablet {
+			display: block;
+		}
 	}
 
 	.navigation {

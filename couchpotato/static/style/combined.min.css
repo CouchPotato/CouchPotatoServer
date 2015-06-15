@@ -540,7 +540,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .content h1,.content h2,.content h3{padding:0;margin:0}
 .content .pages{width:100%;position:relative}
 .content .footer{position:fixed;bottom:0;height:20px;width:100%}
-.page{position:absolute;right:0;bottom:0;display:none;padding:20px 0;overflow:auto}
+.page{position:absolute;right:0;bottom:0;display:none;padding:20px 0;overflow:hidden;overflow-y:auto}
 .page.home{padding:0 0 20px}
 .page.active{display:block}
 .page h1,.page h2,.page h3,.page h4{font-weight:300}
@@ -549,7 +549,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page .navigation{z-index:2;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;-webkit-border-radius:3px 0 0;border-radius:3px 0 0}
 .more_menu,.more_menu .button:before{position:relative}
 .more_menu .button,.page .navigation ul li{display:inline-block}
-@media (max-width:480px){.page h2{font-size:18px;line-height:44px;padding:10px}
+@media (max-width:480px){.page h2{font-size:18px;padding:10px}
 .page .navigation{height:44px;left:64px}
 }
 .page .navigation ul{-webkit-box-flex:1;-webkit-flex:1 auto;-moz-box-flex:1;-ms-flex:1 auto;flex:1 auto;list-style:none}
@@ -613,7 +613,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .table .item span:last-child{padding-right:0}
 .page.settings{top:80px}
 .page.settings.active{display:flex}
-@media (max-width:480px){.page.settings{display:block}
+@media (max-width:480px){.page.settings.active{display:block}
 }
 .page.settings .navigation,.page.settings .navigation .advanced_toggle{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox}
 .page.settings .navigation{display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;-moz-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}

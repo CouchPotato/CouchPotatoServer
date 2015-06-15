@@ -336,7 +336,8 @@ input, textarea, select {
     bottom: 0;
     display: none;
     padding: $padding 0;
-    overflow: auto;
+    overflow: hidden;
+    overflow-y: auto;
 
     &.disable_hover > * {
         pointer-events: none;
@@ -360,7 +361,7 @@ input, textarea, select {
 
         @include media-phablet {
             font-size: 18px;
-            line-height: $header_width_mobile;
+            //line-height: $header_width_mobile;
             padding: $padding/2;
         }
     }
