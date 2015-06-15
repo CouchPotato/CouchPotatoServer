@@ -38,10 +38,10 @@
 .search_form .results_container .results .media_result:last-child .data{border-bottom:0}
 .search_form.focused.filled .results_container,.search_form.shown.filled .results_container{display:block}
 .search_form.focused.filled .input,.search_form.shown.filled .input{-webkit-border-radius:0 0 0 3px;border-radius:0 0 0 3px}
-.page.movies{z-index:21;bottom:auto}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0}
 @media (max-width:480px){.page.movies_manage,.page.movies_wanted{top:66px}
 }
+.page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
 .movie{-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .movie .check{position:absolute;top:0;left:20px;display:none}
 .movie .quality span{background:rgba(0,0,0,.2);color:#FFF;-webkit-border-radius:1px;border-radius:1px;padding:2px 4px}

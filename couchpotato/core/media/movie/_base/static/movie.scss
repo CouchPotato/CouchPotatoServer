@@ -1,16 +1,18 @@
 @import "couchpotato/static/style/_mixins";
 
-.page.movies {
-	z-index: 21; // Sets navigation above
-	bottom: auto;
-}
-
 .page.movies_wanted, .page.movies_manage {
 	top: $header_height;
 	padding: 0;
 
 	@include media-phablet {
 		top: $header_width_mobile;
+	}
+
+	.load_more {
+		text-align: center;
+		padding: $padding;
+		font-size: 2em;
+		display: block;
 	}
 }
 
