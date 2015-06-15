@@ -90,14 +90,15 @@ var MovieList = new Class({
 	create: function(){
 		var self = this;
 
-		if(self.options.load_more)
+		if(self.options.load_more){
 			self.scrollspy = new ScrollSpy({
+				container: self.el.getParent(),
 				min: function(){
-					var c = self.load_more.getCoordinates();
-					return c.top - window.document.getSize().y - 300;
+					return self.load_more.getCoordinates().top;
 				},
 				onEnter: self.loadMore.bind(self)
 			});
+		}
 
 		self.created = true;
 	},
