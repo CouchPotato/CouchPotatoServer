@@ -148,52 +148,6 @@ Page.Home = new Class({
 
 	},
 
-	createSuggestionsChartsMenu: function(){
-		var self = this,
-			suggestion_tab, charts_tab;
-
-        self.el_toggle_menu = new Element('div.toggle_menu', {
-			'events': {
-				'click:relay(a)': function(e, el) {
-					e.preventDefault();
-					self.toggleSuggestionsCharts(el.get('data-container'), el);
-				}
-			}
-		}).adopt(
-			suggestion_tab = new Element('a.toggle_suggestions', {
-				'data-container': 'suggestions'
-			}).grab(new Element('h2', {'text': 'Suggestions'})),
-			charts_tab = new Element('a.toggle_charts', {
-				'data-container': 'charts'
-			}).grab( new Element('h2', {'text': 'Charts'}))
-		);
-
-        var menu_selected = Cookie.read('suggestions_charts_menu_selected') || 'suggestions';
-        self.toggleSuggestionsCharts(menu_selected, menu_selected == 'suggestions' ? suggestion_tab : charts_tab);
-
-		self.el_toggle_menu.inject(self.el);
-
-		self.chain.callChain();
-
-	},
-
-	toggleSuggestionsCharts: function(menu_id, el){
-	    var self = this;
-
-		// Toggle ta
-		self.el_toggle_menu.getElements('.active').removeClass('active');
-		if(el) el.addClass('active');
-
-		// Hide both
-		if(self.suggestions_list) self.suggestions_list.hide();
-		if(self.charts_list) self.charts_list.hide();
-
-		var toggle_to = self[menu_id + '_list'];
-		if(toggle_to) toggle_to.show();
-
-		Cookie.write('suggestions_charts_menu_selected', menu_id, {'duration': 365});
-	},
-
 	createLate: function(){
 		var self = this;
 
