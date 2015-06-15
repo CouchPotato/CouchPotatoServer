@@ -23,6 +23,9 @@ var PageBase = new Class({
 		self.el = new Element('div', {
 			'class': 'page ' + self.getPageClass() + (' level_' + (options.level || 0))
 		});
+
+		// Stop hover events while scrolling
+		self.el.addEvent('scroll', self.preventHover.bind(self));
 	},
 
 	load: function(){
@@ -143,6 +146,17 @@ var PageBase = new Class({
 				sub_page['class'].hide();
 			});
 		}
+	},
+
+	preventHover: function(){
+		var self = this;
+
+		if(self.hover_timer) clearTimeout(self.hover_timer);
+		self.el.addClass('disable_hover');
+
+		self.hover_timer = setTimeout(function(){
+			self.el.removeClass('disable_hover');
+		}, 200);
 	},
 
 	toElement: function(){

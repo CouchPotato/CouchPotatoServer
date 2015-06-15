@@ -15,6 +15,8 @@
 }
 
 .movie {
+	transform: translateZ(0);
+	backface-visibility: hidden;
 
 	.check {
 		position: absolute;
@@ -95,10 +97,6 @@
 
 .list_list {
 	font-weight: 300;
-
-	.poster {
-		display: none;
-	}
 
 	.movie {
 		display: block;
@@ -271,6 +269,7 @@
 		}
 
 		.poster {
+			position: relative;
 			border-radius: $border_radius;
 			background: $theme_off center no-repeat;
 			background-size: cover;
@@ -321,10 +320,9 @@
 			position: absolute;
 			top: 0;
 			right: 0;
-			bottom: 24px;
+			bottom: 0;
 			left: 0;
 			text-align: right;
-			border-radius: $border_radius;
 
 			.action {
 				position: relative;

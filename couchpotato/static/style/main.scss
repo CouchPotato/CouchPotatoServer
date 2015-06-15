@@ -81,7 +81,6 @@ input, textarea, select {
             text-align: center;
             position: relative;
 			overflow: hidden;
-            opacity: .1;
 
             font-family: Lobster, serif;
             color: #FFF;
@@ -283,6 +282,7 @@ input, textarea, select {
 
 /* Content */
 .content {
+    height: 100%;
     flex: 1 auto;
 
     background: $background_color;
@@ -319,6 +319,10 @@ input, textarea, select {
     display: none;
     padding: $padding 0;
     overflow: auto;
+
+    &.disable_hover > * {
+        pointer-events: none;
+    }
 
     &.home {
         padding: 0 0 $padding;

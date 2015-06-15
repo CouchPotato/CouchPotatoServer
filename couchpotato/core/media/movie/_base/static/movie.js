@@ -213,7 +213,8 @@ var Movie = new Class({
 			eta_date = eta_date.toLocaleString('en-us', { month: "long" }) + ' ' + eta_date.getFullYear();
 		}
 
-		var thumbnail = null;
+		var thumbnail = new Element('div.poster');
+
 		if(self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0){
 			thumbnail = new Element('div', {
 				'class': 'type_image poster',
@@ -239,14 +240,15 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = thumbnail,
-			self.actions_el = new Element('div.actions', {
-				'events': {
-					'click': function(e){
-						(e).stopPropagation();
+			self.thumbnail = thumbnail.grab(
+				self.actions_el = new Element('div.actions', {
+					'events': {
+						'click': function(e){
+							(e).stopPropagation();
+						}
 					}
-				}
-			}),
+				})
+			),
 			self.data_container = new Element('div.data.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
