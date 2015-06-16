@@ -26,7 +26,9 @@ var PageBase = new Class({
 		});
 
 		// Stop hover events while scrolling
-		self.el.addEvent('scroll', self.preventHover.bind(self));
+		if(!App.getOption('dev')){
+			self.el.addEvent('scroll', self.preventHover.bind(self));
+		}
 	},
 
 	load: function(){

@@ -74,6 +74,7 @@
 				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({
+					'dev': {{ json_encode(Env.get('dev')) }},
 					'base_url': {{ json_encode(Env.get('web_base')) }},
 					'args': {{ json_encode(Env.get('args', unicode = True)) }},
 					'options': {{ json_encode(('%s' % Env.get('options'))) }},
