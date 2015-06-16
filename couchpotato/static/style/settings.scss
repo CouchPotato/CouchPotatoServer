@@ -2,7 +2,11 @@
 
 .page.settings {
 	top: $header_height;
-	
+
+	@include media-phablet {
+		top: $header_width_mobile;
+	}
+
 	&.active {
 		display: flex;
 
@@ -18,7 +22,6 @@
 		.advanced_toggle {
 			display: flex;
 			align-items: center;
-			margin-right: $padding;
 
 			span {
 				margin-right: $padding / 2;
@@ -35,7 +38,7 @@
 	}
 
 	.tabs {
-		margin: 0 $padding;
+		margin: 0 $padding $padding;
 		list-style: none;
 		font-size: 24px;
 
@@ -71,7 +74,11 @@
 		h2 {
 			display: flex;
 			align-items: baseline;
-			padding: $padding $padding $padding/2;
+			padding: 0 0 $padding/2 $padding;
+
+			@include media-phablet {
+				display: block;
+			}
 
 			.icon {
 				margin-right: $padding/2;
@@ -87,17 +94,16 @@
 				margin-left: $padding/2;
 				font-size: 1rem;
 
+				@include media-phablet {
+					margin: 0;
+					display: block;
+				}
+
 				a {
 					font-weight: 400;
 					color: $primary_color;
 					text-decoration: underline;
 				}
-			}
-		}
-
-		&:first-child {
-			h2 {
-				padding-top: 0;
 			}
 		}
 
@@ -110,6 +116,7 @@
 
 			@include media-phablet {
 				flex-flow: row wrap;
+				padding-right: 0;
 			}
 
 			&:last-child {
@@ -119,14 +126,27 @@
 			label {
 				display: inline-block;
 				min-width: 150px;
+
+				@include media-phablet {
+					flex: 1 1 auto;
+				}
 			}
 
 			input, textarea, select {
 				min-width: 200px;
 
-				&[type=checkbox] {
-					width: auto;
-					min-width: 0;
+				@include media-phablet {
+					flex: 1 1 auto;
+				}
+			}
+
+			input[type=checkbox] {
+				width: auto;
+				min-width: 0;
+
+				@include media-phablet {
+					margin-right: $padding;
+					flex: none;
 				}
 			}
 
@@ -134,6 +154,10 @@
 				position: relative;
 				display: flex;
 				align-items: center;
+
+				@include media-phablet {
+					width: 100%;
+				}
 
 				select {
 					cursor: pointer;
@@ -184,7 +208,7 @@
 			}
 
 			> .ctrlHolder:first-child {
-				display: block;
+				display: flex;
 			}
 		}
 
@@ -194,12 +218,16 @@
 			> :first-child {
 				position: absolute;
 				right: 0;
-				top: 0;
 				border: 0;
 				padding: 0;
+				height: 46px;
 
 				~ h2 {
 					margin-right: 66px + $padding;
+
+					@include media-phablet {
+						margin-right: 0;
+					}
 				}
 			}
 		}
@@ -275,6 +303,7 @@
 				.group_label {
 					min-width: 100px;
 				}
+
 			}
 
 			&.disabled h2 {
@@ -489,6 +518,17 @@
 		}
 	}
 
+	.directory {
+
+		@include media-phablet {
+			width: 100%;
+		}
+
+		input {
+			width: 100%;
+		}
+	}
+
 
 	.directory_list {
 		z-index: 2;
@@ -569,7 +609,7 @@
 				float: right;
 				width: auto;
 				padding: 0;
-				
+
 				input {
 					margin-left: $padding/2;
 				}
