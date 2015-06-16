@@ -18,13 +18,13 @@ class WdtvLive(MovieMetaData):
 
     def getThumbnailName(self, name, root, i):
         return self.createMetaName('%s.jpg', name, root)
-		
+
     def createMetaName(self, basename, name, root):
         return os.path.join(root, basename.replace('%s', name))
-		
+
     def getNfoName(self, name, root, i):
         return self.createMetaName('%s.xml', name, root)
-		
+
     def getNfo(self, movie_info=None, data=None, i=0):
         if not data: data = {}
         if not movie_info: movie_info = {}
@@ -184,7 +184,7 @@ class WdtvLive(MovieMetaData):
         xml_string = text_re.sub('>\g<1></', xml_string)
 
         return xml_string.encode('utf-8')
-		
+
 
 config = [{
     'name': 'wdtvlive',
@@ -201,19 +201,19 @@ config = [{
                     'default': False,
                     'type': 'enabler',
                 },
-				{
+                {
                     'name': 'meta_nfo',
                     'label': 'NFO',
                     'default': True,
                     'type': 'bool',
-					'description': 'Generate metadata xml',
+                    'description': 'Generate metadata xml',
                 },
                 {
                     'name': 'meta_thumbnail',
                     'label': 'Thumbnail',
                     'default': True,
                     'type': 'bool',
-					'description': 'Generate thumbnail jpg',
+                    'description': 'Generate thumbnail jpg',
                 }
             ],
         },
