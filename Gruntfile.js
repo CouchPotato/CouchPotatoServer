@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(grunt){
-
+	require('jit-grunt')(grunt);
 	require('time-grunt')(grunt);
 
 	// Configurable paths
@@ -34,7 +34,8 @@ module.exports = function(grunt){
 		sass: {
 			options: {
 				compass: true,
-				update: true
+				update: true,
+				sourcemap: 'none'
 			},
 			server: {
 				files: [{
@@ -50,7 +51,9 @@ module.exports = function(grunt){
 		// Add vendor prefixed styles
 		autoprefixer: {
 			options: {
-				browsers: ['> 1%', 'Android >= 2.1', 'Chrome >= 21', 'Explorer >= 7', 'Firefox >= 17', 'Opera >= 12.1', 'Safari >= 6.0']
+				browsers: ['last 2 versions'],
+				remove: false,
+				cascade: false
 			},
 			dist: {
 				files: [{
@@ -84,7 +87,7 @@ module.exports = function(grunt){
 		watch: {
 			scss: {
 				files: ['<%= config.base %>/**/*.{scss,sass}'],
-				tasks: ['sass:server', 'autoprefixer', 'cssmin']
+				tasks: ['sass:server', 'autoprefixer']
 			},
 			js: {
 				files: [
@@ -110,15 +113,6 @@ module.exports = function(grunt){
 		}
 
 	});
-
-	grunt.loadNpmTasks('grunt-contrib-jshint');
-	//grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-contrib-sass');
-	grunt.loadNpmTasks('grunt-contrib-cssmin');
-	grunt.loadNpmTasks('grunt-contrib-watch');
-	grunt.loadNpmTasks('grunt-autoprefixer');
-	grunt.loadNpmTasks('grunt-concurrent');
-	grunt.loadNpmTasks('grunt-shell');
 
 	grunt.registerTask('default', ['sass:server', 'autoprefixer', 'cssmin', 'concurrent']);
 
