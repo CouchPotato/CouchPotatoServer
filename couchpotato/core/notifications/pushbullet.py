@@ -20,7 +20,7 @@ class Pushbullet(Notification):
         if not data: data = {}
 
         # Get all the device IDs linked to this user
-        devices = self.getDevices() or [None]
+        devices = self.getDevices() or []
         successful = 0
         for device in devices:
             response = self.request(
@@ -60,7 +60,7 @@ class Pushbullet(Notification):
             base64string = base64.encodestring('%s:' % self.conf('api_key'))[:-1]
 
             headers = {
-                "Authorization": "Basic %s" % base64string
+                'Authorization': 'Basic %s' % base64string
             }
 
             if cache:
