@@ -263,15 +263,7 @@ var Movie = new Class({
 						'text': eta_date,
 						'title': 'ETA'
 					}) : null,
-					self.quality = new Element('div.quality', {
-						'events': {
-							'click': function(e){
-								var releases = self.el.getElement('.actions .releases');
-								if(releases.isVisible())
-									releases.fireEvent('click', [e]);
-							}
-						}
-					})
+					self.quality = new Element('div.quality')
 				)
 			)
 		);

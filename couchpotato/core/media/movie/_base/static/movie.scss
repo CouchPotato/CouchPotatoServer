@@ -17,8 +17,6 @@
 }
 
 .movie {
-	transform: translateZ(0);
-	backface-visibility: hidden;
 
 	.check {
 		position: absolute;
@@ -327,7 +325,7 @@
 
 		.actions {
 			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,.9) 100%);
-			transition: all 250ms;
+			transition: opacity 250ms;
 			opacity: 0;
 			position: absolute;
 			top: 0;
@@ -402,11 +400,14 @@
 		background: rgba(0,0,0,.6);
 		border-radius: $border_radius 0 0 $border_radius;
 		opacity: 0;
-		transition: opacity 800ms;
+		transform: translateZ(0);
+		backface-visibility: hidden;
+		transition: opacity 800ms ease 200ms;
 		z-index: 1;
 
 		@include media-phablet {
 			left: 0;
+			border-radius: 0;
 		}
 
 		.close {
@@ -418,8 +419,9 @@
 			width: $gab-width;
 			height: 100%;
 			opacity: 0;
-			transform: translateX(100%);
-			transition: opacity 300ms, transform 300ms $cubic;
+			transform: translateX(100%) translateZ(0);
+			backface-visibility: hidden;
+			transition: opacity 300ms ease 200ms, transform 300ms $cubic 200ms;
 
 			@include media-phablet {
 				width: $header_width_mobile;
@@ -437,8 +439,8 @@
 		background: $background_color;
 		border-radius: $border_radius 0 0 $border_radius;
 		overflow-y: auto;
-		transform: translateX(100%);
-		transition: transform 250ms $cubic;
+		transform: translateX(100%) translateZ(0);
+		transition: transform 350ms $cubic;
 
 		@include media-phablet {
 			left: $header_width_mobile;

@@ -28,6 +28,7 @@ body {
 a {
 	text-decoration: none;
 	cursor: pointer;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 input, textarea, select {
@@ -345,6 +346,7 @@ input, textarea, select {
 	display: none;
 	padding: $padding 0;
 	overflow-y: auto;
+	-webkit-overflow-scrolling:touch;
 
 	&.disable_hover > * {
 		pointer-events: none;
@@ -478,7 +480,6 @@ input, textarea, select {
 		}
 
 		ul {
-			transform: translateZ(0);
 			background: $background_color;
 			position: relative;
 			z-index: 2;
