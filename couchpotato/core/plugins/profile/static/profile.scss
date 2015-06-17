@@ -49,8 +49,6 @@
 					cursor: pointer;
 
 					&.handle {
-						cursor: -webkit-grab;
-						cursor: -moz-grab;
 						cursor: grab;
 					}
 
@@ -135,8 +133,6 @@
 			font-size: 20px;
 			width: 20px;
 			float: right;
-			cursor: -webkit-grab;
-			cursor: -moz-grab;
 			cursor: grab;
 			opacity: .5;
 			text-align: center;

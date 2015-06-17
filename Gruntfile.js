@@ -114,6 +114,6 @@ module.exports = function(grunt){
 
 	});
 
-	grunt.registerTask('default', ['sass:server', 'autoprefixer', 'cssmin', 'concurrent']);
+	grunt.registerTask('default', ['sass:server', 'autoprefixer', 'concurrent']);
 
 };
