@@ -307,8 +307,23 @@ input, textarea, select {
 	}
 }
 
+.corner_background {
+	display: block;
+	position: absolute;
+	height: 10px;
+	width: 10px;
+	background: $primary_color;
+	top: 0;
+	left: $header_width;
+
+	@include media-phablet {
+		left: $header_width_mobile;
+	}
+}
+
 /* Content */
 .content {
+	position: relative;
 	height: 100%;
 	flex: 1 auto;
 

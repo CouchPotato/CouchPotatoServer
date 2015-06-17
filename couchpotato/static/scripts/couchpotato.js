@@ -81,6 +81,7 @@
 				self.block.search = new BlockSearch(self, {}),
 				self.block.more = new BlockMenu(self, {'button_class': 'icon-settings'})
 			),
+			new Element('div.corner_background'),
 			self.content = new Element('div.content').adopt(
 				self.pages_container = new Element('div.pages'),
 				self.block.footer = new BlockFooter(self, {})

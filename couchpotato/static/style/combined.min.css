@@ -534,9 +534,13 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .search_form{right:auto;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}
 }
 .header .more_menu .wrapper{bottom:0;left:44px;right:auto;padding-left:4px}
-.content{height:100%;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;background:#FFF;border-radius:3px 0 0 3px}
+.corner_background{display:block;position:absolute;height:10px;width:10px;background:#ac0000;top:0;left:132px}
+.content,.content .pages{height:100%;position:relative}
+@media (max-width:480px){.corner_background{left:44px}
+}
+.content{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;background:#FFF;border-radius:3px 0 0 3px}
 .content h1,.content h2,.content h3{padding:0;margin:0}
-.content .pages{height:100%;width:100%;position:relative}
+.content .pages{width:100%}
 .content .footer{position:fixed;bottom:0;height:20px;width:100%}
 .page{position:absolute;top:0;left:0;right:0;bottom:0;display:none;padding:20px 0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page.home{padding:0 0 20px}
