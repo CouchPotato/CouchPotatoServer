@@ -87,12 +87,12 @@ module.exports = function(grunt){
 		watch: {
 			scss: {
 				files: ['<%= config.base %>/**/*.{scss,sass}'],
-				tasks: ['sass:server', 'autoprefixer']
+				tasks: ['sass:server', 'autoprefixer', 'cssmin']
 			},
 			js: {
 				files: [
-                    '<%= config.base %>/**/*.js'
-                ],
+					'<%= config.base %>/**/*.js'
+				],
 				tasks: ['jshint']
 			},
 			livereload: {
@@ -114,6 +114,6 @@ module.exports = function(grunt){
 
 	});
 
-	grunt.registerTask('default', ['sass:server', 'autoprefixer', 'concurrent']);
+	grunt.registerTask('default', ['sass:server', 'autoprefixer',  'cssmin', 'concurrent']);
 
 };

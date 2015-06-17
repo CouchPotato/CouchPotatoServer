@@ -95,6 +95,13 @@
 			background-color: #000;
 		}
 	}
+
+	.actions {
+
+		@include media-phablet {
+			pointer-events: none;
+		}
+	}
 }
 
 .list_list {
@@ -223,7 +230,10 @@
 	font-size: 12px;
 
 	> div:last-child {
-		padding: 0 $padding/2;
+		padding: 0 ($padding/2)+2px;
+		@include media-phablet {
+			padding: 0 $padding/6;
+		}
 	}
 
 	@include media-tablet {
@@ -393,6 +403,7 @@
 		border-radius: $border_radius 0 0 $border_radius;
 		opacity: 0;
 		transition: opacity 800ms;
+		z-index: 1;
 
 		@include media-phablet {
 			left: 0;
@@ -418,6 +429,7 @@
 
 	.content {
 		position: fixed;
+		z-index: 2;
 		top: 0;
 		bottom: 0;
 		right: 0;
