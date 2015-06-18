@@ -15,7 +15,7 @@ var Movie = new Class({
 		self.el = new Element('a.movie', {
 			'events': {
 				'click': function(e){
-					(e).stop();
+					(e).preventDefault();
 					self.openDetails();
 				},
 				'mouseenter': function(){

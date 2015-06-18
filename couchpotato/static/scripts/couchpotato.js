@@ -32,6 +32,7 @@
 			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
+		self.c.addEvent('click:relay(a)', self.ripple.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 
@@ -40,6 +41,24 @@
 		if(self.touch_device)
 			self.c.addClass('touch_enabled');
 
+	},
+
+	ripple: function(e, el){
+		var self = this,
+			button = el.getCoordinates(),
+			x = e.page.x - button.left,
+			y = e.page.y - button.top,
+			ripple = new Element('div.ripple', {
+				'styles': {
+					'left': x,
+					'top': y
+				}
+			});
+
+		ripple.inject(el);
+
+		setTimeout(function(){ ripple.addClass('animate'); }, 0);
+		setTimeout(function(){ ripple.remove(); }, 2100);
 	},
 
 	getOption: function(name){
