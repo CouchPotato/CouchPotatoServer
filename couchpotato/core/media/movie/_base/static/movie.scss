@@ -1,5 +1,10 @@
 @import "couchpotato/static/style/_mixins";
 
+.page.movies {
+	bottom: auto;
+	z-index: 21;
+}
+
 .page.movies_wanted, .page.movies_manage {
 	top: $header_height;
 	padding: 0;
@@ -17,6 +22,12 @@
 }
 
 .movie {
+	transition: transform 300ms $cubic;
+
+	&:active {
+		transition-duration: 50ms;
+		transform: scale(.9);
+	}
 
 	.check {
 		position: absolute;
@@ -32,25 +43,11 @@
 			border-radius: 1px;
 			padding: 2px 4px;
 
-			&.failed {
-				background: #99563e;
-			}
-
-			&.ignored {
-				background: rgba(0,0,0,.2);
-			}
-
-			&.available {
-				background: #2f8199;
-			}
-
-			&.snatched {
-				background: #41997f;
-			}
-
-			&.downloaded {
-				background: #54994a;
-			}
+			&.failed { background: #99563e; }
+			&.ignored { background: rgba(0,0,0,.2); }
+			&.available { background: #578b99; }
+			&.snatched { background: #289973; }
+			&.downloaded { background: #309927; }
 		}
 	}
 
@@ -402,7 +399,7 @@
 		opacity: 0;
 		transform: translateZ(0);
 		backface-visibility: hidden;
-		transition: opacity 800ms ease 200ms;
+		transition: opacity 300ms ease 400ms;
 		z-index: 1;
 
 		.ripple {
@@ -607,6 +604,7 @@
 
 		.overlay {
 			opacity: 1;
+			transition-delay: 0s;
 
 			.close {
 				opacity: 1;
@@ -616,6 +614,7 @@
 		}
 
 		.content {
+			transition-delay: 200ms;
 			transform: translateX(0);
 		}
 	}

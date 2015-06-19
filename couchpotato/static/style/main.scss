@@ -442,7 +442,7 @@ input, textarea, select {
 				a {
 					font-size: 24px;
 					line-height: $header_height;
-					padding: $padding;
+					padding: 0 $padding;
 					color: rgba(0,0,0,.5);
 
 					@include media-phablet {

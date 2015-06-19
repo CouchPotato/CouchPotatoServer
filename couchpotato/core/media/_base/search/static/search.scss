@@ -65,6 +65,10 @@
 		}
 	}
 
+	&.filled .input input {
+		background: $theme_off;
+	}
+
 	&.focused,
 	&.shown {
 		border-color: #04bce6;
@@ -74,7 +78,7 @@
 			width: 380px;
 
 			@include media-phablet {
-				width: 250px;
+				width: 260px;
 			}
 		}
 
@@ -120,6 +124,7 @@
 
 					@include media-phablet {
 						left: 0;
+						padding: 10px 2px;
 					}
 
 					> .in_library_wanted {
@@ -144,13 +149,16 @@
 
 						@include media-phablet {
 							min-width: 0;
+							margin-right: 2px;
 						}
 					}
 
 					.button {
 						flex: 1 auto;
+						min-width: 36px;
 						vertical-align: middle;
 						display: inline-block;
+						margin: 0;
 					}
 
 					.message {
