@@ -405,6 +405,10 @@
 		transition: opacity 800ms ease 200ms;
 		z-index: 1;
 
+		.ripple {
+			background: #FFF;
+		}
+
 		@include media-phablet {
 			left: 0;
 			border-radius: 0;

@@ -32,7 +32,7 @@
 			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
-		self.c.addEvent('click:relay(a)', self.ripple.bind(self));
+		self.c.addEvent('click:relay(.navigation a, .movie_details a)', self.ripple.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 

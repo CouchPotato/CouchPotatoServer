@@ -119,6 +119,7 @@
 .page.movie_details{left:0}
 }
 .page.movie_details .overlay{position:fixed;top:0;bottom:0;right:0;left:132px;background:rgba(0,0,0,.6);border-radius:3px 0 0 3px;opacity:0;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden;transition:opacity 800ms ease 200ms;z-index:1}
+.page.movie_details .overlay .ripple{background:#FFF}
 .page.movie_details .overlay .close{display:inline-block;text-align:center;font-size:60px;line-height:80px;color:#FFF;width:44px;height:100%;opacity:0;-webkit-transform:translateX(100%) translateZ(0);transform:translateX(100%) translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden;transition:opacity 300ms ease 200ms,-webkit-transform 300ms cubic-bezier(.9,0,.1,1) 200ms;transition:opacity 300ms ease 200ms,transform 300ms cubic-bezier(.9,0,.1,1) 200ms}
 @media (max-width:480px){.page.movie_details .overlay{left:0;border-radius:0}
 .page.movie_details .overlay .close{width:44px}
@@ -480,7 +481,7 @@
 *{box-sizing:border-box;text-rendering:optimizeSpeed}
 body,html{font-size:14px;line-height:1.5;font-family:OpenSans,"Helvetica Neue",Helvetica,Arial,Geneva,sans-serif;font-weight:300;height:100%;background:#111;overflow:hidden}
 body{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
-a{position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{display:inline-block;position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#FFF;border:1px solid #b7b7b7}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
@@ -494,12 +495,13 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .navigation .logo:hover{background:#980000}
 .header .navigation .logo:hover span{-webkit-transform:translateX(-153%);transform:translateX(-153%);opacity:0}
 .header .navigation .logo:hover span:nth-child(even){-webkit-transform:translateX(-50%);transform:translateX(-50%);opacity:1}
+.header .navigation ul{padding:0;margin:0}
 @media (max-width:480px){.header{width:44px;min-width:44px;z-index:21}
 .header .navigation .logo{font-size:28px;line-height:44px;height:44px}
 .header .navigation .logo:after{content:'CP'}
 .header .navigation .logo span{display:none}
+.header .navigation ul li{line-height:0}
 }
-.header .navigation ul{padding:0;margin:0}
 .header .navigation ul li a{padding:10px 20px;display:block;position:relative}
 @media (max-width:480px){.header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center;text-indent:-1000px}
 }

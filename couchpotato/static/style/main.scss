@@ -26,6 +26,7 @@ body {
 }
 
 a {
+	display: inline-block;
 	position: relative;
 	overflow: hidden;
 	text-decoration: none;
@@ -152,6 +153,12 @@ input, textarea, select {
 		ul {
 			padding: 0;
 			margin: 0;
+
+			li {
+				@include media-phablet {
+					line-height: 0;
+				}
+			}
 
 			li a {
 				padding: $padding/2 $padding;
