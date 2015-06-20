@@ -339,16 +339,18 @@
 
 		self.unBlockPage();
 
-		self.mask = new Element('div.mask').adopt(
-			new Element('div').adopt(
+		self.mask = new Element('div.mask.with_message').adopt(
+			new Element('div.message').adopt(
 				new Element('h1', {'text': title || 'Unavailable'}),
 				new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
 			)
-		).fade('hide').inject(document.body).fade('in');
+		).inject(document.body);
 
-		createSpinner(self.mask, {
-			'top': -50
-		});
+		createSpinner(self.mask);
+
+		setTimeout(function(){
+			self.mask.addClass('show');
+		}, 10);
 	},
 
 	unBlockPage: function(){

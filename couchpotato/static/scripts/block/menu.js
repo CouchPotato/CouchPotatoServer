@@ -71,6 +71,10 @@ var BlockMenu = new Class({
 
 						if(self.shown){
 							self.el.addEvent('outerClick', self.removeOuterClick.bind(self));
+							this.addEvent('outerClick', function(e) {
+								if (e.target.get('tag') != 'input')
+									self.removeOuterClick();
+							});
 						}
 						else {
 							self.removeOuterClick();

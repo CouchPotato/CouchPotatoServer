@@ -651,6 +651,7 @@ input, textarea, select {
 	a {
 		border-color: #FFF;
 		color: #FFF;
+		transition: none;
 
 		&:hover {
 			background: #FFF;
@@ -670,7 +671,7 @@ input, textarea, select {
 	bottom: 0;
 	left: 0;
 	opacity: 0;
-	transition: opacity 1000ms;
+	transition: opacity 500ms;
 	pointer-events: none;
 
 	$spinner_size: 22px;
@@ -684,7 +685,6 @@ input, textarea, select {
 		width: 320px;
 		margin: -($spinner_size*2 + 5px) 0 0 -160px;
 		font-size: 16px;
-		opacity: .5;
 	}
 
 	.spinner {
@@ -700,6 +700,12 @@ input, textarea, select {
 		outline: 1px solid transparent;
 		animation: rotating 2.5s $cubic infinite normal;
 		transform: scale(0);
+	}
+
+	&.with_message {
+		.spinner {
+			margin-top: -($spinner_size*4);
+		}
 	}
 
 	&.show {

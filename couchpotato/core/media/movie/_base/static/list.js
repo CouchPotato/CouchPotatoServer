@@ -564,7 +564,7 @@ var MovieList = new Class({
 
 		if(self.movies.length === 0 && self.options.loader){
 
-			self.loader_first = new Element('div.mask.loading').adopt(
+			self.loader_first = new Element('div.mask.loading.with_message').adopt(
 				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
 			).inject(self.el, 'top');
 			createSpinner(self.loader_first);
@@ -574,7 +574,7 @@ var MovieList = new Class({
 				lfc.addClass('show');
 			}, 10);
 
-			self.el.setStyle('min-height', 120);
+			self.el.setStyle('min-height', 220);
 
 		}
 

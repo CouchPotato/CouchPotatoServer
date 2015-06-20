@@ -15,21 +15,40 @@ var Question = new Class( {
 	},
 
 	createQuestion : function() {
-		var self = this;
+		var self = this,
+			h3, hint;
 
 		self.container = new Element('div.mask.question')
 			.grab(self.inner = new Element('div.inner').adopt(
-				new Element('h3', {
+				h3 = new Element('h3', {
 					'html': this.question
 				}),
-				new Element('div.hint', {
+				hint = this.hint ? new Element('div.hint', {
 					'html': this.hint
-				})
+				}) : null
 			)
 		).inject(document.body);
 
 		setTimeout(function(){
 			self.container.addClass('show');
+
+			self.inner.getElements('> *').each(function(el, nr){
+				dynamics.css(el, {
+					opacity: 0,
+					translateY: 50
+				});
+
+				dynamics.animate(el, {
+					opacity: 1,
+					translateY: 0
+				}, {
+					type: dynamics.spring,
+					frequency: 200,
+					friction: 300,
+					duration: 800,
+					delay: 400 + (nr * 100)
+				});
+			});
 		}, 10);
 
 	},
@@ -67,8 +86,31 @@ var Question = new Class( {
 		};
 		self.container.addEventListener('transitionend', ended, false);
 
+		// Hide items
+		self.inner.getElements('> *').reverse().each(function(el, nr){
+			dynamics.css(el, {
+				opacity: 1,
+				translateY: 0
+			});
+
+			dynamics.animate(el, {
+				opacity: 0,
+				translateY: 50
+			}, {
+				type: dynamics.spring,
+				frequency: 200,
+				friction: 300,
+				duration: 800,
+				anticipationSize: 175,
+				anticipationStrength: 400,
+				delay: nr * 100
+			});
+		});
+
 		// animate out
-		self.container.removeClass('show');
+		dynamics.setTimeout(function(){
+			self.container.removeClass('show');
+		}, 200);
 	},
 
 	toElement : function() {

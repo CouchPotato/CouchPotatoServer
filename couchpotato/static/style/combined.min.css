@@ -592,13 +592,14 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .question.show{opacity:1}
 .question .inner{width:100%;max-width:500px}
 .question h3{display:block;margin-bottom:20px;font-size:1.4em;font-weight:lighter}
-.question a{border-color:#FFF;color:#FFF}
+.question a{border-color:#FFF;color:#FFF;transition:none}
 .question a:hover{background:#FFF;color:#ac0000}
-.mask{background:rgba(0,0,0,.8);z-index:1000;text-align:center;position:absolute;top:0;left:0;opacity:0;transition:opacity 1000ms}
+.mask{background:rgba(0,0,0,.8);z-index:1000;text-align:center;position:absolute;top:0;left:0;opacity:0;transition:opacity 500ms}
 .mask .message,.mask .spinner{position:absolute;top:50%;left:50%}
-.mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px;opacity:.5}
+.mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px}
 .mask .spinner{width:22px;height:22px;display:block;background:#fff;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;-webkit-transform:scale(0);transform:scale(0)}
 .page.settings.active,.table .item{display:-webkit-flex;display:-ms-flexbox}
+.mask.with_message .spinner{margin-top:-88px}
 .mask.show{pointer-events:auto;opacity:1}
 .mask.show .spinner{-webkit-transform:scale(1);transform:scale(1)}
 .mask.hide{opacity:0}
