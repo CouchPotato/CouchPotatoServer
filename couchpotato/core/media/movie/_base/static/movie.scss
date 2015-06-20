@@ -22,12 +22,6 @@
 }
 
 .movie {
-	//transition: transform 300ms $cubic;
-
-	&:active {
-		transition-duration: 50ms;
-		transform: scale(.9);
-	}
 
 	.check {
 		position: absolute;

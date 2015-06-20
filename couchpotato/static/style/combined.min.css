@@ -44,7 +44,6 @@
 @media (max-width:480px){.page.movies_manage,.page.movies_wanted{top:44px}
 }
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
-.movie:active{transition-duration:50ms;-webkit-transform:scale(.9);transform:scale(.9)}
 .movie .check{position:absolute;top:0;left:20px;display:none}
 .movie .quality span{background:rgba(0,0,0,.2);color:#FFF;border-radius:1px;padding:2px 4px}
 .movie .quality span.failed{background:#99563e}
