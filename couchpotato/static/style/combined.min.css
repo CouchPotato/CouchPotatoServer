@@ -7,7 +7,7 @@
 .search_form .input input::-ms-clear{width:0;height:0}
 .search_form.filled .input input{background:#eaeaea}
 .search_form.focused,.search_form.shown{border-color:#04bce6}
-.search_form.focused .wrapper,.search_form.shown .wrapper{display:block;width:380px}
+.search_form.focused .wrapper,.search_form.shown .wrapper{display:block;width:380px;-webkit-transform-origin:0 90%;transform-origin:0 90%}
 .search_form.focused .input input,.search_form.shown .input input{opacity:1}
 .search_form .results_container{min-height:50px;text-align:left;position:relative;left:4px;display:none;background:#FFF;border-radius:3px 0 0;overflow:hidden}
 .search_form .results_container .results{max-height:280px;overflow-x:hidden}

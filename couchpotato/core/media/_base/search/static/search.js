@@ -15,11 +15,8 @@ var BlockSearch = new Class({
 					'touchend': self.clear.bind(self)
 				}
 			}),
-			new Element('div.wrapper').adopt(
+			self.wrapper = new Element('div.wrapper').adopt(
 				self.result_container = new Element('div.results_container', {
-					'tween': {
-						'duration': 200
-					},
 					'events': {
 						'mousewheel': function(e){
 							(e).stopPropagation();
@@ -45,6 +42,16 @@ var BlockSearch = new Class({
 								focus_timer = (function(){
 									self.el.removeClass('focused');
 								}).delay(100);
+
+								dynamics.animate(self.wrapper, {
+									opacity: 0,
+									scale: 0
+								}, {
+									type: dynamics.spring,
+									frequency: 200,
+									friction: 270,
+									duration: 800
+								});
 							}
 						}
 					})
@@ -52,7 +59,7 @@ var BlockSearch = new Class({
 			)
 		);
 
-		self.mask = new Element('div.mask').inject(self.result_container).fade('hide');
+		self.mask = new Element('div.mask').inject(self.result_container);
 
 	},
 
@@ -74,6 +81,22 @@ var BlockSearch = new Class({
 			self.media = {};
 			self.results.empty();
 			self.el.removeClass('filled');
+
+			// Animate in
+			dynamics.css(self.wrapper, {
+				opacity: 0,
+				scale: 0.1
+			});
+
+			dynamics.animate(self.wrapper, {
+				opacity: 1,
+				scale: 1
+			}, {
+				type: dynamics.spring,
+				frequency: 200,
+				friction: 270,
+				duration: 800
+			});
 
 		}
 	},
@@ -131,7 +154,9 @@ var BlockSearch = new Class({
 		self.hideResults(false);
 
 		if(!cache){
-			self.mask.fade('in');
+			setTimeout(function(){
+				self.mask.addClass('show');
+			}, 10);
 
 			if(!self.spinner)
 				self.spinner = createSpinner(self.mask);
@@ -173,7 +198,7 @@ var BlockSearch = new Class({
 			}
 		});
 
-		self.mask.fade('out');
+		self.mask.removeClass('show');
 
 	},
 

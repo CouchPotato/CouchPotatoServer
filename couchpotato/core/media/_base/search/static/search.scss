@@ -76,6 +76,7 @@
 		.wrapper {
 			display: block;
 			width: 380px;
+			transform-origin: 0 90%;
 
 			@include media-phablet {
 				width: 260px;
