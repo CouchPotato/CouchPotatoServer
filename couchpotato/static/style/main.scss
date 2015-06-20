@@ -66,13 +66,18 @@ input, textarea, select {
 	border-radius: 50%;
 	background: $primary_color;
 	transform: translate(-50%, -50%) scale(1);
-	opacity: 0.4;
-	transition: all 2s ease;
+	opacity: 0.2;
+	transition: all 1.5s ease;
+	pointer-events: none;
 
 	&.animate {
 		transform: translate(-50%, -50%) scale(100);
 		opacity: 0;
 	}
+}
+
+.disable_hover > * {
+	pointer-events: none;
 }
 
 /* Header */
@@ -93,6 +98,10 @@ input, textarea, select {
 		letter-spacing: 1px;
 	}
 
+	.ripple {
+		background: #FFF;
+	}
+
 	.navigation {
 
 		.logo {
@@ -107,33 +116,17 @@ input, textarea, select {
 			font-size: 38px;
 			line-height: $header_height;
 			height: $header_height;
-			transition: background 200ms $cubic;
 
 			span {
 				position: absolute;
 				display: block;
 				height: 100%;
-				left: 50%;
-				transition: all 200ms $cubic;
-				transform: translateX(-50%);
+				width: 100%;
+				text-align: center;
+				left: 0;
 
 				&:nth-child(even){
-					transform: translateX(45%);
-					opacity: 0;
-				}
-			}
-
-			&:hover {
-				background: darken($primary_color, 4);
-
-				span{
-					transform: translateX(-153%);
-					opacity: 0;
-
-					&:nth-child(even){
-						transform: translateX(-50%);
-						opacity: 1;
-					}
+					transform: translateX(100%);
 				}
 			}
 
@@ -208,6 +201,7 @@ input, textarea, select {
 
 		.wrapper {
 			min-width: 170px;
+			transform-origin: 0 90%;
 		}
 
 		> a {
@@ -385,12 +379,9 @@ input, textarea, select {
 	bottom: 0;
 	display: none;
 	padding: $padding 0;
+	overflow: hidden;
 	overflow-y: auto;
 	-webkit-overflow-scrolling:touch;
-
-	&.disable_hover > * {
-		pointer-events: none;
-	}
 
 	&.home {
 		padding: 0 0 $padding;
@@ -501,6 +492,7 @@ input, textarea, select {
 		z-index: 5000;
 		box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
 		border-radius: $border_radius 0 0 $border_radius;
+		transform-origin: 80% 0;
 
 		&:before {
 			transform: rotate(45deg) translateY(-60%);
@@ -513,7 +505,7 @@ input, textarea, select {
 			left: -9px;
 			bottom: 11px;
 			z-index: 1;
-			opacity: 0;
+			opacity: 1;
 			border-radius: $border_radius;
 //			border: 8px solid $primary_color;
 //			border-color: transparent $primary_color transparent transparent;
@@ -558,16 +550,16 @@ input, textarea, select {
 		}
 	}
 
-	&.show {
-
-		.wrapper {
-			display: block;
-
-			&:before {
-				opacity: 1;
-			}
-		}
-	}
+	//&.show {
+	//
+	//	.wrapper {
+	//		display: block;
+	//
+	//		&:before {
+	//			opacity: 1;
+	//		}
+	//	}
+	//}
 }
 
 /* Messages */

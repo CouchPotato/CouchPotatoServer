@@ -3,6 +3,7 @@ var MovieList = new Class({
 	Implements: [Events, Options],
 
 	options: {
+		animated_in: false,
 		navigation: true,
 		limit: 50,
 		load_more: true,
@@ -114,8 +115,8 @@ var MovieList = new Class({
 			self.scrollspy.stop();
 		}
 
-		Object.each(movies, function(movie){
-			self.createMovie(movie);
+		Object.each(movies, function(movie, nr){
+			self.createMovie(movie, 'bottom', nr);
 		});
 
 		self.total_movies += total;
@@ -165,20 +166,43 @@ var MovieList = new Class({
 
 	},
 
-	createMovie: function(movie, inject_at){
-		var self = this;
+	createMovie: function(movie, inject_at, nr){
+		var self = this,
+			animate = self.options.animated_in && !App.mobile_screen && self.current_view == 'thumb' && nr !== undefined;
 		var m = new Movie(self, {
 			'actions': self.options.actions,
 			'view': self.current_view,
 			'onSelect': self.calculateSelected.bind(self)
 		}, movie);
 
-		$(m).inject(self.movie_list, inject_at || 'bottom');
+		var el = $(m);
+
+		if(animate) {
+			dynamics.css(el, {
+				opacity: 0,
+				translateY: 150
+			});
+		}
+
+		el.inject(self.movie_list, inject_at || 'bottom');
 
 		m.fireEvent('injected');
 
 		self.movies.include(m);
 		self.movies_added[movie._id] = true;
+
+		if(animate){
+			dynamics.animate(el, {
+				opacity: 1,
+				translateY: 0
+			}, {
+				type: dynamics.spring,
+				frequency: 200,
+				friction: 300,
+				duration: 1200,
+				delay: 100 + (nr * 20)
+			});
+		}
 	},
 
 	createNavigation: function(){
@@ -235,7 +259,7 @@ var MovieList = new Class({
 				self.navigation_actions = new Element('div.actions', {
 					'events': {
 						'click': function(e, el){
-							(e).stop();
+							(e).preventDefault();
 
 							var new_view = self.current_view == 'list' ? 'thumb' : 'list';
 

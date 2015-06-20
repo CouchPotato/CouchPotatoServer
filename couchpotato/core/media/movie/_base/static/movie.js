@@ -12,6 +12,8 @@ var Movie = new Class({
 		self.data = data;
 		self.list = list;
 
+		var buttons = [];
+
 		self.el = new Element('a.movie', {
 			'events': {
 				'click': function(e){
@@ -19,15 +21,61 @@ var Movie = new Class({
 					self.openDetails();
 				},
 				'mouseenter': function(){
-					if(self.actions.length > 0) return;
-					self.options.actions.each(function(a){
-						var action = new a(self),
-							button = action.getButton();
-						if(button)
-							self.actions_el.grab(button);
+					if(App.mobile_screen) return;
 
-						self.actions.push(action);
-					});
+					if(self.actions.length <= 0){
+						self.options.actions.each(function(a){
+							var action = new a(self),
+								button = action.getButton();
+							if(button){
+								self.actions_el.grab(button);
+								buttons.push(button);
+							}
+
+							self.actions.push(action);
+						});
+					}
+
+					if(list.current_view == 'thumb'){
+						dynamics.css(self.el, {
+							scale: 1,
+							opacity: 1
+						});
+
+						dynamics.animate(self.el, {
+							scale: 0.9
+						}, { type: dynamics.bounce });
+
+						buttons.each(function(el, nr){
+
+							dynamics.css(el, {
+								opacity: 0,
+								translateY: 50
+							});
+
+							dynamics.animate(el, {
+								opacity: 1,
+								translateY: 0
+							}, {
+								type: dynamics.spring,
+								frequency: 200,
+								friction: 300,
+								duration: 800,
+								delay: 100 + (nr * 40)
+							});
+
+						});
+					}
+				},
+				'mouseleave': function(){
+					if(App.mobile_screen) return;
+
+					if(list.current_view == 'thumb'){
+						dynamics.animate(self.el, {
+							scale: 1
+						}, { type: dynamics.spring });
+					}
+
 				}
 			}
 		});
@@ -67,12 +115,9 @@ var Movie = new Class({
 			});
 		}
 
-		// animate in
-		setTimeout(function(){
-			$(self.details).addClass('show');
-		}, 10);
-
 		App.getPageContainer().grab(self.details);
+
+		self.details.open.delay(10, self.details);
 	},
 
 	addEvents: function(){
