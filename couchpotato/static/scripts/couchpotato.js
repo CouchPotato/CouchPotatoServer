@@ -41,6 +41,16 @@
 		if(self.touch_device)
 			self.c.addClass('touch_enabled');
 
+		window.addEvent('resize', self.resize.bind(self));
+		self.resize();
+
+	},
+
+	resize: function(){
+		var self = this;
+
+		self.mobile_screen = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) <= 480;
+		self.c[self.mobile_screen ? 'addClass' : 'removeClass']('mobile');
 	},
 
 	ripple: function(e, el){
@@ -58,7 +68,7 @@
 		ripple.inject(el);
 
 		setTimeout(function(){ ripple.addClass('animate'); }, 0);
-		setTimeout(function(){ ripple.remove(); }, 2100);
+		setTimeout(function(){ ripple.dispose(); }, 2100);
 	},
 
 	getOption: function(name){
@@ -118,7 +128,6 @@
 					'click': self.checkForUpdate.bind(self, null)
 				}
 			}),
-			new Element('span.separator'),
 			new Element('a', {
 				'text': 'Settings',
 				'href': App.createUrl('settings/general')
@@ -127,7 +136,6 @@
 				'text': 'Logs',
 				'href': App.createUrl('log')
 			}),
-			new Element('span.separator'),
 			new Element('a', {
 				'text': 'Restart',
 				'events': {

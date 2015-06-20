@@ -26,9 +26,13 @@ var PageBase = new Class({
 		});
 
 		// Stop hover events while scrolling
-		if(!App.getOption('dev')){
-			self.el.addEvent('scroll', self.preventHover.bind(self));
-		}
+		App.addEvent('load', function(){
+			setTimeout(function(){
+				if(!App.mobile_screen){
+					self.el.addEvent('scroll', self.preventHover.bind(self));
+				}
+			}, 100);
+		});
 	},
 
 	load: function(){

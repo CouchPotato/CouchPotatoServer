@@ -20,16 +20,8 @@ var MovieAction = new Class({
 		if(self.button){
 			var wrapper = new Element('div', {
 				'class': self.class_name
-			})
+			});
 			self.button.inject(wrapper);
-
-			//if(self.icon){
-			//	var label = self.button.get('text');
-			//	self.button.addClass('with-icon').empty().adopt(
-			//		new Element('span.inner').set('text', label),
-			//		new Element('span.icon.icon-'+self.icon).inject(self.button)
-			//	);
-			//}
 
 			self.button = wrapper;
 		}
@@ -675,7 +667,7 @@ var SuggestBase = new Class({
 	refresh: function(json){
 		var self = this;
 
-		self.movie.list.addMovies([json.movie], 1)
+		self.movie.list.addMovies([json.movie], 1);
 
 		var last_added = self.movie.list.movies[self.movie.list.movies.length-1];
 		$(last_added).inject(self.movie, 'before');
