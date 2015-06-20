@@ -685,6 +685,10 @@ input, textarea, select {
 		width: 320px;
 		margin: -($spinner_size*2 + 5px) 0 0 -160px;
 		font-size: 16px;
+
+		h1 {
+			font-size: 1.5em;
+		}
 	}
 
 	.spinner {

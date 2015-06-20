@@ -597,6 +597,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .mask{background:rgba(0,0,0,.8);z-index:1000;text-align:center;position:absolute;top:0;left:0;opacity:0;transition:opacity 500ms}
 .mask .message,.mask .spinner{position:absolute;top:50%;left:50%}
 .mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px}
+.mask .message h1{font-size:1.5em}
 .mask .spinner{width:22px;height:22px;display:block;background:#fff;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;-webkit-transform:scale(0);transform:scale(0)}
 .page.settings.active,.table .item{display:-webkit-flex;display:-ms-flexbox}
 .mask.with_message .spinner{margin-top:-88px}
