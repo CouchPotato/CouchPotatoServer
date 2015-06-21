@@ -42,16 +42,6 @@ var BlockSearch = new Class({
 								focus_timer = (function(){
 									self.el.removeClass('focused');
 								}).delay(100);
-
-								dynamics.animate(self.wrapper, {
-									opacity: 0,
-									scale: 0
-								}, {
-									type: dynamics.spring,
-									frequency: 200,
-									friction: 270,
-									duration: 800
-								});
 							}
 						}
 					})
