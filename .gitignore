@@ -1,7 +1,0 @@
-*.pyc
-/data/
-/_source/
-.project
-.pydevproject
-fooconfig
-/foodata
