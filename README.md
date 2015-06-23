@@ -55,6 +55,7 @@ FreeBSD:
 * Update your repo catalog `pkg update`
 * Install required tools `pkg install python py27-sqlite3 fpc-libcurl docbook-xml git-lite`
 * For default install location and running as root `cd /usr/local`
+* If running as root, expects python here `ln -s /usr/local/bin/python /usr/bin/python`
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Copy the startup script `cp CouchPotatoServer/init/freebsd /usr/local/etc/rc.d/couchpotato`
 * Make startup script executable `chmod 555 /usr/local/etc/rc.d/couchpotato`
