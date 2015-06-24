@@ -21,8 +21,6 @@ var Movie = new Class({
 					self.openDetails();
 				},
 				'mouseenter': function(){
-					if(App.mobile_screen) return;
-
 					if(self.actions.length <= 0){
 						self.options.actions.each(function(a){
 							var action = new a(self),
@@ -35,6 +33,8 @@ var Movie = new Class({
 							self.actions.push(action);
 						});
 					}
+
+					if(App.mobile_screen) return;
 
 					if(list.current_view == 'thumb'){
 						dynamics.css(self.el, {
