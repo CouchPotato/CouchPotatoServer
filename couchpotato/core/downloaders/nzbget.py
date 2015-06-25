@@ -12,9 +12,9 @@ from couchpotato.core.helpers.encoding import ss, sp
 from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
 from couchpotato.core.logger import CPLog
 
-+if sys.version_info >= (2, 7, 9):
-+        import ssl
-+        ssl._create_default_https_context = ssl._create_unverified_context
+if sys.version_info >= (2, 7, 9):
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
 
 log = CPLog(__name__)
 
