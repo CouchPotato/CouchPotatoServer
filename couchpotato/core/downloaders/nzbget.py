@@ -1,6 +1,7 @@
 from base64 import standard_b64encode
 from datetime import timedelta
 import re
+import sys
 import shutil
 import socket
 import traceback
@@ -11,6 +12,9 @@ from couchpotato.core.helpers.encoding import ss, sp
 from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
 from couchpotato.core.logger import CPLog
 
++if sys.version_info >= (2, 7, 9):
++        import ssl
++        ssl._create_default_https_context = ssl._create_unverified_context
 
 log = CPLog(__name__)
 
