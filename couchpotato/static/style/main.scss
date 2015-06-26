@@ -278,6 +278,7 @@ input, textarea, select {
 
 			li {
 				padding: $padding;
+				word-wrap: break-word;
 
 				.added {
 					font-weight: lighter;
@@ -516,6 +517,7 @@ input, textarea, select {
 			position: relative;
 			z-index: 2;
 			overflow: hidden;
+			overflow-y: auto;
 			border-radius: $border_radius 0 0 $border_radius;
 		}
 

@@ -42,7 +42,7 @@ var BlockMenu = new Class({
 								duration: 800
 							});
 
-							self.lis.each(function(li, nr){
+							self.lis.slice(0, 10).each(function(li, nr){
 								dynamics.css(li, {
 									opacity: 0,
 									translateY: 20
