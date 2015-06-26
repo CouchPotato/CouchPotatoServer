@@ -164,8 +164,13 @@
 .page.movie_details .section_add .options>div{display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.movie_details .section_add .options>div select{vertical-align:middle;display:inline-block;margin-right:10px;min-width:70px;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
 .page.movie_details .section_add .options>div .button{background:#FFF;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;vertical-align:middle;display:inline-block;text-align:center}
+.page.movie_details .section_add .options>div .button:hover{background:#ac0000}
 .page.movie_details .section_add .data,.page.movie_details .section_add .thumbnail{display:none}
 .page.movie_details .releases .buttons{margin-bottom:10px}
+.page.movie_details .releases .buttons a{display:inline}
+.page.movie_details .releases .buttons a:hover{text-decoration:underline}
+.page.movie_details .releases .buttons .orange{color:orange}
+.page.movie_details .releases .buttons .green{color:green}
 @media (max-width:480px){.page.movie_details .content>.head .more_menu.title .wrapper{top:30px;max-width:240px}
 .page.movie_details .content>.head .buttons{margin-left:auto}
 .page.movie_details .content .section{padding:10px}

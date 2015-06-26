@@ -251,9 +251,6 @@ MA.Release = new Class({
 
 						release.el.set('class', 'item ' + new_status);
 
-						release.el.getElement(':last-child')
-							.set('class', notification.data.status == 'ignored' ? 'icon-redo' : 'icon-cancel');
-
 						var status_el = release.el.getElement('.status');
 							status_el.set('class', 'status ' + new_status);
 							status_el.set('text', new_status);
@@ -286,9 +283,9 @@ MA.Release = new Class({
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
-						'text': 'If anything went wrong, download'
+						'text': 'If anything went wrong, download '
 					}),
-					lr ? new Element('a.button.orange', {
+					lr ? new Element('a.orange', {
 						'text': 'the same release again',
 						'events': {
 							'click': function(){
@@ -297,9 +294,9 @@ MA.Release = new Class({
 						}
 					}) : null,
 					nr && lr ? new Element('span.or', {
-						'text': ','
+						'text': ', '
 					}) : null,
-					nr ? [new Element('a.button.green', {
+					nr ? [new Element('a.green', {
 						'text': lr ? 'another release' : 'the best release',
 						'events': {
 							'click': function(){
@@ -308,7 +305,7 @@ MA.Release = new Class({
 						}
 					}),
 					new Element('span.or', {
-						'text': 'or pick one below'
+						'text': ' or pick one below'
 					})] : null
 				);
 			}
@@ -755,7 +752,12 @@ MA.SuggestSeen = new Class({
 				'imdb': self.getIMDB(),
 				'mark_seen': 1
 			},
-			'onComplete': self.refresh.bind(self)
+			'onComplete': function(json){
+				self.refresh(json);
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+			}
 		});
 	}
 
@@ -794,7 +796,12 @@ MA.SuggestIgnore = new Class({
 			'data': {
 				'imdb': self.getIMDB()
 			},
-			'onComplete': self.refresh.bind(self)
+			'onComplete': function(json){
+				self.refresh(json);
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+			}
 		});
 	}
 

@@ -647,6 +647,10 @@
 				vertical-align: middle;
 				display: inline-block;
 				text-align: center;
+
+				&:hover {
+					background: $primary_color;
+				}
 			}
 
 		}
@@ -659,6 +663,22 @@
 
 		.buttons {
 			margin-bottom: $padding/2;
+
+			a {
+				display: inline;
+
+				&:hover {
+					text-decoration: underline;
+				}
+			}
+
+			.orange {
+				color: #ffa500;
+			}
+
+			.green {
+				color: #008000;
+			}
 		}
 
 		.item {
