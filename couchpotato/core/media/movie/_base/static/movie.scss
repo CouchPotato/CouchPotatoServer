@@ -71,6 +71,15 @@
 		@include media-tablet {
 			display: none;
 		}
+
+		a {
+			color: $primary_color;
+			display: inline;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
 	}
 
 	> .loading {

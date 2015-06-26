@@ -1,3 +1,4 @@
+.movies>.description a:hover,.page.movie_details .releases .buttons a:hover,.page.settings fieldset h2 .hint a{text-decoration:underline}
 .search_form{display:inline-block;z-index:11;width:44px;position:relative}
 .search_form .icon-search{position:absolute;z-index:2;top:50%;left:0;height:100%;text-align:center;color:#FFF;font-size:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
 .search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
@@ -56,6 +57,7 @@
 .movies>.description{position:absolute;top:0;right:20px;width:auto;line-height:80px}
 @media (max-width:768px){.movies>.description{display:none}
 }
+.movies>.description a{color:#ac0000;display:inline}
 .movies>.loading{background:#FFF}
 .movies>.loading .message{color:#000}
 .movies>.loading .spinner{background-color:#000}
@@ -167,7 +169,6 @@
 .page.movie_details .section_add .data,.page.movie_details .section_add .thumbnail{display:none}
 .page.movie_details .releases .buttons{margin-bottom:10px}
 .page.movie_details .releases .buttons a{display:inline}
-.page.movie_details .releases .buttons a:hover{text-decoration:underline}
 .page.movie_details .releases .buttons .orange{color:orange}
 .page.movie_details .releases .buttons .green{color:green}
 @media (max-width:480px){.page.movie_details .content>.head .more_menu.title .wrapper{top:30px;max-width:240px}
@@ -646,7 +647,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 @media (max-width:480px){.page.settings fieldset h2{display:block}
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
-.page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline}
+.page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000}
 .page.settings fieldset .ctrlHolder{padding:6.67px 20px;border-bottom:1px solid #eaeaea;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .page.settings fieldset .ctrlHolder:last-child{border-bottom:0}
 .page.settings fieldset .ctrlHolder label{display:inline-block;min-width:150px}
