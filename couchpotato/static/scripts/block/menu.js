@@ -42,7 +42,10 @@ var BlockMenu = new Class({
 								duration: 800
 							});
 
-							self.lis.slice(0, 10).each(function(li, nr){
+							if(self.lis == null)
+								self.lis = self.more_option_ul.getElements('> li').slice(0, 10);
+
+							self.lis.each(function(li, nr){
 								dynamics.css(li, {
 									opacity: 0,
 									translateY: 20
@@ -121,7 +124,8 @@ var BlockMenu = new Class({
 		var self = this,
 			li = new Element('li').adopt(tab).inject(self.more_option_ul, position || 'bottom');
 
-		self.lis.push(li);
+		self.lis = null;
+
 		return li;
 	}
 

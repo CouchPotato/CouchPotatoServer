@@ -253,7 +253,7 @@ input, textarea, select {
 		ul {
 			min-height: 60px;
 			max-height: 300px;
-			overflow: auto;
+			overflow-y: auto !important;
 
 			&:empty:after {
 				content: 'No notifications (yet)';
@@ -517,7 +517,6 @@ input, textarea, select {
 			position: relative;
 			z-index: 2;
 			overflow: hidden;
-			overflow-y: auto;
 			border-radius: $border_radius 0 0 $border_radius;
 		}
 
