@@ -33,15 +33,15 @@
 	.quality {
 		span {
 			background: rgba(0,0,0,.2);
+			border: 1px solid transparent;
 			color: #FFF;
 			border-radius: 1px;
-			padding: 2px 4px;
+			padding: 1px 3px;
 
-			&.failed { background: #99563e; }
-			&.ignored { background: rgba(0,0,0,.2); }
-			&.available { background: #578b99; }
-			&.snatched { background: #289973; }
-			&.downloaded { background: #309927; }
+			&.failed { background: #993619; }
+			&.available { color: #009902; border-color: #009902; background: #FFF }
+			&.snatched { background: #568f99; color: #FFF }
+			&.downloaded, &.done { background: #009902; color: #FFF }
 		}
 	}
 

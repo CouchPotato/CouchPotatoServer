@@ -45,12 +45,11 @@
 }
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
 .movie .check{position:absolute;top:0;left:20px;display:none}
-.movie .quality span{background:rgba(0,0,0,.2);color:#FFF;border-radius:1px;padding:2px 4px}
-.movie .quality span.failed{background:#99563e}
-.movie .quality span.ignored{background:rgba(0,0,0,.2)}
-.movie .quality span.available{background:#578b99}
-.movie .quality span.snatched{background:#289973}
-.movie .quality span.downloaded{background:#309927}
+.movie .quality span{background:rgba(0,0,0,.2);border:1px solid transparent;color:#FFF;border-radius:1px;padding:1px 3px}
+.movie .quality span.failed{background:#993619}
+.movie .quality span.available{color:#009902;border-color:#009902;background:#FFF}
+.movie .quality span.snatched{background:#568f99;color:#FFF}
+.movie .quality span.done,.movie .quality span.downloaded{background:#009902;color:#FFF}
 .movie.status_suggested .quality{display:none}
 .movies{position:relative}
 .movies .no_movies{text-align:center;padding:20px}
