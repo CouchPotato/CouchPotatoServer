@@ -142,7 +142,7 @@ Page.Log = new Class({
 	},
 
 	scrollToBottom: function () {
-		new Fx.Scroll(window, {'duration': 0}).toBottom();
+		new Fx.Scroll(this.el, {'duration': 0}).toBottom();
 	},
 
 	showSelectionButton: function(e){
