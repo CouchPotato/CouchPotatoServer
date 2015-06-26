@@ -22,7 +22,7 @@
 .search_form .results_container .results .media_result .options{left:0;padding:10px 2px}
 .search_form .results_container .results .media_result .options select{min-width:0;margin-right:2px}
 }
-.search_form .results_container .results .media_result .options .button{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;min-width:36px;vertical-align:middle;display:inline-block;margin:0}
+.search_form .results_container .results .media_result .options .button{width:42px;vertical-align:middle;display:inline-block;text-align:center;margin:0}
 .search_form .results_container .results .media_result .options .message{height:100%;font-size:20px;color:#fff;line-height:20px}
 .search_form .results_container .results .media_result .thumbnail{width:30px;min-height:100%;display:block;margin:0;vertical-align:top}
 .search_form .results_container .results .media_result .data{position:absolute;height:100%;top:0;left:30px;right:0;cursor:pointer;border-top:1px solid rgba(255,255,255,.08);transition:all .4s cubic-bezier(.9,0,.1,1);-webkit-transform:translateX(0);transform:translateX(0);background:#FFF}
