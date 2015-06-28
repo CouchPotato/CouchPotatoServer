@@ -10,7 +10,7 @@ from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetPro
 
 log = CPLog(__name__)
 tokenreceived = 0
-token = 0
+rarbgtoken = 0
 
 class Base(TorrentMagnetProvider):
 
@@ -81,38 +81,48 @@ class Base(TorrentMagnetProvider):
     @staticmethod
     def get_token(self):
         global tokenreceived
-        global token
+        global rarbgtoken
         now = int(time.time())
 
-        if (token == 0) or (tokenreceived == 0) or (now > (tokenreceived+(15*60))):
-            log.debug("getting rarbg token")
+        if (rarbgtoken == 0) or (tokenreceived == 0) or (now > (tokenreceived+(15*60))):
+            log.debug("RARBG: Getting Rarbg token")
             tokendata = self.getJsonData(self.urls['token'])
 
             if tokendata:
                 try:
                     tokenreceived = int(time.time())
-                    token = tokendata['token']
-                    log.debug("GOT TOKEN: %s", token)
+                    rarbgtoken = tokendata['token']
+                    log.debug("RARBG: GOT TOKEN: %s", rarbgtoken)
                 except RuntimeError:
-                    log.error('Failed getting token from rarbg')
-                    token = 0
+                    log.error('RARBG: Failed getting token from Rarbg')
+                    rarbgtoken = 0
 
         # return token
 
     def _search(self, movie, quality, results):
         hasresults = 0
+        curryear = datetime.now().year
         self.get_token(self)
+        movieid = getIdentifier(movie)
+        try:
+            movieyear = movie['info']['year']
+        except:
+            log.error("RARBG: Couldn't get movie year")
+            movieyear = 0
 
-        if token != 0:
-            data = self.getJsonData(self.urls['search'] % (token, getIdentifier(movie), self.conf('min_seeders'),
+        if (rarbgtoken != 0) and (movieyear == 0 or movieyear <= curryear):
+            data = self.getJsonData(self.urls['search'] % (rarbgtoken, movieid, self.conf('min_seeders'),
                                                            self.conf('min_leechers'), self.conf('ranked_only')))
 
             if data:
                 if 'error_code' in data:
                     if data['error'] == 'No results found':
-                        log.debug("No results returned from Rarbg")
+                        log.debug("RARBG: No results returned from Rarbg")
                     else:
-                        log.error("There is an error in the returned JSON: %s", data['error'])
+                        if data['error_code'] == 10:
+                            log.error(data['error'], movieid)
+                        else:
+                            log.error("RARBG: There is an error in the returned JSON: %s", data['error'])
                 else:
                     hasresults = 1
                 try:
@@ -133,7 +143,7 @@ class Base(TorrentMagnetProvider):
                                 now = datetime.utcnow()
                                 age = (now - pubdate).days
                             except ValueError:
-                                log.debug("Rarbg Bad pubdate")
+                                log.debug("RARBG: Bad pubdate")
                                 age = 0
 
                             torrentscore = self.conf('extra_score')
@@ -159,7 +169,7 @@ class Base(TorrentMagnetProvider):
                             })
 
                 except RuntimeError:
-                    log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+                    log.error('RARBG: Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 config = [{
     'name': 'rarbg',
     'groups': [
