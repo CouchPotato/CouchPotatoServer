@@ -18,10 +18,11 @@ class Base(TorrentMagnetProvider):
         'test': 'https://torrentapi.org/pubapi_v2.php',
         'token': 'https://torrentapi.org/pubapi_v2.php?get_token=get_token',
         'search': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
-                  '=%s&ranked=%s&category=movies&format=json_extended',
+                  '=%s&ranked=%s&category=movies&format=json_extended&app_id=couchpotato',
     }
     
     http_time_between_calls = 2  # Seconds
+    user_agent = 'CouchPotato/1.0'
 
     @staticmethod
     def find_info(filename):
@@ -137,7 +138,6 @@ class Base(TorrentMagnetProvider):
                             resolution = xtrainfo[1]
                             # source = xtrainfo[2]
                             pubdate = result['pubdate']  # .strip(" +0000")
-                            # log.debug("PUBDATE: %s", pubdate)
                             try:
                                 pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S +0000')
                                 now = datetime.utcnow()
