@@ -15,8 +15,8 @@ rarbgtoken = 0
 class Base(TorrentMagnetProvider):
 
     urls = {
-        'test': 'https://torrentapi.org/pubapi_v2.php',
-        'token': 'https://torrentapi.org/pubapi_v2.php?get_token=get_token',
+        'test': 'https://torrentapi.org/pubapi_v2.php?app_id=couchpotato',
+        'token': 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=couchpotato',
         'search': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
                   '=%s&ranked=%s&category=movies&format=json_extended&app_id=couchpotato',
     }
