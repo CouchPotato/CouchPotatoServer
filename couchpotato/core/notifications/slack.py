@@ -8,7 +8,7 @@ autoload = 'Slack'
 
 class Slack(Notification):
     url = 'https://slack.com/api/chat.postMessage'
-    required_confs = ('token', 'channel',)
+    required_confs = ('token', 'channels',)
 
     def notify(self, message='', data=None, listener=None):
         for key in self.required_confs:
