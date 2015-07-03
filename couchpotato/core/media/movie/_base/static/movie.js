@@ -17,8 +17,10 @@ var Movie = new Class({
 		self.el = new Element('a.movie', {
 			'events': {
 				'click': function(e){
-					(e).preventDefault();
-					self.openDetails();
+					if(e.target.get('tag') != 'input'){
+						(e).preventDefault();
+						self.openDetails();
+					}
 				},
 				'mouseenter': function(){
 					if(self.actions.length <= 0){
@@ -319,8 +321,6 @@ var Movie = new Class({
 		if(!self.thumbnail)
 			self.el.addClass('no_thumbnail');
 
-		self.select_checkbox_class = new Form.Check(self.select_checkbox);
-
 		// Add profile
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
@@ -404,11 +404,6 @@ var Movie = new Class({
 
 	get: function(attr){
 		return this.data[attr] || this.data.info[attr];
-	},
-
-	select: function(bool){
-		var self = this;
-		self.select_checkbox_class[bool ? 'check' : 'uncheck']();
 	},
 
 	isSelected: function(){

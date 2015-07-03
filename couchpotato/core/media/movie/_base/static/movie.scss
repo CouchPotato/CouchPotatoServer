@@ -1,5 +1,7 @@
 @import "couchpotato/static/style/_mixins";
 
+$mass_edit_height: 44px;
+
 .page.movies {
 	bottom: auto;
 	z-index: 21;
@@ -22,13 +24,6 @@
 }
 
 .movie {
-
-	.check {
-		position: absolute;
-		top: 0;
-		left: $padding;
-		display: none;
-	}
 
 	.quality {
 		span {
@@ -119,6 +114,22 @@
 			background: rgba(0,0,0,.1);
 		}
 
+		input[type=checkbox] {
+			position: absolute;
+			top: 50%;
+			left: $padding;
+			transform: translateY(-50%);
+			opacity: .5;
+
+			&:checked {
+				opacity: 1;
+			}
+		}
+
+		&:hover input[type=checkbox] {
+			opacity: 1;
+		}
+
 		.data {
 			padding: $padding/2 $padding;
 
@@ -148,6 +159,7 @@
 						overflow: hidden;
 						text-overflow: ellipsis;
 						white-space: nowrap;
+						margin-left: $padding;
 
 						@include media-phablet {
 							width: 100%;
@@ -276,6 +288,10 @@
 		@include media-phablet {
 			max-width: 50%;
 			border-width: 0 $padding/5;
+		}
+
+		input[type=checkbox] {
+			display: none;
 		}
 
 		.poster {
@@ -910,6 +926,7 @@
 
 
 .alph_nav {
+	position: relative;
 
 	@include media-phablet {
 		display: none;
@@ -917,6 +934,31 @@
 
 	.mass_edit_form {
 		display: none;
+		background: $background_color;
+		position: fixed;
+		top: $header_height;
+		right: 0;
+		left: $header_width;
+		flex-flow: row nowrap;
+		align-items: center;
+		transition: max-height 300ms $cubic;
+		max-height: 0;
+		overflow: hidden;
+
+		.mass_editing & {
+			display: flex;
+			max-height: $mass_edit_height;
+		}
+
+		> * {
+			display: flex;
+			align-items: center;
+		}
+
+		.select {
+			margin-left: $padding;
+		}
+
 	}
 
 	.menus {

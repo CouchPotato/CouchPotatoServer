@@ -281,7 +281,6 @@ var MovieList = new Class({
 		);
 
 		// Mass edit
-		self.mass_edit_select_class = new Form.Check(self.mass_edit_select);
 		Quality.getActiveProfiles().each(function(profile){
 			new Element('option', {
 				'value': profile.get('_id'),
@@ -377,10 +376,10 @@ var MovieList = new Class({
 		var indeterminate = selected > 0 && selected < movies,
 			checked = selected == movies && selected > 0;
 
-		self.mass_edit_select.set('indeterminate', indeterminate);
+		document.body[selected > 0 ? 'addClass' : 'removeClass']('mass_editing');
 
-		self.mass_edit_select_class[checked ? 'check' : 'uncheck']();
-		self.mass_edit_select_class.element[indeterminate ? 'addClass' : 'removeClass']('indeterminate');
+		self.mass_edit_select.set('checked', checked);
+		self.mass_edit_select.indeterminate = indeterminate;
 
 		self.mass_edit_selected.set('text', selected);
 	},
