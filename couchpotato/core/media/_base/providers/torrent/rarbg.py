@@ -1,16 +1,16 @@
 import re
 import traceback
 import random
-import time
 from datetime import datetime
+from couchpotato import fireEvent
+from couchpotato.core.event import addEvent
 
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+import requests
 
 log = CPLog(__name__)
-tokenreceived = 0
-rarbgtoken = 0
 
 class Base(TorrentMagnetProvider):
 
@@ -20,130 +20,57 @@ class Base(TorrentMagnetProvider):
         'search': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
                   '=%s&ranked=%s&category=movies&format=json_extended&app_id=couchpotato',
     }
-    
+
     http_time_between_calls = 2  # Seconds
-    user_agent = 'CouchPotato/1.0'
-
-    @staticmethod
-    def find_info(filename):
-        # CODEC #
-        codec = 'x264'
-        v = re.search("(?i)(x265|h265|h\.265)", filename)
-        if v:
-            codec = 'x265'
-        
-        v = re.search("(?i)(xvid)", filename)
-        if v:
-            codec = 'xvid'
-
-        # RESOLUTION #
-        resolution = 'SD'            
-        a = re.search("(?i)(720p)", filename)
-        if a:
-            resolution = '720p'
-            
-        a = re.search("(?i)(1080p)", filename)
-        if a:
-            resolution = '1080p'
-            
-        a = re.search("(?i)(2160p)", filename)
-        if a:
-            resolution = '2160p'
-
-        # SOURCE #
-        source = 'HD-Rip'            
-        s = re.search("(?i)(WEB-DL|WEB_DL|WEB\.DL)", filename)
-        if s:
-            source = 'WEB-DL'
-            
-        s = re.search("(?i)(WEBRIP)", filename)
-        if s:
-            source = 'WEBRIP'
-
-        s = re.search("(?i)(DVDR|DVDRip|DVD-Rip)", filename)
-        if s:
-            source = 'DVD-R'
-
-        s = re.search("(?i)(BRRIP|BDRIP|BluRay)", filename)
-        if s:
-            source = 'BR-Rip'
-            
-        s = re.search("(?i)BluRay(.*)REMUX", filename)
-        if s:
-            source = 'BluRay-Remux'
-            
-        s = re.search("(?i)BluRay(.*)\.(AVC|VC-1)\.", filename)
-        if s:
-            source = 'BluRay-Full'
-            
-        return_info = [codec, resolution, source]
-        return return_info
-
-    @staticmethod
-    def get_token(self):
-        global tokenreceived
-        global rarbgtoken
-        now = int(time.time())
-
-        if (rarbgtoken == 0) or (tokenreceived == 0) or (now > (tokenreceived+(15*60))):
-            log.debug("RARBG: Getting Rarbg token")
-            tokendata = self.getJsonData(self.urls['token'])
-
-            if tokendata:
-                try:
-                    tokenreceived = int(time.time())
-                    rarbgtoken = tokendata['token']
-                    log.debug("RARBG: GOT TOKEN: %s", rarbgtoken)
-                except RuntimeError:
-                    log.error('RARBG: Failed getting token from Rarbg')
-                    rarbgtoken = 0
-
-        # return token
+    _token = 0
 
     def _search(self, movie, quality, results):
         hasresults = 0
         curryear = datetime.now().year
-        self.get_token(self)
         movieid = getIdentifier(movie)
+
         try:
             movieyear = movie['info']['year']
         except:
-            log.error("RARBG: Couldn't get movie year")
+            log.error('RARBG: Couldn\'t get movie year')
             movieyear = 0
 
-        if (rarbgtoken != 0) and (movieyear == 0 or movieyear <= curryear):
-            data = self.getJsonData(self.urls['search'] % (rarbgtoken, movieid, self.conf('min_seeders'),
-                                                           self.conf('min_leechers'), self.conf('ranked_only')))
+        self.getToken()
+
+        if (self._token != 0) and (movieyear == 0 or movieyear <= curryear):
+            data = self.getJsonData(self.urls['search'] % (self._token, movieid, self.conf('min_seeders'),
+                                                           self.conf('min_leechers'), self.conf('ranked_only')), headers = self.getRequestHeaders())
 
             if data:
                 if 'error_code' in data:
                     if data['error'] == 'No results found':
-                        log.debug("RARBG: No results returned from Rarbg")
+                        log.debug('RARBG: No results returned from Rarbg')
                     else:
                         if data['error_code'] == 10:
                             log.error(data['error'], movieid)
                         else:
-                            log.error("RARBG: There is an error in the returned JSON: %s", data['error'])
+                            log.error('RARBG: There is an error in the returned JSON: %s', data['error'])
                 else:
                     hasresults = 1
+
                 try:
                     if hasresults:
                         for result in data['torrent_results']:
                             name = result['title']
-                            titlesplit = re.split("-", name)
+                            titlesplit = re.split('-', name)
                             releasegroup = titlesplit[len(titlesplit)-1]
 
                             xtrainfo = self.find_info(name)
                             encoding = xtrainfo[0]
                             resolution = xtrainfo[1]
                             # source = xtrainfo[2]
-                            pubdate = result['pubdate']  # .strip(" +0000")
+                            pubdate = result['pubdate']  # .strip(' +0000')
                             try:
                                 pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S +0000')
                                 now = datetime.utcnow()
                                 age = (now - pubdate).days
                             except ValueError:
-                                log.debug("RARBG: Bad pubdate")
+                                log.debug('RARBG: Bad pubdate')
                                 age = 0
 
                             torrentscore = self.conf('extra_score')
@@ -170,6 +97,79 @@ class Base(TorrentMagnetProvider):
 
                 except RuntimeError:
                     log.error('RARBG: Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+
+    def getToken(self):
+        tokendata = self.getJsonData(self.urls['token'], cache_timeout = 900, headers = self.getRequestHeaders())
+        if tokendata:
+            try:
+                token = tokendata['token']
+                if self._token != token:
+                    log.debug('RARBG: GOT TOKEN: %s', token)
+                self._token = token
+            except:
+                log.error('RARBG: Failed getting token from Rarbg: %s', traceback.format_exc())
+                self._token = 0
+
+    def getRequestHeaders(self):
+        return {
+            'User-Agent': fireEvent('app.version', single = True)
+        }
+
+    @staticmethod
+    def find_info(filename):
+        # CODEC #
+        codec = 'x264'
+        v = re.search('(?i)(x265|h265|h\.265)', filename)
+        if v:
+            codec = 'x265'
+
+        v = re.search('(?i)(xvid)', filename)
+        if v:
+            codec = 'xvid'
+
+        # RESOLUTION #
+        resolution = 'SD'
+        a = re.search('(?i)(720p)', filename)
+        if a:
+            resolution = '720p'
+
+        a = re.search('(?i)(1080p)', filename)
+        if a:
+            resolution = '1080p'
+
+        a = re.search('(?i)(2160p)', filename)
+        if a:
+            resolution = '2160p'
+
+        # SOURCE #
+        source = 'HD-Rip'
+        s = re.search('(?i)(WEB-DL|WEB_DL|WEB\.DL)', filename)
+        if s:
+            source = 'WEB-DL'
+
+        s = re.search('(?i)(WEBRIP)', filename)
+        if s:
+            source = 'WEBRIP'
+
+        s = re.search('(?i)(DVDR|DVDRip|DVD-Rip)', filename)
+        if s:
+            source = 'DVD-R'
+
+        s = re.search('(?i)(BRRIP|BDRIP|BluRay)', filename)
+        if s:
+            source = 'BR-Rip'
+
+        s = re.search('(?i)BluRay(.*)REMUX', filename)
+        if s:
+            source = 'BluRay-Remux'
+
+        s = re.search('(?i)BluRay(.*)\.(AVC|VC-1)\.', filename)
+        if s:
+            source = 'BluRay-Full'
+
+        return_info = [codec, resolution, source]
+        return return_info
+
 config = [{
     'name': 'rarbg',
     'groups': [
@@ -209,7 +209,7 @@ config = [{
                     'type': 'int',
                     'default': 10,
                     'description': 'Minium amount of seeders the release must have.',
-                }, 
+                },
                 {
                     'name': 'min_leechers',
                     'advanced': True,
