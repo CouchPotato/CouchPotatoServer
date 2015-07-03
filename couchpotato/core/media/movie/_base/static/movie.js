@@ -184,6 +184,9 @@ var Movie = new Class({
 
 		self.list.checkIfEmpty();
 
+		if(self.details)
+			self.details.close();
+
 		// Remove events
 		Object.each(self.global_events, function(handle, listener){
 			App.off(listener, handle);
@@ -367,13 +370,13 @@ var Movie = new Class({
 
 	},
 
-	getTitle: function(){
+	getTitle: function(prefixed){
 		var self = this;
 
 		if(self.data.title)
-			return self.getUnprefixedTitle(self.data.title);
+			return prefixed ? self.data.title : self.getUnprefixedTitle(self.data.title);
 		else if(self.data.info && self.data.info.titles && self.data.info.titles.length > 0)
-			return self.getUnprefixedTitle(self.data.info.titles[0]);
+			return prefixed ? self.data.info.titles[0] : self.getUnprefixedTitle(self.data.info.titles[0]);
 
 		return 'Unknown movie';
 	},

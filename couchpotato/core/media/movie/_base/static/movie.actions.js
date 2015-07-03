@@ -59,7 +59,7 @@ var MovieAction = new Class({
 		var self = this;
 
 		try {
-			return self.movie.getTitle();
+			return self.movie.getTitle(true);
 		}
 		catch(e){
 			try {
@@ -854,81 +854,70 @@ MA.Delete = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.delete', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+		return new Element('a.delete', {
+			'text': 'Delete',
 			'title': 'Remove the movie from this CP list',
 			'events': {
 				'click': self.showConfirm.bind(self)
 			}
 		});
-
 	},
 
 	showConfirm: function(e){
 		var self = this;
 		(e).preventDefault();
 
-		if(!self.delete_container){
-			self.delete_container = new Element('div.buttons.delete_container').adopt(
-				new Element('a.cancel', {
-					'text': 'Cancel',
-					'events': {
-						'click': self.hideConfirm.bind(self)
-					}
-				}),
-				new Element('span.or', {
-					'text': 'or'
-				}),
-				new Element('a.button.delete', {
-					'text': 'Delete ' + self.movie.title.get('text'),
-					'events': {
-						'click': self.del.bind(self)
-					}
-				})
-			).inject(self.movie, 'top');
-		}
+		self.question = new Question('Are you sure you want to delete <strong>' + self.getTitle() + '</strong>?', '', [{
+			'text': 'Yes, delete '+self.getTitle(),
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					e.target.set('text', 'Deleting...');
 
-		self.movie.slide('in', self.delete_container);
+					self.del();
+				}
+			}
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
 
 	},
 
-	hideConfirm: function(e){
-		var self = this;
-		(e).preventDefault();
-
-		self.movie.removeView();
-		self.movie.slide('out');
-	},
-
-	del: function(e){
-		(e).preventDefault();
+	del: function(){
 		var self = this;
 
 		var movie = $(self.movie);
 
-		self.chain(
-			function(){
-				self.callChain();
+		Api.request('media.delete', {
+			'data': {
+				'id': self.movie.get('_id'),
+				'delete_from': self.movie.list.options.identifier
 			},
-			function(){
-				Api.request('media.delete', {
-					'data': {
-						'id': self.movie.get('_id'),
-						'delete_from': self.movie.list.options.identifier
-					},
-					'onComplete': function(){
-						movie.set('tween', {
-							'duration': 300,
-							'onComplete': function(){
-								self.movie.destroy();
-							}
-						});
-						movie.tween('height', 0);
+			'onComplete': function(){
+				if(self.question)
+					self.question.close();
+
+				dynamics.animate(movie, {
+					opacity: 0,
+					scale: 0
+				}, {
+					type: dynamics.bezier,
+					points: [{'x':0,'y':0,'cp':[{'x':0.876,'y':0}]},{'x':1,'y':1,'cp':[{'x':0.145,'y':1}]}],
+					duration: 400,
+					complete: function(){
+						self.movie.destroy();
 					}
 				});
 			}
-		);
-
-		self.callChain();
+		});
 
 	}
 
