@@ -2,13 +2,11 @@ import re
 import traceback
 import random
 from datetime import datetime
-from couchpotato import fireEvent
-from couchpotato.core.event import addEvent
 
+from couchpotato import fireEvent
 from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
-import requests
 
 log = CPLog(__name__)
 
