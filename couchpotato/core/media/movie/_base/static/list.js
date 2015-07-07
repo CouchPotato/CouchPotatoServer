@@ -517,7 +517,7 @@ var MovieList = new Class({
 			.addClass(new_view+'_list');
 
 		self.current_view = new_view;
-		Cookie.write(self.options.identifier+'_view3', new_view, {duration: 1000});
+		Cookie.write(self.options.identifier+'_view', new_view, {duration: 1000});
 	},
 
 	getSavedView: function(){
