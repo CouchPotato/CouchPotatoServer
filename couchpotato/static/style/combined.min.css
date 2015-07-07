@@ -64,12 +64,11 @@
 .list_list .movie{display:block;border-bottom:1px solid #eaeaea;position:relative;cursor:pointer}
 .list_list .movie:last-child{border-bottom:none}
 .list_list .movie:hover{background:rgba(0,0,0,.1)}
-.list_list .movie input[type=checkbox]{position:absolute;top:50%;left:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%);opacity:.5}
-.list_list .movie input[type=checkbox]:checked,.list_list .movie:hover input[type=checkbox]{opacity:1}
+.list_list .movie input[type=checkbox]{position:absolute;top:50%;left:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%);transition:opacity 200ms;opacity:0}
 .list_list .movie .data{padding:10px 20px}
 .list_list .movie .data .info{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
 .list_list .movie .data .info .title{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
-.list_list .movie .data .info .title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:20px}
+.list_list .movie .data .info .title span{transition:margin 200ms;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:480px){.movies .actions{pointer-events:none}
 .list_list .movie .data{padding:10px}
 .list_list .movie .data .info{display:block}
@@ -79,6 +78,10 @@
 .list_list .movie .data .info .title .year{display:inline-block;margin:0 10px;opacity:.5}
 .list_list .movie .data .info .quality{clear:both;overflow:hidden}
 .list_list .movie .data .info .quality span{float:left;font-size:.7em;margin:2px 0 0 2px}
+@media (max-width:480px){.list_list .movie .data .info .quality span{margin:2px 2px 0 0}
+}
+.list_list .movie.checked input[type=checkbox],.list_list .movie:hover input[type=checkbox]{opacity:1}
+.list_list .movie.checked .data .info .title span,.list_list .movie:hover .data .info .title span{margin-left:20px}
 .list_list .movie .actions{position:absolute;right:10px;top:0;bottom:0;display:none}
 .list_list .movie .actions .action{display:inline-block}
 .list_list .movie .actions a{height:100%;display:block;background:#FFF;padding:10px;width:auto;float:right;color:#000}
@@ -87,8 +90,7 @@
 .list_list .movie:hover .actions{display:block}
 .thumb_list{font-size:12px}
 .thumb_list>div:last-child{padding:0 12px}
-@media (max-width:480px){.list_list .movie .data .info .quality span{margin:2px 2px 0 0}
-.list_list .movie:hover .actions{display:none}
+@media (max-width:480px){.list_list .movie:hover .actions{display:none}
 .thumb_list>div:last-child{padding:0 3.33px}
 }
 .thumb_list>div{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:stretch;-ms-flex-align:stretch;align-items:stretch}

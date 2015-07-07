@@ -119,15 +119,8 @@ $mass_edit_height: 44px;
 			top: 50%;
 			left: $padding;
 			transform: translateY(-50%);
-			opacity: .5;
-
-			&:checked {
-				opacity: 1;
-			}
-		}
-
-		&:hover input[type=checkbox] {
-			opacity: 1;
+			transition: opacity 200ms;
+			opacity: 0;
 		}
 
 		.data {
@@ -156,10 +149,10 @@ $mass_edit_height: 44px;
 					}
 
 					span {
+						transition: margin 200ms;
 						overflow: hidden;
 						text-overflow: ellipsis;
 						white-space: nowrap;
-						margin-left: $padding;
 
 						@include media-phablet {
 							width: 100%;
@@ -188,6 +181,17 @@ $mass_edit_height: 44px;
 						}
 					}
 				}
+			}
+		}
+
+		&:hover, &.checked {
+			input[type=checkbox],
+			input[type=checkbox] {
+				opacity: 1;
+			}
+
+			.data .info .title span {
+				margin-left: $padding;
 			}
 		}
 

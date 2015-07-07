@@ -42,7 +42,7 @@ var BlockMenu = new Class({
 								duration: 800
 							});
 
-							if(self.lis == null)
+							if(self.lis === null)
 								self.lis = self.more_option_ul.getElements('> li').slice(0, 10);
 
 							self.lis.each(function(li, nr){

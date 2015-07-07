@@ -287,6 +287,7 @@ var Movie = new Class({
 				'events': {
 					'change': function(){
 						self.fireEvent('select');
+						self.select(self.select_checkbox.get('checked'));
 					}
 				}
 			}),
@@ -404,6 +405,12 @@ var Movie = new Class({
 
 	get: function(attr){
 		return this.data[attr] || this.data.info[attr];
+	},
+
+	select: function(select){
+		var self = this;
+		self.select_checkbox.set('checked', select);
+		self.el[self.select_checkbox.get('checked') ? 'addClass' : 'removeClass']('checked');
 	},
 
 	isSelected: function(){
