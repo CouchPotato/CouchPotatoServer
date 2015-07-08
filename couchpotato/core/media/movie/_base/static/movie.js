@@ -246,13 +246,14 @@ var Movie = new Class({
 	},
 
 	create: function(){
-		var self = this;
+		var self = this,
+			d = new Date();
 
 		self.el.addClass('status_'+self.get('status'));
 
 		var eta = null,
 			eta_date = null,
-			now = Math.round(+new Date()/1000);
+			now = Math.round(+d/1000);
 
 		if(self.data.info.release_date)
 			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
@@ -262,7 +263,12 @@ var Movie = new Class({
 
 		if(eta){
 			eta_date = new Date(eta * 1000);
-			eta_date = eta_date.toLocaleString('en-us', { month: "long" }) + ' ' + eta_date.getFullYear();
+			if(+eta_date/1000 < now){
+				eta_date = null;
+			}
+			else {
+				eta_date = eta_date.toLocaleString('en-us', { month: "short" }) + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : '');
+			}
 		}
 
 		var thumbnail = new Element('div.poster');

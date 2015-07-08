@@ -164,6 +164,7 @@ $mass_edit_height: 44px;
 
 				display: flex;
 				flex-flow: row nowrap;
+				align-items: center;
 
 				@include media-phablet {
 					display: block;
@@ -196,6 +197,12 @@ $mass_edit_height: 44px;
 					}
 				}
 
+				.eta {
+					font-size: .8em;
+					opacity: .5;
+					margin-right: 4px;
+				}
+
 				.quality {
 					clear: both;
 					overflow: hidden;
@@ -219,6 +226,7 @@ $mass_edit_height: 44px;
 			top: 0;
 			bottom: 0;
 			display: none;
+			z-index: 10;
 
 			.action {
 				display: inline-block;
@@ -358,6 +366,12 @@ $mass_edit_height: 44px;
 					}
 				}
 
+				.eta {
+					opacity: .5;
+					float: right;
+					margin-left: 4px;
+				}
+
 				.quality {
 					white-space: nowrap;
 					overflow: hidden;
@@ -423,10 +437,6 @@ $mass_edit_height: 44px;
 		}
 	}
 
-}
-
-.eta {
-	display: none;
 }
 
 .page.movie_details {
@@ -626,9 +636,6 @@ $mass_edit_height: 44px;
 					}
 				}
 
-			}
-
-			.category {
 			}
 
 			.buttons {
