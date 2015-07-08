@@ -122,6 +122,7 @@ var MovieList = new Class({
 		self.total_movies += total;
 		self.setCounter(total);
 
+		self.calculateSelected();
 	},
 
 	setCounter: function(count){
@@ -378,16 +379,18 @@ var MovieList = new Class({
 
 		document.body[selected > 0 ? 'addClass' : 'removeClass']('mass_editing');
 
-		self.mass_edit_select.set('checked', checked);
-		self.mass_edit_select.indeterminate = indeterminate;
+		if(self.mass_edit_select){
+			self.mass_edit_select.set('checked', checked);
+			self.mass_edit_select.indeterminate = indeterminate;
 
-		self.mass_edit_selected.set('text', selected);
+			self.mass_edit_selected.set('text', selected);
+		}
 	},
 
 	deleteSelected: function(){
 		var self = this,
 			ids = self.getSelectedMovies(),
-			help_msg = self.identifier == 'wanted' ? 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!' : 'Your files will be safe, this will only delete the reference from the CouchPotato manage list';
+			help_msg = self.identifier == 'wanted' ? 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!' : 'Your files will be safe, this will only delete the references in CouchPotato';
 
 		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', help_msg, [{
 			'text': 'Yes, delete '+(ids.length != 1 ? 'them' : 'it'),

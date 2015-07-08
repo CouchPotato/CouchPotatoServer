@@ -644,9 +644,13 @@ input, textarea, select {
 
 	h3 {
 		display: block;
-		margin-bottom: 20px;
+		margin-bottom: $padding;
 		font-size: 1.4em;
 		font-weight: lighter;
+	}
+
+	.hint {
+		margin: -$padding 0 $padding;
 	}
 
 	a {

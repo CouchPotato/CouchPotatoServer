@@ -240,6 +240,8 @@ var Movie = new Class({
 		self.category = CategoryList.getCategory(self.data.category_id) || {};
 		self.create();
 
+		self.select(self.select_checkbox.get('checked'));
+
 		self.busy(false);
 	},
 

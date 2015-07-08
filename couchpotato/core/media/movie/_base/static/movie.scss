@@ -7,12 +7,18 @@ $mass_edit_height: 44px;
 	z-index: 21;
 }
 
-.page.movies_wanted, .page.movies_manage {
+.page.movies_wanted,
+.page.movies_manage {
 	top: $header_height;
 	padding: 0;
+	transition: top 300ms $cubic;
 
 	@include media-phablet {
 		top: $header_width_mobile;
+	}
+
+	.mass_editing & {
+		top: $header_height + $mass_edit_height;
 	}
 
 	.load_more {
@@ -24,25 +30,31 @@ $mass_edit_height: 44px;
 }
 
 .movie {
-
 	input[type=checkbox] {
-		position: absolute;
-		transition: opacity 200ms;
-		opacity: 0;
-		z-index: 2;
-		cursor: pointer;
+		display: none;
+	}
 
-		&:hover {
-			opacity: 1 !important;
+	.with_navigation & {
+		input[type=checkbox] {
+			display: inline-block;
+			position: absolute;
+			transition: opacity 200ms;
+			opacity: 0;
+			z-index: 2;
+			cursor: pointer;
+
+			&:hover {
+				opacity: 1 !important;
+			}
 		}
-	}
 
-	&:hover input[type=checkbox] {
-		opacity: .5;
-	}
+		&:hover input[type=checkbox] {
+			opacity: .5;
+		}
 
-	&.checked input[type=checkbox] {
-		opacity: 1;
+		&.checked input[type=checkbox] {
+			opacity: 1;
+		}
 	}
 
 	.quality {
@@ -140,12 +152,6 @@ $mass_edit_height: 44px;
 			transform: translateY(-50%);
 		}
 
-		&:hover, &.checked {
-			.data .info .title span {
-				margin-left: $padding;
-			}
-		}
-
 		.data {
 			padding: $padding/2 $padding;
 
@@ -172,7 +178,7 @@ $mass_edit_height: 44px;
 					}
 
 					span {
-						transition: margin 200ms;
+						transition: margin 200ms $cubic;
 						overflow: hidden;
 						text-overflow: ellipsis;
 						white-space: nowrap;
@@ -246,6 +252,14 @@ $mass_edit_height: 44px;
 
 			@include media-phablet {
 				display: none;
+			}
+		}
+	}
+
+	&.with_navigation .movie {
+		&:hover, &.checked {
+			.data .info .title span {
+				margin-left: $padding;
 			}
 		}
 	}
@@ -950,7 +964,7 @@ $mass_edit_height: 44px;
 	}
 
 	.mass_edit_form {
-		display: none;
+		display: flex;
 		background: $background_color;
 		position: fixed;
 		top: $header_height;
@@ -963,7 +977,6 @@ $mass_edit_height: 44px;
 		overflow: hidden;
 
 		.mass_editing & {
-			display: flex;
 			max-height: $mass_edit_height;
 		}
 
@@ -973,7 +986,11 @@ $mass_edit_height: 44px;
 		}
 
 		.select {
-			margin-left: $padding;
+			margin: 0 $padding/2 0 $padding;
+
+			input, .count {
+				margin-right: $padding/4;
+			}
 		}
 
 	}
