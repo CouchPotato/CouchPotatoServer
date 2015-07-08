@@ -926,27 +926,16 @@ MA.Delete = new Class({
 MA.Files = new Class({
 
 	Extends: MovieAction,
+	label: 'Files',
 
-	create: function(){
+	getDetails: function(){
 		var self = this;
 
-		if(self.movie.data.releases && self.movie.data.releases.length > 0)
-			self.el = new Element('a.directory', {
-				'title': 'Available files',
-				'events': {
-					'click': self.show.bind(self)
-				}
-			});
+		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
+			return;
 
-	},
-
-	show: function(){
-		var self = this;
-
-		if(!self.options_container){
-			self.options_container = new Element('div.options').adopt(
-				self.files_container = new Element('div.files.table')
-			).inject(self.movie, 'top');
+		if(!self.files_container){
+			self.files_container = new Element('div.files.table')
 
 			// Header
 			new Element('div.item.head').adopt(
@@ -970,7 +959,7 @@ MA.Files = new Class({
 
 		}
 
-		self.movie.slide('in', self.options_container);
+		return self.files_container;
 	}
 
 });

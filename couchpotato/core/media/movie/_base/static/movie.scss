@@ -505,7 +505,6 @@ $mass_edit_height: 44px;
 			display: flex;
 			flex-flow: row nowrap;
 			padding: 0 $padding;
-			line-height: $header_height;
 			position: relative;
 			z-index: 2;
 
@@ -537,6 +536,7 @@ $mass_edit_height: 44px;
 				display: inline-block;
 				vertical-align: top;
 				max-width: 100%;
+				margin-bottom: 0;
 
 				&.title .wrapper {
 					transform-origin: 0 0;
@@ -632,6 +632,7 @@ $mass_edit_height: 44px;
 			}
 
 			.buttons {
+				display: flex;
 
 				@include media-phablet {
 					margin-left: auto;
@@ -639,8 +640,9 @@ $mass_edit_height: 44px;
 
 				> a {
 					display: inline-block;
-					padding: 0 10px 10px;
+					padding: 0 10px;
 					color: $primary_color;
+					line-height: $header_height;
 
 					&:hover {
 						color: #000;
@@ -712,6 +714,25 @@ $mass_edit_height: 44px;
 		}
 		.thumbnail, .data {
 			display: none;
+		}
+	}
+
+	.files {
+		span {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			text-align: center;
+			padding: $padding/3 0;
+		}
+
+		.name {
+			text-align: left;
+			flex: 1 1 auto;
+		}
+
+		.type {
+			min-width: 80px;
 		}
 	}
 
