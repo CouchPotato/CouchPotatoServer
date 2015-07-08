@@ -23,7 +23,7 @@ Page.Home = new Class({
 		self.chain = new Chain();
 		self.chain.chain(
 			self.createAvailable.bind(self),
-			//self.createSoon.bind(self),
+			self.createSoon.bind(self),
 			self.createSuggestions.bind(self),
 			self.createCharts.bind(self),
 			self.createLate.bind(self)
