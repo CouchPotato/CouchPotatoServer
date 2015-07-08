@@ -56,6 +56,7 @@
 .movie .quality span.available{color:#009902;border-color:#009902;background:#FFF}
 .movie .quality span.snatched{background:#568f99;color:#FFF}
 .movie .quality span.done,.movie .quality span.downloaded{background:#009902;color:#FFF}
+.movie .rating .votes{opacity:.7;margin-left:4px}
 .movie.status_suggested .quality{display:none}
 .movies{position:relative}
 .movies .no_movies{text-align:center;padding:20px}
@@ -508,6 +509,9 @@
 .icon-home:before{content:'\e817'}
 .icon-movie:before{content:'\e818'}
 .icon-handle:before,.icon-menu:before{content:'\e819'}
+.icon-star:before{content:'\e81a'}
+.icon-star-empty:before{content:'\e81b'}
+.icon-star-half:before{content:'\e81c'}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Light-webfont.eot);src:url(../fonts/OpenSans-Light-webfont.eot?#iefix)format("embedded-opentype"),url(../fonts/OpenSans-Light-webfont.woff)format("woff"),url(../fonts/OpenSans-Light-webfont.ttf)format("truetype"),url(../fonts/OpenSans-Light-webfont.svg#OpenSansRegular)format("svg");font-weight:200;font-style:normal}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Regular-webfont.eot);src:url(../fonts/OpenSans-Regular-webfont.eot?#iefix)format("embedded-opentype"),url(../fonts/OpenSans-Regular-webfont.woff)format("woff"),url(../fonts/OpenSans-Regular-webfont.ttf)format("truetype"),url(../fonts/OpenSans-Regular-webfont.svg#OpenSansRegular)format("svg");font-weight:400;font-style:normal}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Italic-webfont.eot);src:url(../fonts/OpenSans-Italic-webfont.eot?#iefix)format("embedded-opentype"),url(../fonts/OpenSans-Italic-webfont.woff)format("woff"),url(../fonts/OpenSans-Italic-webfont.ttf)format("truetype"),url(../fonts/OpenSans-Italic-webfont.svg#OpenSansItalic)format("svg");font-weight:400;font-style:italic}

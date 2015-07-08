@@ -72,6 +72,13 @@ $mass_edit_height: 44px;
 		}
 	}
 
+	.rating {
+		.votes {
+			opacity: .7;
+			margin-left: 4px;
+		}
+	}
+
 	&.status_suggested {
 		.quality {
 			display: none;

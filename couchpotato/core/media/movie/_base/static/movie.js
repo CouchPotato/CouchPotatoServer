@@ -271,6 +271,25 @@ var Movie = new Class({
 			}
 		}
 
+		var rating, stars;
+		if(self.data.status == 'suggested' && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
+			rating = self.data.info.rating.imdb;
+
+			stars = [];
+
+			var half_rating = rating[0]/2;
+			for(var i = 1; i <= 5; i++){
+				if(half_rating >= 1)
+					stars.push(new Element('span.icon-star'));
+				else if(half_rating > 0)
+					stars.push(new Element('span.icon-star-half'));
+				else
+					stars.push(new Element('span.icon-star-empty'));
+
+				half_rating -= 1;
+			}
+		}
+
 		var thumbnail = new Element('div.poster');
 
 		if(self.data.files && self.data.files.image_poster && self.data.files.image_poster.length > 0){
@@ -322,7 +341,11 @@ var Movie = new Class({
 						'text': eta_date,
 						'title': 'ETA'
 					}) : null,
-					self.quality = new Element('div.quality')
+					self.quality = new Element('div.quality'),
+					self.rating = rating ? new Element('div.rating[title='+rating[0]+']').adopt(
+						stars,
+						new Element('span.votes[text=('+rating[1]+')][title=Votes]')
+					) : null
 				)
 			)
 		);

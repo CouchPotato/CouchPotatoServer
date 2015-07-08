@@ -31,6 +31,24 @@
       "src": "fontawesome"
     },
     {
+      "uid": "474656633f79ea2f1dad59ff63f6bf07",
+      "css": "star",
+      "code": 59418,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "d17030afaecc1e1c22349b99f3c4992a",
+      "css": "star-empty",
+      "code": 59419,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "84cf1fcc3fec556e7eaeb19679ca2dc9",
+      "css": "star-half",
+      "code": 59420,
+      "src": "fontawesome"
+    },
+    {
       "uid": "872d9516df93eb6b776cc4d94bd97dac",
       "css": "movie",
       "code": 59416,
