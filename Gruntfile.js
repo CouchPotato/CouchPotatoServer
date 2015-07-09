@@ -8,8 +8,40 @@ module.exports = function(grunt){
 	var config = {
 		tmp: '.tmp',
 		base: 'couchpotato',
-		css_dest: 'couchpotato/static/style/combined.min.css'
+		css_dest: 'couchpotato/static/style/combined.min.css',
+		scripts_vendor_dest: 'couchpotato/static/scripts/combined.vendor.min.js',
+		scripts_base_dest: 'couchpotato/static/scripts/combined.base.min.js',
+		scripts_plugins_dest: 'couchpotato/static/scripts/combined.plugins.min.js'
 	};
+
+	var vendor_scripts_files = [
+		'couchpotato/static/scripts/vendor/mootools.js',
+		'couchpotato/static/scripts/vendor/mootools_more.js',
+		'couchpotato/static/scripts/vendor/form_replacement/form_check.js',
+		'couchpotato/static/scripts/vendor/form_replacement/form_radio.js',
+		'couchpotato/static/scripts/vendor/form_replacement/form_dropdown.js',
+		'couchpotato/static/scripts/vendor/form_replacement/form_selectoption.js',
+		'couchpotato/static/scripts/vendor/Array.stableSort.js',
+		'couchpotato/static/scripts/vendor/history.js',
+		'couchpotato/static/scripts/vendor/dynamics.js'
+	];
+
+	var scripts_files = [
+		'couchpotato/static/scripts/library/uniform.js',
+		'couchpotato/static/scripts/library/question.js',
+		'couchpotato/static/scripts/library/scrollspy.js',
+		'couchpotato/static/scripts/couchpotato.js',
+		'couchpotato/static/scripts/api.js',
+		'couchpotato/static/scripts/page.js',
+		'couchpotato/static/scripts/block.js',
+		'couchpotato/static/scripts/block/navigation.js',
+		'couchpotato/static/scripts/block/header.js',
+		'couchpotato/static/scripts/block/footer.js',
+		'couchpotato/static/scripts/block/menu.js',
+		'couchpotato/static/scripts/page/home.js',
+		'couchpotato/static/scripts/page/settings.js',
+		'couchpotato/static/scripts/page/about.js'
+	];
 
 	grunt.initConfig({
 
@@ -26,7 +58,8 @@ module.exports = function(grunt){
 			},
 			all: [
 				'<%= config.base %>/{,**/}*.js',
-				'!<%= config.base %>/static/scripts/vendor/{,**/}*.js'
+				'!<%= config.base %>/static/scripts/vendor/{,**/}*.js',
+				'!<%= config.base %>/static/scripts/combined.*.js'
 			]
 		},
 
@@ -76,6 +109,30 @@ module.exports = function(grunt){
 			}
 		},
 
+		uglify: {
+			options: {
+				mangle: false,
+				compress: false,
+				beautify: true,
+				screwIE8: true
+			},
+			vendor: {
+				files: {
+					'<%= config.scripts_vendor_dest %>': vendor_scripts_files
+				}
+			},
+			base: {
+				files: {
+					'<%= config.scripts_base_dest %>': scripts_files
+				}
+			},
+			plugins: {
+				files: {
+					'<%= config.scripts_plugins_dest %>': ['<%= config.base %>/core/**/*.js']
+				}
+			}
+		},
+
 		shell: {
 			runCouchPotato: {
 				command: 'python CouchPotato.py',
@@ -91,16 +148,20 @@ module.exports = function(grunt){
 			},
 			js: {
 				files: [
-					'<%= config.base %>/**/*.js'
+					'<%= config.base %>/**/*.js',
+					'!<%= config.base %>/static/scripts/combined.*.js'
 				],
-				tasks: ['jshint']
+				tasks: ['uglify:base', 'uglify:plugins', 'jshint']
 			},
 			livereload: {
 				options: {
 					livereload: 35729
 				},
 				files: [
-					'<%= config.css_dest %>'
+					'<%= config.css_dest %>',
+					'<%= config.scripts_vendor_dest %>',
+					'<%= config.scripts_base_dest %>',
+					'<%= config.scripts_plugins_dest %>'
 				]
 			}
 		},
@@ -114,6 +175,6 @@ module.exports = function(grunt){
 
 	});
 
-	grunt.registerTask('default', ['sass:server', 'autoprefixer',  'cssmin', 'concurrent']);
+	grunt.registerTask('default', ['sass:server', 'autoprefixer',  'cssmin', 'uglify:vendor', 'uglify:base', 'uglify:plugins', 'concurrent']);
 
 };

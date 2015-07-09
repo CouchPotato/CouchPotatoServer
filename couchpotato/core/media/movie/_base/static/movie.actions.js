@@ -931,11 +931,11 @@ MA.Files = new Class({
 	getDetails: function(){
 		var self = this;
 
-		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0)
 			return;
 
 		if(!self.files_container){
-			self.files_container = new Element('div.files.table')
+			self.files_container = new Element('div.files.table');
 
 			// Header
 			new Element('div.item.head').adopt(

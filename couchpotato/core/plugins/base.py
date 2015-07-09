@@ -32,7 +32,7 @@ class Plugin(object):
     plugin_path = None
 
     enabled_option = 'enabled'
-    auto_register_static = True
+    auto_register_static = False
 
     _needs_shutdown = False
     _running = None
