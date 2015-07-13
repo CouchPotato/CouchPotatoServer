@@ -1,4 +1,5 @@
 import time
+from couchpotato.core.helpers.variable import getTitle
 
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
@@ -52,6 +53,21 @@ class Charts(Plugin):
             for chart in charts:
                 chart['hide_wanted'] = self.conf('hide_wanted')
                 chart['hide_library'] = self.conf('hide_library')
+
+                # Create a list the movie/list.js can use
+                medias = []
+                for media in chart.get('list'):
+                    medias.append({
+                        'status': 'suggested',
+                        'title': getTitle(media),
+                        'type': 'movie',
+                        'info': media,
+                        'identifiers': {
+                            'imdb': media.get('imdb')
+                        }
+                    })
+                chart['list'] = medias
+
             self.setCache('charts_cached', charts, timeout = self.update_interval * 3600)
         except:
             log.error('Failed refreshing charts')

@@ -139,7 +139,7 @@ class Bluray(Automation, RSS):
         if not movie_list['list']:
             return
 
-        return [ movie_list ]
+        return [movie_list]
 
 
 config = [{

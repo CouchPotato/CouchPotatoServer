@@ -3,6 +3,7 @@ var MovieList = new Class({
 	Implements: [Events, Options],
 
 	options: {
+		api_call: 'media.list',
 		animated_in: false,
 		navigation: true,
 		limit: 50,
@@ -52,7 +53,8 @@ var MovieList = new Class({
 		if(self.options.navigation)
 			self.createNavigation();
 
-		self.getMovies();
+		if(self.options.api_call)
+			self.getMovies();
 
 		App.on('movie.added', self.movieAdded.bind(self));
 		App.on('movie.deleted', self.movieDeleted.bind(self));
@@ -580,7 +582,7 @@ var MovieList = new Class({
 
 		}
 
-		Api.request(self.options.api_call || 'media.list', {
+		Api.request(self.options.api_call, {
 			'data': Object.merge({
 				'type': self.options.type || 'movie',
 				'status': self.options.status,

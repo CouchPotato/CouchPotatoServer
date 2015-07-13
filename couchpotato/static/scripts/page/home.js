@@ -25,7 +25,7 @@ Page.Home = new Class({
 			self.createAvailable.bind(self),
 			self.createSoon.bind(self),
 			self.createSuggestions.bind(self),
-			self.createCharts.bind(self),
+			//self.createCharts.bind(self),
 			self.createLate.bind(self)
 		);
 
@@ -113,7 +113,6 @@ Page.Home = new Class({
 	createSuggestions: function(){
 		var self = this;
 
-		// Coming Soon
 		self.suggestions_list = new MovieList({
 			'navigation': false,
 			'identifier': 'suggest',
