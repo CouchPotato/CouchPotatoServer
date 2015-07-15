@@ -45,14 +45,17 @@ class Suggestion(Plugin):
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
             self.setCache('suggestion_cached', suggestions, timeout = 6048000)  # Cache for 10 weeks
 
-
         medias = []
         for suggestion in suggestions[:int(limit)]:
+            poster = suggestion.get('images', {}).get('poster', [])
             medias.append({
                 'status': 'suggested',
                 'title': getTitle(suggestion),
                 'type': 'movie',
                 'info': suggestion,
+                'files': {
+                    'image_poster': [fireEvent('file.download', url = poster[0], single = True)]
+                } if len(poster) > 0 else {},
                 'identifiers': {
                     'imdb': suggestion.get('imdb')
                 }
