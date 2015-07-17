@@ -40,7 +40,8 @@ module.exports = function(grunt){
 		'couchpotato/static/scripts/block/menu.js',
 		'couchpotato/static/scripts/page/home.js',
 		'couchpotato/static/scripts/page/settings.js',
-		'couchpotato/static/scripts/page/about.js'
+		'couchpotato/static/scripts/page/about.js',
+		'couchpotato/static/scripts/page/login.js'
 	];
 
 	grunt.initConfig({
