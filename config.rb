@@ -29,9 +29,8 @@ http_path = "/"
 ##
 ## You probably don't need to edit anything below this.
 ##
-
-sass_dir = "./"
-css_dir = "./static/style_compiled"
+sass_dir = "./couchpotato/static/style"
+css_dir = "./couchpotato/static/style"
 
 # You can select your preferred output style here (can be overridden via the command line):
 # output_style = :expanded or :nested or :compact or :compressed
