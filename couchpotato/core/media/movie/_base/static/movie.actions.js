@@ -733,7 +733,7 @@ MA.SuggestSeen = new Class({
 	createButton: function(){
 		var self = this;
 
-		return new Element('a.add', {
+		return new Element('a.seen', {
 			'text': 'Already seen',
 			'title': 'Already seen it!',
 			'events': {
@@ -778,7 +778,7 @@ MA.SuggestIgnore = new Class({
 	createButton: function(){
 		var self = this;
 
-		return new Element('a.add', {
+		return new Element('a.ignore', {
 			'text': 'Ignore',
 			'title': 'Don\'t suggest this movie anymore',
 			'events': {
@@ -801,6 +801,51 @@ MA.SuggestIgnore = new Class({
 				if(self.movie.details){
 					self.movie.details.close();
 				}
+			}
+		});
+	}
+
+});
+
+
+MA.ChartIgnore = new Class({
+
+	Extends: SuggestBase,
+	icon: 'error',
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.ignore', {
+			'text': 'Hide',
+			'title': 'Don\'t show this movie in charts',
+			'events': {
+				'click': self.markAsHidden.bind(self)
+			}
+		});
+
+	},
+
+	markAsHidden: function(e){
+		var self = this;
+		(e).preventDefault();
+
+		Api.request('charts.ignore', {
+			'data': {
+				'imdb': self.getIMDB()
+			},
+			'onComplete': function(json){
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+				self.movie.destroy();
 			}
 		});
 	}

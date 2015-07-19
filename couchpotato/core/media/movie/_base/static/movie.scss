@@ -224,6 +224,12 @@ $mass_edit_height: 44px;
 						}
 					}
 				}
+
+				.rating .vote {
+					display: inline-block;
+					min-width: 60px;
+					text-align: right;
+				}
 			}
 		}
 

@@ -73,7 +73,7 @@ var Charts = new Class({
 					'identifier': chart.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
 					'title': chart.name,
 					'description': '<a href="'+chart.url+'">See source</a>',
-					'actions': [MA.Add, MA.SuggestIgnore, MA.SuggestSeen, MA.IMDB, MA.Trailer],
+					'actions': [MA.Add, MA.ChartIgnore, MA.IMDB, MA.Trailer],
 					'load_more': false,
 					'view': 'thumb',
 					'force_view': true,
@@ -110,18 +110,6 @@ var Charts = new Class({
 
 			self.shown_once = true;
 		}
-	},
-
-	hide: function(){
-		this.el.hide();
-	},
-
-	afterAdded: function(m){
-
-		$(m).getElement('div.chart_number')
-			.addClass('chart_in_wanted')
-			.set('title', 'Movie in wanted list');
-
 	},
 
 	toElement: function(){

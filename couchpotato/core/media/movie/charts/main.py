@@ -1,5 +1,6 @@
 import time
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato import Env
+from couchpotato.core.helpers.variable import getTitle, splitString
 
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
@@ -17,10 +18,7 @@ class Charts(Plugin):
 
     def __init__(self):
         addApiView('charts.view', self.automationView)
-        addEvent('app.load', self.setCrons)
-
-    def setCrons(self):
-        fireEvent('schedule.interval', 'charts.update_cache', self.updateViewCache, hours = self.update_interval)
+        addApiView('charts.ignore', self.ignoreView)
 
     def automationView(self, force_update = False, **kwargs):
 
@@ -31,10 +29,40 @@ class Charts(Plugin):
             if not charts:
                 charts = self.updateViewCache()
 
+        ignored = splitString(Env.prop('charts_ignore', default = ''))
+
+        # Create a list the movie/list.js can use
+        for chart in charts:
+            medias = []
+            for media in chart.get('list', []):
+
+                identifier = media.get('imdb')
+                if identifier in ignored:
+                    continue
+
+                # Cache poster
+                poster = media.get('images', {}).get('poster', [])
+                cached_poster = fireEvent('file.download', url = poster[0], single = True) if len(poster) > 0 else False
+                files = {'image_poster': [cached_poster] } if cached_poster else {}
+
+                medias.append({
+                    'status': 'suggested',
+                    'title': getTitle(media),
+                    'type': 'movie',
+                    'info': media,
+                    'files': files,
+                    'identifiers': {
+                        'imdb': identifier
+                    }
+                })
+
+            chart['list'] = medias
+
         return {
             'success': True,
             'count': len(charts),
-            'charts': charts
+            'charts': charts,
+            'ignored': ignored,
         }
 
     def updateViewCache(self):
@@ -54,20 +82,6 @@ class Charts(Plugin):
                 chart['hide_wanted'] = self.conf('hide_wanted')
                 chart['hide_library'] = self.conf('hide_library')
 
-                # Create a list the movie/list.js can use
-                medias = []
-                for media in chart.get('list'):
-                    medias.append({
-                        'status': 'suggested',
-                        'title': getTitle(media),
-                        'type': 'movie',
-                        'info': media,
-                        'identifiers': {
-                            'imdb': media.get('imdb')
-                        }
-                    })
-                chart['list'] = medias
-
             self.setCache('charts_cached', charts, timeout = self.update_interval * 3600)
         except:
             log.error('Failed refreshing charts')
@@ -75,3 +89,15 @@ class Charts(Plugin):
         self.update_in_progress = False
 
         return charts
+
+    def ignoreView(self, imdb = None, **kwargs):
+
+        ignored = splitString(Env.prop('charts_ignore', default = ''))
+
+        if imdb:
+            ignored.append(imdb)
+            Env.prop('charts_ignore', ','.join(set(ignored)))
+
+        return {
+            'result': True
+        }

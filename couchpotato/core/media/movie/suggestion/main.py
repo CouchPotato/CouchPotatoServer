@@ -47,15 +47,18 @@ class Suggestion(Plugin):
 
         medias = []
         for suggestion in suggestions[:int(limit)]:
+
+            # Cache poster
             poster = suggestion.get('images', {}).get('poster', [])
+            cached_poster = fireEvent('file.download', url = poster[0], single = True) if len(poster) > 0 else False
+            files = {'image_poster': [cached_poster] } if cached_poster else {}
+
             medias.append({
                 'status': 'suggested',
                 'title': getTitle(suggestion),
                 'type': 'movie',
                 'info': suggestion,
-                'files': {
-                    'image_poster': [fireEvent('file.download', url = poster[0], single = True)]
-                } if len(poster) > 0 else {},
+                'files': files,
                 'identifiers': {
                     'imdb': suggestion.get('imdb')
                 }
