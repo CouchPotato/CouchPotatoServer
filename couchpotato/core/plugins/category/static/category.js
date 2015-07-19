@@ -115,7 +115,7 @@ var CategoryListBase = new Class({
 				new Element('label[text=Order]'),
 				category_list = new Element('ul'),
 				new Element('p.formHint', {
-					'html': 'Change the order the categories are in the dropdown list.<br />First one will be default.'
+					'html': 'Change the order the categories are in the dropdown list.'
 				})
 			)
 		).inject(self.content);

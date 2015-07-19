@@ -1,13 +1,13 @@
 # Base classes for ASN.1 types
 import sys
-from pyasn1.type import constraint, tagmap
+from pyasn1.type import constraint, tagmap, tag
 from pyasn1 import error
 
 class Asn1Item: pass
 
 class Asn1ItemBase(Asn1Item):
     # Set of tags for this ASN.1 type
-    tagSet = ()
+    tagSet = tag.TagSet()
     
     # A list of constraint.Constraint instances for checking values
     subtypeSpec = constraint.ConstraintsIntersection()
@@ -38,22 +38,28 @@ class Asn1ItemBase(Asn1Item):
     def getEffectiveTagSet(self): return self._tagSet  # used by untagged types
     def getTagMap(self): return tagmap.TagMap({self._tagSet: self})
     
-    def isSameTypeWith(self, other):
+    def isSameTypeWith(self, other, matchTags=True, matchConstraints=True):
         return self is other or \
-               self._tagSet == other.getTagSet() and \
-               self._subtypeSpec == other.getSubtypeSpec()
-    def isSuperTypeOf(self, other):
-        """Returns true if argument is a ASN1 subtype of ourselves"""
-        return self._tagSet.isSuperTagSetOf(other.getTagSet()) and \
-               self._subtypeSpec.isSuperTypeOf(other.getSubtypeSpec())
+               (not matchTags or \
+                self._tagSet == other.getTagSet()) and \
+               (not matchConstraints or \
+                self._subtypeSpec==other.getSubtypeSpec())
 
-class __NoValue:
+    def isSuperTypeOf(self, other, matchTags=True, matchConstraints=True):
+        """Returns true if argument is a ASN1 subtype of ourselves"""
+        return (not matchTags or  \
+                self._tagSet.isSuperTagSetOf(other.getTagSet())) and \
+               (not matchConstraints or \
+                (self._subtypeSpec.isSuperTypeOf(other.getSubtypeSpec())))
+
+class NoValue:
     def __getattr__(self, attr):
         raise error.PyAsn1Error('No value for %s()' % attr)
     def __getitem__(self, i):
         raise error.PyAsn1Error('No value')
+    def __repr__(self): return '%s()' % self.__class__.__name__
     
-noValue = __NoValue()
+noValue = NoValue()
 
 # Base class for "simple" ASN.1 objects. These are immutable.
 class AbstractSimpleAsn1Item(Asn1ItemBase):    
@@ -72,10 +78,15 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
         self._len = None
         
     def __repr__(self):
-        if self._value is noValue:
-            return self.__class__.__name__ + '()'
-        else:
-            return self.__class__.__name__ + '(%s)' % (self.prettyOut(self._value),)
+        r = []
+        if self._value is not self.defaultValue:
+            r.append(self.prettyOut(self._value))
+        if self._tagSet is not self.tagSet:
+            r.append('tagSet=%r' % (self._tagSet,))
+        if self._subtypeSpec is not self.subtypeSpec:
+            r.append('subtypeSpec=%r' % (self._subtypeSpec,))
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(r))
+
     def __str__(self): return str(self._value)
     def __eq__(self, other):
         return self is other and True or self._value == other
@@ -89,6 +100,9 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
     else:
         def __bool__(self): return bool(self._value)
     def __hash__(self): return self.__hashedValue
+
+    def hasValue(self):
+        return not isinstance(self._value, NoValue)
 
     def clone(self, value=None, tagSet=None, subtypeSpec=None):
         if value is None and tagSet is None and subtypeSpec is None:
@@ -121,14 +135,17 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
     def prettyOut(self, value): return str(value)
 
     def prettyPrint(self, scope=0):
-        if self._value is noValue:
-            return '<no value>'
-        else:
+        if self.hasValue():
             return self.prettyOut(self._value)
+        else:
+            return '<no value>'
 
     # XXX Compatibility stub
     def prettyPrinter(self, scope=0): return self.prettyPrint(scope)
     
+    def prettyPrintType(self, scope=0):
+        return '%s -> %s' % (self.getTagSet(), self.__class__.__name__)
+
 #
 # Constructed types:
 # * There are five of them: Sequence, SequenceOf/SetOf, Set and Choice
@@ -166,13 +183,16 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
         self._componentValuesSet = 0
 
     def __repr__(self):
-        r = self.__class__.__name__ + '()'
-        for idx in range(len(self._componentValues)):
-            if self._componentValues[idx] is None:
-                continue
-            r = r + '.setComponentByPosition(%s, %r)' % (
-                idx, self._componentValues[idx]
-                )
+        r = []
+        if self._componentType is not self.componentType:
+            r.append('componentType=%r' % (self._componentType,))
+        if self._tagSet is not self.tagSet:
+            r.append('tagSet=%r' % (self._tagSet,))
+        if self._subtypeSpec is not self.subtypeSpec:
+            r.append('subtypeSpec=%r' % (self._subtypeSpec,))
+        r = '%s(%s)' % (self.__class__.__name__, ', '.join(r))
+        if self._componentValues:
+            r += '.setComponents(%s)' % ', '.join([repr(x) for x in self._componentValues])
         return r
 
     def __eq__(self, other):
@@ -235,7 +255,16 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
     def setComponentByPosition(self, idx, value, verifyConstraints=True):
         raise error.PyAsn1Error('Method not implemented')
 
+    def setComponents(self, *args, **kwargs):
+        for idx in range(len(args)):
+            self[idx] = args[idx]
+        for k in kwargs:
+            self[k] = kwargs[k]
+        return self
+
     def getComponentType(self): return self._componentType
+
+    def setDefaultComponents(self): pass
 
     def __getitem__(self, idx): return self.getComponentByPosition(idx)
     def __setitem__(self, idx, value): self.setComponentByPosition(idx, value)
@@ -246,4 +275,3 @@ class AbstractConstructedAsn1Item(Asn1ItemBase):
         self._componentValues = []
         self._componentValuesSet = 0
 
-    def setDefaultComponents(self): pass
