@@ -699,7 +699,7 @@ MA.Add = new Class({
 		var self = this;
 
 		var m = new BlockSearchMovieItem(self.movie.data.info, {
-			'onAdded': function(){
+			'onAdded': self.movie.data.status == 'suggested' ? function(){
 
 				Api.request('suggestion.ignore', {
 					'data': {
@@ -709,6 +709,8 @@ MA.Add = new Class({
 					'onComplete': self.refresh.bind(self)
 				});
 
+			} : function(){
+				self.movie.destroy();
 			}
 		});
 		m.showOptions();

@@ -1,5 +1,6 @@
 import time
-from couchpotato import Env
+from CodernityDB.database import RecordNotFound
+from couchpotato import Env, get_db
 from couchpotato.core.helpers.variable import getTitle, splitString
 
 from couchpotato.core.logger import CPLog
@@ -22,6 +23,8 @@ class Charts(Plugin):
 
     def automationView(self, force_update = False, **kwargs):
 
+        db = get_db()
+
         if force_update:
             charts = self.updateViewCache()
         else:
@@ -40,13 +43,23 @@ class Charts(Plugin):
                 if identifier in ignored:
                     continue
 
+                try:
+                    try:
+                        in_library = db.get('media', 'imdb-%s' % identifier)
+                        if in_library:
+                            continue
+                    except RecordNotFound:
+                        pass
+                except:
+                    pass
+
                 # Cache poster
                 poster = media.get('images', {}).get('poster', [])
                 cached_poster = fireEvent('file.download', url = poster[0], single = True) if len(poster) > 0 else False
                 files = {'image_poster': [cached_poster] } if cached_poster else {}
 
                 medias.append({
-                    'status': 'suggested',
+                    'status': 'chart',
                     'title': getTitle(media),
                     'type': 'movie',
                     'info': media,
