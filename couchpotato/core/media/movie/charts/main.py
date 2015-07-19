@@ -83,9 +83,9 @@ class Charts(Plugin):
         if self.update_in_progress:
             while self.update_in_progress:
                 time.sleep(1)
-            catched_charts = self.getCache('charts_cached')
-            if catched_charts:
-                return catched_charts
+            cached_charts = self.getCache('charts_cached')
+            if cached_charts:
+                return cached_charts
 
         charts = []
         try:
