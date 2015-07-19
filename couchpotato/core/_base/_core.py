@@ -5,6 +5,7 @@ import signal
 import time
 import traceback
 import webbrowser
+import sys
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
@@ -63,6 +64,14 @@ class Core(Plugin):
         # Set default urlopen timeout
         import socket
         socket.setdefaulttimeout(30)
+
+        # Don't check ssl by default
+        try:
+            if sys.version_info >= (2, 7, 9):
+                import ssl
+                ssl._create_default_https_context = ssl._create_unverified_context
+        except:
+            log.debug('Failed setting default ssl context: %s', traceback.format_exc())
 
     def md5Password(self, value):
         return md5(value) if value else ''
