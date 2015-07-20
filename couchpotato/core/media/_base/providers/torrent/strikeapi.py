@@ -23,6 +23,10 @@ class Base(TorrentProvider):
         for item in items:
             results.append(item)
 
+    def extra_score(self, item):
+        extraScore = int(self.conf('extra_score'))
+        return extraScore
+
     def processJson(self, json):
         resultItems = []
         for item in json[u'torrents']:
@@ -34,8 +38,8 @@ class Base(TorrentProvider):
                 'detail_url': item['page'],
                 'size': item['size']/(1024*1024),
                 'seeders': item['seeds'],
-                'leechers': item['leeches']#,
-                #'extra_score': extra_score,
+                'leechers': item['leeches'],
+                'extra_score': self.extra_score
                 #'get_more_info': self.getMoreInfo
             })
         return resultItems
