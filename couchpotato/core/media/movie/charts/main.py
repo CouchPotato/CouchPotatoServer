@@ -1,11 +1,10 @@
-import time
 from CodernityDB.database import RecordNotFound
 from couchpotato import Env, get_db
 from couchpotato.core.helpers.variable import getTitle, splitString
 
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent,fireEvent
+from couchpotato.core.event import fireEvent
 from couchpotato.core.plugins.base import Plugin
 
 
@@ -13,9 +12,6 @@ log = CPLog(__name__)
 
 
 class Charts(Plugin):
-
-    update_in_progress = False
-    update_interval = 72 # hours
 
     def __init__(self):
         addApiView('charts.view', self.automationView)
@@ -25,13 +21,7 @@ class Charts(Plugin):
 
         db = get_db()
 
-        if force_update:
-            charts = self.updateViewCache()
-        else:
-            charts = self.getCache('charts_cached')
-            if not charts:
-                charts = self.updateViewCache()
-
+        charts = fireEvent('automation.get_chart_list', merge = True)
         ignored = splitString(Env.prop('charts_ignore', default = ''))
 
         # Create a list the movie/list.js can use
@@ -77,31 +67,6 @@ class Charts(Plugin):
             'charts': charts,
             'ignored': ignored,
         }
-
-    def updateViewCache(self):
-
-        if self.update_in_progress:
-            while self.update_in_progress:
-                time.sleep(1)
-            cached_charts = self.getCache('charts_cached')
-            if cached_charts:
-                return cached_charts
-
-        charts = []
-        try:
-            self.update_in_progress = True
-            charts = fireEvent('automation.get_chart_list', merge = True)
-            for chart in charts:
-                chart['hide_wanted'] = self.conf('hide_wanted')
-                chart['hide_library'] = self.conf('hide_library')
-
-            self.setCache('charts_cached', charts, timeout = self.update_interval * 3600)
-        except:
-            log.error('Failed refreshing charts')
-
-        self.update_in_progress = False
-
-        return charts
 
     def ignoreView(self, imdb = None, **kwargs):
 
