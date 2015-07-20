@@ -566,6 +566,7 @@ var MovieList = new Class({
 			self.load_more.set('text', 'loading...');
 		}
 
+		var loader_timeout;
 		if(self.movies.length === 0 && self.options.loader){
 
 			self.loader_first = new Element('div.mask.loading.with_message').adopt(
@@ -574,7 +575,7 @@ var MovieList = new Class({
 			createSpinner(self.loader_first);
 
 			var lfc = self.loader_first;
-			setTimeout(function(){
+			loader_timeout = setTimeout(function(){
 				lfc.addClass('show');
 			}, 10);
 
@@ -593,6 +594,7 @@ var MovieList = new Class({
 				if(reset)
 					self.movie_list.empty();
 
+				if(loader_timeout) clearTimeout(loader_timeout);
 				if(self.loader_first){
 					var lf = self.loader_first;
 					self.loader_first = null;
