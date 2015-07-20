@@ -4,6 +4,8 @@ module.exports = function(grunt){
 	require('jit-grunt')(grunt);
 	require('time-grunt')(grunt);
 
+	grunt.loadNpmTasks('grunt-shell-spawn');
+
 	// Configurable paths
 	var config = {
 		tmp: '.tmp',
@@ -137,7 +139,10 @@ module.exports = function(grunt){
 		shell: {
 			runCouchPotato: {
 				command: 'python CouchPotato.py',
-				maxBuffer: 1048576
+				options: {
+					stdout: true,
+					stderr: true
+				}
 			}
 		},
 
