@@ -11,7 +11,6 @@ class Base(TorrentProvider):
         'test': 'https://getstrike.net/torrents/'
     }
 
-
     cat_backup_id = 200
     disable_provider = False
     http_time_between_calls = 1
