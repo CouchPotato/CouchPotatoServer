@@ -3,7 +3,7 @@ import shutil
 import traceback
 
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.helpers.encoding import sp, toUnicode
 from couchpotato.core.helpers.variable import getIdentifier, underscoreToCamel
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.metadata.base import MetaDataBase
@@ -32,9 +32,9 @@ class MovieMetaData(MetaDataBase):
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 
-        root_name = self.getRootName(group)
-        meta_name = os.path.basename(root_name)
-        root = os.path.dirname(root_name)
+        root_name = toUnicode(self.getRootName(group))
+        meta_name = toUnicode(os.path.basename(root_name))
+        root = toUnicode(os.path.dirname(root_name))
 
         movie_info = group['media'].get('info')
 

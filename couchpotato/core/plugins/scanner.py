@@ -569,7 +569,7 @@ class Scanner(Plugin):
             scan_result = []
             for p in paths:
                 if not group['is_dvd']:
-                    video = Video.from_path(sp(p))
+                    video = Video.from_path(toUnicode(sp(p)))
                     video_result = [(video, video.scan())]
                     scan_result.extend(video_result)
 
