@@ -25,7 +25,8 @@ def fnEscape(pattern):
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateHardLinkW(six.text_type(dst), six.text_type(src), 0) == 0: raise ctypes.WinError()
+        from couchpotato.core.helpers.encoding import toUnicode
+        if ctypes.windll.kernel32.CreateHardLinkW(toUnicode(dst), toUnicode(src), 0) == 0: raise ctypes.WinError()
     else:
         os.link(src, dst)
 
@@ -33,7 +34,8 @@ def link(src, dst):
 def symlink(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateSymbolicLinkW(six.text_type(dst), six.text_type(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
+        from couchpotato.core.helpers.encoding import toUnicode
+        if ctypes.windll.kernel32.CreateSymbolicLinkW(toUnicode(dst), toUnicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
         os.symlink(src, dst)
 
