@@ -650,7 +650,7 @@ class Renamer(Plugin):
                     group_folder = media_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = sp(os.path.join(base_folder, os.path.relpath(group['parentdir'], base_folder).split(os.path.sep)[0]))
+                    group_folder = sp(os.path.join(base_folder, toUnicode(os.path.relpath(group['parentdir'], base_folder)).split(os.path.sep)[0]))
 
                 try:
                     if self.conf('cleanup') or self.conf('move_leftover'):
