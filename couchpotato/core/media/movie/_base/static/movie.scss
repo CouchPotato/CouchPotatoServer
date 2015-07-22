@@ -706,29 +706,41 @@ $mass_edit_height: 44px;
 
 		.options > div {
 			display: flex;
+			align-items: center;
 
 			select {
-				vertical-align: middle;
-				display: inline-block;
-				margin-right: 10px;
-				min-width: 70px;
-				flex: 1 auto;
-
-				@include media-phablet {
-					min-width: 0;
-				}
+				display: block;
+				width: 100%;
 			}
 
-			.button {
-				background: #FFF;
-				flex: 1 auto;
-				vertical-align: middle;
-				display: inline-block;
-				text-align: center;
+			.title {
+				min-width: 75px;
+				width: 2000px;
+				margin: 0 10px 0 0;
+			}
 
-				&:hover {
-					background: $primary_color;
+			.profile, .category {
+				width: 200px;
+				min-width: 50px;
+				margin: 0 10px 0 0;
+			}
+
+			.add {
+				width: 200px;
+
+				.button {
+					background: #FFF;
+					flex: 1 auto;
+					display: block;
+					text-align: center;
+					width: 100%;
+					margin: 0;
+
+					&:hover {
+						background: $primary_color;
+					}
 				}
+
 			}
 
 		}
