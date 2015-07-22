@@ -120,12 +120,12 @@
 					top: 0;
 					left: 30px;
 					right: 0;
-					padding: 10px;
 					background: rgba(0,0,0,.3);
+					display: flex;
+					align-items: center;
 
 					@include media-phablet {
 						left: 0;
-						padding: 10px 2px;
 					}
 
 					> .in_library_wanted {
@@ -135,18 +135,19 @@
 					> div {
 						border: 0;
 						display: flex;
-					}
+						padding: 10px;
+						align-items: stretch;
+						justify-content: space-between;
 
-					.thumbnail {
-						vertical-align: middle;
+						@include media-phablet {
+							padding: 3px;
+						}
 					}
 
 					select {
-						vertical-align: middle;
-						display: inline-block;
-						margin-right: 10px;
-						min-width: 70px;
-						flex: 1 auto;
+						display: block;
+						height: 100%;
+						width: 100%;
 
 						@include media-phablet {
 							min-width: 0;
@@ -154,19 +155,39 @@
 						}
 					}
 
-					.button {
+					.title {
+						margin-right: 5px;
+						width: 210px;
+
+						@include media-phablet {
+							width: 140px;
+							margin-right: 2px;
+						}
+					}
+
+					.profile, .category {
+						margin: 0 5px 0 0;
+
+						@include media-phablet {
+							margin-right: 2px;
+						}
+					}
+
+					.add {
 						width: 42px;
-						vertical-align: middle;
-						display: inline-block;
+						flex: 1 auto;
+					}
+
+					.button {
+						display: block;
+						background: $primary_color;
 						text-align: center;
 						margin: 0;
 					}
 
 					.message {
-						height: 100%;
 						font-size: 20px;
 						color: #fff;
-						line-height: 20px;
 					}
 
 				}
@@ -199,16 +220,12 @@
 						left: 0;
 					}
 
-					&.open {
-						transform: translateX(100%);
+					&:hover {
+						transform: translateX(2%);
 					}
 
-					.in_wanted,
-					.in_library {
-						position: absolute;
-						bottom: 2px;
-						left: 14px;
-						font-size: 11px;
+					&.open {
+						transform: translateX(100%);
 					}
 
 					.info {
@@ -241,6 +258,21 @@
 								padding: 0 5px;
 								width: auto;
 								display: none;
+							}
+
+							.in_wanted,
+							.in_library {
+								position: absolute;
+								top: 15px;
+								left: 0;
+								font-size: 11px;
+								color: $primary_color;
+							}
+
+							&.in_library_wanted {
+								.title {
+									margin-top: -7px;
+								}
 							}
 						}
 					}
