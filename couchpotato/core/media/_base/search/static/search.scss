@@ -6,6 +6,10 @@
 	width: 44px;
 	position: relative;
 
+	* {
+		transform: translateZ(0);
+	}
+
 	.icon-search {
 		position: absolute;
 		z-index: 2;
