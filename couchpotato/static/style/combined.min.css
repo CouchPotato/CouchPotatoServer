@@ -528,12 +528,12 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .navigation ul li{line-height:0}
 }
 .header .navigation ul li a{padding:10px 20px;display:block;position:relative}
-@media (max-width:480px){.header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center;text-indent:-1000px}
-}
 .header .navigation ul li a:before{position:absolute;width:100%;display:none;text-align:center;font-size:18px;text-indent:0}
 .header .navigation ul li a.icon-home:before{font-size:24px}
 .header .menu,.header .notification_menu,.header .search_form{position:absolute;z-index:21;bottom:6.67px;width:44px;height:44px}
-@media (max-width:480px){.header .navigation ul li a:before{display:block}
+@media (max-width:480px){.header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center}
+.header .navigation ul li a span{display:none}
+.header .navigation ul li a:before{display:block}
 .header .menu,.header .notification_menu,.header .search_form{bottom:0}
 }
 .header .menu .wrapper,.header .notification_menu .wrapper,.header .search_form .wrapper{min-width:170px;-webkit-transform-origin:0 90%;transform-origin:0 90%}

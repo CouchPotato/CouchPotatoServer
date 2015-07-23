@@ -52,7 +52,7 @@ var PageBase = new Class({
 			self.tab = nav.addTab(self.name, {
 				'href': App.createUrl(self.getPageUrl()),
 				'title': self.title,
-				'text': self.name.capitalize(),
+				'html': '<span>' + self.name.capitalize() + '</span>',
 				'class': self.icon ? 'icon-' + self.icon : null
 			});
 		}

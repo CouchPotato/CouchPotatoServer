@@ -164,7 +164,12 @@ input, textarea, select {
 					height: $header_width_mobile;
 					padding: $padding/2 0;
 					text-align: center;
-					text-indent: -1000px;
+				}
+
+				span {
+					@include media-phablet {
+						display: none;
+					}
 				}
 
 				&:before {
