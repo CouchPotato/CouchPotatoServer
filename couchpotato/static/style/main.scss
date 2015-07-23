@@ -77,7 +77,7 @@ input, textarea, select {
 	}
 }
 
-.disable_hover > * {
+.disable_hover .content > * {
 	pointer-events: none;
 }
 
@@ -386,7 +386,6 @@ input, textarea, select {
 	bottom: 0;
 	display: none;
 	padding: $padding 0;
-	-webkit-overflow-scrolling:touch;
 
 	&.home {
 		padding: 0 0 $padding;
@@ -399,6 +398,7 @@ input, textarea, select {
 	> .content {
 		overflow: hidden;
 		overflow-y: auto;
+		-webkit-overflow-scrolling:touch;
 	}
 
 	h1, h2, h3, h4 {
