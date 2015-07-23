@@ -618,7 +618,6 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px}
 .mask .message h1{font-size:1.5em}
 .mask .spinner{width:22px;height:22px;display:block;background:#fff;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1)infinite normal;-webkit-transform:scale(0);transform:scale(0)}
-.page.settings.active,.table .item{display:-webkit-flex;display:-ms-flexbox}
 .mask.with_message .spinner{margin-top:-88px}
 .mask.show{pointer-events:auto;opacity:1}
 .mask.show .spinner{-webkit-transform:scale(1);transform:scale(1)}
@@ -633,15 +632,15 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 100%{-webkit-transform:rotate(720deg)scale(1.6);transform:rotate(720deg)scale(1.6);border-radius:1px}
 }
 .table .head{font-weight:700}
-.table .item{display:flex;border-bottom:1px solid rgba(0,0,0,.2)}
+.table .item{display:-webkit-flex;display:-ms-flexbox;display:flex;border-bottom:1px solid rgba(0,0,0,.2)}
 .table .item:last-child{border-bottom:none}
 .table .item span{padding:1px 2px}
 .table .item span:first-child{padding-left:0}
 .table .item span:last-child{padding-right:0}
 .page.settings{top:80px}
-.page.settings.active{display:flex}
+.page.settings.active .content{display:-webkit-flex;display:-ms-flexbox;display:flex}
 @media (max-width:480px){.page.settings{top:44px}
-.page.settings.active{display:block}
+.page.settings.active .content{display:block}
 }
 .page.settings .navigation{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:space-between;-ms-flex-pack:justify;justify-content:space-between}
 .page.settings .navigation .advanced_toggle{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}

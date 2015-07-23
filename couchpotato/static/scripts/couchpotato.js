@@ -82,15 +82,15 @@
 		}
 	},
 
-	pushState: function(e){
+	pushState: function(e, el){
 		var self = this;
 
-		if((!e.meta && self.isMac()) || (!e.control && !self.isMac())){
+		if((!e.meta && App.isMac()) || (!e.control && !App.isMac())){
 			(e).preventDefault();
-			var url = e.target.get('href');
+			var url = el.get('href');
 
 			// Middle click
-			if(e.event && e.event.button == 1)
+			if(e.event && e.event.button === 1)
 				window.open(url);
 			else if(History.getPath() != url)
 				History.push(url);
