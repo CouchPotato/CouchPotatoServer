@@ -5,6 +5,11 @@ $mass_edit_height: 44px;
 .page.movies {
 	bottom: auto;
 	z-index: 21;
+	height: $header_height;
+
+	@include media-phablet {
+		height: $header_width_mobile;
+	}
 }
 
 .page.movies_wanted,

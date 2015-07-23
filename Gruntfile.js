@@ -25,7 +25,8 @@ module.exports = function(grunt){
 		'couchpotato/static/scripts/vendor/form_replacement/form_selectoption.js',
 		'couchpotato/static/scripts/vendor/Array.stableSort.js',
 		'couchpotato/static/scripts/vendor/history.js',
-		'couchpotato/static/scripts/vendor/dynamics.js'
+		'couchpotato/static/scripts/vendor/dynamics.js',
+		'couchpotato/static/scripts/vendor/fastclick.js'
 	];
 
 	var scripts_files = [

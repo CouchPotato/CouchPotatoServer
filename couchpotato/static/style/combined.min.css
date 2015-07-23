@@ -51,9 +51,10 @@
 .search_form .results_container .results .media_result:last-child .data{border-bottom:0}
 .search_form.focused.filled .results_container,.search_form.shown.filled .results_container{display:block}
 .search_form.focused.filled .input,.search_form.shown.filled .input{border-radius:0 0 0 3px}
-.page.movies{bottom:auto;z-index:21}
+.page.movies{bottom:auto;z-index:21;height:80px}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0;transition:top 300ms cubic-bezier(.9,0,.1,1)}
-@media (max-width:480px){.page.movies_manage,.page.movies_wanted{top:44px}
+@media (max-width:480px){.page.movies{height:44px}
+.page.movies_manage,.page.movies_wanted{top:44px}
 }
 .mass_editing .page.movies_manage,.mass_editing .page.movies_wanted{top:124px}
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}

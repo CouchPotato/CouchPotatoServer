@@ -38,8 +38,10 @@
 
 		// Check if device is touchenabled
 		self.touch_device = 'ontouchstart' in window || navigator.msMaxTouchPoints;
-		if(self.touch_device)
+		if(self.touch_device){
 			self.c.addClass('touch_enabled');
+			FastClick.attach(document.body);
+		}
 
 		window.addEvent('resize', self.resize.bind(self));
 		self.resize();
