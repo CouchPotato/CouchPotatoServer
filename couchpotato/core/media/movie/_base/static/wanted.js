@@ -37,7 +37,7 @@ var MoviesWanted = new Class({
 				'menu': [self.manual_search, self.scan_folder],
 				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
 			});
-			$(self.list).inject(self.el);
+			$(self.list).inject(self.content);
 
 			// Check if search is in progress
 			self.startProgressInterval.delay(4000, self);
@@ -101,7 +101,7 @@ var MoviesWanted = new Class({
 				});
             };
 
-            self.folder_browser.inject(self.el, 'top');
+            self.folder_browser.inject(self.content, 'top');
             self.folder_browser.fireEvent('injected');
 
             // Hide the settings box

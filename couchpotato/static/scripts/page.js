@@ -23,13 +23,15 @@ var PageBase = new Class({
 		// Create main page container
 		self.el = new Element('div', {
 			'class': 'page ' + self.getPageClass() + (' level_' + (options.level || 0))
-		});
+		}).grab(
+			self.content = new Element('div.content')
+		);
 
 		// Stop hover events while scrolling
 		App.addEvent('load', function(){
 			setTimeout(function(){
 				if(!App.mobile_screen){
-					self.el.addEvent('scroll', self.preventHover.bind(self));
+					self.content.addEvent('scroll', self.preventHover.bind(self));
 				}
 			}, 100);
 		});
@@ -104,8 +106,8 @@ var PageBase = new Class({
 				elements = self[action+'Action'](params);
 			}
 			if(elements !== undefined){
-				self.el.empty();
-				self.el.adopt(elements);
+				self.content.empty();
+				self.content.adopt(elements);
 			}
 
 			App.getBlock('navigation').activate(self.name);

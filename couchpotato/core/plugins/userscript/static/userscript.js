@@ -16,7 +16,7 @@ Page.Userscript = new Class({
 	indexAction: function(){
 		var self = this;
 
-		self.el.adopt(
+		self.content.grab(
 			self.frame = new Element('div.frame.loading', {
 				'text': 'Loading...'
 			})

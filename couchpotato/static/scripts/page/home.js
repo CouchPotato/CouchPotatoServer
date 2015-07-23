@@ -79,7 +79,7 @@ Page.Home = new Class({
 			}
 		});
 
-		$(self.available_list).inject(self.el);
+		$(self.available_list).inject(self.content);
 
 	},
 
@@ -106,7 +106,7 @@ Page.Home = new Class({
 			}
 		});
 
-		$(self.soon_list).inject(self.el);
+		$(self.soon_list).inject(self.content);
 
 	},
 
@@ -129,7 +129,7 @@ Page.Home = new Class({
 			}
 		});
 
-		$(self.suggestions_list).inject(self.el);
+		$(self.suggestions_list).inject(self.content);
 
 	},
 
@@ -143,7 +143,7 @@ Page.Home = new Class({
 			}
 		});
 
-		$(self.charts_list).inject(self.el);
+		$(self.charts_list).inject(self.content);
 
 	},
 
@@ -170,7 +170,7 @@ Page.Home = new Class({
 			}
 		});
 
-		$(self.late_list).inject(self.el);
+		$(self.late_list).inject(self.content);
 
 	}
 

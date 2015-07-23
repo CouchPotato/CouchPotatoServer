@@ -59,7 +59,7 @@ var MoviesManage = new Class({
 					)
 				)
 			});
-			$(self.list).inject(self.el);
+			$(self.list).inject(self.content);
 
 			// Check if search is in progress
 			self.startProgressInterval();

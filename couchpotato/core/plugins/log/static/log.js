@@ -41,7 +41,7 @@ Page.Log = new Class({
 					self.showSelectionButton.delay(100, self, e);
 				}
 			}
-		}).inject(self.el);
+		}).inject(self.content);
 
 		Api.request('logging.get', {
 			'data': {
@@ -74,7 +74,7 @@ Page.Log = new Class({
 						'events': {
 							'change': function () {
 								var type_filter = this.getSelected()[0].get('value');
-								self.el.set('data-filter', type_filter);
+								self.content.set('data-filter', type_filter);
 								self.scrollToBottom();
 							}
 						}
@@ -110,7 +110,7 @@ Page.Log = new Class({
 				}).inject(nav);
 
 				// Add to page
-				navigation.inject(self.el, 'top');
+				navigation.inject(self.content, 'top');
 
 				self.scrollToBottom();
 			}

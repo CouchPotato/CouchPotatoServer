@@ -386,8 +386,6 @@ input, textarea, select {
 	bottom: 0;
 	display: none;
 	padding: $padding 0;
-	overflow: hidden;
-	overflow-y: auto;
 	-webkit-overflow-scrolling:touch;
 
 	&.home {
@@ -396,6 +394,11 @@ input, textarea, select {
 
 	&.active {
 		display: block;
+	}
+
+	> .content {
+		overflow: hidden;
+		overflow-y: auto;
 	}
 
 	h1, h2, h3, h4 {

@@ -53,7 +53,7 @@ Page.Settings = new Class({
 			subtab = param;
 		});
 
-		self.el.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
+		self.content.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
 			active.removeClass(c);
 		});
 
@@ -83,7 +83,7 @@ Page.Settings = new Class({
 			Api.request('settings', {
 				'useSpinner': true,
 				'spinnerOptions': {
-					'target': self.el
+					'target': self.content
 				},
 				'onComplete': function(json){
 					self.data = json;
@@ -108,7 +108,7 @@ Page.Settings = new Class({
 		var self = this;
 
 		var c = self.advanced_toggle.checked ? 'addClass' : 'removeClass';
-		self.el[c]('show_advanced');
+		self.content[c]('show_advanced');
 
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
@@ -209,7 +209,7 @@ Page.Settings = new Class({
 		});
 
 		setTimeout(function(){
-			self.el.adopt(
+			self.content.adopt(
 				self.navigation,
 				self.tabs_container,
 				self.containers
