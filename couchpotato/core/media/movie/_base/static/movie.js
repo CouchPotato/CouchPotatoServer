@@ -267,7 +267,7 @@ var Movie = new Class({
 				eta_date = null;
 			}
 			else {
-				eta_date = eta_date.toLocaleString('en-us', { month: "short" }) + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : '');
+				eta_date = eta_date.format('%b') + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : '');
 			}
 		}
 
