@@ -385,20 +385,25 @@ input, textarea, select {
 	right: 0;
 	bottom: 0;
 	display: none;
-	padding: $padding 0;
-
-	&.home {
-		padding: 0 0 $padding;
-	}
 
 	&.active {
 		display: block;
 	}
 
 	> .content {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: $padding 0;
 		overflow: hidden;
 		overflow-y: auto;
 		-webkit-overflow-scrolling:touch;
+	}
+
+	&.home .content {
+		padding: 0 0 $padding;
 	}
 
 	h1, h2, h3, h4 {

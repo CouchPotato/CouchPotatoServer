@@ -565,10 +565,11 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .content h1,.content h2,.content h3{padding:0;margin:0}
 .content .pages{width:100%}
 .content .footer{position:fixed;bottom:0;height:20px;width:100%}
-.page{position:absolute;top:0;left:0;right:0;bottom:0;display:none;padding:20px 0}
-.page.home{padding:0 0 20px}
+.page,.page>.content{top:0;position:absolute;left:0;right:0;bottom:0}
+.page{display:none}
 .page.active{display:block}
-.page>.content{overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page>.content{padding:20px 0;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page.home .content{padding:0 0 20px}
 .page h1,.page h2,.page h3,.page h4{font-weight:300}
 .page h2{font-size:24px;padding:20px}
 .page .navigation{z-index:2;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;border-radius:3px 0 0}
