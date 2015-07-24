@@ -7,7 +7,7 @@
 		top: $header_width_mobile;
 	}
 
-	&.active .content {
+	&.active .scroll_content {
 		display: flex;
 
 		@include media-phablet {

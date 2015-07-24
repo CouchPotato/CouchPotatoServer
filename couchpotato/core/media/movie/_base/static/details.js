@@ -23,7 +23,7 @@ var MovieDetails = new Class({
 			}).grab(
 				new Element('a.close.icon-left-arrow')
 			),
-			self.content = new Element('div.content').grab(
+			self.content = new Element('div.scroll_content').grab(
 				new Element('div.head').adopt(
 					new Element('h1').grab(
 						self.title_dropdown = new BlockMenu(self, {

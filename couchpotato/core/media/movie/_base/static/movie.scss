@@ -512,7 +512,7 @@ $mass_edit_height: 44px;
 		}
 	}
 
-	.content {
+	.scroll_content {
 		position: fixed;
 		z-index: 2;
 		top: 0;
@@ -700,7 +700,7 @@ $mass_edit_height: 44px;
 			}
 		}
 
-		.content {
+		.scroll_content {
 			transition-delay: 200ms;
 			transform: translateX(0);
 		}

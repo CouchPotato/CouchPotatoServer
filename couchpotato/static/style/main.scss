@@ -77,7 +77,7 @@ input, textarea, select {
 	}
 }
 
-.disable_hover .content > * {
+.disable_hover .scroll_content > * {
 	pointer-events: none;
 }
 
@@ -390,19 +390,16 @@ input, textarea, select {
 		display: block;
 	}
 
-	> .content {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
+	> .scroll_content {
+		position: relative;
+		height: 100%;
 		padding: $padding 0;
 		overflow: hidden;
 		overflow-y: auto;
 		-webkit-overflow-scrolling:touch;
 	}
 
-	&.home .content {
+	&.home .scroll_content {
 		padding: 0 0 $padding;
 	}
 

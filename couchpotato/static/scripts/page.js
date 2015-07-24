@@ -24,7 +24,7 @@ var PageBase = new Class({
 		self.el = new Element('div', {
 			'class': 'page ' + self.getPageClass() + (' level_' + (options.level || 0))
 		}).grab(
-			self.content = new Element('div.content')
+			self.content = new Element('div.scroll_content')
 		);
 
 		// Stop hover events while scrolling
