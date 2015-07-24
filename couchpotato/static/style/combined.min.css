@@ -58,7 +58,7 @@
 }
 .mass_editing .page.movies_manage,.mass_editing .page.movies_wanted{top:124px}
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
-.movie input[type=checkbox]{display:none}
+.movie .ripple,.movie input[type=checkbox]{display:none}
 .with_navigation .movie input[type=checkbox]{display:inline-block;position:absolute;transition:opacity 200ms;opacity:0;z-index:2;cursor:pointer}
 .with_navigation .movie input[type=checkbox]:hover{opacity:1!important}
 .with_navigation .movie:hover input[type=checkbox]{opacity:.5}
@@ -123,7 +123,7 @@
 .thumb_list .movie{max-width:33.333%;border-width:0 5px}
 }
 @media (max-width:480px){.thumb_list{padding:0 3.33px}
-.thumb_list .movie{max-width:50%;border-width:0 4px}
+.thumb_list .movie{max-width:50%;width:50%;border-width:0 4px}
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
 .thumb_list .movie .poster{position:relative;border-radius:3px;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;width:100%;padding-bottom:150%}
@@ -511,8 +511,8 @@ a{display:inline-block;position:relative;overflow:hidden;text-decoration:none;cu
 input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#FFF;border:1px solid #b7b7b7}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
-.ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;-webkit-transform:translate(-50%,-50%)scale(1)translateZ(0);transform:translate(-50%,-50%)scale(1)translateZ(0);opacity:.2;transition:all 1.5s ease}
-.ripple.animate{-webkit-transform:translate(-50%,-50%)scale(100)translateZ(0);transform:translate(-50%,-50%)scale(100)translateZ(0);opacity:0}
+.ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;-webkit-transform:translate(-50%,-50%)scale(1)rotateZ(360deg);transform:translate(-50%,-50%)scale(1)rotateZ(360deg);opacity:.2;transition:all 1.5s ease;transition-property:opacity,-webkit-transform;transition-property:opacity,transform}
+.ripple.animate{-webkit-transform:translate(-50%,-50%)scale(100)rotateZ(360deg);transform:translate(-50%,-50%)scale(100)rotateZ(360deg);opacity:0}
 .header{width:132px;min-width:132px;position:relative;z-index:100}
 @media (max-width:480px){.header{width:44px;min-width:44px;z-index:21}
 }
@@ -567,7 +567,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .content .footer{position:fixed;bottom:0;height:20px;width:100%}
 .page{position:absolute;top:0;left:0;right:0;bottom:0;display:none}
 .page.active{display:block}
-.page>.scroll_content{position:relative;height:100%;padding:20px 0;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page>.scroll_content{position:relative;height:100%;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .page.home .scroll_content{padding:0 0 20px}
 .page h1,.page h2,.page h3,.page h4{font-weight:300}
 .page h2{font-size:24px;padding:20px}

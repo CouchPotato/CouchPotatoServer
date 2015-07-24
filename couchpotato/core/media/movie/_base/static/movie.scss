@@ -35,6 +35,10 @@ $mass_edit_height: 44px;
 }
 
 .movie {
+	.ripple {
+		display: none;
+	}
+
 	input[type=checkbox] {
 		display: none;
 	}
@@ -343,6 +347,7 @@ $mass_edit_height: 44px;
 
 		@include media-phablet {
 			max-width: 50%;
+			width: 50%;
 			border-width: 0 $padding/5;
 		}
 

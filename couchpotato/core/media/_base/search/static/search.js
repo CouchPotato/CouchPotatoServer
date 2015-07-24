@@ -11,8 +11,7 @@ var BlockSearch = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('a.icon-search', {
 				'events': {
-					'click': self.clear.bind(self),
-					'touchend': self.clear.bind(self)
+					'click': self.clear.bind(self)
 				}
 			}),
 			self.wrapper = new Element('div.wrapper').adopt(

@@ -66,13 +66,14 @@ input, textarea, select {
 	width: 10px;
 	border-radius: 50%;
 	background: $primary_color;
-	transform: translate(-50%, -50%) scale(1) translateZ(0);
+	transform: translate(-50%, -50%) scale(1) rotateZ(360deg);
 	opacity: 0.2;
 	transition: all 1.5s ease;
+	transition-property: opacity, transform;
 	pointer-events: none;
 
 	&.animate {
-		transform: translate(-50%, -50%) scale(100) translateZ(0);
+		transform: translate(-50%, -50%) scale(100) rotateZ(360deg);
 		opacity: 0;
 	}
 }
@@ -393,7 +394,6 @@ input, textarea, select {
 	> .scroll_content {
 		position: relative;
 		height: 100%;
-		padding: $padding 0;
 		overflow: hidden;
 		overflow-y: auto;
 		-webkit-overflow-scrolling:touch;
