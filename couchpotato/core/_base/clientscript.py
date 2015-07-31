@@ -1,6 +1,5 @@
 import os
 import re
-import traceback
 
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import ss
@@ -8,8 +7,6 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from minify.cssmin import cssmin
-from minify.jsmin import jsmin
 from tornado.web import StaticFileHandler
 
 
@@ -22,40 +19,18 @@ class ClientScript(Plugin):
 
     core_static = {
         'style': [
-            'style/main.css',
-            'style/uniform.generic.css',
-            'style/uniform.css',
-            'style/settings.css',
+            'style/combined.min.css',
         ],
         'script': [
-            'scripts/library/mootools.js',
-            'scripts/library/mootools_more.js',
-            'scripts/library/uniform.js',
-            'scripts/library/form_replacement/form_check.js',
-            'scripts/library/form_replacement/form_radio.js',
-            'scripts/library/form_replacement/form_dropdown.js',
-            'scripts/library/form_replacement/form_selectoption.js',
-            'scripts/library/question.js',
-            'scripts/library/scrollspy.js',
-            'scripts/library/spin.js',
-            'scripts/library/Array.stableSort.js',
-            'scripts/library/async.js',
-            'scripts/couchpotato.js',
-            'scripts/api.js',
-            'scripts/library/history.js',
-            'scripts/page.js',
-            'scripts/block.js',
-            'scripts/block/navigation.js',
-            'scripts/block/footer.js',
-            'scripts/block/menu.js',
-            'scripts/page/home.js',
-            'scripts/page/settings.js',
-            'scripts/page/about.js',
+            'scripts/combined.vendor.min.js',
+            'scripts/combined.base.min.js',
+            'scripts/combined.plugins.min.js',
         ],
     }
 
-    urls = {'style': {}, 'script': {}}
-    minified = {'style': {}, 'script': {}}
+    watches = {}
+
+    original_paths = {'style': {}, 'script': {}}
     paths = {'style': {}, 'script': {}}
     comment = {
         'style': '/*** %s:%d ***/\n',
@@ -74,8 +49,7 @@ class ClientScript(Plugin):
         addEvent('clientscript.get_styles', self.getStyles)
         addEvent('clientscript.get_scripts', self.getScripts)
 
-        if not Env.get('dev'):
-            addEvent('app.load', self.minify)
+        addEvent('app.load', self.compile)
 
         self.addCore()
 
@@ -91,7 +65,7 @@ class ClientScript(Plugin):
                 else:
                     self.registerStyle(core_url, file_path, position = 'front')
 
-    def minify(self):
+    def compile(self):
 
         # Create cache dir
         cache = Env.get('cache_dir')
@@ -102,47 +76,43 @@ class ClientScript(Plugin):
 
         for file_type in ['style', 'script']:
             ext = 'js' if file_type is 'script' else 'css'
-            positions = self.paths.get(file_type, {})
+            positions = self.original_paths.get(file_type, {})
             for position in positions:
                 files = positions.get(position)
-                self._minify(file_type, files, position, position + '.' + ext)
+                self._compile(file_type, files, position, position + '.' + ext)
 
-    def _minify(self, file_type, files, position, out):
+    def _compile(self, file_type, paths, position, out):
 
         cache = Env.get('cache_dir')
         out_name = out
-        out = os.path.join(cache, 'minified', out_name)
+        minified_dir = os.path.join(cache, 'minified')
 
-        raw = []
-        for file_path in files:
+        data_combined = ''
+
+        new_paths = []
+        for x in paths:
+            file_path, url_path = x
+
             f = open(file_path, 'r').read()
 
-            if file_type == 'script':
-                data = jsmin(f)
-            else:
-                data = self.prefix(f)
-                data = cssmin(data)
-                data = data.replace('../images/', '../static/images/')
-                data = data.replace('../fonts/', '../static/fonts/')
-                data = data.replace('../../static/', '../static/')  # Replace inside plugins
+            if not Env.get('dev'):
+                data = f
 
-            raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
+                data_combined += self.comment.get(file_type) % (ss(file_path), int(os.path.getmtime(file_path)))
+                data_combined += data + '\n\n'
+            else:
+                new_paths.append(x)
 
         # Combine all files together with some comments
-        data = ''
-        for r in raw:
-            data += self.comment.get(file_type) % (ss(r.get('file')), r.get('date'))
-            data += r.get('data') + '\n\n'
+        if not Env.get('dev'):
 
-        self.createFile(out, data.strip())
+            out_path = os.path.join(minified_dir, out_name)
+            self.createFile(out_path, data_combined.strip())
 
-        if not self.minified.get(file_type):
-            self.minified[file_type] = {}
-        if not self.minified[file_type].get(position):
-            self.minified[file_type][position] = []
+            minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
+            new_paths.append((out_path, {'url': minified_url}))
 
-        minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
-        self.minified[file_type][position].append(minified_url)
+        self.paths[file_type][position] = new_paths
 
     def getStyles(self, *args, **kwargs):
         return self.get('style', *args, **kwargs)
@@ -150,22 +120,12 @@ class ClientScript(Plugin):
     def getScripts(self, *args, **kwargs):
         return self.get('script', *args, **kwargs)
 
-    def get(self, type, as_html = False, location = 'head'):
+    def get(self, type, location = 'head'):
+        if type in self.paths and location in self.paths[type]:
+            paths = self.paths[type][location]
+            return [x[1] for x in paths]
 
-        data = '' if as_html else []
-
-        try:
-            try:
-                if not Env.get('dev'):
-                    return self.minified[type][location]
-            except:
-                pass
-
-            return self.urls[type][location]
-        except:
-            log.error('Error getting minified %s, %s: %s', (type, location, traceback.format_exc()))
-
-        return data
+        return []
 
     def registerStyle(self, api_path, file_path, position = 'head'):
         self.register(api_path, file_path, 'style', position)
@@ -177,36 +137,10 @@ class ClientScript(Plugin):
 
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
-        if not self.urls[type].get(location):
-            self.urls[type][location] = []
-        self.urls[type][location].append(api_path)
+        if not self.original_paths[type].get(location):
+            self.original_paths[type][location] = []
+        self.original_paths[type][location].append((file_path, api_path))
 
         if not self.paths[type].get(location):
             self.paths[type][location] = []
-        self.paths[type][location].append(file_path)
-
-    prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
-    prefix_tags = ['ms', 'moz', 'webkit']
-
-    def prefix(self, data):
-
-        trimmed_data = re.sub('(\t|\n|\r)+', '', data)
-
-        new_data = ''
-        colon_split = trimmed_data.split(';')
-        for splt in colon_split:
-            curl_split = splt.strip().split('{')
-            for curly in curl_split:
-                curly = curly.strip()
-                for prop in self.prefix_properties:
-                    if curly[:len(prop) + 1] == prop + ':':
-                        for tag in self.prefix_tags:
-                            new_data += ' -%s-%s; ' % (tag, curly)
-
-                new_data += curly + (' { ' if len(curl_split) > 1 else ' ')
-
-            new_data += '; '
-
-        new_data = new_data.replace('{ ;', '; ').replace('} ;', '} ')
-
-        return new_data
+        self.paths[type][location].append((file_path, api_path))

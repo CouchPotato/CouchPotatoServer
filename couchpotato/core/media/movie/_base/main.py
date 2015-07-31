@@ -224,11 +224,11 @@ class MovieBase(MovieTypeBase):
 
                 try:
                     m = db.get('id', media_id)
-                    m['profile_id'] = kwargs.get('profile_id')
+                    m['profile_id'] = kwargs.get('profile_id') or m['profile_id']
 
                     cat_id = kwargs.get('category_id')
                     if cat_id is not None:
-                        m['category_id'] = cat_id if len(cat_id) > 0 else None
+                        m['category_id'] = cat_id if len(cat_id) > 0 else m['category_id']
 
                     # Remove releases
                     for rel in fireEvent('release.for_media', m['_id'], single = True):
@@ -249,6 +249,7 @@ class MovieBase(MovieTypeBase):
                     fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
 
                 except:
+                    print traceback.format_exc()
                     log.error('Can\'t edit non-existing media')
 
             return {

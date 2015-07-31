@@ -23,8 +23,6 @@
 
 		self.c = $(document.body);
 
-		self.route = new Route(self.defaults);
-
 		self.createLayout();
 		self.createPages();
 
@@ -34,14 +32,45 @@
 			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
+		self.c.addEvent('click:relay(.header a, .navigation a, .movie_details a, .list_list .movie)', self.ripple.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 
 		// Check if device is touchenabled
 		self.touch_device = 'ontouchstart' in window || navigator.msMaxTouchPoints;
-		if(self.touch_device)
+		if(self.touch_device){
 			self.c.addClass('touch_enabled');
+			FastClick.attach(document.body);
+		}
 
+		window.addEvent('resize', self.resize.bind(self));
+		self.resize();
+
+	},
+
+	resize: function(){
+		var self = this;
+
+		self.mobile_screen = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) <= 480;
+		self.c[self.mobile_screen ? 'addClass' : 'removeClass']('mobile');
+	},
+
+	ripple: function(e, el){
+		var self = this,
+			button = el.getCoordinates(),
+			x = e.page.x - button.left,
+			y = e.page.y - button.top,
+			ripple = new Element('div.ripple', {
+				'styles': {
+					'left': x,
+					'top': y
+				}
+			});
+
+		ripple.inject(el);
+
+		setTimeout(function(){ ripple.addClass('animate'); }, 0);
+		setTimeout(function(){ ripple.dispose(); }, 2100);
 	},
 
 	getOption: function(name){
@@ -49,19 +78,19 @@
 			return this.options[name];
 		}
 		catch(e){
-			return null
+			return null;
 		}
 	},
 
-	pushState: function(e){
+	pushState: function(e, el){
 		var self = this;
 
-		if((!e.meta && self.isMac()) || (!e.control && !self.isMac())){
+		if((!e.meta && App.isMac()) || (!e.control && !App.isMac())){
 			(e).preventDefault();
-			var url = e.target.get('href');
+			var url = el.get('href');
 
 			// Middle click
-			if(e.event && e.event.button == 1)
+			if(e.event && e.event.button === 1)
 				window.open(url);
 			else if(History.getPath() != url)
 				History.push(url);
@@ -69,24 +98,25 @@
 	},
 
 	isMac: function(){
-		return Browser.platform == 'mac'
+		return Browser.platform == 'mac';
 	},
 
 	createLayout: function(){
 		var self = this;
 
-		self.block.header = new Block();
+		self.block.header = new BlockBase();
 
 		self.c.adopt(
 			$(self.block.header).addClass('header').adopt(
-				new Element('div').adopt(
-					self.block.navigation = new Block.Navigation(self, {}),
-					self.block.search = new Block.Search(self, {}),
-					self.block.more = new Block.Menu(self, {'button_class': 'icon2.cog'})
-				)
+				self.block.navigation = new BlockHeader(self, {}),
+				self.block.search = new BlockSearch(self, {}),
+				self.block.more = new BlockMenu(self, {'button_class': 'icon-settings'})
 			),
-			self.content = new Element('div.content'),
-			self.block.footer = new Block.Footer(self, {})
+			new Element('div.corner_background'),
+			self.content = new Element('div.content').adopt(
+				self.pages_container = new Element('div.pages'),
+				self.block.footer = new BlockFooter(self, {})
+			)
 		);
 
 		var setting_links = [
@@ -100,7 +130,6 @@
 					'click': self.checkForUpdate.bind(self, null)
 				}
 			}),
-			new Element('span.separator'),
 			new Element('a', {
 				'text': 'Settings',
 				'href': App.createUrl('settings/general')
@@ -109,7 +138,6 @@
 				'text': 'Logs',
 				'href': App.createUrl('log')
 			}),
-			new Element('span.separator'),
 			new Element('a', {
 				'text': 'Restart',
 				'events': {
@@ -125,19 +153,19 @@
 		];
 
 		setting_links.each(function(a){
-			self.block.more.addLink(a)
+			self.block.more.addLink(a);
 		});
 
 
 		new ScrollSpy({
 			min: 10,
 			onLeave: function(){
-				$(self.block.header).removeClass('with_shadow')
+				$(self.block.header).removeClass('with_shadow');
 			},
 			onEnter: function(){
-				$(self.block.header).addClass('with_shadow')
+				$(self.block.header).addClass('with_shadow');
 			}
-		})
+		});
 	},
 
 	createPages: function(){
@@ -145,7 +173,9 @@
 
 		var pages = [];
 		Object.each(Page, function(page_class, class_name){
-			var pg = new Page[class_name](self, {});
+			var pg = new Page[class_name](self, {
+				'level': 1
+			});
 			self.pages[class_name] = pg;
 
 			pages.include({
@@ -158,28 +188,29 @@
 		pages.stableSort(self.sortPageByOrder).each(function(page){
 			page['class'].load();
 			self.fireEvent('load'+page.name);
-			$(page['class']).inject(self.content);
+			$(page['class']).inject(self.getPageContainer());
 		});
-
-		delete pages;
 
 		self.fireEvent('load');
 
 	},
 
 	sortPageByOrder: function(a, b){
-		return (a.order || 100) - (b.order || 100)
+		return (a.order || 100) - (b.order || 100);
 	},
 
 	openPage: function(url) {
-		var self = this;
+		var self = this,
+			route = new Route(self.defaults);
 
-		self.route.parse();
-		var page_name = self.route.getPage().capitalize();
-		var action = self.route.getAction();
-		var params = self.route.getParams();
+		route.parse(rep(History.getPath()));
 
-		var current_url = self.route.getCurrentUrl();
+		var page_name = route.getPage().capitalize(),
+			action = route.getAction(),
+			params = route.getParams(),
+			current_url = route.getCurrentUrl(),
+			page;
+
 		if(current_url == self.current_url)
 			return;
 
@@ -187,12 +218,12 @@
 			self.current_page.hide();
 
 		try {
-			var page = self.pages[page_name] || self.pages.Home;
+			page = self.pages[page_name] || self.pages.Home;
 			page.open(action, params, current_url);
 			page.show();
 		}
 		catch(e){
-			console.error("Can't open page:" + url, e)
+			console.error("Can't open page:" + url, e);
 		}
 
 		self.current_page = page;
@@ -201,11 +232,15 @@
 	},
 
 	getBlock: function(block_name){
-		return this.block[block_name]
+		return this.block[block_name];
 	},
 
 	getPage: function(name){
-		return this.pages[name]
+		return this.pages[name];
+	},
+
+	getPageContainer: function(){
+		return this.pages_container;
 	},
 
 	shutdown: function(){
@@ -281,7 +316,7 @@
 			var onFailure = function(){
 				self.checkAvailable.delay(1000, self, [delay, onAvailable]);
 				self.fireEvent('unload');
-			}
+			};
 
 			var request = Api.request('app.available', {
 				'timeout': 2000,
@@ -298,7 +333,7 @@
 				}
 			});
 
-		}).delay(delay || 0)
+		}).delay(delay || 0);
 	},
 
 	blockPage: function(message, title){
@@ -306,28 +341,30 @@
 
 		self.unBlockPage();
 
-		self.mask = new Element('div.mask').adopt(
-			new Element('div').adopt(
+		self.mask = new Element('div.mask.with_message').adopt(
+			new Element('div.message').adopt(
 				new Element('h1', {'text': title || 'Unavailable'}),
 				new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
 			)
-		).fade('hide').inject(document.body).fade('in');
+		).inject(document.body);
 
-		createSpinner(self.mask, {
-			'top': -50
-		});
+		createSpinner(self.mask);
+
+		setTimeout(function(){
+			self.mask.addClass('show');
+		}, 10);
 	},
 
 	unBlockPage: function(){
 		var self = this;
 		if(self.mask)
 			self.mask.get('tween').start('opacity', 0).chain(function(){
-				this.element.destroy()
+				this.element.destroy();
 			});
 	},
 
 	createUrl: function(action, params){
-		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '');
 	},
 
 	openDerefered: function(e, el){
@@ -356,15 +393,17 @@
 			new Element('span.bookmarklet').adopt(
 				new Element('a.button.orange', {
 					'text': '+CouchPotato',
+					/* jshint ignore:start */
 					'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
 							host_url + Api.createUrl('userscript.bookmark') +
 							"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
 					 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+					/* jshint ignore:end */
 					'target': '',
 					'events': {
 						'click': function(e){
 							(e).stop();
-							alert('Drag it to your bookmark ;)')
+							alert('Drag it to your bookmark ;)');
 						}
 					}
 				}),
@@ -399,22 +438,14 @@
 		}
 
 		// Create parallel callback
-		var callbacks = [];
 		self.global_events[name].each(function(handle){
 
-			callbacks.push(function(callback){
+			setTimeout(function(){
 				var results = handle.apply(handle, args || []);
-				callback(null, results || null);
-			});
 
-		});
-
-		// Fire events
-		async.parallel(callbacks, function(err, results){
-			if(err) p(err);
-
-			if(on_complete)
-				on_complete(results);
+				if(on_complete)
+					on_complete(results);
+			}, 0);
 		});
 
 	},
@@ -440,77 +471,72 @@ window.App = new CouchPotato();
 
 var Route = new Class({
 
-	defaults: {},
+	defaults: null,
 	page: '',
 	action: 'index',
 	params: {},
 
 	initialize: function(defaults){
 		var self = this;
-		self.defaults = defaults
+		self.defaults = defaults || {};
 	},
 
-	parse: function(){
+	parse: function(path){
 		var self = this;
 
-		var rep = function (pa) {
-			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
-		};
-
-		var path = rep(History.getPath());
 		if(path == '/' && location.hash){
-			path = rep(location.hash.replace('#', '/'))
+			path = rep(location.hash.replace('#', '/'));
 		}
 		self.current = path.replace(/^\/+|\/+$/g, '');
 		var url = self.current.split('/');
 
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page;
-		self.action = (url.length > 0) ? url.shift() : self.defaults.action;
+		self.action = (url.length > 0) ? url.join('/') : self.defaults.action;
 
 		self.params = Object.merge({}, self.defaults.params);
 		if(url.length > 1){
 			var key;
 			url.each(function(el, nr){
-				if(nr%2 == 0)
+				if(nr%2 === 0)
 					key = el;
 				else if(key) {
 					self.params[key] = el;
-					key = null
+					key = null;
 				}
-			})
+			});
 		}
 		else if(url.length == 1){
 			self.params[url] = true;
 		}
 
-		return self
+		return self;
 	},
 
 	getPage: function(){
-		return this.page
+		return this.page;
 	},
 
 	getAction: function(){
-		return this.action
+		return this.action;
 	},
 
 	getParams: function(){
-		return this.params
+		return this.params;
 	},
 
 	getCurrentUrl: function(){
-		return this.current
+		return this.current;
 	},
 
 	get: function(param){
-		return this.params[param]
+		return this.params[param];
 	}
 
 });
 
 var p = function(){
-	if(typeof(console) !== 'undefined' && console != null)
-		console.log(arguments)
+	if(typeof(console) !== 'undefined' && console !== null)
+		console.log(arguments);
 };
 
 
@@ -553,14 +579,14 @@ var p = function(){
 
 
 function randomString(length, extra) {
-	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz" + (extra ? '-._!@#$%^&*()+=' : '');
-	var stringLength = length || 8;
-	var randomString = '';
-	for (var i = 0; i < stringLength; i++) {
+	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz" + (extra ? '-._!@#$%^&*()+=' : ''),
+		string_length = length || 8,
+		random_string = '';
+	for (var i = 0; i < string_length; i++) {
 		var rnum = Math.floor(Math.random() * chars.length);
-		randomString += chars.charAt(rnum);
+		random_string += chars.charAt(rnum);
 	}
-	return randomString;
+	return random_string;
 }
 
 (function(){
@@ -576,7 +602,7 @@ function randomString(length, extra) {
 
 	var valueOf = function(object, path) {
 		var ptr = object;
-		path.each(function(key) { ptr = ptr[key] });
+		path.each(function(key) { ptr = ptr[key]; });
 		return ptr;
 	};
 
@@ -606,22 +632,12 @@ function randomString(length, extra) {
 
 })();
 
-var createSpinner = function(target, options){
-	var opts = Object.merge({
-		lines: 12,
-		length: 5,
-		width: 4,
-		radius: 9,
-		color: '#fff',
-		speed: 1.9,
-		trail: 53,
-		shadow: false,
-		hwaccel: true,
-		className: 'spinner',
-		zIndex: 2e9,
-		top: 'auto',
-		left: 'auto'
-	}, options);
+var createSpinner = function(container){
+	var spinner = new Element('div.spinner');
+	container.grab(spinner);
+	return spinner;
+};
 
-	return new Spinner(opts).spin(target);
+var rep = function (pa) {
+	return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/');
 };

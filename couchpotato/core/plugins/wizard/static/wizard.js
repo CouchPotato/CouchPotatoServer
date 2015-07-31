@@ -41,7 +41,7 @@ Page.Wizard = new Class({
 			'content': function(){
 				return App.createUserscriptButtons().setStyles({
 					'background-image': "url('https://couchpota.to/media/images/userscript.gif')"
-				})
+				});
 			}
 		},
 		'finish': {
@@ -103,7 +103,7 @@ Page.Wizard = new Class({
 			(function(){
 				var sc = self.el.getElement('.wgroup_'+action);
 				self.scroll.start(0, sc.getCoordinates().top-80);
-			}).delay(1)
+			}).delay(1);
 	},
 
 	orderGroups: function(){
@@ -114,8 +114,9 @@ Page.Wizard = new Class({
 
 		self.groups.each(function(group){
 
+			var group_container;
 			if(self.headers[group]){
-				var group_container = new Element('.wgroup_'+group, {
+				group_container = new Element('.wgroup_'+group, {
 					'styles': {
 						'opacity': 0.2
 					},
@@ -127,7 +128,7 @@ Page.Wizard = new Class({
 				if(self.headers[group].include){
 					self.headers[group].include.each(function(inc){
 						group_container.addClass('wgroup_'+inc);
-					})
+					});
 				}
 
 				var content = self.headers[group].content;
@@ -148,7 +149,7 @@ Page.Wizard = new Class({
 				tab_navigation = [];
 				self.headers[group].include.each(function(inc){
 					tab_navigation.include(tabs.getElement('.t_'+inc));
-				})
+				});
 			}
 
 			if(tab_navigation && group_container){
@@ -165,7 +166,7 @@ Page.Wizard = new Class({
 							'href': App.createUrl('wizard/'+group),
 							'text': (self.headers[group].label || group).capitalize()
 						})
-					).inject(tabs)
+					).inject(tabs);
 
 				}
 				else
@@ -190,7 +191,7 @@ Page.Wizard = new Class({
 			}
 
 			if(self.headers[group] && self.headers[group].event)
-				self.headers[group].event.call()
+				self.headers[group].event.call();
 		});
 
 		// Remove toggle
@@ -220,22 +221,22 @@ Page.Wizard = new Class({
 				g.tween('opacity', 1);
 			};
 
-			if(nr == 0)
+			if(nr === 0)
 				func();
 
 			new ScrollSpy( {
 				min: function(){
 					var c = g.getCoordinates();
 					var top = c.top-(window.getSize().y/2);
-					return top > minimum ? minimum : top
+					return top > minimum ? minimum : top;
 				},
 				max: function(){
 					var c = g.getCoordinates();
-					return c.top+(c.height/2)
+					return c.top+(c.height/2);
 				},
 				onEnter: func,
 				onLeave: function(){
-					g.tween('opacity', 0.2)
+					g.tween('opacity', 0.2);
 				}
 			});
 		});

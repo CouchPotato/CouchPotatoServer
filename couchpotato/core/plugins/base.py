@@ -32,7 +32,7 @@ class Plugin(object):
     plugin_path = None
 
     enabled_option = 'enabled'
-    auto_register_static = True
+    auto_register_static = False
 
     _needs_shutdown = False
     _running = None
@@ -145,7 +145,7 @@ class Plugin(object):
                 f.close()
                 os.chmod(path, Env.getPermission('file'))
             except:
-                log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
+                log.error('Unable to write file "%s": %s', (path, traceback.format_exc()))
                 if os.path.isfile(path):
                     os.remove(path)
 

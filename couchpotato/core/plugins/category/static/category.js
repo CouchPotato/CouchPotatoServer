@@ -52,7 +52,7 @@ var CategoryListBase = new Class({
 
 			});
 
-		})
+		});
 
 	},
 
@@ -71,7 +71,7 @@ var CategoryListBase = new Class({
 				'events': {
 					'click': function(){
 						var category = self.createCategory();
-						$(category).inject(self.category_container)
+						$(category).inject(self.category_container);
 					}
 				}
 			})
@@ -79,15 +79,15 @@ var CategoryListBase = new Class({
 
 		// Add categories, that aren't part of the core (for editing)
 		Array.each(self.categories, function(category){
-			$(category).inject(self.category_container)
+			$(category).inject(self.category_container);
 		});
 
 	},
 
 	getCategory: function(id){
 		return this.categories.filter(function(category){
-			return category.data._id == id
-		}).pick()
+			return category.data._id == id;
+		}).pick();
 	},
 
 	getAll: function(){
@@ -97,7 +97,7 @@ var CategoryListBase = new Class({
 	createCategory: function(data){
 		var self = this;
 
-		var data = data || {'id': randomString()};
+		data = data || {'id': randomString()};
 		var category = new Category(data);
 		self.categories.include(category);
 
@@ -125,7 +125,7 @@ var CategoryListBase = new Class({
 				new Element('span.category_label', {
 					'text': category.data.label
 				}),
-				new Element('span.handle')
+				new Element('span.handle.icon-handle')
 			).inject(category_list);
 
 		});
@@ -192,7 +192,7 @@ var Category = new Class({
 			}),
 			new Element('.category_label.ctrlHolder').adopt(
 				new Element('label', {'text':'Name'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.label,
 					'placeholder': 'Example: Kids, Horror or His'
@@ -201,7 +201,7 @@ var Category = new Class({
 			),
 			new Element('.category_preferred.ctrlHolder').adopt(
 				new Element('label', {'text':'Preferred'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.preferred,
 					'placeholder': 'Blu-ray, DTS'
@@ -209,7 +209,7 @@ var Category = new Class({
 			),
 			new Element('.category_required.ctrlHolder').adopt(
 				new Element('label', {'text':'Required'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.required,
 					'placeholder': 'Example: DTS, AC3 & English'
@@ -217,7 +217,7 @@ var Category = new Class({
 			),
 			new Element('.category_ignored.ctrlHolder').adopt(
 				new Element('label', {'text':'Ignored'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.ignored,
 					'placeholder': 'Example: dubbed, swesub, french'
@@ -225,7 +225,7 @@ var Category = new Class({
 			)
 		);
 
-		self.makeSortable()
+		self.makeSortable();
 
 	},
 
@@ -248,7 +248,7 @@ var Category = new Class({
 				}
 			});
 
-		}).delay(delay || 0, self)
+		}).delay(delay || 0, self);
 
 	},
 
@@ -262,13 +262,13 @@ var Category = new Class({
 			'preferred' : self.el.getElement('.category_preferred input').get('value'),
 			'ignored' : self.el.getElement('.category_ignored input').get('value'),
 			'destination': self.data.destination
-		}
+		};
 	},
 
 	del: function(){
 		var self = this;
 
-		if(self.data.label == undefined){
+		if(self.data.label === undefined){
 			self.el.destroy();
 			return;
 		}
@@ -318,11 +318,11 @@ var Category = new Class({
 	},
 
 	get: function(attr){
-		return this.data[attr]
+		return this.data[attr];
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 
 });

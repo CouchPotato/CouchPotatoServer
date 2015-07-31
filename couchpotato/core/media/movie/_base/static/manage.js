@@ -1,4 +1,4 @@
-Page.Manage = new Class({
+var MoviesManage = new Class({
 
 	Extends: PageBase,
 
@@ -33,7 +33,7 @@ Page.Manage = new Class({
 					'release_status': 'done',
 					'status_or': 1
 				},
-				'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Readd, MA.Edit, MA.Delete],
+				'actions': [MA.IMDB, MA.Files, MA.Trailer, MA.Readd, MA.Delete],
 				'menu': [self.refresh_button, self.refresh_quick],
 				'on_empty_element': new Element('div.empty_manage').adopt(
 					new Element('div', {
@@ -59,7 +59,7 @@ Page.Manage = new Class({
 					)
 				)
 			});
-			$(self.list).inject(self.el);
+			$(self.list).inject(self.content);
 
 			// Check if search is in progress
 			self.startProgressInterval();
@@ -126,12 +126,12 @@ Page.Manage = new Class({
 									(folder_progress.eta > 0 ? ', ' + new Date ().increment('second', folder_progress.eta).timeDiffInWords().replace('from now', 'to go') : '')
 								}),
 								new Element('span.percentage', {'text': folder_progress.total ? Math.round(((folder_progress.total-folder_progress.to_go)/folder_progress.total)*100) + '%' : '0%'})
-							).inject(self.progress_container)
+							).inject(self.progress_container);
 						});
 
 					}
 				}
-			})
+			});
 
 		}, 1000);
 	},
@@ -141,10 +141,10 @@ Page.Manage = new Class({
 
 		for (folder in progress_object) {
 			if (progress_object.hasOwnProperty(folder)) {
-				temp_array.push(folder)
+				temp_array.push(folder);
 			}
 		}
-		return temp_array.stableSort()
+		return temp_array.stableSort();
 	}
 
 });

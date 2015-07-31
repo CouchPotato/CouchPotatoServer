@@ -1,4 +1,4 @@
-Page.Wanted = new Class({
+var MoviesWanted = new Class({
 
 	Extends: PageBase,
 
@@ -10,7 +10,7 @@ Page.Wanted = new Class({
 	indexAction: function(){
 		var self = this;
 
-		if(!self.wanted){
+		if(!self.list){
 
 			self.manual_search = new Element('a', {
 				'title': 'Force a search for the full wanted list',
@@ -19,7 +19,6 @@ Page.Wanted = new Class({
 					'click': self.doFullSearch.bind(self, true)
 				}
 			});
-
 
             self.scan_folder = new Element('a', {
                 'title': 'Scan a folder and rename all movies in it',
@@ -30,15 +29,15 @@ Page.Wanted = new Class({
             });
 
 			// Wanted movies
-			self.wanted = new MovieList({
+			self.list = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
-				'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Edit, MA.Refresh, MA.Readd, MA.Delete],
+				'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
 				'add_new': true,
 				'menu': [self.manual_search, self.scan_folder],
 				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
 			});
-			$(self.wanted).inject(self.el);
+			$(self.list).inject(self.content);
 
 			// Check if search is in progress
 			self.startProgressInterval.delay(4000, self);
@@ -91,7 +90,7 @@ Page.Wanted = new Class({
         };
 
         if(!self.folder_browser){
-            self.folder_browser = new Option['Directory']("Scan", "folder", "", options);
+            self.folder_browser = new Option.Directory("Scan", "folder", "", options);
 
             self.folder_browser.save = function() {
                 var folder = self.folder_browser.getValue();
@@ -102,7 +101,7 @@ Page.Wanted = new Class({
 				});
             };
 
-            self.folder_browser.inject(self.el, 'top');
+            self.folder_browser.inject(self.content, 'top');
             self.folder_browser.fireEvent('injected');
 
             // Hide the settings box

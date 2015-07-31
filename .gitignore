@@ -3,3 +3,5 @@
 /_source/
 .project
 .pydevproject
+node_modules
+.tmp

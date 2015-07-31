@@ -8,20 +8,19 @@ Page.Log = new Class({
 	has_tab: false,
 
 	log_items: [],
-	report_text: '\
-### Steps to reproduce:\n\
-1. ..\n\
-2. ..\n\
-\n\
-### Information:\n\
-Movie(s) I have this with: ...\n\
-Quality of the movie being searched: ...\n\
-Providers I use: ...\n\
-Version of CouchPotato: {version}\n\
-Running on: ...\n\
-\n\
-### Logs:\n\
-```\n{issue}```',
+	report_text: '### Steps to reproduce:\n'+
+				'1. ..\n'+
+				'2. ..\n'+
+				'\n'+
+				'### Information:\n'+
+				'Movie(s) I have this with: ...\n'+
+				'Quality of the movie being searched: ...\n'+
+				'Providers I use: ...\n'+
+				'Version of CouchPotato: {version}\n'+
+				'Running on: ...\n'+
+				'\n'+
+				'### Logs:\n'+
+				'```\n{issue}```',
 
 	indexAction: function () {
 		var self = this;
@@ -34,6 +33,7 @@ Running on: ...\n\
 		var self = this;
 
 		if (self.log) self.log.destroy();
+
 		self.log = new Element('div.container.loading', {
 			'text': 'loading...',
 			'events': {
@@ -41,7 +41,7 @@ Running on: ...\n\
 					self.showSelectionButton.delay(100, self, e);
 				}
 			}
-		}).inject(self.el);
+		}).inject(self.content);
 
 		Api.request('logging.get', {
 			'data': {
@@ -53,13 +53,20 @@ Running on: ...\n\
 				self.log.adopt(self.log_items);
 				self.log.removeClass('loading');
 
+				var navigation = new Element('div.navigation').adopt(
+					new Element('h2[text=Logs]'),
+					new Element('div.hint', {
+						'text': 'Select multiple lines & report an issue'
+					})
+				);
+
 				var nav = new Element('ul.nav', {
 					'events': {
 						'click:relay(li.select)': function (e, el) {
 							self.getLogs(parseInt(el.get('text')) - 1);
 						}
 					}
-				});
+				}).inject(navigation);
 
 				// Type selection
 				new Element('li.filter').grab(
@@ -67,7 +74,7 @@ Running on: ...\n\
 						'events': {
 							'change': function () {
 								var type_filter = this.getSelected()[0].get('value');
-								self.el.set('data-filter', type_filter);
+								self.content.set('data-filter', type_filter);
 								self.scrollToBottom();
 							}
 						}
@@ -102,13 +109,8 @@ Running on: ...\n\
 					}
 				}).inject(nav);
 
-				// Hint
-				new Element('li.hint', {
-					'text': 'Select multiple lines & report an issue'
-				}).inject(nav);
-
 				// Add to page
-				nav.inject(self.log, 'top');
+				navigation.inject(self.content, 'top');
 
 				self.scrollToBottom();
 			}
@@ -133,14 +135,14 @@ Running on: ...\n\
 				new Element('span.message', {
 					'text': log.message
 				})
-			))
+			));
 		});
 
 		return elements;
 	},
 
 	scrollToBottom: function () {
-		new Fx.Scroll(window, {'duration': 0}).toBottom();
+		new Fx.Scroll(this.el, {'duration': 0}).toBottom();
 	},
 
 	showSelectionButton: function(e){
@@ -213,7 +215,7 @@ Running on: ...\n\
 				.replace('{version}', version ? version.version.repr : '...'),
 			textarea;
 
-		var overlay = new Element('div.report', {
+		var overlay = new Element('div.mask.report_popup', {
 			'method': 'post',
 			'events': {
 				'click': function(e){
@@ -270,7 +272,7 @@ Running on: ...\n\
 			)
 		);
 
-		overlay.inject(self.log);
+		overlay.inject(document.body);
 	},
 
 	getSelected: function(){
