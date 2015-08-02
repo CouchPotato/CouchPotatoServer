@@ -25,7 +25,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, page, cats):
         return (
-            tryUrlencode('"%s"' % fireEvent('media.search_query', media, single = True)),
+            tryUrlencode('"%s"' % fireEvent('library.query', media, single = True)),
             page,
             ','.join(str(x) for x in cats)
         )
@@ -40,7 +40,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, page, cats):
         return (
-            tryUrlencode('"%s"' % fireEvent('media.search_query', media, single = True)),
+            tryUrlencode('"%s"' % fireEvent('library.query', media, single = True)),
             page,
             ','.join(str(x) for x in cats)
         )

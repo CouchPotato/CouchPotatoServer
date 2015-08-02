@@ -40,8 +40,21 @@ class Base(MatcherBase):
                 if len(value) <= 1:
                     value = value[0]
                 else:
-                    log.warning('Wrong: identifier contains multiple season or episode values, unsupported')
-                    return None
+                    # It might contain multiple season or episode values, but
+                    # there's a chance that it contains the same identifier
+                    # multiple times.
+                    x, y = None, None
+                    for y in value:
+                        y = tryInt(y, None)
+                        if x is None:
+                            x = y
+                        elif x is None or y is None or x != y:
+                            break
+                    if x is not None and y is not None and x == y:
+                        value = value[0]
+                    else:
+                        log.warning('Wrong: identifier contains multiple season or episode values, unsupported: %s' % repr(value))
+                        return None
 
             identifier[key] = tryInt(value, value)
 

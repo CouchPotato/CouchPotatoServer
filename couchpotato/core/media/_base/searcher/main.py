@@ -1,12 +1,15 @@
 import datetime
 import re
+import time
 
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import splitString, removeEmpty, removeDuplicate
+from couchpotato.core.helpers.variable import splitString, removeEmpty, removeDuplicate, getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
+from couchpotato.environment import Env
 
 
 log = CPLog(__name__)
@@ -16,12 +19,6 @@ class Searcher(SearcherBase):
 
     # noinspection PyMissingConstructor
     def __init__(self):
-        addEvent('searcher.protocols', self.getSearchProtocols)
-        addEvent('searcher.contains_other_quality', self.containsOtherQuality)
-        addEvent('searcher.correct_3d', self.correct3D)
-        addEvent('searcher.correct_year', self.correctYear)
-        addEvent('searcher.correct_name', self.correctName)
-        addEvent('searcher.correct_words', self.correctWords)
         addEvent('searcher.search', self.search)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
@@ -223,6 +220,169 @@ class Searcher(SearcherBase):
             return False
 
         return True
+
+    def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):
+        raise NotImplementedError
+
+    def couldBeReleased(self, is_pre_release, dates, media):
+        raise NotImplementedError
+
+    def getTitle(self, media):
+        return getTitle(media)
+
+    def getProfileId(self, media):
+        # Required because the profile_id for an show episode is stored with
+        # the show, not the episode.
+        raise NotImplementedError
+
+    def single(self, media, search_protocols = None, manual = False, force_download = False, notify = True):
+
+        # Find out search type
+        try:
+            if not search_protocols:
+                search_protocols = self.getSearchProtocols()
+        except SearchSetupError:
+            return
+
+        db = get_db()
+        profile = db.get('id', self.getProfileId(media))
+
+        if not profile or (media['status'] == 'done' and not manual):
+            log.debug('Media does not have a profile or already done, assuming in manage tab.')
+            fireEvent('media.restatus', media['_id'], single = True)
+            return
+
+        default_title = self.getTitle(media)
+        if not default_title:
+            log.error('No proper info found for media, removing it from library to stop it from causing more issues.')
+            fireEvent('media.delete', media['_id'], single = True)
+            return
+
+        # Update media status and check if it is still not done (due to the stop searching after feature
+        if fireEvent('media.restatus', media['_id'], single = True) == 'done':
+            log.debug('No better quality found, marking media %s as done.', default_title)
+
+        pre_releases = fireEvent('quality.pre_releases', single = True)
+        release_dates = fireEvent('media.update_release_dates', media['_id'], merge = True)
+
+        found_releases = []
+        previous_releases = media.get('releases', [])
+        too_early_to_search = []
+        outside_eta_results = 0
+        always_search = self.conf('always_search')
+        ignore_eta = manual
+        total_result_count = 0
+
+        if notify:
+            fireEvent('notify.frontend', type = '%s.searcher.started' % self._type, data = {'_id': media['_id']}, message = 'Searching for "%s"' % default_title)
+
+        # Ignore eta once every 7 days
+        if not always_search:
+            prop_name = 'last_ignored_eta.%s' % media['_id']
+            last_ignored_eta = float(Env.prop(prop_name, default = 0))
+            if last_ignored_eta < time.time() - 604800:
+                ignore_eta = True
+                Env.prop(prop_name, value = time.time())
+
+        ret = False
+
+        for index, q_identifier in enumerate(profile.get('qualities', [])):
+            quality_custom = {
+                'index': index,
+                'quality': q_identifier,
+                'finish': profile['finish'][index],
+                'wait_for': tryInt(profile['wait_for'][index]),
+                '3d': profile['3d'][index] if profile.get('3d') else False,
+                'minimum_score': profile.get('minimum_score', 1),
+            }
+
+            could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, media)
+            if not always_search and could_not_be_released:
+                too_early_to_search.append(q_identifier)
+
+                # Skip release, if ETA isn't ignored
+                if not ignore_eta:
+                    continue
+
+            has_better_quality = 0
+
+            # See if better quality is available
+            for release in media.get('releases', []):
+                if release['status'] not in ['available', 'ignored', 'failed']:
+                    is_higher = fireEvent('quality.ishigher', \
+                            {'identifier': q_identifier, 'is_3d': quality_custom.get('3d', 0)}, \
+                            {'identifier': release['quality'], 'is_3d': release.get('is_3d', 0)}, \
+                            profile, single = True)
+                    if is_higher != 'higher':
+                        has_better_quality += 1
+
+            # Don't search for quality lower then already available.
+            if has_better_quality > 0:
+                log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
+                fireEvent('media.restatus', media['_id'], single = True)
+                break
+
+            quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+            log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if always_search or ignore_eta else ''))
+
+            # Extend quality with profile customs
+            quality['custom'] = quality_custom
+
+            results = fireEvent('searcher.search', search_protocols, media, quality, single = True) or []
+
+            # Check if media isn't deleted while searching
+            if not fireEvent('media.get', media.get('_id'), single = True):
+                break
+
+            # Add them to this media releases list
+            found_releases += fireEvent('release.create_from_search', results, media, quality, single = True)
+            results_count = len(found_releases)
+            total_result_count += results_count
+            if results_count == 0:
+                log.debug('Nothing found for %s in %s', (default_title, quality['label']))
+
+            # Keep track of releases found outside ETA window
+            outside_eta_results += results_count if could_not_be_released else 0
+
+            # Don't trigger download, but notify user of available releases
+            if could_not_be_released and results_count > 0:
+                log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
+
+            # Try find a valid result and download it
+            if (force_download or not could_not_be_released or always_search) and fireEvent('release.try_download_result', results, media, quality_custom, single = True):
+                ret = True
+
+            # Remove releases that aren't found anymore
+            temp_previous_releases = []
+            for release in previous_releases:
+                if release.get('status') == 'available' and release.get('identifier') not in found_releases:
+                    fireEvent('release.delete', release.get('_id'), single = True)
+                else:
+                    temp_previous_releases.append(release)
+            previous_releases = temp_previous_releases
+            del temp_previous_releases
+
+            # Break if CP wants to shut down
+            if self.shuttingDown() or ret:
+                break
+
+        if total_result_count > 0:
+            fireEvent('media.tag', media['_id'], 'recent', update_edited = True, single = True)
+
+        if len(too_early_to_search) > 0:
+            log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+
+            if outside_eta_results > 0:
+                message = 'Found %s releases for "%s" before ETA. Select and download via the dashboard.' % (outside_eta_results, default_title)
+                log.info(message)
+
+                if not manual:
+                    fireEvent('media.available', message = message, data = {})
+
+        if notify:
+            fireEvent('notify.frontend', type = '%s.searcher.ended' % self._type, data = {'_id': media['_id']})
+
+        return ret
 
 class SearchSetupError(Exception):
     pass

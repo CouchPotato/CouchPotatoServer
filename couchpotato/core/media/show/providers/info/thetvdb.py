@@ -129,6 +129,7 @@ class TheTVDb(ShowProvider):
                 season_number = int(season_number)
             except: return None
 
+        identifier = tryInt(identifier)
         cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_number)
         log.debug('Getting EpisodeInfo: %s', cache_key)
         result = self.getCache(cache_key) or {}
@@ -136,7 +137,7 @@ class TheTVDb(ShowProvider):
             return result
 
         try:
-            show = self.tvdb[int(identifier)]
+            show = self.tvdb[identifier]
         except (tvdb_exceptions.tvdb_error, IOError), e:
             log.error('Failed parsing TheTVDB EpisodeInfo for "%s" id "%s": %s', (show, identifier, traceback.format_exc()))
             return False
@@ -263,9 +264,12 @@ class TheTVDb(ShowProvider):
         except:
             pass
 
+        identifier = tryInt(
+            show['id'] if show.get('id') else show[number][1]['seasonid'])
+
         season_data = {
             'identifiers': {
-                'thetvdb': show['id'] if show.get('id') else show[number][1]['seasonid']
+                'thetvdb': identifier
             },
             'number': tryInt(number),
             'images': {
