@@ -15,7 +15,8 @@ class Trakt(ShowProvider, TraktBase):
         addEvent('show.search', self.search, priority = 1)
 
     def search(self, q, limit = 12):
-        if self.isDisabled():
+        if self.isDisabled() or not self.conf('enabled', section='shows'):
+            log.debug('Not searching for show: %s', q)
             return False
 
         # Search
