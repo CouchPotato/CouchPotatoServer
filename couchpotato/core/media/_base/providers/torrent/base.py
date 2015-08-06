@@ -17,6 +17,9 @@ class TorrentProvider(YarrProvider):
     proxy_domain = None
     proxy_list = []
 
+    def __init__(self):
+        self.addSupportedMediaType('torrent')
+
     def imdbMatch(self, url, imdbId):
         if getImdb(url) == imdbId:
             return True

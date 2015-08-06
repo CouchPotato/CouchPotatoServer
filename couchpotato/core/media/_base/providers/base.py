@@ -4,6 +4,7 @@ import re
 import time
 import traceback
 import xml.etree.ElementTree as XMLTree
+import inspect
 
 try:
     from xml.etree.ElementTree import ParseError as XmlParseError
@@ -129,6 +130,46 @@ class YarrProvider(Provider):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
         addEvent('provider.search.%s.%s' % (self.protocol, self.type), self.search)
+
+    # The frontend requires the supported media types to be known for every
+    # torrent and nzb provider in order for the user to select the appropriate
+    # provider for the content he or she whishes to consume.
+    def addSupportedMediaType(self, module):
+        section = None
+        for base in self.__class__.__bases__:
+            parts = inspect.getmodule(base).__name__.split('.')
+            try:
+                section = parts[ parts.index(module) + 1 ].lower()
+                break
+            except:
+                pass
+
+        settings = Env.get('settings')
+
+        head = 'Supported media types: '
+
+        values = ['', '']
+        groups = settings.options[section].get('groups', [])
+        groupno = 0
+        while groupno < len(groups):
+            if 'description' in groups[groupno]:
+                if isinstance(groups[groupno]['description'], list):
+                    values = groups[groupno]['description']
+                else:
+                    values[0] = groups[groupno]['description']
+                break
+
+        assert len(values) == 2
+
+        # Verify the second entry was created by us.
+        assert not values[1] or values[1].startswith(head)
+        types = [t.strip() for t in values[1].replace(head, '').split(',') if t]
+        if not self.type.title() in types:
+            types.append(self.type.title())
+
+        values[1] = head + ', '.join(types)
+
+        settings.options[section]['groups'][groupno]['description'] = values
 
     def getEnabledProtocol(self):
         if self.isEnabled():
