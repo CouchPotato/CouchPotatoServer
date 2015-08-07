@@ -233,9 +233,10 @@
 .page.movie_details .releases .status{min-width:70px;max-width:70px}
 .page.movie_details .releases .status:before{content:"Status:"}
 .page.movie_details .releases .quality{min-width:60px;max-width:60px}
-.page.movie_details .releases .age,.page.movie_details .releases .size{min-width:40px;max-width:40px}
 .page.movie_details .releases .quality:before{content:"Quality:"}
+.page.movie_details .releases .size{min-width:50px;max-width:50px}
 .page.movie_details .releases .size:before{content:"Size:"}
+.page.movie_details .releases .age{min-width:40px;max-width:40px}
 .page.movie_details .releases .age:before{content:"Age:"}
 .page.movie_details .releases .score{min-width:45px;max-width:45px}
 .page.movie_details .releases .score:before{content:"Score:"}
