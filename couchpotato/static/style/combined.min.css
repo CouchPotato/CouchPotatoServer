@@ -1,8 +1,9 @@
 .movies>.description a:hover,.page.movie_details .releases .buttons a:hover{text-decoration:underline}
+.messages .message,.more_menu .wrapper,.search_form .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .search_form{display:inline-block;z-index:11;width:44px;position:relative}
 .search_form *{-webkit-transform:translateZ(0);transform:translateZ(0)}
 .search_form .icon-search{position:absolute;z-index:2;top:50%;left:0;height:100%;text-align:center;color:#FFF;font-size:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
-.search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
+.search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none}
 .search_form .wrapper:before{-webkit-transform:rotate(45deg);transform:rotate(45deg);content:'';display:block;position:absolute;height:10px;width:10px;background:#ac0000;left:-6px;bottom:16px;z-index:1}
 .search_form .input{background:#FFF;border-radius:3px 0 0 3px;position:relative;left:4px;height:44px;overflow:hidden;width:100%}
 .search_form .input input{position:absolute;top:0;left:0;height:100%;width:100%;z-index:1}
@@ -431,28 +432,23 @@
 #profile_ordering li .handle:hover{opacity:1}
 .group_sizes .item .label{min-width:150px}
 .group_sizes .item .max,.group_sizes .item .min{display:inline-block;width:70px!important;min-width:0!important;margin-right:10px;text-align:center}
+.page.userscript .media_result .year,.page.wizard .navigation.navigation{display:none}
 .page.userscript{position:absolute;width:100%;top:0;bottom:0;left:0;right:0;padding:0}
 .page.userscript .frame.loading{text-align:center;font-size:20px;padding:20px}
 .page.userscript .media_result{height:140px}
 .page.userscript .media_result .thumbnail{width:90px}
 .page.userscript .media_result .options{left:90px;padding:54px 15px}
-.page.userscript .media_result .year{display:none}
 .page.userscript .media_result .options select[name=title]{width:190px}
 .page.userscript .media_result .options select[name=profile]{width:70px}
-.page.wizard .uniForm{margin:0 0 30px;width:83%}
-.page.wizard h1{padding:10px 0;display:block;font-size:30px;margin:80px 5px 0}
+.page.wizard .tab_content.tab_content{display:block}
+.page.wizard .tab_content.tab_content fieldset .ctrlHolder,.page.wizard .tab_content.tab_content fieldset h2{padding:5px}
+.page.wizard h1{padding:10px 0;display:block;font-size:30px;margin:80px 5px 0;font-weight:300}
 .page.wizard .description{padding:10px 5px;font-size:1.45em;line-height:1.4em;display:block}
-.page.wizard .tab_wrapper{background:#5c697b;height:65px;font-size:1.75em;position:fixed;top:0;margin:0;width:100%;left:0;z-index:2;box-shadow:0 0 10px rgba(0,0,0,.1)}
-.messages .message,.more_menu .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
-.page.wizard .tab_wrapper .tabs{padding:0;margin:0 auto;display:block;height:100%;width:100%;max-width:960px}
-.page.wizard .tabs li{display:inline-block;height:100%}
-.page.wizard .tabs li a{padding:20px 10px;height:100%;display:block;color:#FFF;font-weight:400;border-bottom:4px solid transparent}
-.page.wizard .tabs li:hover a{border-color:#047792}
-.page.wizard .tabs li.done a{border-color:#04bce6}
-.page.wizard .tab_wrapper .pointer{border-right:10px solid transparent;border-left:10px solid transparent;border-top:10px solid #5c697b;display:block;position:absolute;top:44px}
-.page.wizard .tab_content{margin:20px 0 160px}
-.page.wizard form>div{min-height:300px}
-.page.wizard .button.green{padding:20px;font-size:25px;margin:10px 0 80px;display:block}
+.page.wizard form.uniForm.containers{margin:0}
+.page.wizard form>div{min-height:300px;max-width:1024px;padding:20px;margin:0 auto}
+@media (max-width:480px){.page.wizard form>div{padding:10px}
+}
+.page.wizard .button.green{padding:20px;font-size:25px;margin:10px 0 80px;display:inline-block}
 .page.wizard .tab_nzb_providers{margin:20px 0 0}
 .api_docs h1{font-size:25px;padding:20px 40px}
 .api_docs pre{background:#eee;font-family:monospace;margin:0;padding:10px;width:100%;display:block;font-size:12px}

@@ -4,6 +4,7 @@ Page.Wizard = new Class({
 
 	order: 70,
 	name: 'wizard',
+	current: 'welcome',
 	has_tab: false,
 	wizard_only: true,
 
@@ -54,7 +55,7 @@ Page.Wizard = new Class({
 					'styles': {
 						'margin-top': 20
 					},
-					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
+					'text': 'I\'m ready to start the awesomeness!',
 					'events': {
 						'click': function(e){
 							(e).preventDefault();
@@ -78,6 +79,7 @@ Page.Wizard = new Class({
 			)
 		}
 	},
+
 	groups: ['welcome', 'general', 'downloaders', 'searcher', 'renamer', 'automation', 'finish'],
 
 	open: function(action, params){
@@ -88,6 +90,8 @@ Page.Wizard = new Class({
 			App.getBlock('header').hide();
 
 			self.parent(action, params);
+
+			self.el.addClass('settings');
 
 			self.addEvent('create', function(){
 				self.orderGroups();
@@ -110,20 +114,13 @@ Page.Wizard = new Class({
 		var self = this;
 
 		var form = self.el.getElement('.uniForm');
-		var tabs = self.el.getElement('.tabs');
+		var tabs = self.el.getElement('.tabs').hide();
 
 		self.groups.each(function(group){
 
 			var group_container;
 			if(self.headers[group]){
-				group_container = new Element('.wgroup_'+group, {
-					'styles': {
-						'opacity': 0.2
-					},
-					'tween': {
-						'duration': 350
-					}
-				});
+				group_container = new Element('.wgroup_'+group);
 
 				if(self.headers[group].include){
 					self.headers[group].include.each(function(inc){
@@ -199,47 +196,6 @@ Page.Wizard = new Class({
 
 		// Hide retention
 		self.el.getElement('.section_nzb').hide();
-
-		// Add pointer
-		new Element('.tab_wrapper').wraps(tabs);
-
-		// Add nav
-		var minimum = self.el.getSize().y-window.getSize().y;
-		self.groups.each(function(group, nr){
-
-			var g = self.el.getElement('.wgroup_'+group);
-			if(!g || !g.isVisible()) return;
-			var t = self.el.getElement('.t_'+group);
-			if(!t) return;
-
-			var func = function(){
-				// Activate all previous ones
-				self.groups.each(function(groups2, nr2){
-					var t2 = self.el.getElement('.t_'+groups2);
-						t2[nr2 > nr ? 'removeClass' : 'addClass' ]('done');
-				});
-				g.tween('opacity', 1);
-			};
-
-			if(nr === 0)
-				func();
-
-			new ScrollSpy( {
-				min: function(){
-					var c = g.getCoordinates();
-					var top = c.top-(window.getSize().y/2);
-					return top > minimum ? minimum : top;
-				},
-				max: function(){
-					var c = g.getCoordinates();
-					return c.top+(c.height/2);
-				},
-				onEnter: func,
-				onLeave: function(){
-					g.tween('opacity', 0.2);
-				}
-			});
-		});
 
 	}
 
