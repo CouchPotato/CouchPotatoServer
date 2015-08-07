@@ -30,7 +30,7 @@ var PageBase = new Class({
 		// Stop hover events while scrolling
 		App.addEvent('load', function(){
 			setTimeout(function(){
-				if(!App.mobile_screen){
+				if(!App.mobile_screen && !App.getOption('dev')){
 					self.content.addEvent('scroll', self.preventHover.bind(self));
 				}
 			}, 100);
