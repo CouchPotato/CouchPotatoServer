@@ -18,6 +18,7 @@ class TorrentProvider(YarrProvider):
     proxy_list = []
 
     def __init__(self):
+        super(TorrentProvider, self).__init__()
         self.addSupportedMediaType('torrent')
 
     def imdbMatch(self, url, imdbId):
