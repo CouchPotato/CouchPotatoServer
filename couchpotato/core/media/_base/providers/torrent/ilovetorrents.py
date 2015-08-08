@@ -23,7 +23,8 @@ class Base(TorrentProvider):
     }
 
     cat_ids = [
-        (['41'], ['720p', '1080p', 'brrip']),
+        (['80'], ['720p', '1080p']),
+        (['41'], ['brrip']),
         (['19'], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         (['20'], ['dvdr'])
     ]
@@ -88,7 +89,7 @@ class Base(TorrentProvider):
                             id = re.search('id=(?P<id>\d+)&', link).group('id')
                             url = self.urls['download'] % download
 
-                            fileSize = self.parseSize(result.select('td.rowhead')[5].text)
+                            fileSize = self.parseSize(result.select('td.rowhead')[8].text)
                             results.append({
                                 'id': id,
                                 'name': toUnicode(prelink.find('b').text),

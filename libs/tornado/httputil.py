@@ -62,6 +62,11 @@ except ImportError:
         pass
 
 
+# RFC 7230 section 3.5: a recipient MAY recognize a single LF as a line
+# terminator and ignore any preceding CR.
+_CRLF_RE = re.compile(r'\r?\n')
+
+
 class _NormalizedHeaderCache(dict):
     """Dynamic cached mapping of header names to Http-Header-Case.
 
@@ -193,7 +198,7 @@ class HTTPHeaders(dict):
         [('Content-Length', '42'), ('Content-Type', 'text/html')]
         """
         h = cls()
-        for line in headers.splitlines():
+        for line in _CRLF_RE.split(headers):
             if line:
                 h.parse_line(line)
         return h
@@ -543,6 +548,8 @@ class HTTPConnection(object):
             headers.
         :arg callback: a callback to be run when the write is complete.
 
+        The ``version`` field of ``start_line`` is ignored.
+
         Returns a `.Future` if no callback is given.
         """
         raise NotImplementedError()
@@ -689,14 +696,17 @@ def parse_body_arguments(content_type, body, arguments, files, headers=None):
             if values:
                 arguments.setdefault(name, []).extend(values)
     elif content_type.startswith("multipart/form-data"):
-        fields = content_type.split(";")
-        for field in fields:
-            k, sep, v = field.strip().partition("=")
-            if k == "boundary" and v:
-                parse_multipart_form_data(utf8(v), body, arguments, files)
-                break
-        else:
-            gen_log.warning("Invalid multipart/form-data")
+        try:
+            fields = content_type.split(";")
+            for field in fields:
+                k, sep, v = field.strip().partition("=")
+                if k == "boundary" and v:
+                    parse_multipart_form_data(utf8(v), body, arguments, files)
+                    break
+            else:
+                raise ValueError("multipart boundary not found")
+        except Exception as e:
+            gen_log.warning("Invalid multipart/form-data: %s", e)
 
 
 def parse_multipart_form_data(boundary, data, arguments, files):
@@ -782,7 +792,7 @@ def parse_request_start_line(line):
         method, path, version = line.split(" ")
     except ValueError:
         raise HTTPInputError("Malformed HTTP request line")
-    if not version.startswith("HTTP/"):
+    if not re.match(r"^HTTP/1\.[0-9]$", version):
         raise HTTPInputError(
             "Malformed HTTP version in HTTP Request-Line: %r" % version)
     return RequestStartLine(method, path, version)
@@ -801,7 +811,7 @@ def parse_response_start_line(line):
     ResponseStartLine(version='HTTP/1.1', code=200, reason='OK')
     """
     line = native_str(line)
-    match = re.match("(HTTP/1.[01]) ([0-9]+) ([^\r]*)", line)
+    match = re.match("(HTTP/1.[0-9]) ([0-9]+) ([^\r]*)", line)
     if not match:
         raise HTTPInputError("Error parsing response start line")
     return ResponseStartLine(match.group(1), int(match.group(2)),
@@ -878,6 +888,8 @@ def split_host_and_port(netloc):
     """Returns ``(host, port)`` tuple from ``netloc``.
 
     Returned ``port`` will be ``None`` if not present.
+
+    .. versionadded:: 4.1
     """
     match = re.match(r'^(.+):(\d+)$', netloc)
     if match:

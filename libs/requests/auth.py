@@ -103,7 +103,8 @@ class HTTPDigestAuth(AuthBase):
         # XXX not implemented yet
         entdig = None
         p_parsed = urlparse(url)
-        path = p_parsed.path
+        #: path is request-uri defined in RFC 2616 which should not be empty
+        path = p_parsed.path or "/"
         if p_parsed.query:
             path += '?' + p_parsed.query
 
@@ -124,13 +125,15 @@ class HTTPDigestAuth(AuthBase):
         s += os.urandom(8)
 
         cnonce = (hashlib.sha1(s).hexdigest()[:16])
-        noncebit = "%s:%s:%s:%s:%s" % (nonce, ncvalue, cnonce, qop, HA2)
         if _algorithm == 'MD5-SESS':
             HA1 = hash_utf8('%s:%s:%s' % (HA1, nonce, cnonce))
 
         if qop is None:
             respdig = KD(HA1, "%s:%s" % (nonce, HA2))
         elif qop == 'auth' or 'auth' in qop.split(','):
+            noncebit = "%s:%s:%s:%s:%s" % (
+                nonce, ncvalue, cnonce, 'auth', HA2
+                )
             respdig = KD(HA1, noncebit)
         else:
             # XXX handle auth-int.
@@ -176,7 +179,7 @@ class HTTPDigestAuth(AuthBase):
             # Consume content and release the original connection
             # to allow our new request to reuse the same one.
             r.content
-            r.raw.release_conn()
+            r.close()
             prep = r.request.copy()
             extract_cookies_to_jar(prep._cookies, r.request, r.raw)
             prep.prepare_cookies(prep._cookies)

@@ -11,10 +11,10 @@ and maintain connections.
 import socket
 
 from .models import Response
-from .packages.urllib3 import Retry
 from .packages.urllib3.poolmanager import PoolManager, proxy_from_url
 from .packages.urllib3.response import HTTPResponse
 from .packages.urllib3.util import Timeout as TimeoutSauce
+from .packages.urllib3.util.retry import Retry
 from .compat import urlparse, basestring
 from .utils import (DEFAULT_CA_BUNDLE_PATH, get_encoding_from_headers,
                     prepend_scheme_if_needed, get_auth_from_url, urldefragauth)
@@ -407,9 +407,6 @@ class HTTPAdapter(BaseAdapter):
                     # Then, reraise so that we can handle the actual exception.
                     low_conn.close()
                     raise
-                else:
-                    # All is well, return the connection to the pool.
-                    conn._put_conn(low_conn)
 
         except (ProtocolError, socket.error) as err:
             raise ConnectionError(err, request=request)
