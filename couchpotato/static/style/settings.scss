@@ -103,6 +103,7 @@
 					font-weight: 400;
 					color: $primary_color;
 					text-decoration: underline;
+					display: inline;
 				}
 			}
 		}
@@ -161,16 +162,20 @@
 
 				select {
 					cursor: pointer;
-					-moz-appearance: none;
+					appearance: none;
+					width: 100%;
+					min-width: 200px;
+					border-radius: 0;
 				}
 
 				&:before {
+					vertical-align: top;
 					pointer-events: none;
 					position: absolute;
+					top: 0;
+					line-height: 2em;
 					right: $padding/2;
 					height: 100%;
-					line-height: 0;
-					margin-top: -3px;
 				}
 			}
 
@@ -220,7 +225,6 @@
 				right: 0;
 				border: 0;
 				padding: 0;
-				height: 46px;
 
 				~ h2 {
 					margin-right: 66px + $padding;
@@ -247,18 +251,16 @@
 	}
 
 	.switch {
+		$switch_height: 24px;
 		$switch_active: $primary_color;
 		display: inline-block;
 		background: $switch_active;
-		border: 1px solid $switch_active;
-		box-shadow: inset 0 0 0 1px #FFF;
-		height: 22px;
-		width: 66px;
+		height: $switch_height;
+		width: $switch_height * 2.5;
 		min-width: 0 !important;
-		padding: 2px;
 		transition: all 250ms;
 		cursor: pointer;
-		border-radius: $border_radius;
+		border-radius: $switch_height;
 
 		input {
 			display: none;
@@ -266,11 +268,12 @@
 
 		.toggle {
 			background: #FFF;
-			height: 100%;
-			width: 40%;
+			margin: 1px;
+			height: $switch_height - 2px;
+			width: $switch_height - 2px;
 			transition: transform 250ms;
-			transform: translateX(150%);
-			border-radius: $border_radius - 1px;
+			transform: translateX($switch_height*1.5);
+			border-radius: $switch_height;
 		}
 
 	}
@@ -650,6 +653,22 @@
 				> .save {
 					margin-right: 0;
 				}
+			}
+		}
+	}
+
+	.choice {
+		.select_wrapper {
+			margin-left: $padding;
+			width: 120px;
+			min-width: 120px;
+
+			@include media-phablet {
+				margin: $padding/2 0 0;
+			}
+
+			select {
+				min-width: 0 !important;
 			}
 		}
 	}
