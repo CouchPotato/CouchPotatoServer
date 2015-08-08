@@ -413,7 +413,6 @@ input, textarea, select {
 
 		@include media-phablet {
 			font-size: 18px;
-			//line-height: $header_width_mobile;
 			padding: $padding/2;
 		}
 	}
