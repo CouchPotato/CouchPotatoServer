@@ -194,6 +194,9 @@ MA.Release = new Class({
 						catch(e){}
 					}
 
+					var size = info.size ? Math.floor(self.get(release, 'size')) : 0;
+						size = size ? ((size < 1000) ? size + 'MB' : Math.round(size*10/1024)/10 + 'GB') : 'n/a';
+
 					// Create release
 					release.el = new Element('div', {
 						'class': 'item '+release.status,
@@ -202,7 +205,7 @@ MA.Release = new Class({
 						new Element('span.name', {'text': release_name, 'title': release_name}),
 						new Element('span.status', {'text': release.status, 'class': 'status '+release.status}),
 						new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
-						new Element('span.size', {'text': info.size ? Math.floor(self.get(release, 'size')) : 'n/a'}),
+						new Element('span.size', {'text': size}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),
 						new Element('span.provider', { 'text': provider, 'title': provider }),

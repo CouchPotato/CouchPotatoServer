@@ -108,7 +108,7 @@ Page.Settings = new Class({
 		var self = this;
 
 		var c = self.advanced_toggle.checked ? 'addClass' : 'removeClass';
-		self.content[c]('show_advanced');
+		self.el[c]('show_advanced');
 
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},

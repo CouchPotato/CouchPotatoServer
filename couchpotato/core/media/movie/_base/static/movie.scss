@@ -908,7 +908,7 @@ $mass_edit_height: 44px;
 
 		.status { min-width: 70px; max-width: 70px; &:before { content: "Status:"; } }
 		.quality { min-width: 60px; max-width: 60px; &:before { content: "Quality:"; } }
-		.size { min-width: 40px; max-width: 40px; &:before { content: "Size:"; } }
+		.size { min-width: 50px; max-width: 50px; &:before { content: "Size:"; } }
 		.age { min-width: 40px; max-width: 40px; &:before { content: "Age:"; } }
 		.score { min-width: 45px; max-width: 45px; &:before { content: "Score:"; } }
 		.provider { min-width: 110px; max-width: 110px; &:before { content: "Provider:"; } }
