@@ -272,7 +272,7 @@ var Movie = new Class({
 		}
 
 		var rating, stars;
-		if(self.data.status == 'suggested' && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
+		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
 			rating = self.data.info.rating.imdb;
 
 			stars = [];
@@ -344,7 +344,7 @@ var Movie = new Class({
 					self.quality = new Element('div.quality'),
 					self.rating = rating ? new Element('div.rating[title='+rating[0]+']').adopt(
 						stars,
-						new Element('span.votes[text=('+rating[1]+')][title=Votes]')
+						new Element('span.votes[text=('+rating.join(' / ')+')][title=Votes]')
 					) : null
 				)
 			)
