@@ -322,56 +322,6 @@ MA.Release = new Class({
 
 	},
 
-	showHelper: function(e){
-		var self = this;
-		if(e)
-			(e).preventDefault();
-
-		var has_available = false,
-			has_snatched = false;
-
-		if(self.movie.data.releases)
-			self.movie.data.releases.each(function(release){
-				if(has_available && has_snatched) return;
-
-				if(['snatched', 'downloaded', 'seeding', 'done'].contains(release.status))
-					has_snatched = true;
-
-				if(['available'].contains(release.status))
-					has_available = true;
-
-			});
-
-		if(has_available || has_snatched){
-
-			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
-
-			self.trynext_container.adopt(
-				has_available ? [new Element('a.icon-redo', {
-					'text': has_snatched ? 'Download another release' : 'Download the best release',
-					'events': {
-						'click': self.tryNextRelease.bind(self)
-					}
-				}),
-				new Element('a.icon-download', {
-					'text': 'pick one yourself',
-					'events': {
-						'click': function(){
-							self.movie.quality.fireEvent('click');
-						}
-					}
-				})] : null,
-				new Element('a.icon-ok', {
-					'text': 'mark this movie done',
-					'events': {
-						'click': self.markMovieDone.bind(self)
-					}
-				})
-			);
-		}
-
-	},
-
 	get: function(release, type){
 		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a';
 	},
@@ -410,39 +360,6 @@ MA.Release = new Class({
 		Api.request('release.ignore', {
 			'data': {
 				'id': release._id
-			}
-		});
-
-	},
-
-	markMovieDone: function(){
-		var self = this;
-
-		Api.request('media.delete', {
-			'data': {
-				'id': self.movie.get('_id'),
-				'delete_from': 'wanted'
-			},
-			'onComplete': function(){
-				var movie = $(self.movie);
-				movie.set('tween', {
-					'duration': 300,
-					'onComplete': function(){
-						self.movie.destroy();
-					}
-				});
-				movie.tween('height', 0);
-			}
-		});
-
-	},
-
-	tryNextRelease: function(){
-		var self = this;
-
-		Api.request('movie.searcher.try_next', {
-			'data': {
-				'media_id': self.movie.get('_id')
 			}
 		});
 
@@ -1010,6 +927,48 @@ MA.Files = new Class({
 		}
 
 		return self.files_container;
+	}
+
+});
+
+
+MA.MarkAsDone = new Class({
+
+	Extends: MovieAction,
+
+	create: function(){
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.mark_as_done', {
+			'text': 'Mark as done',
+			'title': 'Remove from available list and move to managed movies',
+			'events': {
+				'click': self.markMovieDone.bind(self)
+			}
+		});
+	},
+
+	markMovieDone: function(){
+		var self = this;
+
+		Api.request('media.delete', {
+			'data': {
+				'id': self.movie.get('_id'),
+				'delete_from': 'wanted'
+			},
+			'onComplete': function(){
+				self.movie.destroy();
+			}
+		});
+
 	}
 
 });

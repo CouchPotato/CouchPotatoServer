@@ -124,7 +124,7 @@
 .thumb_list .movie{max-width:33.333%;border-width:0 5px}
 }
 @media (max-width:480px){.thumb_list{padding:0 3.33px}
-.thumb_list .movie{max-width:50%;width:50%;border-width:0 4px}
+.thumb_list .movie{max-width:50%;border-width:0 4px}
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
 .thumb_list .movie .poster{position:relative;border-radius:3px;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;width:100%;padding-bottom:150%}
@@ -496,7 +496,7 @@
 *{margin:0;padding:0;box-sizing:border-box;text-rendering:optimizeSpeed;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 body,html{font-size:14px;line-height:1.5;font-family:OpenSans,"Helvetica Neue",Helvetica,Arial,Geneva,sans-serif;font-weight:300;height:100%;margin:0;padding:0;background:#111;overflow:hidden}
 body{display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
-a{display:inline-block;position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#FFF;border:1px solid #b7b7b7}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
@@ -642,7 +642,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
 .page.settings fieldset{border:0;margin-bottom:20px;position:relative}
-.page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 10px 20px}
+.page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
 .page.settings fieldset h2 .hint{margin-left:10px;font-size:1rem}
@@ -676,6 +676,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset.enabler>:first-child~h2{margin-right:86px}
 @media (max-width:480px){.page.settings fieldset.enabler>:first-child~h2{margin-right:0}
 }
+.page.settings fieldset.enabler>:nth-child(3){margin-top:20px}
 .page.settings fieldset .ctrlHolder.advanced,.page.settings fieldset.advanced{display:none;color:#ac0000}
 .page.settings.show_advanced fieldset.advanced,.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.settings .switch{display:inline-block;background:#ac0000;height:20px;width:50px;min-width:0!important;transition:all 250ms;cursor:pointer;border-radius:20px}
