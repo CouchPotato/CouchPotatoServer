@@ -567,7 +567,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page .navigation{height:44px;left:64px}
 }
 .page .navigation ul{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;list-style:none}
-.page .navigation ul li a{font-size:24px;line-height:80px;padding:0 20px;color:rgba(0,0,0,.5)}
+.page .navigation ul li a{display:inline-block;font-size:24px;line-height:80px;padding:0 20px;color:rgba(0,0,0,.5)}
 @media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:44px;padding:10px}
 }
 .page .navigation ul .active a{color:#000}
