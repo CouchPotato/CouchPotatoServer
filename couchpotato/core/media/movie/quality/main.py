@@ -3,8 +3,9 @@ import re
 from couchpotato import CPLog
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.variable import getExt, splitString, tryInt
+from couchpotato.core.helpers.variable import getExt, splitString, tryFloat
 from couchpotato.core.media._base.quality.base import QualityBase
+from math import ceil, fabs
 
 log = CPLog(__name__)
 
@@ -43,7 +44,8 @@ class MovieQuality(QualityBase):
 
         # Create hash for cache
         cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
-        if use_cache:
+        #if use_cache:
+        if True:
             cached = self.getCache(cache_key)
             if cached and len(extra) == 0:
                 return cached
@@ -213,11 +215,14 @@ class MovieQuality(QualityBase):
                 size_diff = size - size_min
                 size_proc = (size_diff / proc_range)
 
-                median_diff = quality['median_size'] - size_min
-                median_proc = (median_diff / proc_range)
+                #median_diff = quality['median_size'] - size_min
+                # FIXME: not sure this is the proper fix
+                average_diff = ((size_min + size_max) / 2) - size_min
+                average_proc = (average_diff / proc_range)
 
                 max_points = 8
-                score += ceil(max_points - (fabs(size_proc - median_proc) * max_points))
+                #score += ceil(max_points - (fabs(size_proc - median_proc) * max_points))
+                score += ceil(max_points - (fabs(size_proc - average_proc) * max_points))
             else:
                 score -= 5
 

@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.searcher.base import SearcherBase
+from couchpotato.core.media._base.searcher.main import Searcher
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.media.show import ShowTypeBase
 
@@ -12,7 +12,7 @@ log = CPLog(__name__)
 autoload = 'ShowSearcher'
 
 
-class ShowSearcher(SearcherBase, ShowTypeBase):
+class ShowSearcher(Searcher, ShowTypeBase):
     type = 'show'
 
     in_progress = False
@@ -38,50 +38,56 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
     def searchAll(self, manual = False):
         pass
 
-    def single(self, media, search_protocols = None, manual = False):
-        # Find out search type
-        try:
-            if not search_protocols:
-                search_protocols = fireEvent('searcher.protocols', single = True)
-        except SearchSetupError:
-            return
-
-        if not media['profile_id'] or media['status'] == 'done':
-            log.debug('Show doesn\'t have a profile or already done, assuming in manage tab.')
-            return
-
-        show_title = fireEvent('media.search_query', media, condense = False, single = True)
-
-        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['_id'], data = True, message = 'Searching for "%s"' % show_title)
-
-        show_tree = fireEvent('library.tree', media, single = True)
+    def single(self, media, search_protocols = None, manual = False, force_download = False, notify = True):
 
         db = get_db()
-
         profile = db.get('id', media['profile_id'])
 
-        for season in show_tree.get('seasons', []):
-            if not season.get('info'):
-                continue
-
-            # Skip specials (and seasons missing 'number') for now
-            # TODO: set status for specials to skipped by default
-            if not season['info'].get('number'):
-                continue
-
-            # Check if full season can be downloaded
-            fireEvent('show.season.searcher.single', season, profile, search_protocols, manual)
-
-            # TODO (testing) only snatch one season
+        if not profile or (media['status'] == 'done' and not manual):
+            log.debug('Media does not have a profile or already done, assuming in manage tab.')
+            fireEvent('media.restatus', media['_id'], single = True)
             return
+
+        default_title = getTitle(media)
+        if not default_title:
+            log.error('No proper info found for media, removing it from library to stop it from causing more issues.')
+            fireEvent('media.delete', media['_id'], single = True)
+            return
+
+        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['_id'], data = True, message = 'Searching for "%s"' % default_title)
+
+        seasons = []
+
+        tree = fireEvent('library.tree', media, single = True)
+        if tree:
+            for season in tree.get('seasons', []):
+                if season.get('info'):
+                    continue
+
+                # Skip specials (and seasons missing 'number') for now
+                # TODO: set status for specials to skipped by default
+                if not season['info'].get('number'):
+                    continue
+
+                seasons.append(season)
+
+        result = True
+        for season in seasons:
+            if not fireEvent('show.season.searcher.single', search_protocols, manual, force_download, False):
+                result = False
+                break
 
         fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['_id'], data = True)
 
+        return result
+
     def getSearchTitle(self, media):
-        if media.get('type') != 'show':
+        show = None
+        if media.get('type') == 'show':
+            show = media
+        elif media.get('type') in ('show.season', 'show.episode'):
             related = fireEvent('library.related', media, single = True)
             show = related['show']
-        else:
-            show = media
 
-        return getTitle(show)
+        if show:
+            return getTitle(show)

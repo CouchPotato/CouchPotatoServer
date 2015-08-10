@@ -8,6 +8,7 @@ import re
 import string
 import sys
 import traceback
+import time
 
 from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp
 from couchpotato.core.logger import CPLog
@@ -411,3 +412,7 @@ def find(func, iterable):
             return item
 
     return None
+
+def strtotime(string, format):
+    timestamp = time.strptime(string, format)
+    return time.mktime(timestamp)

@@ -76,9 +76,10 @@ class Dashboard(Plugin):
                 coming_soon = False
 
                 # Theater quality
-                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, media['info']['year'], single = True):
+                event = '%s.searcher.could_be_released' % (media.get('type'))
+                if pp.get('theater') and fireEvent(event, True, eta, media, single = True):
                     coming_soon = 'theater'
-                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, media['info']['year'], single = True):
+                elif pp.get('dvd') and fireEvent(event, False, eta, media, single = True):
                     coming_soon = 'dvd'
 
                 if coming_soon:
