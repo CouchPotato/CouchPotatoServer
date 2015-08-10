@@ -85,7 +85,10 @@ class Suggestion(Plugin):
 
             new_suggestions = self.updateSuggestionCache(ignore_imdb = imdb, limit = limit, ignored = ignored, seen = seen)
 
-        limit = limit if len(new_suggestions) > limit else len(new_suggestions)
+        if len(new_suggestions) <= limit:
+            return {
+                'result': False
+            }
 
         # Only return new (last) item
         media = {
