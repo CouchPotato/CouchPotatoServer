@@ -74,7 +74,7 @@
 		h2 {
 			display: flex;
 			align-items: baseline;
-			padding: 0 0 $padding/2 $padding;
+			padding: 0 0 0 $padding;
 
 			@include media-phablet {
 				display: block;
@@ -234,6 +234,11 @@
 					}
 				}
 			}
+
+			> :nth-child(3){
+				margin-top: $padding;
+			}
+
 		}
 	}
 
