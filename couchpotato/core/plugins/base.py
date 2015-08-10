@@ -201,12 +201,13 @@ class Plugin(object):
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
         use_proxy = Env.setting('use_proxy')
-        proxy_server = Env.setting('proxy_server')
-        proxy_username = Env.setting('proxy_username')
-        proxy_password = Env.setting('proxy_password')
         proxy_url = None
 
         if use_proxy:
+            proxy_server = Env.setting('proxy_server')
+            proxy_username = Env.setting('proxy_username')
+            proxy_password = Env.setting('proxy_password')
+
             if proxy_server:
                 loc = "{0}:{1}@{2}".format(proxy_username, proxy_password, proxy_server) if proxy_username else proxy_server
                 proxy_url = {
