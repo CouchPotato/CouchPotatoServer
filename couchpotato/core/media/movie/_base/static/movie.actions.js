@@ -584,10 +584,12 @@ var SuggestBase = new Class({
 	refresh: function(json){
 		var self = this;
 
-		self.movie.list.addMovies([json.movie], 1);
+		if(json && json.movie){
+			self.movie.list.addMovies([json.movie], 1);
 
-		var last_added = self.movie.list.movies[self.movie.list.movies.length-1];
-		$(last_added).inject(self.movie, 'before');
+			var last_added = self.movie.list.movies[self.movie.list.movies.length-1];
+			$(last_added).inject(self.movie, 'before');
+		}
 
 		self.movie.destroy();
 	}
