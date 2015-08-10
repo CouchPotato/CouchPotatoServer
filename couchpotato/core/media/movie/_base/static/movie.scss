@@ -297,8 +297,6 @@ $mass_edit_height: 44px;
 
 .thumb_list {
 
-	font-size: 12px;
-
 	> div:last-child {
 		padding: 0 ($padding/2)+2px;
 		@include media-phablet {
@@ -367,6 +365,7 @@ $mass_edit_height: 44px;
 
 		.data {
 			clear: both;
+			font-size: .85em;
 
 			.info {
 

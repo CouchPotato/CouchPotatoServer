@@ -10,7 +10,7 @@
 }
 
 body, html {
-	font-size: 14px;
+	font-size: $font_size;
 	line-height: 1.5;
 	font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
 	font-weight: 300;
@@ -149,6 +149,8 @@ input, textarea, select {
 			margin: 0;
 
 			li {
+				display: block;
+
 				@include media-phablet {
 					line-height: 0;
 				}
@@ -484,6 +486,10 @@ input, textarea, select {
 .more_menu {
 	position: relative;
 	line-height: 1em;
+
+	a {
+		display: inline-block;
+	}
 
 	.button {
 		font-size: 24px;

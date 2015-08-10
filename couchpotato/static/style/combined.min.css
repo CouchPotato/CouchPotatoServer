@@ -110,7 +110,6 @@
 .list_list .movie:hover .actions{display:none}
 }
 .list_list.with_navigation .movie.checked .data .info .title span,.list_list.with_navigation .movie:hover .data .info .title span{margin-left:20px}
-.thumb_list{font-size:12px}
 .thumb_list>div:last-child{padding:0 12px}
 @media (max-width:480px){.thumb_list>div:last-child{padding:0 3.33px}
 }
@@ -128,7 +127,7 @@
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
 .thumb_list .movie .poster{position:relative;border-radius:3px;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;width:100%;padding-bottom:150%}
-.thumb_list .movie .data{clear:both}
+.thumb_list .movie .data{clear:both;font-size:.85em}
 .thumb_list .movie .data .info .title{display:-webkit-flex;display:-ms-flexbox;display:flex;padding:3px 0}
 .thumb_list .movie .data .info .title span{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thumb_list .movie .data .info .title .year{display:inline-block;margin-left:5px;opacity:.5}
@@ -510,17 +509,18 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px}
 .header .navigation .logo span{position:absolute;display:block;height:100%;width:100%;text-align:center;left:0}
 .header .navigation .logo span:nth-child(even){-webkit-transform:translateX(100%);transform:translateX(100%)}
-.header .navigation ul{padding:0;margin:0}
 @media (max-width:480px){.header .navigation .logo{font-size:28px;line-height:44px;height:44px}
 .header .navigation .logo:after{content:'CP'}
 .header .navigation .logo span{display:none}
-.header .navigation ul li{line-height:0}
 }
+.header .navigation ul{padding:0;margin:0}
+.header .navigation ul li{display:block}
 .header .navigation ul li a{padding:10px 20px;display:block;position:relative}
 .header .navigation ul li a:before{position:absolute;width:100%;display:none;text-align:center;font-size:18px;text-indent:0}
 .header .navigation ul li a.icon-home:before{font-size:24px}
 .header .menu,.header .notification_menu,.header .search_form{position:absolute;z-index:21;bottom:6.67px;width:44px;height:44px}
-@media (max-width:480px){.header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center}
+@media (max-width:480px){.header .navigation ul li{line-height:0}
+.header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center}
 .header .navigation ul li a span{display:none}
 .header .navigation ul li a:before{display:block}
 .header .menu,.header .notification_menu,.header .search_form{bottom:0}
@@ -562,7 +562,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page h2{font-size:24px;padding:20px}
 .page .navigation{z-index:2;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;border-radius:3px 0 0}
 .more_menu,.more_menu .button:before{position:relative}
-.more_menu .button,.page .navigation ul li{display:inline-block}
+.more_menu .button,.more_menu a,.page .navigation ul li{display:inline-block}
 @media (max-width:480px){.page h2{font-size:18px;padding:10px}
 .page .navigation{height:44px;left:64px}
 }
@@ -637,7 +637,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tab_content{display:none}
 .page.settings .tab_content.active{display:block}
 .page.settings .tabs{margin:0 20px 20px;list-style:none;font-size:24px}
-.page.settings .tabs ul{list-style:none;font-size:initial}
+.page.settings .tabs ul{list-style:none;font-size:14px}
 .page.settings .tabs li a{color:rgba(0,0,0,.5)}
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
