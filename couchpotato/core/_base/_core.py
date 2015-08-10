@@ -276,6 +276,25 @@ config = [{
                     'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
                 },
                 {
+                    'name': 'use_proxy',
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Route outbound connections via proxy. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. ',
+                },
+                {
+                    'name': 'proxy_server',
+                    'description': 'Override system default proxy server. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. Ex. <i>\"127.0.0.1:8080\"</i>. Keep empty to use system default proxy server.',
+                },
+                {
+                    'name': 'proxy_username',
+                    'description': 'Only HTTP Basic Auth is supported. Leave blank to disable authentication.',
+                },
+                {
+                    'name': 'proxy_password',
+                    'type': 'password',
+                    'description': 'Leave blank for no password.',
+                },
+                {
                     'name': 'debug',
                     'default': 0,
                     'type': 'bool',
