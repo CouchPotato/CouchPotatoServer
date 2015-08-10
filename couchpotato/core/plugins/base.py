@@ -1,5 +1,5 @@
 import threading
-from urllib import quote
+from urllib import quote, getproxies
 from urlparse import urlparse
 import glob
 import inspect
@@ -200,6 +200,22 @@ class Plugin(object):
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
+        use_proxy = Env.setting('use_proxy')
+        proxy_server = Env.setting('proxy_server')
+        proxy_username = Env.setting('proxy_username')
+        proxy_password = Env.setting('proxy_password')
+        proxy_url = None
+
+        if use_proxy:
+            if proxy_server:
+                loc = "{0}:{1}@{2}".format(proxy_username, proxy_password, proxy_server) if proxy_username else proxy_server
+                proxy_url = {
+                    "http": "http://"+loc,
+                    "https": "https://"+loc,
+                }
+            else:
+                proxy_url = getproxies()
+
         r = Env.get('http_opener')
 
         # Don't try for failed requests
@@ -225,6 +241,7 @@ class Plugin(object):
                 'files': files,
                 'verify': False, #verify_ssl, Disable for now as to many wrongly implemented certificates..
                 'stream': stream,
+                'proxies': proxy_url,
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
