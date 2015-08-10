@@ -57,6 +57,15 @@ Block.Navigation = new Class({
 
 	},
 
+	removeTab: function(name) {
+		var self = this;
+
+		var element = self.nav.getElement('li.tab_'+name);
+		if (element) {
+			element.dispose()
+		}
+	},
+
 	toggleMenu: function(){
 		var self = this,
 			body = $(document.body),
