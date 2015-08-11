@@ -19,10 +19,6 @@ module.exports = function(grunt){
 	var vendor_scripts_files = [
 		'couchpotato/static/scripts/vendor/mootools.js',
 		'couchpotato/static/scripts/vendor/mootools_more.js',
-		'couchpotato/static/scripts/vendor/form_replacement/form_check.js',
-		'couchpotato/static/scripts/vendor/form_replacement/form_radio.js',
-		'couchpotato/static/scripts/vendor/form_replacement/form_dropdown.js',
-		'couchpotato/static/scripts/vendor/form_replacement/form_selectoption.js',
 		'couchpotato/static/scripts/vendor/Array.stableSort.js',
 		'couchpotato/static/scripts/vendor/history.js',
 		'couchpotato/static/scripts/vendor/dynamics.js',

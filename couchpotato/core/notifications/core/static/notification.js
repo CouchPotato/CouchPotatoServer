@@ -101,8 +101,8 @@ var NotificationBase = new Class({
 		}
 
 		self.request = Api.request('notification.listener', {
-    		'data': {'init':true},
-    		'onSuccess': function(json){
+			'data': {'init':true},
+			'onSuccess': function(json){
 				self.processData(json, true);
 			}
 		}).send();
@@ -128,15 +128,15 @@ var NotificationBase = new Class({
 			self.request.cancel();
 
 		self.request = Api.request('nonblock/notification.listener', {
-    		'onSuccess': function(json){
+			'onSuccess': function(json){
 				self.processData(json, false);
 			},
-    		'data': {
-    			'last_id': self.last_id
-    		},
-    		'onFailure': function(){
-    			self.startPoll.delay(2000, self);
-    		}
+			'data': {
+				'last_id': self.last_id
+			},
+			'onFailure': function(){
+				self.startPoll.delay(2000, self);
+			}
 		}).send();
 
 	},

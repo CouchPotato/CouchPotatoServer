@@ -56,13 +56,13 @@ var Charts = new Class({
 
 		if(!json || json.count === 0){
 			self.el_no_charts_enabled.show();
-		    self.el_refresh_link.show();
-		    self.el_refreshing_text.hide();
+			self.el_refresh_link.show();
+			self.el_refreshing_text.hide();
 		}
 		else {
 			self.el_no_charts_enabled.hide();
 
-		    json.charts.sort(function(a, b) {
+			json.charts.sort(function(a, b) {
 				return a.order - b.order;
 			});
 

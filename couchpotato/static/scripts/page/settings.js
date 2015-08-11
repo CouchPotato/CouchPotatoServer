@@ -113,7 +113,7 @@ Page.Settings = new Class({
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
-    sortByOrder: function(a, b){
+	sortByOrder: function(a, b){
 		return (a.order || 100) - (b.order || 100);
 	},
 
