@@ -20,13 +20,13 @@ var MoviesWanted = new Class({
 				}
 			});
 
-            self.scan_folder = new Element('a', {
-                'title': 'Scan a folder and rename all movies in it',
-                'text': 'Manual folder scan',
-                'events':{
-                    'click': self.scanFolder.bind(self)
-                }
-            });
+			self.scan_folder = new Element('a', {
+				'title': 'Scan a folder and rename all movies in it',
+				'text': 'Manual folder scan',
+				'events':{
+					'click': self.scanFolder.bind(self)
+				}
+			});
 
 			// Wanted movies
 			self.list = new MovieList({
@@ -81,43 +81,55 @@ var MoviesWanted = new Class({
 
 	},
 
-    scanFolder: function(e) {
-        (e).stop();
+	scanFolder: function(e) {
+		(e).stop();
 
-        var self = this;
-        var options = {
-        	'name': 'Scan_folder'
-        };
+		var self = this;
+		var options = {
+			'name': 'Scan_folder'
+		};
 
-        if(!self.folder_browser){
-            self.folder_browser = new Option.Directory("Scan", "folder", "", options);
+		if(!self.folder_browser){
+			self.folder_browser = new Option.Directory("Scan", "folder", "", options);
 
-            self.folder_browser.save = function() {
-                var folder = self.folder_browser.getValue();
-                Api.request('renamer.scan', {
-                    'data': {
-                        'base_folder': folder
+			self.folder_browser.save = function() {
+				var folder = self.folder_browser.getValue();
+				Api.request('renamer.scan', {
+					'data': {
+						'base_folder': folder
 					}
 				});
-            };
+			};
 
-            self.folder_browser.inject(self.content, 'top');
-            self.folder_browser.fireEvent('injected');
+			self.folder_browser.inject(self.content, 'top');
+			self.folder_browser.fireEvent('injected');
 
-            // Hide the settings box
-            self.folder_browser.directory_inlay.hide();
-            self.folder_browser.el.removeChild(self.folder_browser.el.firstChild);
+			// Hide the settings box
+			self.folder_browser.directory_inlay.hide();
+			self.folder_browser.el.removeChild(self.folder_browser.el.firstChild);
 
-            self.folder_browser.showBrowser();
+			self.folder_browser.showBrowser();
 
-            // Make adjustments to the browser
-            self.folder_browser.browser.getElements('.clear.button').hide();
-            self.folder_browser.save_button.text = "Select";
-            self.folder_browser.browser.style.zIndex=1000;
-        }
-        else{
-            self.folder_browser.showBrowser();
-        }
-    }
+			// Make adjustments to the browser
+			self.folder_browser.browser.getElements('.clear.button').hide();
+			self.folder_browser.save_button.text = "Select";
+			self.folder_browser.browser.setStyles({
+				'z-index': 1000,
+				'right': 20,
+				'top': 0,
+				'margin': 0
+			});
+
+			self.folder_browser.pointer.setStyles({
+				'right': 20
+			});
+
+		}
+		else{
+			self.folder_browser.showBrowser();
+		}
+
+		self.list.navigation_menu.hide();
+	}
 
 });

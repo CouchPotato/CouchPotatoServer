@@ -756,7 +756,7 @@ Option.Directory = new Class({
 
 		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
-				new Element('div.pointer'),
+				self.pointer = new Element('div.pointer'),
 				new Element('div.wrapper').adopt(
 					new Element('div.actions').adopt(
 						self.back_button = new Element('a.back', {
