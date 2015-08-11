@@ -4,7 +4,6 @@ var MovieList = new Class({
 
 	options: {
 		api_call: 'media.list',
-		animated_in: false,
 		navigation: true,
 		limit: 50,
 		load_more: true,
@@ -39,7 +38,28 @@ var MovieList = new Class({
 				'html': self.options.description,
 				'styles': {'display': 'none'}
 			}) : null,
-			self.movie_list = new Element('div'),
+			self.movie_list = new Element('div', {
+				'events': {
+					'click:relay(.movie)': function(e, el){
+						el.retrieve('klass').onClick(e);
+					},
+					'mouseenter:relay(.movie)': function(e, el){
+						el.retrieve('klass').onMouseenter(e);
+					},
+					'mouseleave:relay(.movie)': function(e, el){
+						el.retrieve('klass').onMouseleave(e);
+					},
+					'click:relay(.movie .action)': function(e){
+						(e).stopPropagation();
+					},
+					'change:relay(.movie input)': function(e, el){
+						el = el.getParent();
+						var klass = el.retrieve('klass');
+						klass.fireEvent('select');
+						klass.select(klass.select_checkbox.get('checked'));
+					}
+				}
+			}),
 			self.load_more = self.options.load_more ? new Element('a.load_more', {
 				'events': {
 					'click': self.loadMore.bind(self)
@@ -109,6 +129,7 @@ var MovieList = new Class({
 	addMovies: function(movies, total){
 		var self = this;
 
+
 		if(!self.created) self.create();
 
 		// do scrollspy
@@ -117,9 +138,7 @@ var MovieList = new Class({
 			self.scrollspy.stop();
 		}
 
-		Object.each(movies, function(movie, nr){
-			self.createMovie(movie, 'bottom', nr);
-		});
+		self.createMovie(movies, 'bottom');
 
 		self.total_movies += total;
 		self.setCounter(total);
@@ -171,41 +190,35 @@ var MovieList = new Class({
 
 	createMovie: function(movie, inject_at, nr){
 		var self = this,
-			animate = self.options.animated_in && !App.mobile_screen && self.current_view == 'thumb' && nr !== undefined;
-		var m = new Movie(self, {
-			'actions': self.options.actions,
-			'view': self.current_view,
-			'onSelect': self.calculateSelected.bind(self)
-		}, movie);
+			movies = Array.isArray(movie) ? movie : [movie],
+			movie_els = [];
+		inject_at = inject_at || 'bottom';
 
-		var el = $(m);
+		movies.each(function(movie, nr){
 
-		if(animate) {
-			dynamics.css(el, {
-				opacity: 0,
-				translateY: 150
-			});
+			var m = new Movie(self, {
+				'actions': self.options.actions,
+				'view': self.current_view,
+				'onSelect': self.calculateSelected.bind(self)
+			}, movie);
+
+			var el = $(m);
+
+			if(inject_at === 'bottom'){
+				movie_els.push(el);
+			}
+			else {
+				el.inject(self.movie_list, inject_at);
+			}
+
+			self.movies.include(m);
+			self.movies_added[movie._id] = true;
+		});
+
+		if(movie_els.length > 0){
+			$(self.movie_list).adopt(movie_els);
 		}
 
-		el.inject(self.movie_list, inject_at || 'bottom');
-
-		m.fireEvent('injected');
-
-		self.movies.include(m);
-		self.movies_added[movie._id] = true;
-
-		if(animate){
-			dynamics.animate(el, {
-				opacity: 1,
-				translateY: 0
-			}, {
-				type: dynamics.spring,
-				frequency: 200,
-				friction: 300,
-				duration: 1200,
-				delay: 100 + (nr * 20)
-			});
-		}
 	},
 
 	createNavigation: function(){

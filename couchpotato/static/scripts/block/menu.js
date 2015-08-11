@@ -1,6 +1,7 @@
 var BlockMenu = new Class({
 
 	Extends: BlockBase,
+	Implements: [Options, Events],
 
 	options: {
 		'class': 'menu'

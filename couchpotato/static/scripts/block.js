@@ -1,6 +1,6 @@
 var BlockBase = new Class({
 
-	Implements: [Options, Events],
+	Implements: [Options],
 
 	options: {},
 

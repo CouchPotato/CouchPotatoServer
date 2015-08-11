@@ -1,6 +1,7 @@
 var Movie = new Class({
 
 	Extends: BlockBase,
+	Implements: [Options, Events],
 
 	actions: null,
 	details: null,
@@ -12,75 +13,10 @@ var Movie = new Class({
 		self.data = data;
 		self.list = list;
 
-		var buttons = [];
+		self.buttons = [];
 
-		self.el = new Element('a.movie', {
-			'events': {
-				'click': function(e){
-					if(e.target.get('tag') != 'input'){
-						(e).preventDefault();
-						self.openDetails();
-					}
-				},
-				'mouseenter': function(){
-					if(self.actions.length <= 0){
-						self.options.actions.each(function(a){
-							var action = new a(self),
-								button = action.getButton();
-							if(button){
-								self.actions_el.grab(button);
-								buttons.push(button);
-							}
-
-							self.actions.push(action);
-						});
-					}
-
-					if(App.mobile_screen) return;
-
-					if(list.current_view == 'thumb'){
-						dynamics.css(self.el, {
-							scale: 1,
-							opacity: 1
-						});
-
-						dynamics.animate(self.el, {
-							scale: 0.9
-						}, { type: dynamics.bounce });
-
-						buttons.each(function(el, nr){
-
-							dynamics.css(el, {
-								opacity: 0,
-								translateY: 50
-							});
-
-							dynamics.animate(el, {
-								opacity: 1,
-								translateY: 0
-							}, {
-								type: dynamics.spring,
-								frequency: 200,
-								friction: 300,
-								duration: 800,
-								delay: 100 + (nr * 40)
-							});
-
-						});
-					}
-				},
-				'mouseleave': function(){
-					if(App.mobile_screen) return;
-
-					if(list.current_view == 'thumb'){
-						dynamics.animate(self.el, {
-							scale: 1
-						}, { type: dynamics.spring });
-					}
-
-				}
-			}
-		});
+		self.el = new Element('a.movie');
+		self.el.store('klass', self);
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.category = CategoryList.getCategory(data.category_id) || {};
@@ -310,24 +246,11 @@ var Movie = new Class({
 		}
 
 		self.el.adopt(
-			self.select_checkbox = new Element('input[type=checkbox]', {
-				'events': {
-					'change': function(){
-						self.fireEvent('select');
-						self.select(self.select_checkbox.get('checked'));
-					}
-				}
-			}),
+			self.select_checkbox = new Element('input[type=checkbox]'),
 			self.thumbnail = thumbnail.grab(
-				self.actions_el = new Element('div.actions', {
-					'events': {
-						'click:relay(.action)': function(e){
-							(e).stopPropagation();
-						}
-					}
-				})
+				self.actions_el = new Element('div.actions')
 			),
-			self.data_container = new Element('div.data.light').adopt(
+			self.data_container = new Element('div.data.light').grab(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
 						self.title = new Element('span', {
@@ -367,6 +290,79 @@ var Movie = new Class({
 
 		// Add releases
 		self.updateReleases();
+
+	},
+
+
+	onClick: function(e){
+		var self = this;
+
+		if(e.target.get('tag') != 'input'){
+			(e).preventDefault();
+			self.openDetails();
+		}
+	},
+
+	onMouseenter: function(){
+		var self = this;
+
+		if(self.actions.length <= 0){
+			self.options.actions.each(function(a){
+				var action = new a(self),
+					button = action.getButton();
+				if(button){
+					self.actions_el.grab(button);
+					self.buttons.push(button);
+				}
+
+				self.actions.push(action);
+			});
+		}
+
+		if(App.mobile_screen) return;
+
+		if(self.list.current_view == 'thumb'){
+			dynamics.css(self.el, {
+				scale: 1,
+				opacity: 1
+			});
+
+			dynamics.animate(self.el, {
+				scale: 0.9
+			}, { type: dynamics.bounce });
+
+			self.buttons.each(function(el, nr){
+
+				dynamics.css(el, {
+					opacity: 0,
+					translateY: 50
+				});
+
+				dynamics.animate(el, {
+					opacity: 1,
+					translateY: 0
+				}, {
+					type: dynamics.spring,
+					frequency: 200,
+					friction: 300,
+					duration: 800,
+					delay: 100 + (nr * 40)
+				});
+
+			});
+		}
+	},
+
+	onMouseleave: function(){
+		var self = this;
+
+		if(App.mobile_screen) return;
+
+		if(self.list.current_view == 'thumb'){
+			dynamics.animate(self.el, {
+				scale: 1
+			}, { type: dynamics.spring });
+		}
 
 	},
 
