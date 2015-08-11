@@ -85,6 +85,11 @@ module.exports = function(grunt){
 			}
 		},
 
+		// Empties folders to start fresh
+		clean: {
+			server: '.tmp'
+		},
+
 		// Add vendor prefixed styles
 		autoprefixer: {
 			options: {
@@ -182,6 +187,15 @@ module.exports = function(grunt){
 
 	});
 
-	grunt.registerTask('default', ['sass:server', 'autoprefixer',  'cssmin', 'uglify:vendor', 'uglify:base', 'uglify:plugins', 'concurrent']);
+	grunt.registerTask('default', [
+		'clean:server',
+		'sass:server',
+		'autoprefixer',
+		'cssmin',
+		'uglify:vendor',
+		'uglify:base',
+		'uglify:plugins',
+		'concurrent'
+	]);
 
 };
