@@ -5,6 +5,7 @@ import signal
 import time
 import traceback
 import webbrowser
+import sys
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
@@ -63,6 +64,14 @@ class Core(Plugin):
         # Set default urlopen timeout
         import socket
         socket.setdefaulttimeout(30)
+
+        # Don't check ssl by default
+        try:
+            if sys.version_info >= (2, 7, 9):
+                import ssl
+                ssl._create_default_https_context = ssl._create_unverified_context
+        except:
+            log.debug('Failed setting default ssl context: %s', traceback.format_exc())
 
     def md5Password(self, value):
         return md5(value) if value else ''
@@ -265,6 +274,25 @@ config = [{
                     'default': uuid4().hex,
                     'readonly': 1,
                     'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
+                },
+                {
+                    'name': 'use_proxy',
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Route outbound connections via proxy. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. ',
+                },
+                {
+                    'name': 'proxy_server',
+                    'description': 'Override system default proxy server. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. Ex. <i>\"127.0.0.1:8080\"</i>. Keep empty to use system default proxy server.',
+                },
+                {
+                    'name': 'proxy_username',
+                    'description': 'Only HTTP Basic Auth is supported. Leave blank to disable authentication.',
+                },
+                {
+                    'name': 'proxy_password',
+                    'type': 'password',
+                    'description': 'Leave blank for no password.',
                 },
                 {
                     'name': 'debug',
