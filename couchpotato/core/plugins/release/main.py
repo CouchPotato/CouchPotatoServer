@@ -563,4 +563,4 @@ class Release(Plugin):
         if download_preference != 'both':
             releases = sorted(releases, key = lambda k: k.get('info', {}).get('protocol', '')[:3], reverse = (download_preference == 'torrent'))
 
-        return releases
+        return releases or []
