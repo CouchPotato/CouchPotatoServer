@@ -217,7 +217,7 @@ MA.Release = new Class({
 							new Element('a.icon-download', {
 								'events': {
 									'click': function(e){
-										(e).preventDefault();
+										(e).stopPropagation();
 										if(!this.hasClass('completed'))
 											self.download(release);
 									}
@@ -227,7 +227,7 @@ MA.Release = new Class({
 								'class': release.status == 'ignored' ? 'icon-redo' : 'icon-cancel',
 								'events': {
 									'click': function(e){
-										(e).preventDefault();
+										(e).stopPropagation();
 										self.ignore(release);
 
 										this.toggleClass('icon-redo');
@@ -669,7 +669,7 @@ MA.SuggestSeen = new Class({
 
 	markAsSeen: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		Api.request('suggestion.ignore', {
 			'data': {
@@ -714,7 +714,7 @@ MA.SuggestIgnore = new Class({
 
 	markAsIgnored: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		Api.request('suggestion.ignore', {
 			'data': {
@@ -759,7 +759,7 @@ MA.ChartIgnore = new Class({
 
 	markAsHidden: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		Api.request('charts.ignore', {
 			'data': {
@@ -802,7 +802,7 @@ MA.Readd = new Class({
 
 	doReadd: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		Api.request('movie.add', {
 			'data': {
@@ -841,7 +841,7 @@ MA.Delete = new Class({
 
 	showConfirm: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		self.question = new Question('Are you sure you want to delete <strong>' + self.getTitle() + '</strong>?', '', [{
 			'text': 'Yes, delete '+self.getTitle(),

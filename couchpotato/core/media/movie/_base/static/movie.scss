@@ -365,14 +365,20 @@ $mass_edit_height: 44px;
 			left: $padding/2;
 		}
 
-		.poster {
-			position: relative;
+		.poster_container {
 			border-radius: $border_radius;
+			position: relative;
+			width: 100%;
+			padding-bottom: 150%;
+		}
+
+		.poster {
+			position: absolute;
 			background: $theme_off center no-repeat;
 			background-size: cover;
 			overflow: hidden;
+			height: 100%;
 			width: 100%;
-			padding-bottom: 150%;
 		}
 
 		.data {

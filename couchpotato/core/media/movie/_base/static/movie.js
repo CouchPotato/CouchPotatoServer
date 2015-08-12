@@ -247,7 +247,8 @@ var Movie = new Class({
 
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox]'),
-			self.thumbnail = thumbnail.grab(
+			new Element('div.poster_container').adopt(
+				self.thumbnail = thumbnail,
 				self.actions_el = new Element('div.actions')
 			),
 			self.data_container = new Element('div.data.light').grab(

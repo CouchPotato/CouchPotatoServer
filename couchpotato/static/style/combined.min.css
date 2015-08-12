@@ -129,7 +129,8 @@
 .thumb_list .movie{max-width:50%;border-width:0 4px}
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
-.thumb_list .movie .poster{position:relative;border-radius:3px;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;width:100%;padding-bottom:150%}
+.thumb_list .movie .poster_container{border-radius:3px;position:relative;width:100%;padding-bottom:150%}
+.thumb_list .movie .poster{position:absolute;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;height:100%;width:100%}
 .thumb_list .movie .data{clear:both;font-size:.85em}
 .thumb_list .movie .data .info .title{display:-webkit-flex;display:-ms-flexbox;display:flex;padding:3px 0}
 .thumb_list .movie .data .info .title span{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
