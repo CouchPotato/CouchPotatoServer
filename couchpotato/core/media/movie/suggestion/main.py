@@ -49,8 +49,11 @@ class Suggestion(Plugin):
         for suggestion in suggestions[:int(limit)]:
 
             # Cache poster
-            poster = suggestion.get('images', {}).get('poster', [])
-            cached_poster = fireEvent('file.download', url = poster[0], single = True) if len(poster) > 0 else False
+            posters = suggestion.get('images', {}).get('poster', [])
+            poster = [x for x in posters if 'tmdb' in x]
+            posters = poster if len(poster) > 0 else posters
+
+            cached_poster = fireEvent('file.download', url = posters[0], single = True) if len(posters) > 0 else False
             files = {'image_poster': [cached_poster] } if cached_poster else {}
 
             medias.append({

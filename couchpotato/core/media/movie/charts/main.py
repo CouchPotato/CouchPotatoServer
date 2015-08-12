@@ -45,6 +45,9 @@ class Charts(Plugin):
 
                 # Cache poster
                 posters = media.get('images', {}).get('poster', [])
+                poster = [x for x in posters if 'tmdb' in x]
+                posters = poster if len(poster) > 0 else posters
+
                 cached_poster = fireEvent('file.download', url = posters[0], single = True) if len(posters) > 0 else False
                 files = {'image_poster': [cached_poster] } if cached_poster else {}
 
