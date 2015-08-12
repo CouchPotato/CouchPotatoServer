@@ -50,7 +50,7 @@ Page.Wizard = new Class({
 			'description': 'Are you done? Did you fill in everything as much as possible?' +
 				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' +
 				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f">Usenet Server</a> or <a href="http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df">Newshosting</a>.</div>',
-			'content': new Element('div').adopt(
+			'content': new Element('div').grab(
 				new Element('a.button.green', {
 					'styles': {
 						'margin-top': 20
@@ -158,7 +158,7 @@ Page.Wizard = new Class({
 						self.el.getElement('.tab_'+inc).inject(group_container);
 					});
 
-					new Element('li.t_'+group).adopt(
+					new Element('li.t_'+group).grab(
 						new Element('a', {
 							'href': App.createUrl('wizard/'+group),
 							'text': (self.headers[group].label || group).capitalize()
@@ -179,7 +179,7 @@ Page.Wizard = new Class({
 				}
 			}
 			else {
-				new Element('li.t_'+group).adopt(
+				new Element('li.t_'+group).grab(
 					new Element('a', {
 						'href': App.createUrl('wizard/'+group),
 						'text': (self.headers[group].label || group).capitalize()

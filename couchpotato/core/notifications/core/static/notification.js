@@ -221,7 +221,7 @@ var NotificationBase = new Class({
 
 		if(button_name.contains('Notifications')) return;
 
-		new Element('.ctrlHolder.test_button').adopt(
+		new Element('.ctrlHolder.test_button').grab(
 			new Element('a.button', {
 				'text': button_name,
 				'events': {

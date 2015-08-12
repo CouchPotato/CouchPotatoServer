@@ -38,8 +38,8 @@ var BlockSearchMovieItem = new Class({
 				'width': null
 			}) : null,
 			self.options_el = new Element('div.options'),
-			self.data_container = new Element('div.data').adopt(
-				self.info_container = new Element('div.info').adopt(
+			self.data_container = new Element('div.data').grab(
+				self.info_container = new Element('div.info').grab(
 					new Element('h2', {
 						'class': info.in_wanted && info.in_wanted.profile_id || in_library ? 'in_library_wanted' : '',
 						'title': self.getTitle()
@@ -122,7 +122,7 @@ var BlockSearchMovieItem = new Class({
 			},
 			'onComplete': function(json){
 				self.options_el.empty();
-				self.options_el.adopt(
+				self.options_el.grab(
 					new Element('div.message', {
 						'text': json.success ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
 					})
@@ -133,7 +133,7 @@ var BlockSearchMovieItem = new Class({
 			},
 			'onFailure': function(){
 				self.options_el.empty();
-				self.options_el.adopt(
+				self.options_el.grab(
 					new Element('div.message', {
 						'text': 'Something went wrong, check the logs for more info.'
 					})

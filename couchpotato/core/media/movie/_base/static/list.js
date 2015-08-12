@@ -582,7 +582,7 @@ var MovieList = new Class({
 		var loader_timeout;
 		if(self.movies.length === 0 && self.options.loader){
 
-			self.loader_first = new Element('div.mask.loading.with_message').adopt(
+			self.loader_first = new Element('div.mask.loading.with_message').grab(
 				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
 			).inject(self.el, 'top');
 			createSpinner(self.loader_first);

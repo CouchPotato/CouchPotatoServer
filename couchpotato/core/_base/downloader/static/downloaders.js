@@ -27,7 +27,7 @@ var DownloadersBase = new Class({
 
 		if(button_name.contains('Downloaders')) return;
 
-		new Element('.ctrlHolder.test_button').adopt(
+		new Element('.ctrlHolder.test_button').grab(
 			new Element('a.button', {
 				'text': button_name,
 				'events': {
