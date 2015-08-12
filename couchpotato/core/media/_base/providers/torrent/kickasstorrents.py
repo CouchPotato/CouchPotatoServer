@@ -31,7 +31,8 @@ class Base(TorrentMagnetProvider):
 
     proxy_list = [
         'https://kat.cr',
-        'http://katproxy.com',
+        'https://kickass.unblocked.pw/',
+        'https://katproxy.com',
     ]
 
     def _search(self, media, quality, results):
