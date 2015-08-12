@@ -44,8 +44,8 @@ class Charts(Plugin):
                     pass
 
                 # Cache poster
-                poster = media.get('images', {}).get('poster', [])
-                cached_poster = fireEvent('file.download', url = poster[0], single = True) if len(poster) > 0 else False
+                posters = media.get('images', {}).get('poster', [])
+                cached_poster = fireEvent('file.download', url = posters[0], single = True) if len(posters) > 0 else False
                 files = {'image_poster': [cached_poster] } if cached_poster else {}
 
                 medias.append({
