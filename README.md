@@ -23,6 +23,7 @@ OS X:
 
 * If you're on Leopard (10.5) install Python 2.6+: [Python 2.6.5](http://www.python.org/download/releases/2.6.5/)
 * Install [GIT](http://git-scm.com/)
+* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
 * Open up `Terminal`
 * Go to your App folder `cd /Applications`
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
@@ -33,6 +34,7 @@ Linux:
 
 * (Ubuntu / Debian) Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * (Fedora / CentOS) Install [GIT](http://git-scm.com/) with `yum install git`
+* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
@@ -59,6 +61,7 @@ FreeBSD :
 * Install port [ftp/curl](http://www.freshports.org/ftp/bcurl), deselect 'Asynchronous DNS resolution via c-ares' when prompted as part of config `cd /usr/ports/ftp/fpc-libcurl; sudo make install clean`
 * Install port [textproc/docbook-xml-450](http://www.freshports.org/textproc/docbook-xml-450) with `cd /usr/ports/textproc/docbook-xml-450; sudo make install clean`
 * Install port [GIT](http://git-scm.com/) with `cd /usr/ports/devel/git; sudo make install clean`
+* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then run `sudo python CouchPotatoServer/CouchPotato.py` to start for the first time

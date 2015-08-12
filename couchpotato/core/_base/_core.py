@@ -73,6 +73,13 @@ class Core(Plugin):
         except:
             log.debug('Failed setting default ssl context: %s', traceback.format_exc())
 
+
+        # Check if lxml is available
+        try:
+            from lxml import etree
+        except:
+            log.error('LXML not available, please install for better/faster scraping support. `http://lxml.de/installation.html`')
+
     def md5Password(self, value):
         return md5(value) if value else ''
 
