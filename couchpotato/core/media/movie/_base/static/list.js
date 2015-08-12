@@ -41,18 +41,22 @@ var MovieList = new Class({
 			self.movie_list = new Element('div', {
 				'events': {
 					'click:relay(.movie)': function(e, el){
+						(e).stopPropagation();
 						el.retrieve('klass').onClick(e);
 					},
 					'mouseenter:relay(.movie)': function(e, el){
+						(e).stopPropagation();
 						el.retrieve('klass').onMouseenter(e);
 					},
 					'mouseleave:relay(.movie)': function(e, el){
+						(e).stopPropagation();
 						el.retrieve('klass').onMouseleave(e);
 					},
 					'click:relay(.movie .action)': function(e){
 						(e).stopPropagation();
 					},
 					'change:relay(.movie input)': function(e, el){
+						(e).stopPropagation();
 						el = el.getParent();
 						var klass = el.retrieve('klass');
 						klass.fireEvent('select');

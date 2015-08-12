@@ -299,7 +299,7 @@ var Movie = new Class({
 		var self = this;
 
 		if(e.target.get('tag') != 'input'){
-			(e).preventDefault();
+			(e).stopPropagation();
 			self.openDetails();
 		}
 	},
