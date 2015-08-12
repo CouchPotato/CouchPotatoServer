@@ -37,11 +37,8 @@ var MoviesManage = new Class({
 				'menu': [self.refresh_button, self.refresh_quick],
 				'on_empty_element': new Element('div.empty_manage').adopt(
 					new Element('div', {
-						'text': 'Seems like you don\'t have anything in your library yet.'
-					}),
-					new Element('div', {
-						'text': 'Add your existing movie folders in '
-					}).adopt(
+						'text': 'Seems like you don\'t have anything in your library yet. Add your existing movie folders in '
+					}).grab(
 						new Element('a', {
 							'text': 'Settings > Manage',
 							'href': App.createUrl('settings/manage')
@@ -49,7 +46,7 @@ var MoviesManage = new Class({
 					),
 					new Element('div.after_manage', {
 						'text': 'When you\'ve done that, hit this button → '
-					}).adopt(
+					}).grab(
 						new Element('a.button.green', {
 							'text': 'Hit me, but not too hard',
 							'events':{

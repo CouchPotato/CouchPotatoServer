@@ -59,6 +59,8 @@
 }
 .mass_editing .page.movies_manage,.mass_editing .page.movies_wanted{top:124px}
 .page.movies_manage .load_more,.page.movies_wanted .load_more{text-align:center;padding:20px;font-size:2em;display:block}
+.page.movies_manage .empty_manage,.page.movies_wanted .empty_manage{padding:20px}
+.page.movies_manage .empty_manage .after_manage,.page.movies_wanted .empty_manage .after_manage{margin-top:20px}
 .movie .ripple,.movie input[type=checkbox]{display:none}
 .with_navigation .movie input[type=checkbox]{display:inline-block;position:absolute;transition:opacity 200ms;opacity:0;z-index:2;cursor:pointer}
 .with_navigation .movie input[type=checkbox]:hover{opacity:1!important}

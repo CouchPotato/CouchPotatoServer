@@ -32,6 +32,14 @@ $mass_edit_height: 44px;
 		font-size: 2em;
 		display: block;
 	}
+
+	.empty_manage {
+		padding: $padding;
+
+		.after_manage {
+			margin-top: $padding;
+		}
+	}
 }
 
 .movie {
@@ -167,7 +175,7 @@ $mass_edit_height: 44px;
 			top: 50%;
 			transform: translateY(-50%);
 		}
-		
+
 		.poster {
 			display: none;
 		}
