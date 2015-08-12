@@ -50,21 +50,24 @@
 				$(document.body).set('data-api', window.location.protocol + '//' + window.location.host + Api.createUrl().replace('/default/', '/'));
 
 				// Catch errors
-				window.onerror = function(message, file, line){
+				var dev = {{ json_encode(Env.get('dev')) }};
+				if(!dev){
+					window.onerror = function(message, file, line){
 
-					p(message, file, line);
+						p(message, file, line);
 
-					Api.request('logging.log', {
-						'data': {
-							'type': 'error',
-							'message': Browser.name + ' ' + Browser.version + ': \n' + message,
-							'page': window.location.href.replace(window.location.host, 'HOST'),
-							'file': file.replace(window.location.host, 'HOST'),
-							'line': line
-						}
-					});
+						Api.request('logging.log', {
+							'data': {
+								'type': 'error',
+								'message': Browser.name + ' ' + Browser.version + ': \n' + message,
+								'page': window.location.href.replace(window.location.host, 'HOST'),
+								'file': file.replace(window.location.host, 'HOST'),
+								'line': line
+							}
+						});
 
-					return true;
+						return true;
+					}
 				}
 
 				Quality.setup({
@@ -75,7 +78,7 @@
 				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({
-					'dev': {{ json_encode(Env.get('dev')) }},
+					'dev': dev,
 					'base_url': {{ json_encode(Env.get('web_base')) }},
 					'args': {{ json_encode(Env.get('args', unicode = True)) }},
 					'options': {{ json_encode(('%s' % Env.get('options'))) }},
