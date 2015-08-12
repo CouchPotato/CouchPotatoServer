@@ -190,8 +190,9 @@ class Core(Plugin):
         if host == '0.0.0.0' or host == '':
             host = 'localhost'
         port = Env.setting('port')
+        ssl = Env.setting('ssl_cert') and Env.setting('ssl_key')
 
-        return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), Env.get('web_base'))
+        return '%s:%d%s' % (cleanHost(host, ssl = ssl).rstrip('/'), int(port), Env.get('web_base'))
 
     def createApiUrl(self):
         return '%sapi/%s' % (self.createBaseUrl(), Env.setting('api_key'))
