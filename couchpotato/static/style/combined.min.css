@@ -85,6 +85,7 @@
 .list_list .movie:last-child{border-bottom:none}
 .list_list .movie:hover{background:rgba(0,0,0,.1)}
 .list_list .movie input[type=checkbox]{left:20px;top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
+.list_list .movie .poster{display:none}
 .list_list .movie .data{padding:10px 20px}
 .list_list .movie .data .info{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .list_list .movie .data .info .title{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}

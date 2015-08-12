@@ -167,6 +167,10 @@ $mass_edit_height: 44px;
 			top: 50%;
 			transform: translateY(-50%);
 		}
+		
+		.poster {
+			display: none;
+		}
 
 		.data {
 			padding: $padding/2 $padding;
