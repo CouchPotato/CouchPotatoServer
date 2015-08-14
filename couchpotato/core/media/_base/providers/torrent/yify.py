@@ -18,8 +18,6 @@ class Base(TorrentProvider):
     http_time_between_calls = 1  # seconds
 
     proxy_list = [
-        'https://yts.re',
-        'https://yts.wf',
         'https://yts.im',
         'https://yts.to',
         'https://yify.ml',
