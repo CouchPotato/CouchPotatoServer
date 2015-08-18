@@ -80,6 +80,7 @@
 				App.setup({
 					'dev': dev,
 					'base_url': {{ json_encode(Env.get('web_base')) }},
+					'dereferer': {{ json_encode(Env.setting('dereferer')) }},
 					'args': {{ json_encode(Env.get('args', unicode = True)) }},
 					'options': {{ json_encode(('%s' % Env.get('options'))) }},
 					'app_dir': {{ json_encode(Env.get('app_dir', unicode = True)) }},

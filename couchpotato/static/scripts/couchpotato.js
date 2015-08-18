@@ -371,7 +371,10 @@
 		var self = this;
 		(e).stop();
 
-		var url = 'http://www.dereferer.org/?' + el.get('href');
+		var url = el.get('href');
+		if(self.getOption('dereferer')){
+			url = self.getOption('dereferer') + el.get('href');
+		}
 
 		if(el.get('target') == '_blank' || (e.meta && self.isMac()) || (e.control && !self.isMac()))
 			window.open(url);

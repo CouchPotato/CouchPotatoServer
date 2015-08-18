@@ -298,7 +298,7 @@ var Movie = new Class({
 	onClick: function(e){
 		var self = this;
 
-		if(e.target.get('tag') != 'input'){
+		if(e.target.getParents('.actions').length == 0 && e.target != self.select_checkbox){
 			(e).stopPropagation();
 			self.openDetails();
 		}

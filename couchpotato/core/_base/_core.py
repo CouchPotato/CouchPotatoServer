@@ -284,6 +284,11 @@ config = [{
                     'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
                 },
                 {
+                    'name': 'dereferer',
+                    'default': 'http://www.dereferer.org/?',
+                    'description': 'Derefer links to external sites, keep empty for no dereferer. Example: http://www.dereferer.org/? or http://www.nullrefer.com/?.',
+                },
+                {
                     'name': 'use_proxy',
                     'default': 0,
                     'type': 'bool',
