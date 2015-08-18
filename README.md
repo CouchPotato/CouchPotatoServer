@@ -49,7 +49,7 @@ Linux:
 * Open your browser and go to `http://localhost:5050/`
 
 Docker:
-* You can use [razorgirl's Dockerfile](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
+* You can use [linuxserver.io](https://github.com/linuxserver/docker-couchpotato) or [razorgirl's](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
 
 FreeBSD :
 
