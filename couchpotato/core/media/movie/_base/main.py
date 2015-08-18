@@ -34,6 +34,7 @@ class MovieBase(MovieTypeBase):
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
+                'force_readd': {'desc': 'Force re-add even if movie already in wanted or manage. Default: True'},
                 'category_id': {'desc': 'ID of category you want the add the movie in. If empty will use no category.'},
                 'title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
@@ -77,6 +78,11 @@ class MovieBase(MovieTypeBase):
         info = params.get('info')
         if not info or (info and len(info.get('titles', [])) == 0):
             info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
+
+        # Allow force re-add overwrite from param
+        if 'force_readd' in params:
+            fra = params.get('force_readd')
+            force_readd = fra.lower() not in ['0', '-1'] if not isinstance(fra, bool) else fra
 
         # Set default title
         default_title = toUnicode(info.get('title'))
