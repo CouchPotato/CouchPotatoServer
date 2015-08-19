@@ -68,3 +68,16 @@ FreeBSD:
 * If not default install, specify options with startup flags in `ee /etc/rc.conf`
 * Finally, `service couchpotato start`
 * Open your browser and go to: `http://server:5050/`
+
+
+## Development
+
+For development you need a few tools that build and compress scss -> css and combine the javascript files.
+[Node/NPM](https://nodejs.org/), [Grunt](http://gruntjs.com/installing-grunt), [Compass](http://compass-style.org/install/)
+
+After you've got these tools you can install the packages using `npm install`. Once this process has finished you can start CP using the command `grunt`. This will start all the needed tools and watches any files for changes.
+You can now change css and javascript and it wil reload the page when needed.
+
+By default it will combine files used in the core folder. If you're adding a new .scss or .js file, you might need to add it and then restart the grunt process for it to combine it properly.
+
+Don't forget to enable development inside the CP settings. This disables some functions and also makes sure javascript rrors are pushed to console instead of the log.
