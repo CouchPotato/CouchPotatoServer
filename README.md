@@ -72,8 +72,9 @@ FreeBSD:
 
 ## Development
 
-For development you need a few tools that build and compress scss -> css and combine the javascript files.
-[Node/NPM](https://nodejs.org/), [Grunt](http://gruntjs.com/installing-grunt), [Compass](http://compass-style.org/install/)
+Be sure you're running the latest version of [Python 2.7](http://python.org/).
+
+If you're going to add styling or doing some javascript work you'll need a few tools that build and compress scss -> css and combine the javascript files. [Node/NPM](https://nodejs.org/), [Grunt](http://gruntjs.com/installing-grunt), [Compass](http://compass-style.org/install/)
 
 After you've got these tools you can install the packages using `npm install`. Once this process has finished you can start CP using the command `grunt`. This will start all the needed tools and watches any files for changes.
 You can now change css and javascript and it wil reload the page when needed.
