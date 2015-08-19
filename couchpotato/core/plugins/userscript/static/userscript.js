@@ -16,7 +16,7 @@ Page.Userscript = new Class({
 	indexAction: function(){
 		var self = this;
 
-		self.el.adopt(
+		self.content.grab(
 			self.frame = new Element('div.frame.loading', {
 				'text': 'Loading...'
 			})
@@ -35,7 +35,7 @@ Page.Userscript = new Class({
 				if(json.error)
 					self.frame.set('html', json.error);
 				else {
-					var item = new Block.Search.MovieItem(json.movie);
+					var item = new BlockSearchMovieItem(json.movie);
 					self.frame.adopt(item);
 					item.showOptions();
 				}
@@ -54,7 +54,7 @@ var UserscriptSettingTab = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('loadSettings', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self));
 
 	},
 
@@ -80,25 +80,28 @@ var UserscriptSettingTab = new Class({
 				new Element('span.bookmarklet').adopt(
 					new Element('a.button.green', {
 						'text': '+CouchPotato',
+						/* jshint ignore:start */
 						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
 								host_url + Api.createUrl('userscript.bookmark') +
 								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
 						 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+						/* jshint ignore:end */
 						'target': '',
 						'events': {
 							'click': function(e){
 								(e).stop();
-								alert('Drag it to your bookmark ;)')
+								alert('Drag it to your bookmark ;)');
 							}
 						}
 					}),
 					new Element('span', {
 						'text': '⇽ Drag this to your bookmarks'
 					})
-				)
-			).setStyles({
-				'background-image': "url('https://couchpota.to/media/images/userscript.gif')"
-			});
+				),
+				new Element('img', {
+					'src': 'https://couchpota.to/media/images/userscript.gif'
+				})
+			);
 
 		});
 

@@ -3,6 +3,7 @@ var MovieList = new Class({
 	Implements: [Events, Options],
 
 	options: {
+		api_call: 'media.list',
 		navigation: true,
 		limit: 50,
 		load_more: true,
@@ -37,7 +38,28 @@ var MovieList = new Class({
 				'html': self.options.description,
 				'styles': {'display': 'none'}
 			}) : null,
-			self.movie_list = new Element('div'),
+			self.movie_list = new Element('div', {
+				'events': {
+					'click:relay(.movie)': function(e, el){
+						el.retrieve('klass').onClick(e);
+					},
+					'mouseenter:relay(.movie)': function(e, el){
+						(e).stopPropagation();
+						el.retrieve('klass').onMouseenter(e);
+					},
+					'mouseleave:relay(.movie)': function(e, el){
+						(e).stopPropagation();
+						el.retrieve('klass').onMouseleave(e);
+					},
+					'change:relay(.movie input)': function(e, el){
+						(e).stopPropagation();
+						el = el.getParent();
+						var klass = el.retrieve('klass');
+						klass.fireEvent('select');
+						klass.select(klass.select_checkbox.get('checked'));
+					}
+				}
+			}),
 			self.load_more = self.options.load_more ? new Element('a.load_more', {
 				'events': {
 					'click': self.loadMore.bind(self)
@@ -45,15 +67,17 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		if($(window).getSize().x <= 480 && !self.options.force_view)
-			self.changeView('list');
-		else
-			self.changeView(self.getSavedView() || self.options.view || 'details');
+		self.changeView(self.getSavedView() || self.options.view || 'thumb');
 
-		self.getMovies();
+		// Create the alphabet nav
+		if(self.options.navigation)
+			self.createNavigation();
+
+		if(self.options.api_call)
+			self.getMovies();
 
 		App.on('movie.added', self.movieAdded.bind(self));
-		App.on('movie.deleted', self.movieDeleted.bind(self))
+		App.on('movie.deleted', self.movieDeleted.bind(self));
 	},
 
 	movieDeleted: function(notification){
@@ -67,7 +91,7 @@ var MovieList = new Class({
 					self.setCounter(self.counter_count-1);
 					self.total_movies--;
 				}
-			})
+			});
 		}
 
 		self.checkIfEmpty();
@@ -89,24 +113,22 @@ var MovieList = new Class({
 	create: function(){
 		var self = this;
 
-		// Create the alphabet nav
-		if(self.options.navigation)
-			self.createNavigation();
-
-		if(self.options.load_more)
+		if(self.options.load_more){
 			self.scrollspy = new ScrollSpy({
+				container: self.el.getParent(),
 				min: function(){
-					var c = self.load_more.getCoordinates();
-					return c.top - window.document.getSize().y - 300
+					return self.load_more.getCoordinates().top;
 				},
 				onEnter: self.loadMore.bind(self)
 			});
+		}
 
 		self.created = true;
 	},
 
 	addMovies: function(movies, total){
 		var self = this;
+
 
 		if(!self.created) self.create();
 
@@ -116,13 +138,12 @@ var MovieList = new Class({
 			self.scrollspy.stop();
 		}
 
-		Object.each(movies, function(movie){
-			self.createMovie(movie);
-		});
+		self.createMovie(movies, 'bottom');
 
 		self.total_movies += total;
 		self.setCounter(total);
 
+		self.calculateSelected();
 	},
 
 	setCounter: function(count){
@@ -138,7 +159,7 @@ var MovieList = new Class({
 			self.empty_message = null;
 		}
 
-		if(self.total_movies && count == 0 && !self.empty_message){
+		if(self.total_movies && count === 0 && !self.empty_message){
 			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
 				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
 
@@ -167,20 +188,37 @@ var MovieList = new Class({
 
 	},
 
-	createMovie: function(movie, inject_at){
-		var self = this;
-		var m = new Movie(self, {
-			'actions': self.options.actions,
-			'view': self.current_view,
-			'onSelect': self.calculateSelected.bind(self)
-		}, movie);
+	createMovie: function(movie, inject_at, nr){
+		var self = this,
+			movies = Array.isArray(movie) ? movie : [movie],
+			movie_els = [];
+		inject_at = inject_at || 'bottom';
 
-		$(m).inject(self.movie_list, inject_at || 'bottom');
+		movies.each(function(movie, nr){
 
-		m.fireEvent('injected');
+			var m = new Movie(self, {
+				'actions': self.options.actions,
+				'view': self.current_view,
+				'onSelect': self.calculateSelected.bind(self)
+			}, movie);
 
-		self.movies.include(m);
-		self.movies_added[movie._id] = true;
+			var el = $(m);
+
+			if(inject_at === 'bottom'){
+				movie_els.push(el);
+			}
+			else {
+				el.inject(self.movie_list, inject_at);
+			}
+
+			self.movies.include(m);
+			self.movies_added[movie._id] = true;
+		});
+
+		if(movie_els.length > 0){
+			$(self.movie_list).adopt(movie_els);
+		}
+
 	},
 
 	createNavigation: function(){
@@ -192,7 +230,7 @@ var MovieList = new Class({
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
 				new Element('span.select').adopt(
-					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
+					self.mass_edit_select = new Element('input[type=checkbox]', {
 						'events': {
 							'change': self.massEditToggleAll.bind(self)
 						}
@@ -230,38 +268,40 @@ var MovieList = new Class({
 			),
 			new Element('div.menus').adopt(
 				self.navigation_counter = new Element('span.counter[title=Total]'),
-				self.filter_menu = new Block.Menu(self, {
-					'class': 'filter'
+				self.filter_menu = new BlockMenu(self, {
+					'class': 'filter',
+					'button_class': 'icon-filter'
 				}),
-				self.navigation_actions = new Element('ul.actions', {
+				self.navigation_actions = new Element('div.actions', {
 					'events': {
-						'click:relay(li)': function(e, el){
+						'click': function(e, el){
+							(e).preventDefault();
+
+							var new_view = self.current_view == 'list' ? 'thumb' : 'list';
+
 							var a = 'active';
 							self.navigation_actions.getElements('.'+a).removeClass(a);
-							self.changeView(el.get('data-view'));
-							this.addClass(a);
+							self.changeView(new_view);
 
-							el.inject(el.getParent(), 'top');
-							el.getSiblings().hide();
-							setTimeout(function(){
-								el.getSiblings().setStyle('display', null);
-							}, 100)
+							self.navigation_actions.getElement('[data-view='+new_view+']')
+								.addClass(a);
+
 						}
 					}
 				}),
-				self.navigation_menu = new Block.Menu(self, {
-					'class': 'extra'
+				self.navigation_menu = new BlockMenu(self, {
+					'class': 'extra',
+					'button_class': 'icon-dots'
 				})
 			)
-		).inject(self.el, 'top');
+		);
 
 		// Mass edit
-		self.mass_edit_select_class = new Form.Check(self.mass_edit_select);
 		Quality.getActiveProfiles().each(function(profile){
 			new Element('option', {
 				'value': profile.get('_id'),
 				'text': profile.get('label')
-			}).inject(self.mass_edit_quality)
+			}).inject(self.mass_edit_quality);
 		});
 
 		self.filter_menu.addLink(
@@ -273,7 +313,7 @@ var MovieList = new Class({
 					'change': self.search.bind(self)
 				}
 			})
-		).addClass('search');
+		).addClass('search icon-search');
 
 		var available_chars;
 		self.filter_menu.addEvent('open', function(){
@@ -289,8 +329,8 @@ var MovieList = new Class({
 						available_chars = json.chars;
 
 						available_chars.each(function(c){
-							self.letters[c.capitalize()].addClass('available')
-						})
+							self.letters[c.capitalize()].addClass('available');
+						});
 
 					}
 				});
@@ -301,23 +341,23 @@ var MovieList = new Class({
 				'events': {
 					'click:relay(li.available)': function(e, el){
 						self.activateLetter(el.get('data-letter'));
-						self.getMovies(true)
+						self.getMovies(true);
 					}
 				}
 			})
 		);
 
 		// Actions
-		['mass_edit', 'details', 'list'].each(function(view){
+		['thumb', 'list'].each(function(view){
 			var current = self.current_view == view;
-			new Element('li', {
-				'class': 'icon2 ' + view + (current ?  ' active ' : ''),
+			new Element('a', {
+				'class': 'icon-' + view + (current ?  ' active ' : ''),
 				'data-view': view
 			}).inject(self.navigation_actions, current ? 'top' : 'bottom');
 		});
 
 		// All
-		self.letters['all'] = new Element('li.letter_all.available.active', {
+		self.letters.all = new Element('li.letter_all.available.active', {
 			'text': 'ALL'
 		}).inject(self.navigation_alpha);
 
@@ -346,24 +386,26 @@ var MovieList = new Class({
 		var selected = 0,
 			movies = self.movies.length;
 		self.movies.each(function(movie){
-			selected += movie.isSelected() ? 1 : 0
+			selected += movie.isSelected() ? 1 : 0;
 		});
 
 		var indeterminate = selected > 0 && selected < movies,
 			checked = selected == movies && selected > 0;
 
-		self.mass_edit_select.set('indeterminate', indeterminate);
+		document.body[selected > 0 ? 'addClass' : 'removeClass']('mass_editing');
 
-		self.mass_edit_select_class[checked ? 'check' : 'uncheck']();
-		self.mass_edit_select_class.element[indeterminate ? 'addClass' : 'removeClass']('indeterminate');
+		if(self.mass_edit_select){
+			self.mass_edit_select.set('checked', checked);
+			self.mass_edit_select.indeterminate = indeterminate;
 
-		self.mass_edit_selected.set('text', selected);
+			self.mass_edit_selected.set('text', selected);
+		}
 	},
 
 	deleteSelected: function(){
 		var self = this,
 			ids = self.getSelectedMovies(),
-			help_msg = self.identifier == 'wanted' ? 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!' : 'Your files will be safe, this will only delete the reference from the CouchPotato manage list';
+			help_msg = self.identifier == 'wanted' ? 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!' : 'Your files will be safe, this will only delete the references in CouchPotato';
 
 		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', help_msg, [{
 			'text': 'Yes, delete '+(ids.length != 1 ? 'them' : 'it'),
@@ -441,10 +483,10 @@ var MovieList = new Class({
 		var ids = [];
 		self.movies.each(function(movie){
 			if (movie.isSelected())
-				ids.include(movie.get('_id'))
+				ids.include(movie.get('_id'));
 		});
 
-		return ids
+		return ids;
 	},
 
 	massEditToggleAll: function(){
@@ -453,10 +495,10 @@ var MovieList = new Class({
 		var select = self.mass_edit_select.get('checked');
 
 		self.movies.each(function(movie){
-			movie.select(select)
+			movie.select(select);
 		});
 
-		self.calculateSelected()
+		self.calculateSelected();
 	},
 
 	reset: function(){
@@ -493,12 +535,12 @@ var MovieList = new Class({
 			.addClass(new_view+'_list');
 
 		self.current_view = new_view;
-		Cookie.write(self.options.identifier+'_view2', new_view, {duration: 1000});
+		Cookie.write(self.options.identifier+'_view', new_view, {duration: 1000});
 	},
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view2');
+		return self.options.force_view ? self.options.view : Cookie.read(self.options.identifier+'_view');
 	},
 
 	search: function(){
@@ -537,23 +579,24 @@ var MovieList = new Class({
 			self.load_more.set('text', 'loading...');
 		}
 
-		if(self.movies.length == 0 && self.options.loader){
+		var loader_timeout;
+		if(self.movies.length === 0 && self.options.loader){
 
-			self.loader_first = new Element('div.loading').adopt(
+			self.loader_first = new Element('div.mask.loading.with_message').grab(
 				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
 			).inject(self.el, 'top');
+			createSpinner(self.loader_first);
 
-			createSpinner(self.loader_first, {
-				radius: 4,
-				length: 4,
-				width: 1
-			});
+			var lfc = self.loader_first;
+			loader_timeout = setTimeout(function(){
+				lfc.addClass('show');
+			}, 10);
 
-			self.el.setStyle('min-height', 93);
+			self.el.setStyle('min-height', 220);
 
 		}
 
-		Api.request(self.options.api_call || 'media.list', {
+		Api.request(self.options.api_call, {
 			'data': Object.merge({
 				'type': self.options.type || 'movie',
 				'status': self.options.status,
@@ -564,13 +607,15 @@ var MovieList = new Class({
 				if(reset)
 					self.movie_list.empty();
 
+				if(loader_timeout) clearTimeout(loader_timeout);
 				if(self.loader_first){
 					var lf = self.loader_first;
-					self.loader_first.addClass('hide');
 					self.loader_first = null;
+					lf.removeClass('show');
+
 					setTimeout(function(){
 						lf.destroy();
-					}, 20000);
+					}, 1000);
 					self.el.setStyle('min-height', null);
 				}
 
@@ -590,7 +635,7 @@ var MovieList = new Class({
 	loadMore: function(){
 		var self = this;
 		if(self.offset >= self.options.limit)
-			self.getMovies()
+			self.getMovies();
 	},
 
 	store: function(movies){
@@ -603,7 +648,7 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
+		var is_empty = self.movies.length === 0 && (self.total_movies === 0 || self.total_movies === undefined);
 
 		if(self.title)
 			self.title[is_empty ? 'hide' : 'show']();

@@ -16,8 +16,8 @@ var DownloadersBase = new Class({
 
 		var setting_page = App.getPage('Settings');
 		setting_page.addEvent('create', function(){
-			Object.each(setting_page.tabs.downloaders.groups, self.addTestButton.bind(self))
-		})
+			Object.each(setting_page.tabs.downloaders.groups, self.addTestButton.bind(self));
+		});
 
 	},
 
@@ -27,7 +27,7 @@ var DownloadersBase = new Class({
 
 		if(button_name.contains('Downloaders')) return;
 
-		new Element('.ctrlHolder.test_button').adopt(
+		new Element('.ctrlHolder.test_button').grab(
 			new Element('a.button', {
 				'text': button_name,
 				'events': {
@@ -44,19 +44,19 @@ var DownloadersBase = new Class({
 								if(json.success){
 									message = new Element('span.success', {
 										'text': 'Connection successful'
-									}).inject(button, 'after')
+									}).inject(button, 'after');
 								}
 								else {
 									var msg_text = 'Connection failed. Check logs for details.';
 									if(json.hasOwnProperty('msg')) msg_text = json.msg;
 									message = new Element('span.failed', {
 										'text': msg_text
-									}).inject(button, 'after')
+									}).inject(button, 'after');
 								}
 
 								(function(){
 									message.destroy();
-								}).delay(3000)
+								}).delay(3000);
 							}
 						});
 					}
@@ -67,7 +67,7 @@ var DownloadersBase = new Class({
 	},
 
 	testButtonName: function(fieldset){
-		var name = String(fieldset.getElement('h2').innerHTML).substring(0,String(fieldset.getElement('h2').innerHTML).indexOf("<span"));
+		var name = fieldset.getElement('h2 .group_label').get('text');
 		return 'Test '+name;
 	}
 

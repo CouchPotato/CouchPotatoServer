@@ -1,6 +1,7 @@
+import time
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.variable import splitString, removeDuplicate, getIdentifier, getTitle
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 
@@ -14,6 +15,12 @@ class Suggestion(Plugin):
 
         addApiView('suggestion.view', self.suggestView)
         addApiView('suggestion.ignore', self.ignoreView)
+
+        def test():
+            time.sleep(1)
+            self.suggestView()
+
+        addEvent('app.load', test)
 
     def suggestView(self, limit = 6, **kwargs):
 
@@ -38,10 +45,31 @@ class Suggestion(Plugin):
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
             self.setCache('suggestion_cached', suggestions, timeout = 6048000)  # Cache for 10 weeks
 
+        medias = []
+        for suggestion in suggestions[:int(limit)]:
+
+            # Cache poster
+            posters = suggestion.get('images', {}).get('poster', [])
+            poster = [x for x in posters if 'tmdb' in x]
+            posters = poster if len(poster) > 0 else posters
+
+            cached_poster = fireEvent('file.download', url = posters[0], single = True) if len(posters) > 0 else False
+            files = {'image_poster': [cached_poster] } if cached_poster else {}
+
+            medias.append({
+                'status': 'suggested',
+                'title': getTitle(suggestion),
+                'type': 'movie',
+                'info': suggestion,
+                'files': files,
+                'identifiers': {
+                    'imdb': suggestion.get('imdb')
+                }
+            })
+
         return {
             'success': True,
-            'count': len(suggestions),
-            'suggestions': suggestions[:int(limit)]
+            'movies': medias
         }
 
     def ignoreView(self, imdb = None, limit = 6, remove_only = False, mark_seen = False, **kwargs):
@@ -60,10 +88,25 @@ class Suggestion(Plugin):
 
             new_suggestions = self.updateSuggestionCache(ignore_imdb = imdb, limit = limit, ignored = ignored, seen = seen)
 
+        if len(new_suggestions) <= limit:
+            return {
+                'result': False
+            }
+
+        # Only return new (last) item
+        media = {
+            'status': 'suggested',
+            'title': getTitle(new_suggestions[limit]),
+            'type': 'movie',
+            'info': new_suggestions[limit],
+            'identifiers': {
+                'imdb': new_suggestions[limit].get('imdb')
+            }
+        }
+
         return {
             'result': True,
-            'ignore_count': len(ignored),
-            'suggestions': new_suggestions[limit - 1:limit]
+            'movie': media
         }
 
     def updateSuggestionCache(self, ignore_imdb = None, limit = 6, ignored = None, seen = None):

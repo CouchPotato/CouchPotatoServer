@@ -105,41 +105,49 @@ class Bluray(Automation, RSS):
 
         return movies
 
-
     def getChartList(self):
-        # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
-        movie_list = {'name': 'Blu-ray.com - New Releases', 'url': self.display_url, 'order': self.chart_order, 'list': []}
-        movie_ids = []
-        max_items = int(self.conf('max_items', section='charts', default=5))
-        rss_movies = self.getRSSData(self.rss_url)
-
-        for movie in rss_movies:
-            name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
-            year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
-
-            if not name.find('/') == -1: # make sure it is not a double movie release
-                continue
-
-            movie = self.search(name, year)
-
-            if movie:
-
-                if movie.get('imdb') in movie_ids:
-                    continue
-
-                is_movie = fireEvent('movie.is_movie', identifier = movie.get('imdb'), single = True)
-                if not is_movie:
-                    continue
-
-                movie_ids.append(movie.get('imdb'))
-                movie_list['list'].append( movie )
-                if len(movie_list['list']) >= max_items:
-                    break
+        cache_key = 'bluray.charts'
+        movie_list = {
+            'name': 'Blu-ray.com - New Releases',
+            'url': self.display_url,
+            'order': self.chart_order,
+            'list': self.getCache(cache_key) or []
+        }
 
         if not movie_list['list']:
-            return
+            movie_ids = []
+            max_items = int(self.conf('max_items', section='charts', default=5))
+            rss_movies = self.getRSSData(self.rss_url)
 
-        return [ movie_list ]
+            for movie in rss_movies:
+                name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
+                year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
+
+                if not name.find('/') == -1: # make sure it is not a double movie release
+                    continue
+
+                movie = self.search(name, year)
+
+                if movie:
+
+                    if movie.get('imdb') in movie_ids:
+                        continue
+
+                    is_movie = fireEvent('movie.is_movie', identifier = movie.get('imdb'), single = True)
+                    if not is_movie:
+                        continue
+
+                    movie_ids.append(movie.get('imdb'))
+                    movie_list['list'].append( movie )
+                    if len(movie_list['list']) >= max_items:
+                        break
+
+            if not movie_list['list']:
+                return
+
+            self.setCache(cache_key, movie_list['list'], timeout = 259200)
+
+        return [movie_list]
 
 
 config = [{

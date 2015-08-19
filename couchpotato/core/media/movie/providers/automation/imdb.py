@@ -19,7 +19,7 @@ autoload = 'IMDB'
 class IMDB(MultiProvider):
 
     def getTypes(self):
-        return [IMDBWatchlist, IMDBAutomation]
+        return [IMDBWatchlist, IMDBAutomation, IMDBCharts]
 
 
 class IMDBBase(Automation, RSS):
@@ -126,30 +126,6 @@ class IMDBAutomation(IMDBBase):
 
     enabled_option = 'automation_providers_enabled'
 
-    charts = {
-        'theater': {
-            'order': 1,
-            'name': 'IMDB - Movies in Theaters',
-            'url': 'http://www.imdb.com/movies-in-theaters/',
-        },
-        'boxoffice': {
-            'order': 2,
-            'name': 'IMDB - Box Office',
-            'url': 'http://www.imdb.com/boxoffice/',
-        },
-        'rentals': {
-            'order': 3,
-            'name': 'IMDB - Top DVD rentals',
-            'url': 'http://www.imdb.com/boxoffice/rentals',
-            'type': 'json',
-        },
-        'top250': {
-            'order': 4,
-            'name': 'IMDB - Top 250 Movies',
-            'url': 'http://www.imdb.com/chart/top',
-        },
-    }
-
     def getIMDBids(self):
 
         movies = []
@@ -175,20 +151,53 @@ class IMDBAutomation(IMDBBase):
 
         return movies
 
-    def getChartList(self):
 
+class IMDBCharts(IMDBBase):
+
+    charts = {
+        'theater': {
+            'order': 1,
+            'name': 'IMDB - Movies in Theaters',
+            'url': 'http://www.imdb.com/movies-in-theaters/',
+        },
+        'boxoffice': {
+            'order': 2,
+            'name': 'IMDB - Box Office',
+            'url': 'http://www.imdb.com/boxoffice/',
+        },
+        'rentals': {
+            'order': 3,
+            'name': 'IMDB - Top DVD rentals',
+            'url': 'http://www.imdb.com/boxoffice/rentals',
+            'type': 'json',
+        },
+        'top250': {
+            'order': 4,
+            'name': 'IMDB - Top 250 Movies',
+            'url': 'http://www.imdb.com/chart/top',
+        },
+    }
+
+    def getChartList(self):
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
         movie_lists = []
         max_items = int(self.conf('max_items', section = 'charts', default=5))
 
         for name in self.charts:
             chart = self.charts[name].copy()
-            url = chart.get('url')
+            cache_key = 'imdb.chart_display_%s' % name
 
             if self.conf('chart_display_%s' % name):
 
-                chart['list'] = []
+                cached = self.getCache(cache_key)
+                if cached:
+                    chart['list'] = cached
+                    movie_lists.append(chart)
+                    continue
 
+                url = chart.get('url')
+
+                chart['list'] = []
                 imdb_ids = self.getFromURL(url)
 
                 try:
@@ -206,9 +215,10 @@ class IMDBAutomation(IMDBBase):
                 except:
                     log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
+                self.setCache(cache_key, chart['list'], timeout = 259200)
+
                 if chart['list']:
                     movie_lists.append(chart)
-
 
         return movie_lists
 

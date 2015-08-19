@@ -31,7 +31,7 @@ var Profile = new Class({
 			}),
 			new Element('.quality_label.ctrlHolder').adopt(
 				new Element('label', {'text':'Name'}),
-				new Element('input.inlay', {
+				new Element('input', {
 					'type':'text',
 					'value': data.label,
 					'placeholder': 'Profile name'
@@ -47,7 +47,7 @@ var Profile = new Class({
 			new Element('div.wait_for.ctrlHolder').adopt(
 				// "Wait the entered number of days for a checked quality, before downloading a lower quality release."
 				new Element('span', {'text':'Wait'}),
-				new Element('input.inlay.wait_for_input.xsmall', {
+				new Element('input.wait_for_input.xsmall', {
 					'type':'text',
 					'value': data.wait_for && data.wait_for.length > 0 ? data.wait_for[0] : 0
 				}),
@@ -55,7 +55,7 @@ var Profile = new Class({
 				new Element('span.advanced', {'text':'and keep searching'}),
 
 				// "After a checked quality is found and downloaded, continue searching for even better quality releases for the entered number of days."
-				new Element('input.inlay.xsmall.stop_after_input.advanced', {
+				new Element('input.xsmall.stop_after_input.advanced', {
 					'type':'text',
 					'value': data.stop_after && data.stop_after.length > 0 ? data.stop_after[0] : 0
 				}),
@@ -63,7 +63,7 @@ var Profile = new Class({
 
 				// Minimum score of
 				new Element('span.advanced', {'html':'<br/>Releases need a minimum score of'}),
-				new Element('input.advanced.inlay.xsmall.minimum_score_input', {
+				new Element('input.advanced.xsmall.minimum_score_input', {
 					'size': 4,
 					'type':'text',
 					'value': data.minimum_score || 1
@@ -81,7 +81,7 @@ var Profile = new Class({
 					'quality': quality,
 					'finish': data.finish[nr] || false,
 					'3d': data['3d'] ? data['3d'][nr] || false : false
-				})
+				});
 			});
 		}
 
@@ -123,7 +123,7 @@ var Profile = new Class({
 				}
 			});
 
-		}).delay(delay, self)
+		}).delay(delay, self);
 
 	},
 
@@ -148,7 +148,7 @@ var Profile = new Class({
 				});
 		});
 
-		return data
+		return data;
 	},
 
 	addType: function(data){
@@ -177,7 +177,7 @@ var Profile = new Class({
 		var self = this;
 
 		return self.types.filter(function(type){
-			return type.get('quality')
+			return type.get('quality');
 		});
 
 	},
@@ -231,15 +231,15 @@ var Profile = new Class({
 	},
 
 	get: function(attr){
-		return this.data[attr]
+		return this.data[attr];
 	},
 
 	isCore: function(){
-		return this.data.core
+		return this.data.core;
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 
 });
@@ -270,56 +270,48 @@ Profile.Type = new Class({
 		var data = self.data;
 
 		self.el = new Element('li.type').adopt(
-			new Element('span.quality_type').grab(
+			new Element('span.quality_type.select_wrapper.icon-dropdown').grab(
 				self.fillQualities()
 			),
 			self.finish_container = new Element('label.finish').adopt(
-				new Element('span.finish').grab(
-					self.finish = new Element('input.inlay.finish[type=checkbox]', {
-						'checked': data.finish !== undefined ? data.finish : 1,
-						'events': {
-							'change': function(){
-								if(self.el == self.el.getParent().getElement(':first-child')){
-									self.finish_class.check();
-									alert('Top quality always finishes the search');
-									return;
-								}
-
-								self.fireEvent('change');
+				self.finish = new Element('input.finish[type=checkbox]', {
+					'checked': data.finish !== undefined ? data.finish : 1,
+					'events': {
+						'change': function(){
+							if(self.el == self.el.getParent().getElement(':first-child')){
+								alert('Top quality always finishes the search');
+								return;
 							}
+
+							self.fireEvent('change');
 						}
-					})
-				),
+					}
+				}),
 				new Element('span.check_label[text=finish]')
 			),
 			self['3d_container'] = new Element('label.threed').adopt(
-				new Element('span.3d').grab(
-					self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
-						'checked': data['3d'] !== undefined ? data['3d'] : 0,
-						'events': {
-							'change': function(){
-								self.fireEvent('change');
-							}
+				self['3d'] = new Element('input.3d[type=checkbox]', {
+					'checked': data['3d'] !== undefined ? data['3d'] : 0,
+					'events': {
+						'change': function(){
+							self.fireEvent('change');
 						}
-					})
-				),
+					}
+				}),
 				new Element('span.check_label[text=3D]')
 			),
-			new Element('span.delete.icon2', {
+			new Element('span.delete.icon-cancel', {
 				'events': {
 					'click': self.del.bind(self)
 				}
 			}),
-			new Element('span.handle')
+			new Element('span.handle.icon-handle')
 		);
 
 		self.el[self.data.quality ? 'removeClass' : 'addClass']('is_empty');
 
 		if(self.data.quality && Quality.getQuality(self.data.quality).allow_3d)
 			self.el.addClass('allow_3d');
-
-		self.finish_class = new Form.Check(self.finish);
-		self['3d_class'] = new Form.Check(self['3d']);
 
 	},
 
@@ -342,7 +334,7 @@ Profile.Type = new Class({
 				'text': q.label,
 				'value': q.identifier,
 				'data-allow_3d': q.allow_3d
-			}).inject(self.qualities)
+			}).inject(self.qualities);
 		});
 
 		self.qualities.set('value', self.data.quality);
@@ -358,7 +350,7 @@ Profile.Type = new Class({
 			'quality': self.qualities.get('value'),
 			'finish': +self.finish.checked,
 			'3d': +self['3d'].checked
-		}
+		};
 	},
 
 	get: function(key){
