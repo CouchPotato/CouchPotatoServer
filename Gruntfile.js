@@ -8,6 +8,7 @@ module.exports = function(grunt){
 
 	// Configurable paths
 	var config = {
+		python: grunt.file.exists('./_env/bin/python') ? './_env/bin/python' : 'python',
 		tmp: '.tmp',
 		base: 'couchpotato',
 		css_dest: 'couchpotato/static/style/combined.min.css',
@@ -140,7 +141,7 @@ module.exports = function(grunt){
 
 		shell: {
 			runCouchPotato: {
-				command: 'python CouchPotato.py',
+				command: '<%= config.python %> CouchPotato.py',
 				options: {
 					stdout: true,
 					stderr: true
