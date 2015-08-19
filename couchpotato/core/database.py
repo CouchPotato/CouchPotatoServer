@@ -272,7 +272,7 @@ class Database(object):
         prop_name = 'last_db_compact'
         last_check = int(Env.prop(prop_name, default = 0))
 
-        if size > 26214400 and last_check < time.time()-604800: # 25MB / 7 days
+        if last_check < time.time()-604800: # 7 days
             self.compact()
             Env.prop(prop_name, value = int(time.time()))
 
