@@ -51,22 +51,18 @@ Linux:
 Docker:
 * You can use [linuxserver.io](https://github.com/linuxserver/docker-couchpotato) or [razorgirl's](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
 
-FreeBSD :
+FreeBSD:
 
-* Update your ports tree `sudo portsnap fetch update`
-* Install Python 2.6+ [lang/python](http://www.freshports.org/lang/python) with `cd /usr/ports/lang/python; sudo make install clean`
-* Install port [databases/py-sqlite3](http://www.freshports.org/databases/py-sqlite3) with `cd /usr/ports/databases/py-sqlite3; sudo make install clean`
-* Add a symlink to 'python2' `sudo ln -s /usr/local/bin/python /usr/local/bin/python2`
-* Install port [ftp/libcurl](http://www.freshports.org/ftp/libcurl) with `cd /usr/ports/ftp/fpc-libcurl; sudo make install clean`
-* Install port [ftp/curl](http://www.freshports.org/ftp/bcurl), deselect 'Asynchronous DNS resolution via c-ares' when prompted as part of config `cd /usr/ports/ftp/fpc-libcurl; sudo make install clean`
-* Install port [textproc/docbook-xml-450](http://www.freshports.org/textproc/docbook-xml-450) with `cd /usr/ports/textproc/docbook-xml-450; sudo make install clean`
-* Install port [GIT](http://git-scm.com/) with `cd /usr/ports/devel/git; sudo make install clean`
-* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
-* 'cd' to the folder of your choosing.
+* Become root with `su`
+* Update your repo catalog `pkg update`
+* Install required tools `pkg install python py27-sqlite3 fpc-libcurl docbook-xml git-lite`
+* For default install location and running as root `cd /usr/local`
+* If running as root, expects python here `ln -s /usr/local/bin/python /usr/bin/python`
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
-* Then run `sudo python CouchPotatoServer/CouchPotato.py` to start for the first time
-* To run on boot copy the init script. `sudo cp CouchPotatoServer/init/freebsd /etc/rc.d/couchpotato`
-* Change the paths inside the init script. `sudo vim /etc/rc.d/couchpotato`
-* Make init script executable. `sudo chmod +x /etc/rc.d/couchpotato`
-* Add init to startup. `sudo echo 'couchpotato_enable="YES"' >> /etc/rc.conf`
+* Copy the startup script `cp CouchPotatoServer/init/freebsd /usr/local/etc/rc.d/couchpotato`
+* Make startup script executable `chmod 555 /usr/local/etc/rc.d/couchpotato`
+* Add startup to boot `echo 'couchpotato_enable="YES"' >> /etc/rc.conf`
+* Read the options at the top of `more /usr/local/etc/rc.d/couchpotato`
+* If not default install, specify options with startup flags in `ee /etc/rc.conf`
+* Finally, `service couchpotato start`
 * Open your browser and go to: `http://server:5050/`
