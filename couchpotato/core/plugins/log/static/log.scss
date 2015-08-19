@@ -91,12 +91,12 @@
 
 
 
-	&[data-filter=INFO] .error,
-	&[data-filter=INFO] .debug,
-	&[data-filter=ERROR] .debug,
-	&[data-filter=ERROR] .info,
-	&[data-filter=DEBUG] .info,
-	&[data-filter=DEBUG] .error {
+	[data-filter=INFO] .error,
+	[data-filter=INFO] .debug,
+	[data-filter=ERROR] .debug,
+	[data-filter=ERROR] .info,
+	[data-filter=DEBUG] .info,
+	[data-filter=DEBUG] .error {
 		display: none;
 	}
 }

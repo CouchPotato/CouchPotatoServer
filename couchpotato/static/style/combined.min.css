@@ -372,7 +372,7 @@
 .page.log .container .message{float:right;width:86%;white-space:pre-wrap}
 .page.log .container .error{color:#FFA4A4}
 .page.log .container .debug span{opacity:.6}
-.page.log[data-filter=DEBUG] .error,.page.log[data-filter=DEBUG] .info,.page.log[data-filter=ERROR] .debug,.page.log[data-filter=ERROR] .info,.page.log[data-filter=INFO] .debug,.page.log[data-filter=INFO] .error{display:none}
+.page.log [data-filter=DEBUG] .error,.page.log [data-filter=DEBUG] .info,.page.log [data-filter=ERROR] .debug,.page.log [data-filter=ERROR] .info,.page.log [data-filter=INFO] .debug,.page.log [data-filter=INFO] .error{display:none}
 .report_popup.report_popup{position:fixed;left:0;right:0;bottom:0;top:0;z-index:99999;font-size:14px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;opacity:1;color:#FFF;pointer-events:auto}
 .disable_hover .scroll_content>*,.mask,.ripple{pointer-events:none}
 .report_popup.report_popup .button{display:inline-block;margin:10px 0;padding:10px;color:#FFF}
