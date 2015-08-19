@@ -1565,13 +1565,13 @@ class IU_TreeBasedIndex(Index):
 
     def update(self, doc_id, key, u_start=0, u_size=0, u_status='o'):
         containing_leaf_start, element_index, old_doc_id, old_key, old_start, old_size, old_status = self._find_key_to_update(key, doc_id)
+        if u_start:
+            old_start = u_start
+        if u_size:
+            old_size = u_size
+        if u_status:
+            old_status = u_status
         new_data = (old_doc_id, old_start, old_size, old_status)
-        if not u_start:
-            new_data[1] = u_start
-        if not u_size:
-            new_data[2] = u_size
-        if not u_status:
-            new_data[3] = u_status
         self._update_element(containing_leaf_start, element_index, new_data)
 
         self._find_key.delete(key)
