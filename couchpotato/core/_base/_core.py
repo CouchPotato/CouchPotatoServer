@@ -53,6 +53,7 @@ class Core(Plugin):
         addEvent('app.version', self.version)
         addEvent('app.load', self.checkDataDir)
         addEvent('app.load', self.cleanUpFolders)
+        addEvent('app.load.after', self.dependencies)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
@@ -73,12 +74,14 @@ class Core(Plugin):
         except:
             log.debug('Failed setting default ssl context: %s', traceback.format_exc())
 
+    def dependencies(self):
 
         # Check if lxml is available
-        try:
-            from lxml import etree
-        except:
-            log.error('LXML not available, please install for better/faster scraping support. `http://lxml.de/installation.html`')
+        try: from lxml import etree
+        except: log.error('LXML not available, please install for better/faster scraping support: `http://lxml.de/installation.html`')
+
+        try: import OpenSSL
+        except: log.error('OpenSSL not available, please install for better requests validation: `https://pyopenssl.readthedocs.org/en/latest/install.html`')
 
     def md5Password(self, value):
         return md5(value) if value else ''
