@@ -1,24 +1,23 @@
 .movies>.description a:hover,.page.movie_details .releases .buttons a:hover{text-decoration:underline}
-.directory_list,.messages .message,.more_menu .wrapper,.search_form .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .search_form{display:inline-block;z-index:11;width:44px;position:relative}
 .search_form *{-webkit-transform:translateZ(0);transform:translateZ(0)}
 .search_form .icon-search{position:absolute;z-index:2;top:50%;left:0;height:100%;text-align:center;color:#FFF;font-size:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
-.search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none}
+.search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .search_form .wrapper:before{-webkit-transform:rotate(45deg);transform:rotate(45deg);content:'';display:block;position:absolute;height:10px;width:10px;background:#ac0000;left:-6px;bottom:16px;z-index:1}
 .search_form .input{background:#FFF;border-radius:3px 0 0 3px;position:relative;left:4px;height:44px;overflow:hidden;width:100%}
 .search_form .input input{position:absolute;top:0;left:0;height:100%;width:100%;z-index:1}
 .search_form .input input::-ms-clear{width:0;height:0}
 .search_form.filled .input input{background:#eaeaea}
-.search_form.focused,.search_form.shown{border-color:#04bce6}
-.search_form.focused .wrapper,.search_form.shown .wrapper{display:block;width:380px;-webkit-transform-origin:0 90%;transform-origin:0 90%}
-.search_form.focused .input input,.search_form.shown .input input{opacity:1}
+.page.home .search_form,.search_form.focused,.search_form.shown{border-color:#04bce6}
+.page.home .search_form .wrapper,.search_form.focused .wrapper,.search_form.shown .wrapper{display:block;width:380px;-webkit-transform-origin:0 90%;transform-origin:0 90%}
+.page.home .search_form .input input,.search_form.focused .input input,.search_form.shown .input input{opacity:1}
 .search_form .results_container{min-height:50px;text-align:left;position:relative;left:4px;display:none;background:#FFF;border-radius:3px 0 0;overflow:hidden}
 .search_form .results_container .results{max-height:280px;overflow-x:hidden}
 .search_form .results_container .results .media_result{overflow:hidden;height:50px;position:relative}
 .search_form .results_container .results .media_result .options{position:absolute;height:100%;top:0;left:30px;right:0;background:rgba(0,0,0,.3);display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .search_form .results_container .results .media_result .options>.in_library_wanted{margin-top:-7px}
 .search_form .results_container .results .media_result .options>div{border:0;display:-webkit-flex;display:-ms-flexbox;display:flex;padding:10px;-webkit-align-items:stretch;-ms-flex-align:stretch;align-items:stretch;-webkit-justify-content:space-between;-ms-flex-pack:justify;justify-content:space-between}
-@media (max-width:480px){.search_form.focused .wrapper,.search_form.shown .wrapper{width:260px}
+@media (max-width:480px){.page.home .search_form .wrapper,.search_form.focused .wrapper,.search_form.shown .wrapper{width:260px}
 .search_form .results_container .results .media_result{font-size:12px}
 .search_form .results_container .results .media_result .options{left:0}
 .search_form .results_container .results .media_result .options>div{padding:3px}
@@ -52,6 +51,12 @@
 .search_form .results_container .results .media_result:last-child .data{border-bottom:0}
 .search_form.focused.filled .results_container,.search_form.shown.filled .results_container{display:block}
 .search_form.focused.filled .input,.search_form.shown.filled .input{border-radius:0 0 0 3px}
+.page.home .search_form{height:100px}
+.page.home .search_form .icon-search{color:#000}
+.page.home .search_form .wrapper{border-radius:0;box-shadow:0;bottom:auto;top:0}
+.directory_list,.messages .message,.more_menu .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
+.page.home .search_form .wrapper:before{display:none}
+.page.home .search_form .wrapper .input{border-radius:0;left:0}
 .page.movies{bottom:auto;z-index:21;height:80px}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0;transition:top 300ms cubic-bezier(.9,0,.1,1)}
 @media (max-width:480px){.page.movies{height:44px}

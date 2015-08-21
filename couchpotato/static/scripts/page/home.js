@@ -22,6 +22,7 @@ Page.Home = new Class({
 
 		self.chain = new Chain();
 		self.chain.chain(
+			self.createBigsearch.bind(self),
 			self.createAvailable.bind(self),
 			self.createSoon.bind(self),
 			self.createSuggestions.bind(self),
@@ -31,6 +32,15 @@ Page.Home = new Class({
 
 		self.chain.callChain();
 
+	},
+
+	createBigsearch: function(){
+		var self = this;
+
+		var search = new BlockSearch(self, {});
+		$(search).inject(self.content);
+
+		self.chain.callChain();
 	},
 
 	createAvailable: function(){

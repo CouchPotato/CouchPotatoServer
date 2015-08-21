@@ -74,7 +74,8 @@
 	}
 
 	&.focused,
-	&.shown {
+	&.shown,
+	.page.home & {
 		border-color: #04bce6;
 
 		.wrapper {
@@ -303,6 +304,33 @@
 		.input {
 			border-radius: 0 0 0 $border_radius;
 		}
+	}
+
+	.page.home & {
+		height: 100px;
+
+		.icon-search {
+			color: #000;
+		}
+
+		.wrapper {
+			border-radius: 0;
+			box-shadow: 0;
+			bottom: auto;
+			top: 0;
+
+			&:before {
+				display: none;
+			}
+
+			.input {
+				border-radius: 0;
+				left: 0;
+			}
+
+		}
+
+
 	}
 
 }
