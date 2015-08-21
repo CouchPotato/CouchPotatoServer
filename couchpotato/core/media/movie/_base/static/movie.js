@@ -248,33 +248,31 @@ var Movie = new Class({
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox]'),
 			new Element('div.poster_container').adopt(
-				self.thumbnail = thumbnail,
+				thumbnail,
 				self.actions_el = new Element('div.actions')
 			),
-			self.data_container = new Element('div.data.light').grab(
-				self.info_container = new Element('div.info').adopt(
-					new Element('div.title').adopt(
-						self.title = new Element('span', {
-							'text': self.getTitle() || 'n/a'
-						}),
-						self.year = new Element('div.year', {
-							'text': self.data.info.year || 'n/a'
-						})
-					),
-					self.eta = eta_date && (now+8035200 > eta) ? new Element('div.eta', {
-						'text': eta_date,
-						'title': 'ETA'
-					}) : null,
-					self.quality = new Element('div.quality'),
-					self.rating = rating ? new Element('div.rating[title='+rating[0]+']').adopt(
-						stars,
-						new Element('span.votes[text=('+rating.join(' / ')+')][title=Votes]')
-					) : null
-				)
+			new Element('div.info').adopt(
+				new Element('div.title').adopt(
+					new Element('span', {
+						'text': self.getTitle() || 'n/a'
+					}),
+					new Element('div.year', {
+						'text': self.data.info.year || 'n/a'
+					})
+				),
+				eta_date && (now+8035200 > eta) ? new Element('div.eta', {
+					'text': eta_date,
+					'title': 'ETA'
+				}) : null,
+				self.quality = new Element('div.quality'),
+				rating ? new Element('div.rating[title='+rating[0]+']').adopt(
+					stars,
+					new Element('span.votes[text=('+rating.join(' / ')+')][title=Votes]')
+				) : null
 			)
 		);
 
-		if(!self.thumbnail)
+		if(!thumbnail)
 			self.el.addClass('no_thumbnail');
 
 		// Add profile
