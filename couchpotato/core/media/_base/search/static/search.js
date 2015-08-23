@@ -2,6 +2,10 @@ var BlockSearch = new Class({
 
 	Extends: BlockBase,
 
+	options: {
+		'animate': true
+	},
+
 	cache: {},
 
 	create: function(){
@@ -72,20 +76,24 @@ var BlockSearch = new Class({
 			self.el.removeClass('filled');
 
 			// Animate in
-			dynamics.css(self.wrapper, {
-				opacity: 0,
-				scale: 0.1
-			});
+			if(self.options.animate){
 
-			dynamics.animate(self.wrapper, {
-				opacity: 1,
-				scale: 1
-			}, {
-				type: dynamics.spring,
-				frequency: 200,
-				friction: 270,
-				duration: 800
-			});
+				dynamics.css(self.wrapper, {
+					opacity: 0,
+					scale: 0.1
+				});
+
+				dynamics.animate(self.wrapper, {
+					opacity: 1,
+					scale: 1
+				}, {
+					type: dynamics.spring,
+					frequency: 200,
+					friction: 270,
+					duration: 800
+				});
+
+			}
 
 		}
 	},

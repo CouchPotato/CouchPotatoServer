@@ -112,8 +112,16 @@ $mass_edit_height: 44px;
 	position: relative;
 
 	.no_movies {
-		text-align: center;
+		display: block;
 		padding: $padding;
+
+		@include media-phablet {
+			padding: $padding/2;
+		}
+
+		a {
+			color: $primary_color;
+		}
 	}
 
 	> .description {
