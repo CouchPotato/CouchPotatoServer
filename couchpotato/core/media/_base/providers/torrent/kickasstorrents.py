@@ -67,7 +67,7 @@ class Base(TorrentMagnetProvider):
                                         link = td.find('div', {'class': 'torrentname'}).find_all('a')[2]
                                         new['id'] = temp.get('id')[-7:]
                                         new['name'] = link.text
-                                        new['url'] = td.find('a', 'imagnet')['href']
+                                        new['url'] = td.find('a', {'href': re.compile('magnet:*')})['href']
                                         new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
                                         new['verified'] = True if td.find('a', 'iverify') else False
                                         new['score'] = 100 if new['verified'] else 0
