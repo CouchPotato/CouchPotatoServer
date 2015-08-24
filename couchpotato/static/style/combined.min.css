@@ -507,7 +507,7 @@
 .page.login input[type=password],.page.login input[type=text]{width:100%!important}
 .page.login .remember_me{font-size:15px;float:left;width:150px}
 .page.login .button{float:right;margin:0;transition:none}
-@font-face{font-family:icons;src:url(../fonts/icons.eot?74719542);src:url(../fonts/icons.eot?74719542#iefix) format("embedded-opentype"),url(../fonts/icons.woff?747195412) format("woff"),url(../fonts/icons.ttf?74719542) format("truetype"),url(../fonts/icons.svg?74719542#icons) format("svg");font-weight:400;font-style:normal}
+@font-face{font-family:icons;src:url(../fonts/icons.eot?3);src:url(../fonts/icons.eot?3#iefix) format("embedded-opentype"),url(../fonts/icons.woff?3) format("woff"),url(../fonts/icons.ttf?3) format("truetype"),url(../fonts/icons.svg?3#icons) format("svg");font-weight:400;font-style:normal}
 [class*=" icon-"]:before,[class^=icon-]:before{font-family:icons;font-style:normal;font-weight:400;speak:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 .icon-left-arrow:before{content:'\e800'}
 .icon-settings:before{content:'\e801'}
@@ -538,6 +538,7 @@
 .icon-star:before{content:'\e81a'}
 .icon-star-empty:before{content:'\e81b'}
 .icon-star-half:before{content:'\e81c'}
+.icon-donate:before{content:'\e81d'}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Light-webfont.eot);src:url(../fonts/OpenSans-Light-webfont.eot?#iefix) format("embedded-opentype"),url(../fonts/OpenSans-Light-webfont.woff) format("woff"),url(../fonts/OpenSans-Light-webfont.ttf) format("truetype"),url(../fonts/OpenSans-Light-webfont.svg#OpenSansRegular) format("svg");font-weight:200;font-style:normal}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Regular-webfont.eot);src:url(../fonts/OpenSans-Regular-webfont.eot?#iefix) format("embedded-opentype"),url(../fonts/OpenSans-Regular-webfont.woff) format("woff"),url(../fonts/OpenSans-Regular-webfont.ttf) format("truetype"),url(../fonts/OpenSans-Regular-webfont.svg#OpenSansRegular) format("svg");font-weight:400;font-style:normal}
 @font-face{font-family:OpenSans;src:url(../fonts/OpenSans-Italic-webfont.eot);src:url(../fonts/OpenSans-Italic-webfont.eot?#iefix) format("embedded-opentype"),url(../fonts/OpenSans-Italic-webfont.woff) format("woff"),url(../fonts/OpenSans-Italic-webfont.ttf) format("truetype"),url(../fonts/OpenSans-Italic-webfont.svg#OpenSansItalic) format("svg");font-weight:400;font-style:italic}
@@ -569,21 +570,27 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .header .navigation ul li{display:block}
 .header .navigation ul li a{padding:10px 20px;display:block;position:relative}
 .header .navigation ul li a:before{position:absolute;width:100%;display:none;text-align:center;font-size:18px;text-indent:0}
-.header .navigation ul li a.icon-home:before{font-size:24px}
-.header .menu,.header .notification_menu,.header .search_form{position:absolute;z-index:21;bottom:6.67px;width:44px;height:44px}
 @media (max-width:480px){.header .navigation ul li{line-height:0}
 .header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center}
 .header .navigation ul li a span{display:none}
 .header .navigation ul li a:before{display:block}
-.header .menu,.header .notification_menu,.header .search_form{bottom:0}
 }
+.header .navigation ul li a.icon-home:before{font-size:24px}
+.header .donate{position:absolute;bottom:54px;left:0;right:0;padding:10px 20px}
+.header .donate:before{display:none;font-size:20px;text-align:center}
+@media (max-width:480px){.header .donate{bottom:132px;padding:10px 0}
+.header .donate span{display:none}
+.header .donate:before{display:block}
+}
+.header .menu,.header .notification_menu,.header .search_form{position:absolute;z-index:21;bottom:6.67px;width:44px;height:44px}
 .header .menu .wrapper,.header .notification_menu .wrapper,.header .search_form .wrapper{min-width:170px;-webkit-transform-origin:0 90%;transform-origin:0 90%}
 .header .menu>a,.header .notification_menu>a,.header .search_form>a{display:inline-block;height:100%;width:100%;text-align:center;line-height:44px;font-size:20px}
 .header .notification_menu{left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}
 .header .notification_menu .button:before{font-size:20px;top:-2px}
 .header .notification_menu .badge{position:absolute;color:#FFF;top:5px;right:0;background:#ac0000;border-radius:50%;width:18px;height:18px;line-height:16px;text-align:center;font-size:10px;font-weight:lighter}
 .header .notification_menu .wrapper{width:320px}
-@media (max-width:480px){.header .notification_menu{bottom:44px}
+@media (max-width:480px){.header .menu,.header .notification_menu,.header .search_form{bottom:0}
+.header .notification_menu{bottom:44px}
 .header .notification_menu .wrapper{width:250px}
 }
 .header .notification_menu ul{min-height:60px;max-height:300px;overflow-y:auto!important}
