@@ -7,6 +7,7 @@ Page.Log = new Class({
 	title: 'Show recent logs.',
 	has_tab: false,
 
+	navigation: null,
 	log_items: [],
 	report_text: '### Steps to reproduce:\n'+
 				'1. ..\n'+
@@ -43,7 +44,15 @@ Page.Log = new Class({
 			}
 		}).inject(self.content);
 
-		Api.request('logging.get', {
+		if(self.navigation){
+			var nav = self.navigation.getElement('.nav');
+			nav.getElements('.active').removeClass('active');
+
+			self.navigation.getElements('li')[nr+1].addClass('active');
+		}
+
+		if(self.request && self.request.running) self.request.cancel();
+		self.request = Api.request('logging.get', {
 			'data': {
 				'nr': nr
 			},
@@ -52,67 +61,68 @@ Page.Log = new Class({
 				self.log_items = self.createLogElements(json.log);
 				self.log.adopt(self.log_items);
 				self.log.removeClass('loading');
+				self.scrollToBottom();
 
-				var navigation = new Element('div.navigation').adopt(
-					new Element('h2[text=Logs]'),
-					new Element('div.hint', {
-						'text': 'Select multiple lines & report an issue'
-					})
-				);
+				if(!self.navigation){
+					self.navigation = new Element('div.navigation').adopt(
+						new Element('h2[text=Logs]'),
+						new Element('div.hint', {
+							'text': 'Select multiple lines & report an issue'
+						})
+					);
 
-				var nav = new Element('ul.nav', {
-					'events': {
-						'click:relay(li.select)': function (e, el) {
-							self.getLogs(parseInt(el.get('text')) - 1);
-						}
-					}
-				}).inject(navigation);
-
-				// Type selection
-				new Element('li.filter').grab(
-					new Element('select', {
+					var nav = new Element('ul.nav', {
 						'events': {
-							'change': function () {
-								var type_filter = this.getSelected()[0].get('value');
-								self.content.set('data-filter', type_filter);
-								self.scrollToBottom();
+							'click:relay(li.select)': function (e, el) {
+								self.getLogs(parseInt(el.get('text')) - 1);
 							}
 						}
-					}).adopt(
-						new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
-						new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
-						new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
-						new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
-					)
-				).inject(nav);
+					}).inject(self.navigation);
 
-				// Selections
-				for (var i = 0; i <= json.total; i++) {
-					new Element('li', {
-						'text': i + 1,
-						'class': 'select ' + (nr == i ? 'active' : '')
-					}).inject(nav);
-				}
-
-				// Clear button
-				new Element('li.clear', {
-					'text': 'clear',
-					'events': {
-						'click': function () {
-							Api.request('logging.clear', {
-								'onComplete': function () {
-									self.getLogs(0);
+					// Type selection
+					new Element('li.filter').grab(
+						new Element('select', {
+							'events': {
+								'change': function () {
+									var type_filter = this.getSelected()[0].get('value');
+									self.content.set('data-filter', type_filter);
+									self.scrollToBottom();
 								}
-							});
+							}
+						}).adopt(
+							new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
+							new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
+							new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
+							new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
+						)
+					).inject(nav);
 
-						}
+					// Selections
+					for (var i = 0; i <= json.total; i++) {
+						new Element('li', {
+							'text': i + 1,
+							'class': 'select ' + (nr == i ? 'active' : '')
+						}).inject(nav);
 					}
-				}).inject(nav);
 
-				// Add to page
-				navigation.inject(self.content, 'top');
+					// Clear button
+					new Element('li.clear', {
+						'text': 'clear',
+						'events': {
+							'click': function () {
+								Api.request('logging.clear', {
+									'onComplete': function () {
+										self.getLogs(0);
+									}
+								});
 
-				self.scrollToBottom();
+							}
+						}
+					}).inject(nav);
+
+					// Add to page
+					self.navigation.inject(self.content, 'top');
+				}
 			}
 		});
 
@@ -142,7 +152,7 @@ Page.Log = new Class({
 	},
 
 	scrollToBottom: function () {
-		new Fx.Scroll(this.el, {'duration': 0}).toBottom();
+		new Fx.Scroll(this.content, {'duration': 0}).toBottom();
 	},
 
 	showSelectionButton: function(e){

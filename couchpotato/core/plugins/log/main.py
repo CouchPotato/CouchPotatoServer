@@ -131,11 +131,12 @@ class Logging(Plugin):
 
     def toList(self, log_content = ''):
 
-        logs_raw = toUnicode(log_content).split('[0m\n')
+        logs_raw = re.split(r'\[0m\n', toUnicode(log_content))
 
         logs = []
+        re_split = r'\x1b'
         for log_line in logs_raw:
-            split = splitString(log_line, '\x1b')
+            split = re.split(re_split, log_line)
             if split:
                 try:
                     date, time, log_type = splitString(split[0], ' ')

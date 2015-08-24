@@ -34,16 +34,16 @@
 		margin-top: 3px;
 	}
 
-	.loading {
-		text-align: center;
-		font-size: 20px;
-		padding: 50px;
-	}
-
 	.container {
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+
+		&.loading {
+			text-align: center;
+			font-size: 20px;
+			padding: 100px 50px;
+		}
 
 		select {
 			vertical-align: top;
