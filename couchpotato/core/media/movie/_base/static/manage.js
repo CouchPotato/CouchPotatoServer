@@ -110,7 +110,8 @@ var MoviesManage = new Class({
 							return;
 
 						if(!self.progress_container)
-							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after');
+							self.progress_container = new Element('div.progress')
+								.inject(self.list, 'top');
 
 						self.progress_container.empty();
 

@@ -126,6 +126,11 @@
 @media (max-width:480px){.movies .no_movies{padding:10px}
 .movies .actions{pointer-events:none}
 }
+.movies .progress div{width:50%;padding:5px 10px;display:-webkit-flex;display:-ms-flexbox;display:flex}
+@media (max-width:768px){.movies .progress div{width:100%}
+}
+.movies .progress div .folder{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px}
+.movies .progress div .percentage{font-weight:700}
 .list_list{font-weight:300}
 .list_list .movie{display:block;border-bottom:1px solid #eaeaea;position:relative;cursor:pointer}
 .list_list .movie:last-child{border-bottom:none}

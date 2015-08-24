@@ -164,6 +164,31 @@ $mass_edit_height: 44px;
 			pointer-events: none;
 		}
 	}
+
+	.progress {
+
+		div {
+			width: 50%;
+			padding: $padding/4 $padding/2;
+			display: flex;
+
+			@include media-tablet {
+				width: 100%;
+			}
+
+			.folder {
+				flex: 1 auto;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				margin-right: $padding/2;
+			}
+
+			.percentage {
+				font-weight: bold;
+			}
+		}
+	}
 }
 
 .list_list {
