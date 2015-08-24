@@ -250,7 +250,7 @@
 .page.movie_details .section_add .options>div .add{width:200px}
 .page.movie_details .section_add .options>div .add .button{background:#FFF;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;display:block;text-align:center;width:100%;margin:0}
 .page.movie_details .section_add .options>div .add .button:hover{background:#ac0000}
-.page.movie_details .section_add .thumbnail{display:none}
+.page.movie_details .section_add .data,.page.movie_details .section_add .thumbnail{display:none}
 .page.movie_details .files span{text-align:center}
 .page.movie_details .files .name{text-align:left;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
 .page.movie_details .files .type{min-width:80px}
