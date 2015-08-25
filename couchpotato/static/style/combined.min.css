@@ -447,9 +447,8 @@
 .profile .ctrlHolder.wait_for.wait_for input{min-width:0;width:40px;text-align:center;margin:0 2px}
 .profile .ctrlHolder.wait_for.wait_for .advanced{display:none;color:#ac0000}
 .show_advanced .profile .ctrlHolder.wait_for.wait_for .advanced{display:inline}
-#profile_ordering li,.page.login{display:-webkit-flex;display:-ms-flexbox}
 #profile_ordering ul{list-style:none;margin:0;width:275px;padding:0}
-#profile_ordering li{border-bottom:1px solid #eaeaea;padding:5px;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
+#profile_ordering li{border-bottom:1px solid #eaeaea;padding:5px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 #profile_ordering li:hover{background:#eaeaea}
 #profile_ordering li:last-child{border:0}
 #profile_ordering li input[type=checkbox]{margin:2px 10px 0 0;vertical-align:top}
@@ -459,14 +458,19 @@
 #profile_ordering li .handle:hover{opacity:1}
 .group_sizes .item .label{min-width:150px}
 .group_sizes .item .max,.group_sizes .item .min{display:inline-block;width:70px!important;min-width:0!important;margin-right:10px;text-align:center}
-.page.userscript .media_result .year,.page.wizard .navigation.navigation{display:none}
 .page.userscript{position:absolute;width:100%;top:0;bottom:0;left:0;right:0;padding:0}
 .page.userscript .frame.loading{text-align:center;font-size:20px;padding:20px}
-.page.userscript .media_result{height:140px}
-.page.userscript .media_result .thumbnail{width:90px}
-.page.userscript .media_result .options{left:90px;padding:54px 15px}
-.page.userscript .media_result .options select[name=title]{width:190px}
-.page.userscript .media_result .options select[name=profile]{width:70px}
+.page.userscript .media_result{height:140px;display:-webkit-flex;display:-ms-flexbox;display:flex}
+.page.userscript .thumbnail{width:90px}
+.page.userscript .options{left:90px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;padding:10px}
+.page.userscript .options>div{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap}
+.page.userscript .options>div div{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;margin:0;padding:0 5px}
+.page.userscript .options>div .title{min-width:100%;margin-bottom:20px}
+.page.userscript .options>div .add{text-align:right}
+.page.userscript .options>div .add a{display:block;text-align:center}
+.page.userscript .options>div select{width:100%}
+.page.userscript .message{font-size:1.5em}
+.page.userscript .data,.page.userscript .year,.page.wizard .navigation.navigation{display:none}
 .page.wizard .tab_content.tab_content{display:block}
 .page.wizard .tab_content.tab_content fieldset .ctrlHolder,.page.wizard .tab_content.tab_content fieldset h2{padding:5px}
 .page.wizard h1{padding:10px 0;display:block;font-size:30px;margin:80px 5px 0;font-weight:300}
@@ -504,7 +508,7 @@
 .api_docs .database table .form,.api_docs .database table form{width:600px}
 .api_docs .database table textarea{font-size:12px;width:100%;height:200px}
 .api_docs .database table input[type=submit]{display:block}
-.page.login{background:#FFF;display:flex;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;font-size:1.25em}
+.page.login{background:#FFF;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;font-size:1.25em}
 .page.login h1{padding:0 0 10px;font-size:60px;font-family:Lobster;font-weight:400;color:#ac0000;text-align:center}
 .page.login form{padding:0;width:300px}
 .page.login .ctrlHolder{padding:0;margin:0 0 20px}
