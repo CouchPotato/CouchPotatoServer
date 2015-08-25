@@ -1,3 +1,12 @@
+.header .navigation ul .tab_shows {
+	display: none;
+
+	.support_show & {
+		display: block;
+	}
+}
+
+/*
 .shows.details_list {
 	padding: 10px 0 20px;
 	position: relative;
@@ -1213,3 +1222,4 @@
 				text-align: right;
 				vertical-align: middle;
 			}
+*/

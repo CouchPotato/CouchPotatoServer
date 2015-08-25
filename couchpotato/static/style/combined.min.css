@@ -392,6 +392,8 @@
 .toggle_menu h2{height:40px}
 @media all and (max-width:480px){.toggle_menu h2{font-size:16px;text-align:center;height:30px}
 }
+.header .navigation ul .tab_shows{display:none}
+.support_show .header .navigation ul .tab_shows{display:block}
 .add_new_category{padding:20px;display:block;text-align:center;font-size:20px}
 .category{margin-bottom:20px;position:relative}
 .category>.delete{position:absolute;padding:16px;right:0;cursor:pointer;opacity:.6;color:#fd5353}
