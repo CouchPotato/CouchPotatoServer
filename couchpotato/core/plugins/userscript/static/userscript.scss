@@ -70,3 +70,55 @@
 	}
 
 }
+
+
+.group_userscript.group_userscript {
+	display: block;
+
+	.empty_wanted & {
+		padding: $padding 0;
+	}
+
+	.wgroup_automation & {
+		padding: $padding/2 0;
+		margin-left: 0;
+	}
+
+	h2 {
+		margin: 0 0 $padding/2;
+	}
+
+	.userscript {
+		margin-left: $padding;
+
+		@include media-tablet {
+			margin-left: $padding/2;
+		}
+
+		.wgroup_automation & {
+			margin-left: 0;
+		}
+	}
+
+	.bookmarklet {
+
+		span {
+			margin-left: 10px;
+			display: inline-block;
+		}
+	}
+
+	img {
+		margin: $padding;
+		width: 100%;
+		max-width: 600px;
+
+		@include media-tablet {
+			margin: $padding/2;
+		}
+
+		.wgroup_automation & {
+			margin-left: 0;
+		}
+	}
+}

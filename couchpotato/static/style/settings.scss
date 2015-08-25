@@ -491,47 +491,6 @@
 		}
 	}
 
-
-	.group_userscript {
-
-		h2 .hint {
-			display: block;
-			margin: 0 !important;
-		}
-
-		.userscript {
-			float: left;
-			margin: 14px 0 0 $padding;
-			height: 36px;
-			line-height: 25px;
-		}
-
-		.or {
-			float: left;
-			margin: $padding -10px 0 10px;
-		}
-
-		.bookmarklet {
-			display: block;
-			float: left;
-			padding: $padding 15px 0 $padding;
-
-			span {
-				margin-left: 10px;
-				display: inline-block;
-			}
-		}
-
-		img {
-			display: block;
-			clear: both;
-			float: left;
-			margin: $padding;
-			width: 100%;
-			max-width: 680px;
-		}
-	}
-
 	.directory {
 
 		@include media-phablet {
