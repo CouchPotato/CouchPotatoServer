@@ -1,6 +1,7 @@
 @import "_mixins";
 
 .page.wizard {
+	top: 0 !important;
 
 	.navigation.navigation {
 		display: none;

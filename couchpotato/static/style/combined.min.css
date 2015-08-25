@@ -470,7 +470,22 @@
 .page.userscript .options>div .add a{display:block;text-align:center}
 .page.userscript .options>div select{width:100%}
 .page.userscript .message{font-size:1.5em}
-.page.userscript .data,.page.userscript .year,.page.wizard .navigation.navigation{display:none}
+.page.userscript .data,.page.userscript .year{display:none}
+.group_userscript.group_userscript{display:block}
+.empty_wanted .group_userscript.group_userscript{padding:20px 0}
+.wgroup_automation .group_userscript.group_userscript{padding:10px 0;margin-left:0}
+.group_userscript.group_userscript h2{margin:0 0 10px}
+.group_userscript.group_userscript .userscript{margin-left:20px}
+@media (max-width:768px){.group_userscript.group_userscript .userscript{margin-left:10px}
+}
+.wgroup_automation .group_userscript.group_userscript .userscript{margin-left:0}
+.group_userscript.group_userscript .bookmarklet span{margin-left:10px;display:inline-block}
+.group_userscript.group_userscript img{margin:20px;width:100%;max-width:600px}
+@media (max-width:768px){.group_userscript.group_userscript img{margin:10px}
+}
+.wgroup_automation .group_userscript.group_userscript img{margin-left:0}
+.page.wizard{top:0!important}
+.page.wizard .navigation.navigation{display:none}
 .page.wizard .tab_content.tab_content{display:block}
 .page.wizard .tab_content.tab_content fieldset .ctrlHolder,.page.wizard .tab_content.tab_content fieldset h2{padding:5px}
 .page.wizard h1{padding:10px 0;display:block;font-size:30px;margin:80px 5px 0;font-weight:300}
@@ -748,7 +763,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 }
 .page.settings fieldset.enabler>:nth-child(3){margin-top:20px}
 .page.settings fieldset .ctrlHolder.advanced,.page.settings fieldset.advanced{display:none;color:#ac0000}
-.page.settings.show_advanced fieldset.advanced,.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
+.page.settings.show_advanced fieldset.advanced{display:block}
+.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.settings .switch{display:inline-block;background:#ac0000;height:20px;width:50px;min-width:0!important;transition:all 250ms;cursor:pointer;border-radius:20px}
 .page.settings .switch input{display:none}
 .page.settings .switch .toggle{background:#FFF;margin:1px;height:18px;width:18px;transition:-webkit-transform 250ms;transition:transform 250ms;-webkit-transform:translateX(30px);transform:translateX(30px);border-radius:20px}
@@ -790,12 +806,6 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tab_about .info dd.version{cursor:pointer}
 .page.settings .tab_about .group_actions>div{padding:20px;text-align:center}
 .page.settings .tab_about .group_actions a{margin:0 10px;font-size:20px}
-.page.settings .group_userscript h2 .hint{display:block;margin:0!important}
-.page.settings .group_userscript .userscript{float:left;margin:14px 0 0 20px;height:36px;line-height:25px}
-.page.settings .group_userscript .or{float:left;margin:20px -10px 0 10px}
-.page.settings .group_userscript .bookmarklet{display:block;float:left;padding:20px 15px 0 20px}
-.page.settings .group_userscript .bookmarklet span{margin-left:10px;display:inline-block}
-.page.settings .group_userscript img{display:block;clear:both;float:left;margin:20px;width:100%;max-width:680px}
 @media (max-width:480px){.page.settings .directory{width:100%}
 }
 .page.settings .directory input{width:100%}

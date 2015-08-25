@@ -402,7 +402,7 @@
 			}),
 			new Element('span.or[text=or]'),
 			new Element('span.bookmarklet').adopt(
-				new Element('a.button.orange', {
+				new Element('a.button', {
 					'text': '+CouchPotato',
 					/* jshint ignore:start */
 					'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
@@ -421,7 +421,10 @@
 				new Element('span', {
 					'text': '⇽ Drag this to your bookmarks'
 				})
-			)
+			),
+			new Element('img', {
+				'src': 'https://couchpota.to/media/images/userscript.gif'
+			})
 		);
 	},
 
