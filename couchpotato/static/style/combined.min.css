@@ -763,7 +763,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 }
 .page.settings fieldset.enabler>:nth-child(3){margin-top:20px}
 .page.settings fieldset .ctrlHolder.advanced,.page.settings fieldset.advanced{display:none;color:#ac0000}
-.page.settings.show_advanced fieldset.advanced,.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
+.page.settings.show_advanced fieldset.advanced{display:block}
+.page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.settings .switch{display:inline-block;background:#ac0000;height:20px;width:50px;min-width:0!important;transition:all 250ms;cursor:pointer;border-radius:20px}
 .page.settings .switch input{display:none}
 .page.settings .switch .toggle{background:#FFF;margin:1px;height:18px;width:18px;transition:-webkit-transform 250ms;transition:transform 250ms;-webkit-transform:translateX(30px);transform:translateX(30px);border-radius:20px}
