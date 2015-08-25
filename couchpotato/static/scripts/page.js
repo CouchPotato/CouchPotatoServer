@@ -93,6 +93,10 @@ var PageBase = new Class({
 
 	},
 
+	sortPageByOrder: function(a, b){
+		return (a.order || 100) - (b.order || 100);
+	},
+
 	open: function(action, params){
 		var self = this;
 		//p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));

@@ -176,7 +176,7 @@
 .thumb_list .movie{max-width:50%;border-width:0 4px}
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
-.thumb_list .movie .poster_container{border-radius:3px;position:relative;width:100%;padding-bottom:150%}
+.thumb_list .movie .poster_container{border-radius:3px;position:relative;width:100%;padding-bottom:150%;overflow:hidden}
 .thumb_list .movie .poster{position:absolute;background:center no-repeat #eaeaea;background-size:cover;overflow:hidden;height:100%;width:100%}
 .thumb_list .movie .info{clear:both;font-size:.85em}
 .thumb_list .movie .info .title{display:-webkit-flex;display:-ms-flexbox;display:flex;padding:3px 0}
@@ -435,7 +435,7 @@
 .profile .ctrlHolder .types .type label span{font-size:.9em}
 .profile .ctrlHolder .types .type input[type=checkbox]{margin-right:3px}
 .profile .ctrlHolder .types .type .delete,.profile .ctrlHolder .types .type .handle{margin-left:5px;width:20px;font-size:20px;opacity:.1;text-align:center;cursor:pointer}
-.profile .ctrlHolder .types .type .delete.handle,.profile .ctrlHolder .types .type .handle.handle{cursor:-webkit-grab;cursor:grab}
+.profile .ctrlHolder .types .type .delete.handle,.profile .ctrlHolder .types .type .handle.handle{cursor:move;cursor:-webkit-grab;cursor:grab}
 .profile .ctrlHolder .types .type .delete:hover,.profile .ctrlHolder .types .type .handle:hover{opacity:1}
 .profile .ctrlHolder .types .type.is_empty .delete,.profile .ctrlHolder .types .type.is_empty .handle{display:none}
 .profile .ctrlHolder.wait_for.wait_for{display:block}
@@ -450,7 +450,7 @@
 #profile_ordering li input[type=checkbox]{margin:2px 10px 0 0;vertical-align:top}
 #profile_ordering li>span{display:inline-block;height:20px;vertical-align:top;line-height:20px}
 #profile_ordering li>span.profile_label{-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
-#profile_ordering li .handle{font-size:20px;width:20px;float:right;cursor:-webkit-grab;cursor:grab;opacity:.5;text-align:center}
+#profile_ordering li .handle{font-size:20px;width:20px;float:right;cursor:move;cursor:-webkit-grab;cursor:grab;opacity:.5;text-align:center}
 #profile_ordering li .handle:hover{opacity:1}
 .group_sizes .item .label{min-width:150px}
 .group_sizes .item .max,.group_sizes .item .min{display:inline-block;width:70px!important;min-width:0!important;margin-right:10px;text-align:center}
@@ -705,7 +705,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
-.page.settings fieldset h2 .hint{margin-left:10px;font-size:1rem}
+.page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;margin-left:10px;font-size:1rem}
 @media (max-width:480px){.page.settings fieldset h2{display:block}
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
@@ -721,8 +721,9 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 }
 .page.settings fieldset .ctrlHolder .select_wrapper{position:relative;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .page.settings fieldset .ctrlHolder .select_wrapper select{cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%;min-width:200px;border-radius:0}
+.page.settings fieldset .ctrlHolder .select_wrapper select::-ms-expand{display:none}
 .page.settings fieldset .ctrlHolder .select_wrapper:before{vertical-align:top;pointer-events:none;position:absolute;top:0;line-height:2em;right:10px;height:100%}
-.page.settings fieldset .ctrlHolder .formHint{opacity:.8;margin-left:20px}
+.page.settings fieldset .ctrlHolder .formHint{-webkit-flex:1;-ms-flex:1;flex:1;opacity:.8;margin-left:20px}
 .page.settings fieldset .ctrlHolder .formHint a{font-weight:400;color:#ac0000;text-decoration:underline}
 @media (max-width:480px){.page.settings fieldset .ctrlHolder .select_wrapper{width:100%}
 .page.settings fieldset .ctrlHolder .formHint{min-width:100%;margin-left:0}

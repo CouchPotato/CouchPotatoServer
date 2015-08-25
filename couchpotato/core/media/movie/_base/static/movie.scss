@@ -401,6 +401,7 @@ $mass_edit_height: 44px;
 			position: relative;
 			width: 100%;
 			padding-bottom: 150%;
+			overflow: hidden;
 		}
 
 		.poster {
@@ -798,7 +799,7 @@ $mass_edit_height: 44px;
 			}
 
 		}
-		
+
 		.thumbnail,
 		.data {
 			display: none;
