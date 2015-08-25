@@ -2,6 +2,9 @@ var MovieList = new Class({
 
 	Implements: [Events, Options],
 
+	media_type: 'movie',
+	list_key: 'movies',
+
 	options: {
 		api_call: 'media.list',
 		navigation: true,
@@ -598,7 +601,7 @@ var MovieList = new Class({
 
 		Api.request(self.options.api_call, {
 			'data': Object.merge({
-				'type': self.options.type || 'movie',
+				'type': self.media_type || 'movie',
 				'status': self.options.status,
 				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
@@ -619,8 +622,9 @@ var MovieList = new Class({
 					self.el.setStyle('min-height', null);
 				}
 
-				self.store(json.movies);
-				self.addMovies(json.movies, json.total || json.movies.length);
+				var items = json[self.list_key] || [];
+				self.store(items);
+				self.addMovies(items, json.total || items.length);
 				if(self.scrollspy) {
 					self.load_more.set('text', 'load more movies');
 					self.scrollspy.start();

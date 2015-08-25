@@ -20,6 +20,15 @@ var BlockNavigation = new Class({
 
 	},
 
+	removeTab: function(name) {
+		var self = this;
+
+		var element = self.nav.getElement('li.tab_'+name);
+		if (element) {
+			element.dispose()
+		}
+	},
+
 	activate: function(name){
 		var self = this;
 

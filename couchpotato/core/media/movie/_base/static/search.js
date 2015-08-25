@@ -2,6 +2,8 @@ var BlockSearchMovieItem = new Class({
 
 	Implements: [Options, Events],
 
+	media_type: 'movie',
+
 	initialize: function(info, options){
 		var self = this;
 		self.setOptions(options);
@@ -113,7 +115,7 @@ var BlockSearchMovieItem = new Class({
 
 		self.loadingMask();
 
-		Api.request('movie.add', {
+		Api.request(self.media_type + '.add', {
 			'data': {
 				'identifier': self.info.imdb,
 				'title': self.title_select.get('value'),

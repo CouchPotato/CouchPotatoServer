@@ -164,6 +164,14 @@
 			self.block.more.addLink(a);
 		});
 
+		// Add support classes
+		var support_classes = [];
+		self.options.support.each(function(support){
+			if(support){
+				support_classes.push('support_'+support);
+			}
+		});
+		document.body.addClass(support_classes.join(' '));
 
 		new ScrollSpy({
 			min: 10,
