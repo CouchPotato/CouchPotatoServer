@@ -205,22 +205,24 @@
 .page.movie_details .overlay .close{width:44px}
 }
 .page.movie_details .scroll_content{position:fixed;z-index:2;top:0;bottom:0;right:0;left:176px;background:#FFF;border-radius:3px 0 0 3px;overflow-y:auto;-webkit-transform:translateX(100%) rotateY(360deg);transform:translateX(100%) rotateY(360deg);transition:-webkit-transform 350ms cubic-bezier(.9,0,.1,1);transition:transform 350ms cubic-bezier(.9,0,.1,1)}
-.page.movie_details .scroll_content>.head{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;padding:0 20px;position:relative;z-index:2}
-@media (max-width:480px){.page.movie_details .scroll_content{left:44px}
-.page.movie_details .scroll_content>.head{-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap;padding:0 10px;line-height:1em}
-}
+.page.movie_details .scroll_content>.head{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;padding:0 20px;position:relative;z-index:2}
 .page.movie_details .scroll_content>.head h1{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;margin:0;font-size:24px;color:rgba(0,0,0,.5);font-weight:300;max-width:100%}
-@media (max-width:480px){.page.movie_details .scroll_content>.head h1{min-width:100%;line-height:44px}
+@media (max-width:480px){.page.movie_details .scroll_content{left:44px}
+.page.movie_details .scroll_content>.head{padding:0;line-height:1em}
+.page.movie_details .scroll_content>.head h1{min-width:100%;line-height:44px;margin-top:20px}
 .page.movie_details .scroll_content>.head h1 .more_menu{width:100%}
 }
+.page.movie_details .scroll_content>.head h1 .more_menu .icon-dropdown{padding-right:20px}
 .page.movie_details .scroll_content>.head .more_menu{display:inline-block;vertical-align:top;max-width:100%;margin-bottom:0}
 .page.movie_details .scroll_content>.head .more_menu>a{line-height:80px}
-.page.movie_details .scroll_content>.head .more_menu .icon-dropdown{position:relative;padding:0 20px 0 10px}
-.page.movie_details .scroll_content>.head .more_menu .icon-dropdown:before{position:absolute;right:0;opacity:.2}
+@media (max-width:480px){.page.movie_details .scroll_content>.head h1 .more_menu .icon-dropdown:before{right:10px}
+.page.movie_details .scroll_content>.head .more_menu>a{line-height:22px}
+}
+.page.movie_details .scroll_content>.head .more_menu .icon-dropdown{position:relative;padding:0 13.33px 0 10px}
+.page.movie_details .scroll_content>.head .more_menu .icon-dropdown:before{position:absolute;right:0;top:-2px;opacity:.2}
 .page.movie_details .scroll_content>.head .more_menu .icon-dropdown:hover:before{opacity:1}
 .page.movie_details .scroll_content>.head .more_menu .wrapper{top:70px;padding-top:4px;border-radius:3px 3px 0 0;font-size:14px}
-@media (max-width:480px){.page.movie_details .scroll_content>.head .more_menu>a{line-height:1em}
-.page.movie_details .scroll_content>.head .more_menu .wrapper{top:25px}
+@media (max-width:480px){.page.movie_details .scroll_content>.head .more_menu .wrapper{top:25px}
 }
 .page.movie_details .scroll_content>.head .more_menu .wrapper:before{top:0;left:auto;right:22px}
 .page.movie_details .scroll_content>.head .more_menu .wrapper ul{border-radius:3px 3px 0 0;max-height:215px;overflow-y:auto}
@@ -230,12 +232,13 @@
 .page.movie_details .scroll_content>.head .more_menu.title>a{display:inline-block;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;width:100%}
 .page.movie_details .scroll_content>.head .more_menu.title .wrapper{-webkit-transform-origin:0 0;transform-origin:0 0;left:0;right:auto}
 .page.movie_details .scroll_content>.head .more_menu.title .wrapper:before{left:22px;right:auto}
-.page.movie_details .scroll_content>.head .buttons{display:-webkit-flex;display:-ms-flexbox;display:flex}
+.page.movie_details .scroll_content>.head .buttons{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap}
 .page.movie_details .scroll_content>.head .buttons>a{display:inline-block;padding:0 10px;color:#ac0000;line-height:80px}
 .page.movie_details .scroll_content>.head .buttons>a:hover{color:#000}
 .page.movie_details .scroll_content .section{padding:20px;border-top:1px solid rgba(0,0,0,.1)}
 @media (max-width:480px){.page.movie_details .scroll_content>.head .more_menu.title .wrapper{top:30px;max-width:240px}
-.page.movie_details .scroll_content>.head .buttons{margin-left:auto}
+.page.movie_details .scroll_content>.head .buttons{margin:0}
+.page.movie_details .scroll_content>.head .buttons>a{line-height:22px}
 .page.movie_details .scroll_content .section{padding:10px}
 }
 .page.movie_details .files span,.page.movie_details .releases .item span{white-space:nowrap;padding:6.67px 0;overflow:hidden;text-overflow:ellipsis}

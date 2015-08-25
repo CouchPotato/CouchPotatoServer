@@ -581,14 +581,13 @@ $mass_edit_height: 44px;
 
 		> .head {
 			display: flex;
-			flex-flow: row nowrap;
+			flex-flow: row wrap;
 			padding: 0 $padding;
 			position: relative;
 			z-index: 2;
 
 			@include media-phablet {
-				flex-wrap: wrap;
-				padding: 0 $padding/2;
+				padding: 0;
 				line-height: 1em;
 			}
 
@@ -603,9 +602,20 @@ $mass_edit_height: 44px;
 				@include media-phablet {
 					min-width: 100%;
 					line-height: $header_width_mobile;
+					margin-top: $padding;
 
 					.more_menu {
 						width: 100%;
+					}
+				}
+
+				.more_menu .icon-dropdown {
+					padding-right: $padding;
+
+					@include media-phablet {
+						&:before {
+							right: $padding/2;
+						}
 					}
 				}
 			}
@@ -624,17 +634,18 @@ $mass_edit_height: 44px;
 					line-height: $header_height;
 
 					@include media-phablet {
-						line-height: 1em;
+						line-height: $header_width_mobile/2;
 					}
 				}
 
 				.icon-dropdown {
 					position: relative;
-					padding: 0 $padding 0 $padding/2;
+					padding: 0 $padding/1.5 0 $padding/2;
 
 					&:before {
 						position: absolute;
 						right: 0;
+						top: -2px;
 						opacity: .2;
 					}
 
@@ -708,9 +719,10 @@ $mass_edit_height: 44px;
 
 			.buttons {
 				display: flex;
+				flex-wrap: wrap;
 
 				@include media-phablet {
-					margin-left: auto;
+					margin: 0;
 				}
 
 				> a {
@@ -718,6 +730,10 @@ $mass_edit_height: 44px;
 					padding: 0 10px;
 					color: $primary_color;
 					line-height: $header_height;
+
+					@include media-phablet {
+						line-height: $header_width_mobile/2;
+					}
 
 					&:hover {
 						color: #000;
