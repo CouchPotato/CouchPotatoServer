@@ -9,7 +9,9 @@ autoload = 'TMDB'
 
 class TMDB(UserscriptBase):
 
-    includes = ['http://www.themoviedb.org/movie/*']
+    version = 2
+
+    includes = ['*://www.themoviedb.org/movie/*']
 
     def getMovie(self, url):
         match = re.search('(?P<id>\d+)', url)

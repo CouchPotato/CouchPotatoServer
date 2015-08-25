@@ -1,14 +1,14 @@
-import re
+from bs4 import BeautifulSoup
+from couchpotato import fireEvent
 
 from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
-
 
 autoload = 'Filmweb'
 
 
 class Filmweb(UserscriptBase):
 
-    version = 2
+    version = 3
 
     includes = ['http://www.filmweb.pl/film/*']
 
@@ -21,14 +21,10 @@ class Filmweb(UserscriptBase):
         except:
             return
 
-        name = re.search("<h2.*?class=\"text-large caption\">(?P<name>[^<]+)</h2>", data)
-
-        if name is None:
-            name = re.search("<a.*?property=\"v:name\".*?>(?P<name>[^<]+)</a>", data)
-
-        name = name.group('name').decode('string_escape')
-
-        year = re.search("<span.*?id=filmYear.*?>\((?P<year>[^\)]+)\).*?</span>", data)
-        year = year.group('year')
+        html = BeautifulSoup(data)
+        name = html.find('meta', {'name': 'title'})['content'][:-9].strip()
+        name_year = fireEvent('scanner.name_year', name, single = True)
+        name = name_year.get('name')
+        year = name_year.get('year')
 
         return self.search(name, year)
