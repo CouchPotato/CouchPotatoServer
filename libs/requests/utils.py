@@ -25,7 +25,8 @@ from . import __version__
 from . import certs
 from .compat import parse_http_list as _parse_list_header
 from .compat import (quote, urlparse, bytes, str, OrderedDict, unquote, is_py2,
-                     builtin_str, getproxies, proxy_bypass, urlunparse)
+                     builtin_str, getproxies, proxy_bypass, urlunparse,
+                     basestring)
 from .cookies import RequestsCookieJar, cookiejar_from_dict
 from .structures import CaseInsensitiveDict
 from .exceptions import InvalidURL
@@ -66,7 +67,7 @@ def super_len(o):
         return len(o.getvalue())
 
 
-def get_netrc_auth(url):
+def get_netrc_auth(url, raise_errors=False):
     """Returns the Requests tuple auth for a given url from netrc."""
 
     try:
@@ -104,8 +105,9 @@ def get_netrc_auth(url):
                 return (_netrc[login_i], _netrc[2])
         except (NetrcParseError, IOError):
             # If there was a parsing error or a permissions issue reading the file,
-            # we'll just skip netrc auth
-            pass
+            # we'll just skip netrc auth unless explicitly asked to raise errors.
+            if raise_errors:
+                raise
 
     # AppEngine hackiness.
     except (ImportError, AttributeError):
@@ -115,7 +117,8 @@ def get_netrc_auth(url):
 def guess_filename(obj):
     """Tries to guess the filename of the given object."""
     name = getattr(obj, 'name', None)
-    if name and isinstance(name, builtin_str) and name[0] != '<' and name[-1] != '>':
+    if (name and isinstance(name, basestring) and name[0] != '<' and
+            name[-1] != '>'):
         return os.path.basename(name)
 
 
@@ -418,10 +421,18 @@ def requote_uri(uri):
     This function passes the given URI through an unquote/quote cycle to
     ensure that it is fully and consistently quoted.
     """
-    # Unquote only the unreserved characters
-    # Then quote only illegal characters (do not quote reserved, unreserved,
-    # or '%')
-    return quote(unquote_unreserved(uri), safe="!#$%&'()*+,/:;=?@[]~")
+    safe_with_percent = "!#$%&'()*+,/:;=?@[]~"
+    safe_without_percent = "!#$&'()*+,/:;=?@[]~"
+    try:
+        # Unquote only the unreserved characters
+        # Then quote only illegal characters (do not quote reserved,
+        # unreserved, or '%')
+        return quote(unquote_unreserved(uri), safe=safe_with_percent)
+    except InvalidURL:
+        # We couldn't unquote the given URI, so let's try quoting it, but
+        # there may be unquoted '%'s in the URI. We need to make sure they're
+        # properly quoted so they do not cause issues elsewhere.
+        return quote(uri, safe=safe_without_percent)
 
 
 def address_in_network(ip, net):

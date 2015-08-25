@@ -50,7 +50,7 @@ var ScrollSpy = new Class({
 				min = typeOf(self.options.min) == 'function' ? self.options.min() : self.options.min,
 				max = typeOf(self.options.max) == 'function' ? self.options.max() : self.options.max;
 
-			if(xy >= min && (max == 0 || xy <= max)) {
+			if(xy >= min && (max === 0 || xy <= max)) {
 					/* trigger enter event if necessary */
 					if(!self.inside) {
 						/* record as inside */

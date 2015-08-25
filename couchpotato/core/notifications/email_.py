@@ -31,12 +31,12 @@ class Email(Notification):
         starttls = self.conf('starttls')
 
         # Make the basic message
-        message = MIMEText(toUnicode(message), _charset = Env.get('encoding'))
-        message['Subject'] = self.default_title
-        message['From'] = from_address
-        message['To'] = to_address
-        message['Date'] = formatdate(localtime = 1)
-        message['Message-ID'] = make_msgid()
+        email = MIMEText(toUnicode(message), _charset = Env.get('encoding'))
+        email['Subject'] = '%s: %s' % (self.default_title, toUnicode(message))
+        email['From'] = from_address
+        email['To'] = to_address
+        email['Date'] = formatdate(localtime = 1)
+        email['Message-ID'] = make_msgid()
 
         try:
             # Open the SMTP connection, via SSL if requested
@@ -58,7 +58,7 @@ class Email(Notification):
 
             # Send the e-mail
             log.debug("Sending the email")
-            mailserver.sendmail(from_address, splitString(to_address), message.as_string())
+            mailserver.sendmail(from_address, splitString(to_address), email.as_string())
 
             # Close the SMTP connection
             mailserver.quit()

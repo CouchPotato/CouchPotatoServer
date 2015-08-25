@@ -70,8 +70,10 @@ import datetime
 import functools
 import numbers
 import socket
+import sys
 
 import twisted.internet.abstract
+from twisted.internet.defer import Deferred
 from twisted.internet.posixbase import PosixReactorBase
 from twisted.internet.interfaces import \
     IReactorFDSet, IDelayedCall, IReactorTime, IReadDescriptor, IWriteDescriptor
@@ -84,6 +86,7 @@ import twisted.names.resolve
 
 from zope.interface import implementer
 
+from tornado.concurrent import Future
 from tornado.escape import utf8
 from tornado import gen
 import tornado.ioloop
@@ -147,6 +150,9 @@ class TornadoReactor(PosixReactorBase):
     We override `mainLoop` instead of `doIteration` and must implement
     timed call functionality on top of `IOLoop.add_timeout` rather than
     using the implementation in `PosixReactorBase`.
+
+    .. versionchanged:: 4.1
+       The ``io_loop`` argument is deprecated.
     """
     def __init__(self, io_loop=None):
         if not io_loop:
@@ -356,7 +362,11 @@ class _TestReactor(TornadoReactor):
 
 
 def install(io_loop=None):
-    """Install this package as the default Twisted reactor."""
+    """Install this package as the default Twisted reactor.
+
+    .. versionchanged:: 4.1
+       The ``io_loop`` argument is deprecated.
+    """
     if not io_loop:
         io_loop = tornado.ioloop.IOLoop.current()
     reactor = TornadoReactor(io_loop)
@@ -512,6 +522,9 @@ class TwistedResolver(Resolver):
     ``socket.AF_UNSPEC``.
 
     Requires Twisted 12.1 or newer.
+
+    .. versionchanged:: 4.1
+       The ``io_loop`` argument is deprecated.
     """
     def initialize(self, io_loop=None):
         self.io_loop = io_loop or IOLoop.current()
@@ -554,3 +567,17 @@ class TwistedResolver(Resolver):
             (resolved_family, (resolved, port)),
         ]
         raise gen.Return(result)
+
+if hasattr(gen.convert_yielded, 'register'):
+    @gen.convert_yielded.register(Deferred)
+    def _(d):
+        f = Future()
+        def errback(failure):
+            try:
+                failure.raiseException()
+                # Should never happen, but just in case
+                raise Exception("errback called without error")
+            except:
+                f.set_exc_info(sys.exc_info())
+        d.addCallbacks(f.set_result, errback)
+        return f

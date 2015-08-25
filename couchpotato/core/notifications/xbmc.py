@@ -83,7 +83,7 @@ class XBMC(Notification):
                 # v6 (as of XBMC v12(Frodo)) is required to send notifications
                 xbmc_rpc_version = str(result['result']['version'])
 
-                log.debug('XBMC JSON-RPC Version: %s ; Notifications by JSON-RPC only supported for v6 [as of XBMC v12(Frodo)]', xbmc_rpc_version)
+                log.debug('Kodi JSON-RPC Version: %s ; Notifications by JSON-RPC only supported for v6 [as of XBMC v12(Frodo)]', xbmc_rpc_version)
 
                 # disable JSON use
                 self.use_json_notifications[host] = False
@@ -96,7 +96,7 @@ class XBMC(Notification):
                         success = True
                         break
                     elif r.get('error'):
-                        log.error('XBMC error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
+                        log.error('Kodi error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
                         break
 
             elif result.get('result') and type(result['result']['version']).__name__ == 'dict':
@@ -106,7 +106,7 @@ class XBMC(Notification):
                 xbmc_rpc_version += '.' + str(result['result']['version']['minor'])
                 xbmc_rpc_version += '.' + str(result['result']['version']['patch'])
 
-                log.debug('XBMC JSON-RPC Version: %s', xbmc_rpc_version)
+                log.debug('Kodie JSON-RPC Version: %s', xbmc_rpc_version)
 
                 # ok, XBMC version is supported
                 self.use_json_notifications[host] = True
@@ -119,12 +119,12 @@ class XBMC(Notification):
                         success = True
                         break
                     elif r.get('error'):
-                        log.error('XBMC error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
+                        log.error('Kodi error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
                         break
 
             # error getting version info (we do have contact with XBMC though)
             elif result.get('error'):
-                log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                log.error('Kodi error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
         log.debug('Use JSON notifications: %s ', self.use_json_notifications)
 
@@ -173,10 +173,10 @@ class XBMC(Notification):
                 return [{'result': 'Error'}]
 
         except (MaxRetryError, Timeout, ConnectionError):
-            log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
+            log.info2('Couldn\'t send request to Kodi, assuming it\'s turned off')
             return [{'result': 'Error'}]
         except:
-            log.error('Failed sending non-JSON-type request to XBMC: %s', traceback.format_exc())
+            log.error('Failed sending non-JSON-type request to Kodi: %s', traceback.format_exc())
             return [{'result': 'Error'}]
 
     def request(self, host, do_requests):
@@ -209,10 +209,10 @@ class XBMC(Notification):
 
             return response
         except (MaxRetryError, Timeout, ConnectionError):
-            log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
+            log.info2('Couldn\'t send request to Kodi, assuming it\'s turned off')
             return []
         except:
-            log.error('Failed sending request to XBMC: %s', traceback.format_exc())
+            log.error('Failed sending request to Kodi: %s', traceback.format_exc())
             return []
 
 
@@ -223,8 +223,8 @@ config = [{
             'tab': 'notifications',
             'list': 'notification_providers',
             'name': 'xbmc',
-            'label': 'XBMC',
-            'description': 'v11 (Eden), v12 (Frodo), v13 (Gotham)',
+            'label': 'Kodi',
+            'description': 'v14 (Helix), v15 (Isengard)',
             'options': [
                 {
                     'name': 'enabled',
@@ -249,7 +249,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Only update the first host when movie snatched, useful for synced XBMC',
+                    'description': 'Only update the first host when movie snatched, useful for synced Kodi',
                 },
                 {
                     'name': 'remote_dir_scan',
@@ -257,7 +257,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': ('Only scan new movie folder at remote XBMC servers.', 'Useful if the XBMC path is different from the path CPS uses.'),
+                    'description': ('Only scan new movie folder at remote Kodi servers.', 'Useful if the Kodi path is different from the path CPS uses.'),
                 },
                 {
                     'name': 'force_full_scan',
@@ -265,7 +265,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': ('Do a full scan instead of only the new movie.', 'Useful if the XBMC path is different from the path CPS uses.'),
+                    'description': ('Do a full scan instead of only the new movie.', 'Useful if the Kodi path is different from the path CPS uses.'),
                 },
                 {
                     'name': 'on_snatch',

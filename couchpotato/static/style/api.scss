@@ -1,0 +1,154 @@
+@import "_mixins";
+
+.api_docs {
+
+	h1 {
+		font-size: 25px;
+		padding: 20px 40px;
+	}
+
+	pre {
+		background: #eee;
+		font-family: monospace;
+		margin: 0;
+		padding: 10px;
+		width: 100%;
+		display: block;
+		font-size: 12px;
+	}
+
+	body {
+		display: block;
+		overflow: auto;
+		background-color: #FFF;
+	}
+
+	.api, .missing {
+		overflow: hidden;
+		border-bottom: 1px solid #eee;
+		padding: 40px;
+	}
+
+	.api {
+		&:hover {
+			color: #000;
+		}
+
+
+		.description {
+			color: #333;
+			padding: 0 0 5px;
+		}
+
+		.params {
+			background: #fafafa;
+			width: 100%;
+
+			h3 {
+				clear: both;
+				float: left;
+				width: 100px;
+			}
+
+			td, th {
+				padding: 3px 5px;
+				border-bottom: 1px solid #eee;
+			}
+
+			tr:last-child td, tr:last-child th {
+				border: 0;
+			}
+
+			.param {
+				vertical-align: top;
+
+				th {
+					text-align: left;
+					width: 100px;
+				}
+
+				.type {
+					font-style: italic;
+					margin-right: 10px;
+					width: 100px;
+					color: #666;
+				}
+			}
+
+			.return {
+				float: left;
+				width: 700px;
+			}
+		}
+	}
+
+
+	.database {
+		padding: 20px;
+		margin: 0;
+
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		.nav {
+			li {
+				display: inline-block;
+
+				a {
+					padding: 5px;
+				}
+			}
+
+		}
+	}
+		.database table {
+			font-size: 11px;
+
+			th {
+				text-align: left;
+			}
+
+			tr:hover {
+				position: relative;
+				z-index: 20;
+			}
+
+			td {
+				vertical-align: top;
+				position: relative;
+			}
+
+			.id {
+				width: 100px;
+			}
+
+			._rev {
+				width: 60px;
+			}
+
+			._t {
+				width: 60px;
+			}
+
+			.form {
+				width: 600px;
+			}
+
+			form {
+				width: 600px;
+			}
+
+			textarea {
+				font-size: 12px;
+				width: 100%;
+				height: 200px;
+			}
+
+			input[type=submit] {
+				display: block;
+			}
+		}
+
+}

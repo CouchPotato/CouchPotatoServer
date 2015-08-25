@@ -129,6 +129,7 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.close_code = None
         self.close_reason = None
         self.stream = None
+        self._on_close_called = False
 
     @tornado.web.asynchronous
     def get(self, *args, **kwargs):
@@ -171,17 +172,15 @@ class WebSocketHandler(tornado.web.RequestHandler):
         self.stream = self.request.connection.detach()
         self.stream.set_close_callback(self.on_connection_close)
 
-        if self.request.headers.get("Sec-WebSocket-Version") in ("7", "8", "13"):
-            self.ws_connection = WebSocketProtocol13(
-                self, compression_options=self.get_compression_options())
+        self.ws_connection = self.get_websocket_protocol()
+        if self.ws_connection:
             self.ws_connection.accept_connection()
         else:
             if not self.stream.closed():
                 self.stream.write(tornado.escape.utf8(
                     "HTTP/1.1 426 Upgrade Required\r\n"
-                    "Sec-WebSocket-Version: 8\r\n\r\n"))
+                    "Sec-WebSocket-Version: 7, 8, 13\r\n\r\n"))
                 self.stream.close()
-
 
     def write_message(self, message, binary=False):
         """Sends the given message to the client of this Web Socket.
@@ -350,6 +349,8 @@ class WebSocketHandler(tornado.web.RequestHandler):
         if self.ws_connection:
             self.ws_connection.on_connection_close()
             self.ws_connection = None
+        if not self._on_close_called:
+            self._on_close_called
             self.on_close()
 
     def send_error(self, *args, **kwargs):
@@ -361,6 +362,13 @@ class WebSocketHandler(tornado.web.RequestHandler):
             # TODO: for uncaught exceptions after the handshake,
             # we can close the connection more gracefully.
             self.stream.close()
+
+    def get_websocket_protocol(self):
+        websocket_version = self.request.headers.get("Sec-WebSocket-Version")
+        if websocket_version in ("7", "8", "13"):
+            return WebSocketProtocol13(
+                self, compression_options=self.get_compression_options())
+
 
 def _wrap_method(method):
     def _disallow_for_websocket(self, *args, **kwargs):
@@ -852,12 +860,15 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     This class should not be instantiated directly; use the
     `websocket_connect` function instead.
     """
-    def __init__(self, io_loop, request, compression_options=None):
+    def __init__(self, io_loop, request, on_message_callback=None,
+                 compression_options=None):
         self.compression_options = compression_options
         self.connect_future = TracebackFuture()
+        self.protocol = None
         self.read_future = None
         self.read_queue = collections.deque()
         self.key = base64.b64encode(os.urandom(16))
+        self._on_message_callback = on_message_callback
 
         scheme, sep, rest = request.url.partition(':')
         scheme = {'ws': 'http', 'wss': 'https'}[scheme]
@@ -919,9 +930,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
                 start_line, headers)
 
         self.headers = headers
-        self.protocol = WebSocketProtocol13(
-            self, mask_outgoing=True,
-            compression_options=self.compression_options)
+        self.protocol = self.get_websocket_protocol()
         self.protocol._process_server_headers(self.key, self.headers)
         self.protocol._receive_frame()
 
@@ -946,6 +955,9 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     def read_message(self, callback=None):
         """Reads a message from the WebSocket server.
 
+        If on_message_callback was specified at WebSocket
+        initialization, this function will never return messages
+
         Returns a future whose result is the message, or None
         if the connection is closed.  If a callback argument
         is given it will be called with the future when it is
@@ -962,7 +974,9 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         return future
 
     def on_message(self, message):
-        if self.read_future is not None:
+        if self._on_message_callback:
+            self._on_message_callback(message)
+        elif self.read_future is not None:
             self.read_future.set_result(message)
             self.read_future = None
         else:
@@ -971,9 +985,13 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     def on_pong(self, data):
         pass
 
+    def get_websocket_protocol(self):
+        return WebSocketProtocol13(self, mask_outgoing=True,
+                                   compression_options=self.compression_options)
+
 
 def websocket_connect(url, io_loop=None, callback=None, connect_timeout=None,
-                      compression_options=None):
+                      on_message_callback=None, compression_options=None):
     """Client-side websocket support.
 
     Takes a url and returns a Future whose result is a
@@ -982,11 +1000,26 @@ def websocket_connect(url, io_loop=None, callback=None, connect_timeout=None,
     ``compression_options`` is interpreted in the same way as the
     return value of `.WebSocketHandler.get_compression_options`.
 
+    The connection supports two styles of operation. In the coroutine
+    style, the application typically calls
+    `~.WebSocketClientConnection.read_message` in a loop::
+
+        conn = yield websocket_connection(loop)
+        while True:
+            msg = yield conn.read_message()
+            if msg is None: break
+            # Do something with msg
+
+    In the callback style, pass an ``on_message_callback`` to
+    ``websocket_connect``. In both styles, a message of ``None``
+    indicates that the connection has been closed.
+
     .. versionchanged:: 3.2
        Also accepts ``HTTPRequest`` objects in place of urls.
 
     .. versionchanged:: 4.1
-       Added ``compression_options``.
+       Added ``compression_options`` and ``on_message_callback``.
+       The ``io_loop`` argument is deprecated.
     """
     if io_loop is None:
         io_loop = IOLoop.current()
@@ -1000,7 +1033,9 @@ def websocket_connect(url, io_loop=None, callback=None, connect_timeout=None,
         request = httpclient.HTTPRequest(url, connect_timeout=connect_timeout)
     request = httpclient._RequestProxy(
         request, httpclient.HTTPRequest._DEFAULTS)
-    conn = WebSocketClientConnection(io_loop, request, compression_options)
+    conn = WebSocketClientConnection(io_loop, request,
+                                     on_message_callback=on_message_callback,
+                                     compression_options=compression_options)
     if callback is not None:
         io_loop.add_future(conn.connect_future, callback)
     return conn.connect_future

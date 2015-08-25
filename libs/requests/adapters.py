@@ -11,10 +11,10 @@ and maintain connections.
 import socket
 
 from .models import Response
-from .packages.urllib3 import Retry
 from .packages.urllib3.poolmanager import PoolManager, proxy_from_url
 from .packages.urllib3.response import HTTPResponse
 from .packages.urllib3.util import Timeout as TimeoutSauce
+from .packages.urllib3.util.retry import Retry
 from .compat import urlparse, basestring
 from .utils import (DEFAULT_CA_BUNDLE_PATH, get_encoding_from_headers,
                     prepend_scheme_if_needed, get_auth_from_url, urldefragauth)
@@ -35,6 +35,7 @@ from .auth import _basic_auth_str
 DEFAULT_POOLBLOCK = False
 DEFAULT_POOLSIZE = 10
 DEFAULT_RETRIES = 0
+DEFAULT_POOL_TIMEOUT = None
 
 
 class BaseAdapter(object):
@@ -326,8 +327,8 @@ class HTTPAdapter(BaseAdapter):
         :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
-            data before giving up, as a float, or a (`connect timeout, read
-            timeout <user/advanced.html#timeouts>`_) tuple.
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
         :type timeout: float or tuple
         :param verify: (optional) Whether to verify SSL certificates.
         :param cert: (optional) Any user-provided SSL certificate to be trusted.
@@ -375,7 +376,7 @@ class HTTPAdapter(BaseAdapter):
                 if hasattr(conn, 'proxy_pool'):
                     conn = conn.proxy_pool
 
-                low_conn = conn._get_conn(timeout=timeout)
+                low_conn = conn._get_conn(timeout=DEFAULT_POOL_TIMEOUT)
 
                 try:
                     low_conn.putrequest(request.method,
@@ -407,9 +408,6 @@ class HTTPAdapter(BaseAdapter):
                     # Then, reraise so that we can handle the actual exception.
                     low_conn.close()
                     raise
-                else:
-                    # All is well, return the connection to the pool.
-                    conn._put_conn(low_conn)
 
         except (ProtocolError, socket.error) as err:
             raise ConnectionError(err, request=request)

@@ -88,8 +88,13 @@ class MediaBase(Plugin):
         if len(existing_files) == 0:
             del existing_files[file_type]
 
+        images = image_urls.get(image_type, [])
+        for y in ['SX300', 'tmdb']:
+            initially_try = [x for x in images if y in x]
+            images[:-1] = initially_try
+
         # Loop over type
-        for image in image_urls.get(image_type, []):
+        for image in images:
             if not isinstance(image, (str, unicode)):
                 continue
 

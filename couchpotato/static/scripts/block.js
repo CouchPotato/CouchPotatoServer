@@ -1,6 +1,6 @@
 var BlockBase = new Class({
 
-	Implements: [Options, Events],
+	Implements: [Options],
 
 	options: {},
 
@@ -19,7 +19,7 @@ var BlockBase = new Class({
 	},
 
 	getParent: function(){
-		return this.page
+		return this.page;
 	},
 
 	hide: function(){
@@ -31,9 +31,7 @@ var BlockBase = new Class({
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el;
 	}
 
 });
-
-var Block = BlockBase;

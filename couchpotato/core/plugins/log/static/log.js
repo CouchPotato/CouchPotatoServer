@@ -7,21 +7,21 @@ Page.Log = new Class({
 	title: 'Show recent logs.',
 	has_tab: false,
 
+	navigation: null,
 	log_items: [],
-	report_text: '\
-### Steps to reproduce:\n\
-1. ..\n\
-2. ..\n\
-\n\
-### Information:\n\
-Movie(s) I have this with: ...\n\
-Quality of the movie being searched: ...\n\
-Providers I use: ...\n\
-Version of CouchPotato: {version}\n\
-Running on: ...\n\
-\n\
-### Logs:\n\
-```\n{issue}```',
+	report_text: '### Steps to reproduce:\n'+
+				'1. ..\n'+
+				'2. ..\n'+
+				'\n'+
+				'### Information:\n'+
+				'Movie(s) I have this with: ...\n'+
+				'Quality of the movie being searched: ...\n'+
+				'Providers I use: ...\n'+
+				'Version of CouchPotato: {version}\n'+
+				'Running on: ...\n'+
+				'\n'+
+				'### Logs:\n'+
+				'```\n{issue}```',
 
 	indexAction: function () {
 		var self = this;
@@ -34,6 +34,7 @@ Running on: ...\n\
 		var self = this;
 
 		if (self.log) self.log.destroy();
+
 		self.log = new Element('div.container.loading', {
 			'text': 'loading...',
 			'events': {
@@ -41,9 +42,17 @@ Running on: ...\n\
 					self.showSelectionButton.delay(100, self, e);
 				}
 			}
-		}).inject(self.el);
+		}).inject(self.content);
 
-		Api.request('logging.get', {
+		if(self.navigation){
+			var nav = self.navigation.getElement('.nav');
+			nav.getElements('.active').removeClass('active');
+
+			self.navigation.getElements('li')[nr+1].addClass('active');
+		}
+
+		if(self.request && self.request.running) self.request.cancel();
+		self.request = Api.request('logging.get', {
 			'data': {
 				'nr': nr
 			},
@@ -52,65 +61,68 @@ Running on: ...\n\
 				self.log_items = self.createLogElements(json.log);
 				self.log.adopt(self.log_items);
 				self.log.removeClass('loading');
+				self.scrollToBottom();
 
-				var nav = new Element('ul.nav', {
-					'events': {
-						'click:relay(li.select)': function (e, el) {
-							self.getLogs(parseInt(el.get('text')) - 1);
-						}
-					}
-				});
+				if(!self.navigation){
+					self.navigation = new Element('div.navigation').adopt(
+						new Element('h2[text=Logs]'),
+						new Element('div.hint', {
+							'text': 'Select multiple lines & report an issue'
+						})
+					);
 
-				// Type selection
-				new Element('li.filter').grab(
-					new Element('select', {
+					var nav = new Element('ul.nav', {
 						'events': {
-							'change': function () {
-								var type_filter = this.getSelected()[0].get('value');
-								self.el.set('data-filter', type_filter);
-								self.scrollToBottom();
+							'click:relay(li.select)': function (e, el) {
+								self.getLogs(parseInt(el.get('text')) - 1);
 							}
 						}
-					}).adopt(
-						new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
-						new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
-						new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
-						new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
-					)
-				).inject(nav);
+					}).inject(self.navigation);
 
-				// Selections
-				for (var i = 0; i <= json.total; i++) {
-					new Element('li', {
-						'text': i + 1,
-						'class': 'select ' + (nr == i ? 'active' : '')
-					}).inject(nav);
-				}
-
-				// Clear button
-				new Element('li.clear', {
-					'text': 'clear',
-					'events': {
-						'click': function () {
-							Api.request('logging.clear', {
-								'onComplete': function () {
-									self.getLogs(0);
+					// Type selection
+					new Element('li.filter').grab(
+						new Element('select', {
+							'events': {
+								'change': function () {
+									var type_filter = this.getSelected()[0].get('value');
+									self.content.set('data-filter', type_filter);
+									self.scrollToBottom();
 								}
-							});
+							}
+						}).adopt(
+							new Element('option', {'value': 'ALL', 'text': 'Show all logs'}),
+							new Element('option', {'value': 'INFO', 'text': 'Show only INFO'}),
+							new Element('option', {'value': 'DEBUG', 'text': 'Show only DEBUG'}),
+							new Element('option', {'value': 'ERROR', 'text': 'Show only ERROR'})
+						)
+					).inject(nav);
 
-						}
+					// Selections
+					for (var i = 0; i <= json.total; i++) {
+						new Element('li', {
+							'text': i + 1,
+							'class': 'select ' + (nr == i ? 'active' : '')
+						}).inject(nav);
 					}
-				}).inject(nav);
 
-				// Hint
-				new Element('li.hint', {
-					'text': 'Select multiple lines & report an issue'
-				}).inject(nav);
+					// Clear button
+					new Element('li.clear', {
+						'text': 'clear',
+						'events': {
+							'click': function () {
+								Api.request('logging.clear', {
+									'onComplete': function () {
+										self.getLogs(0);
+									}
+								});
 
-				// Add to page
-				nav.inject(self.log, 'top');
+							}
+						}
+					}).inject(nav);
 
-				self.scrollToBottom();
+					// Add to page
+					self.navigation.inject(self.content, 'top');
+				}
 			}
 		});
 
@@ -133,14 +145,14 @@ Running on: ...\n\
 				new Element('span.message', {
 					'text': log.message
 				})
-			))
+			));
 		});
 
 		return elements;
 	},
 
 	scrollToBottom: function () {
-		new Fx.Scroll(window, {'duration': 0}).toBottom();
+		new Fx.Scroll(this.content, {'duration': 0}).toBottom();
 	},
 
 	showSelectionButton: function(e){
@@ -213,7 +225,7 @@ Running on: ...\n\
 				.replace('{version}', version ? version.version.repr : '...'),
 			textarea;
 
-		var overlay = new Element('div.report', {
+		var overlay = new Element('div.mask.report_popup', {
 			'method': 'post',
 			'events': {
 				'click': function(e){
@@ -245,12 +257,7 @@ Running on: ...\n\
 					})
 				),
 				textarea = new Element('textarea', {
-					'text': body,
-					'events': {
-						'click': function(){
-							this.select();
-						}
-					}
+					'text': body
 				}),
 				new Element('a.button', {
 					'target': '_blank',
@@ -270,7 +277,7 @@ Running on: ...\n\
 			)
 		);
 
-		overlay.inject(self.log);
+		overlay.inject(document.body);
 	},
 
 	getSelected: function(){

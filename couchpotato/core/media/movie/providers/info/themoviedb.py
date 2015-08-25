@@ -173,7 +173,8 @@ class TheMovieDb(MovieProvider):
         image_url = ''
         try:
             path = movie.get('%s_path' % type)
-            image_url = '%s%s%s' % (self.configuration['images']['secure_base_url'], size, path)
+            if path:
+                image_url = '%s%s%s' % (self.configuration['images']['secure_base_url'], size, path)
         except:
             log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
@@ -196,7 +197,7 @@ class TheMovieDb(MovieProvider):
         params = tryUrlencode(params)
 
         try:
-            url = 'http://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
+            url = 'https://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
             data = self.getJsonData(url, show_error = False)
         except:
             log.debug('Movie not found: %s, %s', (call, params))

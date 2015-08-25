@@ -157,3 +157,13 @@ class InsecureRequestWarning(SecurityWarning):
 class SystemTimeWarning(SecurityWarning):
     "Warned when system time is suspected to be wrong"
     pass
+
+
+class InsecurePlatformWarning(SecurityWarning):
+    "Warned when certain SSL configuration is not available on a platform."
+    pass
+
+
+class ResponseNotChunked(ProtocolError, ValueError):
+    "Response needs to be chunked in order to read it as chunks."
+    pass

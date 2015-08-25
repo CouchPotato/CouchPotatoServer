@@ -73,10 +73,11 @@ class Sabnzbd(DownloaderBase):
             return False
 
         log.debug('Result from SAB: %s', sab_data)
-        if sab_data.get('status') and not sab_data.get('error'):
+        nzo_ids = sab_data.get('nzo_ids', [])
+        if sab_data.get('status') and not sab_data.get('error') and isinstance(nzo_ids, list) and len(nzo_ids) > 0:
             log.info('NZB sent to SAB successfully.')
             if filedata:
-                return self.downloadReturnId(sab_data.get('nzo_ids')[0])
+                return self.downloadReturnId(nzo_ids[0])
             else:
                 return True
         else:

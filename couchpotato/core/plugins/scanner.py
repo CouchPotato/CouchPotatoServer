@@ -63,8 +63,8 @@ class Scanner(Plugin):
     }
 
     file_sizes = {  # in MB
-        'movie': {'min': 300},
-        'trailer': {'min': 2, 'max': 250},
+        'movie': {'min': 200},
+        'trailer': {'min': 2, 'max': 199},
         'backdrop': {'min': 0, 'max': 5},
     }
 
@@ -797,6 +797,10 @@ class Scanner(Plugin):
         identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
 
+        # Exclude file name path if needed (f.e. for DVD files)
+        if exclude_filename:
+            identifier = identifier[:len(identifier) - len(os.path.split(identifier)[-1])]
+
         # Make sure the identifier is lower case as all regex is with lower case tags
         identifier = identifier.lower()
 
@@ -804,9 +808,6 @@ class Scanner(Plugin):
             path_split = splitString(identifier, os.path.sep)
             identifier = path_split[-2] if len(path_split) > 1 and len(path_split[-2]) > len(path_split[-1]) else path_split[-1] # Only get filename
         except: pass
-
-        if exclude_filename:
-            identifier = identifier[:len(identifier) - len(os.path.split(identifier)[-1])]
 
         # multipart
         identifier = self.removeMultipart(identifier)

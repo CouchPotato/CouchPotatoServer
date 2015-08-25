@@ -18,9 +18,14 @@ class Base(TorrentProvider):
     http_time_between_calls = 1  # seconds
 
     proxy_list = [
-        'https://yts.re',
-        'https://yts.wf',
         'https://yts.im',
+        'https://yts.to',
+        'https://yify.ml',
+        'https://yify.link',
+        'https://yifytorrent.link',
+        'https://yts.ch',
+        'https://yts.click',
+        'https://yify.me',
     ]
 
     def search(self, movie, quality):
@@ -38,7 +43,7 @@ class Base(TorrentProvider):
 
         search_url = self.urls['search'] % (domain, getIdentifier(movie))
 
-        data = self.getJsonData(search_url)
+        data = self.getJsonData(search_url) or {}
         data = data.get('data')
 
         if isinstance(data, dict) and data.get('movies'):

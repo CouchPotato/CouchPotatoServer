@@ -886,8 +886,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 replaced = replaced.replace('<' + x + '>', '')
 
         if self.conf('replace_doubles'):
-           replaced = self.replaceDoubles(replaced.lstrip('. '))       
-        
+            replaced = self.replaceDoubles(replaced.lstrip('. '))
+
         for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
@@ -966,6 +966,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             try:
                 for rel in rels:
+                    if not rel.get('media_id'): continue
                     movie_dict = db.get('id', rel.get('media_id'))
                     download_info = rel.get('download_info')
 
@@ -1202,7 +1203,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
-                rar_handle = RarFile(archive['file'], custom_path = self.conf('unrar_path'))
+                unrar_path = self.conf('unrar_path')
+                unrar_path = unrar_path if unrar_path and (os.path.isfile(unrar_path) or re.match('^[a-zA-Z0-9_/\.\-]+$', unrar_path)) else None
+
+                rar_handle = RarFile(archive['file'], custom_path = unrar_path)
                 extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
@@ -1326,7 +1330,7 @@ config = [{
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Default folder where the movies are moved to.',
+                    'description': 'Default folder where the movies are moved/copied/linked to.',
                 },
                 {
                     'name': 'folder_name',
@@ -1345,12 +1349,12 @@ config = [{
                     'options': rename_options
                 },
                 {
-                    'advanced': True,                
+                    'advanced': True,
                     'name': 'replace_doubles',
                     'type': 'bool',
                     'label': 'Clean Name',
                     'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/RuudBurger/CouchPotatoServer/issues/2782">#2782</a>).'),
-                    'default': True 
+                    'default': True
                 },
                 {
                     'name': 'unrar',
@@ -1444,7 +1448,7 @@ config = [{
                     'default': 'link',
                     'type': 'dropdown',
                     'values': [('Link', 'link'), ('Copy', 'copy'), ('Move', 'move')],
-                    'description': 'See above. It is prefered to use link when downloading torrents as it will save you space, while still beeing able to seed.',
+                    'description': 'See above. It is prefered to use link when downloading torrents as it will save you space, while still being able to seed.',
                     'advanced': True,
                 },
                 {

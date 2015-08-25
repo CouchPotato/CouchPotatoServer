@@ -41,7 +41,8 @@ def symlink(src, dst):
 def getUserDir():
     try:
         import pwd
-        os.environ['HOME'] = sp(pwd.getpwuid(os.geteuid()).pw_dir)
+        if not os.environ['HOME']:
+            os.environ['HOME'] = sp(pwd.getpwuid(os.geteuid()).pw_dir)
     except:
         pass
 

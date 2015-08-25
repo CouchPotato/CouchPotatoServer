@@ -1,6 +1,6 @@
 import random as rndm
 import time
-from CodernityDB.database import RecordDeleted
+from CodernityDB.database import RecordDeleted, RecordNotFound
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -65,6 +65,10 @@ class Dashboard(Plugin):
                     log.debug('Record already deleted: %s', media_id)
                     continue
 
+                except RecordNotFound:
+                    log.debug('Record not found: %s', media_id)
+                    continue
+
                 pp = profile_pre.get(media.get('profile_id'))
                 if not pp: continue
 
@@ -92,7 +96,7 @@ class Dashboard(Plugin):
                         if late:
                             media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
 
-                            for release in media.get('releases'):
+                            for release in media.get('releases', []):
                                 if release.get('status') in ['snatched', 'available', 'seeding', 'downloaded']:
                                     add = False
                                     break
