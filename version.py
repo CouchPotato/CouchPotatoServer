@@ -1,2 +1,2 @@
-VERSION = '2.6.3'
+VERSION = '3.0.0'
 BRANCH = 'desktop'

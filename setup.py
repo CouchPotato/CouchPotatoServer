@@ -35,6 +35,7 @@ includes = [
     'version',
     'distutils',
     'lxml', 'lxml.etree', 'lxml._elementpath', 'gzip',
+    'OpenSSL', 'cffi',
 ]
 
 excludes = [
