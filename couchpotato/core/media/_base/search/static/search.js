@@ -1,6 +1,10 @@
-Block.Search = new Class({
+var BlockSearch = new Class({
 
 	Extends: BlockBase,
+
+	options: {
+		'animate': true
+	},
 
 	cache: {},
 
@@ -9,49 +13,47 @@ Block.Search = new Class({
 
 		var focus_timer = 0;
 		self.el = new Element('div.search_form').adopt(
-			new Element('div.input').adopt(
-				self.input = new Element('input', {
-					'placeholder': 'Search & add a new media',
+			new Element('a.icon-search', {
+				'events': {
+					'click': self.clear.bind(self)
+				}
+			}),
+			self.wrapper = new Element('div.wrapper').adopt(
+				self.result_container = new Element('div.results_container', {
 					'events': {
-						'input': self.keyup.bind(self),
-						'paste': self.keyup.bind(self),
-						'change': self.keyup.bind(self),
-						'keyup': self.keyup.bind(self),
-						'focus': function(){
-							if(focus_timer) clearTimeout(focus_timer);
-							self.el.addClass('focused');
-							if(this.get('value'))
-								self.hideResults(false)
-						},
-						'blur': function(){
-							focus_timer = (function(){
-								self.el.removeClass('focused')
-							}).delay(100);
+						'mousewheel': function(e){
+							(e).stopPropagation();
 						}
 					}
-				}),
-				new Element('a.icon2', {
-					'events': {
-						'click': self.clear.bind(self),
-						'touchend': self.clear.bind(self)
-					}
-				})
-			),
-			self.result_container = new Element('div.results_container', {
-				'tween': {
-					'duration': 200
-				},
-				'events': {
-					'mousewheel': function(e){
-						(e).stopPropagation();
-					}
-				}
-			}).adopt(
-				self.results = new Element('div.results')
+				}).grab(
+					self.results = new Element('div.results')
+				),
+				new Element('div.input').grab(
+					self.input = new Element('input', {
+						'placeholder': 'Search & add a new media',
+						'events': {
+							'input': self.keyup.bind(self),
+							'paste': self.keyup.bind(self),
+							'change': self.keyup.bind(self),
+							'keyup': self.keyup.bind(self),
+							'focus': function(){
+								if(focus_timer) clearTimeout(focus_timer);
+								if(this.get('value'))
+									self.hideResults(false);
+							},
+							'blur': function(){
+								focus_timer = (function(){
+									self.el.removeClass('focused');
+									self.last_q = null;
+								}).delay(100);
+							}
+						}
+					})
+				)
 			)
 		);
 
-		self.mask = new Element('div.mask').inject(self.result_container).fade('hide');
+		self.mask = new Element('div.mask').inject(self.result_container);
 
 	},
 
@@ -67,11 +69,32 @@ Block.Search = new Class({
 
 			self.last_q = '';
 			self.input.set('value', '');
+			self.el.addClass('focused');
 			self.input.focus();
 
 			self.media = {};
 			self.results.empty();
-			self.el.removeClass('filled')
+			self.el.removeClass('filled');
+
+			// Animate in
+			if(self.options.animate){
+
+				dynamics.css(self.wrapper, {
+					opacity: 0,
+					scale: 0.1
+				});
+
+				dynamics.animate(self.wrapper, {
+					opacity: 1,
+					scale: 1
+				}, {
+					type: dynamics.spring,
+					frequency: 200,
+					friction: 270,
+					duration: 800
+				});
+
+			}
 
 		}
 	},
@@ -105,7 +128,7 @@ Block.Search = new Class({
 				self.api_request.cancel();
 
 			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer);
-			self.autocomplete_timer = self.autocomplete.delay(300, self)
+			self.autocomplete_timer = self.autocomplete.delay(300, self);
 		}
 
 	},
@@ -115,10 +138,10 @@ Block.Search = new Class({
 
 		if(!self.q()){
 			self.hideResults(true);
-			return
+			return;
 		}
 
-		self.list()
+		self.list();
 	},
 
 	list: function(){
@@ -129,7 +152,9 @@ Block.Search = new Class({
 		self.hideResults(false);
 
 		if(!cache){
-			self.mask.fade('in');
+			setTimeout(function(){
+				self.mask.addClass('show');
+			}, 10);
 
 			if(!self.spinner)
 				self.spinner = createSpinner(self.mask);
@@ -139,7 +164,7 @@ Block.Search = new Class({
 					'q': q
 				},
 				'onComplete': self.fill.bind(self, q)
-			})
+			});
 		}
 		else
 			self.fill(q, cache);
@@ -158,30 +183,25 @@ Block.Search = new Class({
 
 		Object.each(json, function(media){
 			if(typeOf(media) == 'array'){
-				Object.each(media, function(m){
+				Object.each(media, function(me){
 
-					var m = new Block.Search[m.type.capitalize() + 'Item'](m);
+					var m = new window['BlockSearch' + me.type.capitalize() + 'Item'](me);
 					$(m).inject(self.results);
 					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m;
 
 					if(q == m.imdb)
-						m.showOptions()
+						m.showOptions();
 
 				});
 			}
 		});
 
-		// Calculate result heights
-		var w = window.getSize(),
-			rc = self.result_container.getCoordinates();
-
-		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px');
-		self.mask.fade('out')
+		self.mask.removeClass('show');
 
 	},
 
 	loading: function(bool){
-		this.el[bool ? 'addClass' : 'removeClass']('loading')
+		this.el[bool ? 'addClass' : 'removeClass']('loading');
 	},
 
 	q: function(){

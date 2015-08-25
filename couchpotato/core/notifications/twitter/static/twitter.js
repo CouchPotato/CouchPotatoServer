@@ -16,7 +16,7 @@ var TwitterNotification = new Class({
 
 			var twitter_set = 0;
 		 	fieldset.getElements('input[type=text]').each(function(el){
-		 		twitter_set += +(el.get('value') != '');
+		 		twitter_set += +(el.get('value') !== '');
 		 	});
 
 
@@ -57,7 +57,7 @@ var TwitterNotification = new Class({
 					}
 				})
 			).inject(fieldset.getElement('.test_button'), 'before');
-		})
+		});
 
 	}
 

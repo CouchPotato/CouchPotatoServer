@@ -2,7 +2,12 @@ var MovieAction = new Class({
 
 	Implements: [Options],
 
-	class_name: 'action icon2',
+	class_name: 'action',
+	label: 'UNKNOWN',
+	icon: null,
+	button: null,
+	details: null,
+	detail_button: null,
 
 	initialize: function(movie, options){
 		var self = this;
@@ -11,33 +16,56 @@ var MovieAction = new Class({
 		self.movie = movie;
 
 		self.create();
-		if(self.el)
-			self.el.addClass(self.class_name)
+
+		if(self.button){
+			var wrapper = new Element('div', {
+				'class': self.class_name
+			});
+			self.button.inject(wrapper);
+
+			self.button = wrapper;
+		}
 	},
 
 	create: function(){},
 
+	getButton: function(){
+		return this.button || null;
+	},
+
+	getDetails: function(){
+		return this.details || null;
+	},
+
+	getDetailButton: function(){
+		return this.detail_button || null;
+	},
+
+	getLabel: function(){
+		return this.label;
+	},
+
 	disable: function(){
 		if(this.el)
-			this.el.addClass('disable')
+			this.el.addClass('disable');
 	},
 
 	enable: function(){
 		if(this.el)
-			this.el.removeClass('disable')
+			this.el.removeClass('disable');
 	},
 
 	getTitle: function(){
 		var self = this;
 
 		try {
-			return self.movie.getTitle();
+			return self.movie.getTitle(true);
 		}
 		catch(e){
 			try {
 				return self.movie.original_title ? self.movie.original_title : self.movie.titles[0];
 			}
-			catch(e){
+			catch(e2){
 				return 'Unknown';
 			}
 		}
@@ -46,10 +74,10 @@ var MovieAction = new Class({
 	get: function(key){
 		var self = this;
 		try {
-			return self.movie.get(key)
+			return self.movie.get(key);
 		}
 		catch(e){
-			return self.movie[key]
+			return self.movie[key];
 		}
 	},
 
@@ -63,7 +91,7 @@ var MovieAction = new Class({
 	},
 
 	toElement: function(){
-		return this.el || null
+		return this.el || null;
 	}
 
 });
@@ -80,35 +108,32 @@ MA.IMDB = new Class({
 
 		self.id = self.movie.getIdentifier ? self.movie.getIdentifier() : self.get('imdb');
 
-		self.el = new Element('a.imdb', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+		if(!self.id) self.disable();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.imdb', {
+			'text': 'IMDB',
 			'title': 'Go to the IMDB page of ' + self.getTitle(),
 			'href': 'http://www.imdb.com/title/'+self.id+'/',
 			'target': '_blank'
 		});
-
-		if(!self.id) self.disable();
-	}
+	},
 
 });
 
 MA.Release = new Class({
 
 	Extends: MovieAction,
+	label: 'Releases',
 
 	create: function(){
 		var self = this;
-
-		self.el = new Element('a.releases.download', {
-			'title': 'Show the releases that are available for ' + self.getTitle(),
-			'events': {
-				'click': self.show.bind(self)
-			}
-		});
-
-		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
-			self.el.hide();
-		else
-			self.showHelper();
 
 		App.on('movie.searcher.ended', function(notification){
 			if(self.movie.data._id != notification.data._id) return;
@@ -118,7 +143,7 @@ MA.Release = new Class({
 				// Releases are currently displayed
 				if(self.options_container.isDisplayed()){
 					self.options_container.destroy();
-					self.createReleases();
+					self.getDetails();
 				}
 				else {
 					self.options_container.destroy();
@@ -129,17 +154,9 @@ MA.Release = new Class({
 
 	},
 
-	show: function(e){
+	getDetails: function(refresh){
 		var self = this;
-		if(e)
-			(e).preventDefault();
-
-		self.createReleases();
-
-	},
-
-	createReleases: function(refresh){
-		var self = this;
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0) return;
 
 		if(!self.options_container || refresh){
 			self.options_container = new Element('div.options').grab(
@@ -154,7 +171,8 @@ MA.Release = new Class({
 				new Element('span.size', {'text': 'Size'}),
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
-				new Element('span.provider', {'text': 'Provider'})
+				new Element('span.provider', {'text': 'Provider'}),
+				new Element('span.actions')
 			).inject(self.release_container);
 
 			if(self.movie.data.releases)
@@ -162,53 +180,62 @@ MA.Release = new Class({
 
 					var quality = Quality.getQuality(release.quality) || {},
 						info = release.info || {},
-						provider = self.get(release, 'provider') + (info['provider_extra'] ? self.get(release, 'provider_extra') : '');
+						provider = self.get(release, 'provider') + (info.provider_extra ? self.get(release, 'provider_extra') : '');
 
 					var release_name = self.get(release, 'name');
 					if(release.files && release.files.length > 0){
 						try {
 							var movie_file = release.files.filter(function(file){
 								var type = File.Type.get(file.type_id);
-								return type && type.identifier == 'movie'
+								return type && type.identifier == 'movie';
 							}).pick();
 							release_name = movie_file.path.split(Api.getOption('path_sep')).getLast();
 						}
 						catch(e){}
 					}
 
+					var size = info.size ? Math.floor(self.get(release, 'size')) : 0;
+						size = size ? ((size < 1000) ? size + 'MB' : Math.round(size*10/1024)/10 + 'GB') : 'n/a';
+
 					// Create release
-					release['el'] = new Element('div', {
+					release.el = new Element('div', {
 						'class': 'item '+release.status,
 						'id': 'release_'+release._id
 					}).adopt(
 						new Element('span.name', {'text': release_name, 'title': release_name}),
-						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
+						new Element('span.status', {'text': release.status, 'class': 'status '+release.status}),
 						new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
-						new Element('span.size', {'text': info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
+						new Element('span.size', {'text': size}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),
 						new Element('span.provider', { 'text': provider, 'title': provider }),
-						info['detail_url'] ? new Element('a.info.icon2', {
-							'href': info['detail_url'],
-							'target': '_blank'
-						}) : new Element('a'),
-						new Element('a.download.icon2', {
-							'events': {
-								'click': function(e){
-									(e).preventDefault();
-									if(!this.hasClass('completed'))
-										self.download(release);
+						new Element('span.actions').adopt(
+							info.detail_url ? new Element('a.icon-info', {
+								'href': info.detail_url,
+								'target': '_blank'
+							}) : new Element('a'),
+							new Element('a.icon-download', {
+								'events': {
+									'click': function(e){
+										(e).stopPropagation();
+										if(!this.hasClass('completed'))
+											self.download(release);
+									}
 								}
-							}
-						}),
-						new Element('a.delete.icon2', {
-							'events': {
-								'click': function(e){
-									(e).preventDefault();
-									self.ignore(release);
+							}),
+							new Element('a', {
+								'class': release.status == 'ignored' ? 'icon-redo' : 'icon-cancel',
+								'events': {
+									'click': function(e){
+										(e).stopPropagation();
+										self.ignore(release);
+
+										this.toggleClass('icon-redo');
+										this.toggleClass('icon-cancel');
+									}
 								}
-							}
-						})
+							})
+						)
 					).inject(self.release_container);
 
 					if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
@@ -227,9 +254,9 @@ MA.Release = new Class({
 
 						release.el.set('class', 'item ' + new_status);
 
-						var status_el = release.el.getElement('.release_status');
-						status_el.set('class', 'release_status ' + new_status);
-						status_el.set('text', new_status);
+						var status_el = release.el.getElement('.status');
+							status_el.set('class', 'status ' + new_status);
+							status_el.set('text', new_status);
 
 						if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
 							q = self.addQuality(release.quality_id);
@@ -259,9 +286,9 @@ MA.Release = new Class({
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
-						'text': 'If anything went wrong, download'
+						'text': 'If anything went wrong, download '
 					}),
-					lr ? new Element('a.button.orange', {
+					lr ? new Element('a.orange', {
 						'text': 'the same release again',
 						'events': {
 							'click': function(){
@@ -270,9 +297,9 @@ MA.Release = new Class({
 						}
 					}) : null,
 					nr && lr ? new Element('span.or', {
-						'text': ','
+						'text': ', '
 					}) : null,
-					nr ? [new Element('a.button.green', {
+					nr ? [new Element('a.green', {
 						'text': lr ? 'another release' : 'the best release',
 						'events': {
 							'click': function(){
@@ -281,9 +308,9 @@ MA.Release = new Class({
 						}
 					}),
 					new Element('span.or', {
-						'text': 'or pick one below'
+						'text': ' or pick one below'
 					})] : null
-				)
+				);
 			}
 
 			self.last_release = null;
@@ -291,71 +318,19 @@ MA.Release = new Class({
 
 		}
 
-		// Show it
-		self.options_container.inject(self.movie, 'top');
-		self.movie.slide('in', self.options_container);
-
-	},
-
-	showHelper: function(e){
-		var self = this;
-		if(e)
-			(e).preventDefault();
-
-		var has_available = false,
-			has_snatched = false;
-
-		if(self.movie.data.releases)
-			self.movie.data.releases.each(function(release){
-				if(has_available && has_snatched) return;
-
-				if(['snatched', 'downloaded', 'seeding', 'done'].contains(release.status))
-					has_snatched = true;
-
-				if(['available'].contains(release.status))
-					has_available = true;
-
-			});
-
-		if(has_available || has_snatched){
-
-			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
-
-			self.trynext_container.adopt(
-				has_available ? [new Element('a.icon2.readd', {
-					'text': has_snatched ? 'Download another release' : 'Download the best release',
-					'events': {
-						'click': self.tryNextRelease.bind(self)
-					}
-				}),
-				new Element('a.icon2.download', {
-					'text': 'pick one yourself',
-					'events': {
-						'click': function(){
-							self.movie.quality.fireEvent('click');
-						}
-					}
-				})] : null,
-				new Element('a.icon2.completed', {
-					'text': 'mark this movie done',
-					'events': {
-						'click': self.markMovieDone.bind(self)
-					}
-				})
-			)
-		}
+		return self.options_container;
 
 	},
 
 	get: function(release, type){
-		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a'
+		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a';
 	},
 
 	download: function(release){
 		var self = this;
 
 		var release_el = self.release_container.getElement('#release_'+release._id),
-			icon = release_el.getElement('.download.icon2');
+			icon = release_el.getElement('.icon-download');
 
 		if(icon)
 			icon.addClass('icon spinner').removeClass('download');
@@ -386,39 +361,6 @@ MA.Release = new Class({
 			'data': {
 				'id': release._id
 			}
-		})
-
-	},
-
-	markMovieDone: function(){
-		var self = this;
-
-		Api.request('media.delete', {
-			'data': {
-				'id': self.movie.get('_id'),
-				'delete_from': 'wanted'
-			},
-			'onComplete': function(){
-				var movie = $(self.movie);
-				movie.set('tween', {
-					'duration': 300,
-					'onComplete': function(){
-						self.movie.destroy()
-					}
-				});
-				movie.tween('height', 0);
-			}
-		});
-
-	},
-
-	tryNextRelease: function(){
-		var self = this;
-
-		Api.request('movie.searcher.try_next', {
-			'data': {
-				'media_id': self.movie.get('_id')
-			}
 		});
 
 	}
@@ -429,223 +371,167 @@ MA.Trailer = new Class({
 
 	Extends: MovieAction,
 	id: null,
+	label: 'Trailer',
 
-	create: function(){
-		var self = this;
+	getDetails: function(){
+		var self = this,
+			data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
 
-		self.el = new Element('a.trailer', {
-			'title': 'Watch the trailer of ' + self.getTitle(),
-			'events': {
-				'click': self.watch.bind(self)
-			}
-		});
 
-	},
+		if(!self.player_container){
+			self.id = 'trailer-'+randomString();
+			self.player_container = new Element('div.icon-play[id='+self.id+']', {
+				'events': {
+					'click': self.watch.bind(self)
+				}
+			}).adopt(
+				new Element('span[text="watch"]'),
+				new Element('span[text="trailer"]')
+			);
 
-	watch: function(offset){
-		var self = this;
+			self.container = new Element('div.trailer_container')
+				.grab(self.player_container);
 
-		var data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk'
-		var url = data_url.substitute({
+			var url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
-				'year': self.get('year'),
-				'offset': offset || 1
-			}),
-			size = $(self.movie).getSize(),
-			height = self.options.height || (size.x/16)*9,
-			id = 'trailer-'+randomString();
+				'year': self.get('year')
+			});
 
-		self.player_container = new Element('div[id='+id+']');
-		self.container = new Element('div.hide.trailer_container')
-			.adopt(self.player_container)
-			.inject($(self.movie), 'top');
-
-		self.container.setStyle('height', 0);
-		self.container.removeClass('hide');
-
-		self.close_button = new Element('a.hide.hide_trailer', {
-			'text': 'Hide trailer',
-			'events': {
-				'click': self.stop.bind(self)
-			}
-		}).inject(self.movie);
-
-		self.container.setStyle('height', height);
-		$(self.movie).setStyle('height', height);
-
-		new Request.JSONP({
-			'url': url,
-			'onComplete': function(json){
-
-				self.player = new YT.Player(id, {
-					'height': height,
-					'width': size.x,
-					'videoId': json.items[0].id.videoId,
-					'playerVars': {
-						'autoplay': 1,
-						'showsearch': 0,
-						'wmode': 'transparent',
-						'iv_load_policy': 3
-					}
-				});
-
-				self.close_button.removeClass('hide');
-
-				var quality_set = false;
-				var change_quality = function(state){
-					if(!quality_set && (state.data == 1 || state.data || 2)){
-						try {
-							self.player.setPlaybackQuality('hd720');
-							quality_set = true;
+			new Request.JSONP({
+				'url': url,
+				'onComplete': function(json){
+					self.video_id = json.items[0].id.videoId;
+					self.container.grab(new Element('div.background', {
+						'styles': {
+							'background-image': 'url('+json.items[0].snippet.thumbnails.high.url+')'
 						}
-						catch(e){
+					}));
+				}
+			}).send();
+		}
 
-						}
-					}
-				};
-				self.player.addEventListener('onStateChange', change_quality);
-
-			}
-		}).send()
+		return self.container;
 
 	},
 
-	stop: function(){
+	watch: function(){
 		var self = this;
 
-		self.player.stopVideo();
-		self.container.addClass('hide');
-		self.close_button.addClass('hide');
-		$(self.movie).setStyle('height', null);
-
-		setTimeout(function(){
-			self.container.destroy();
-			self.close_button.destroy();
-		}, 1800)
+		self.container.set('html', '<iframe src="https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720" />');
 	}
 
 
 });
 
-MA.Edit = new Class({
+MA.Category = new Class({
 
 	Extends: MovieAction,
 
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.edit', {
-			'title': 'Change movie information, like title and quality.',
-			'events': {
-				'click': self.editMovie.bind(self)
-			}
+		var category = self.movie.get('category');
+
+		self.detail_button = new BlockMenu(self, {
+			'class': 'category',
+			'button_text': category ? category.label : 'No category',
+			'button_class': 'icon-dropdown'
 		});
 
-	},
+		var categories = CategoryList.getAll();
+		if(categories.length > 0){
 
-	editMovie: function(e){
-		var self = this;
-		(e).preventDefault();
+			$(self.detail_button).addEvents({
+				'click:relay(li a)': function(e, el){
+					(e).stopPropagation();
 
-		if(!self.options_container){
-			self.options_container = new Element('div.options').adopt(
-				new Element('div.form').adopt(
-					self.title_select = new Element('select', {
-						'name': 'title'
-					}),
-					self.profile_select = new Element('select', {
-						'name': 'profile'
-					}),
-					self.category_select = new Element('select', {
-						'name': 'category'
-					}).grab(
-						new Element('option', {'value': -1, 'text': 'None'})
-					),
-					new Element('a.button.edit', {
-						'text': 'Save & Search',
-						'events': {
-							'click': self.save.bind(self)
+					// Update category
+					Api.request('movie.edit', {
+						'data': {
+							'id': self.movie.get('_id'),
+							'category_id': el.get('data-id')
 						}
-					})
-				)
-			).inject(self.movie, 'top');
+					});
 
-			Array.each(self.movie.data.info.titles, function(title){
-				new Element('option', {
-					'text': title
-				}).inject(self.title_select);
+					$(self.detail_button).getElements('.icon-ok').removeClass('icon-ok');
+					el.addClass('icon-ok');
 
-				if(title == self.movie.data.title)
-					self.title_select.set('value', title);
+					self.detail_button.button.set('text', el.get('text'));
+
+				}
 			});
 
-
-			// Fill categories
-			var categories = CategoryList.getAll();
-
-			if(categories.length == 0)
-				self.category_select.hide();
-			else {
-				self.category_select.show();
-				categories.each(function(category){
-
-					var category_id = category.data._id;
-
-					new Element('option', {
-						'value': category_id,
-						'text': category.data.label
-					}).inject(self.category_select);
-
-					if(self.movie.category && self.movie.category.data && self.movie.category.data._id == category_id)
-						self.category_select.set('value', category_id);
-
-				});
-			}
-
-			// Fill profiles
-			var profiles = Quality.getActiveProfiles();
-			if(profiles.length == 1)
-				self.profile_select.hide();
-
-			profiles.each(function(profile){
-
-				var profile_id = profile.get('_id');
-
-				new Element('option', {
-					'value': profile_id,
-					'text': profile.label ? profile.label : profile.data.label
-				}).inject(self.profile_select);
-
-				if(self.movie.get('profile_id') == profile_id)
-					self.profile_select.set('value', profile_id);
-
+			self.detail_button.addLink(new Element('a[text=No category]', {
+				'class': !category ? 'icon-ok' : '',
+				'data-id': ''
+			}));
+			categories.each(function(c){
+				self.detail_button.addLink(new Element('a', {
+					'text': c.get('label'),
+					'class': category && category._id == c.get('_id') ? 'icon-ok' : '',
+					'data-id': c.get('_id')
+				}));
 			});
-
+		}
+		else {
+			$(self.detail_button).hide();
 		}
 
-		self.movie.slide('in', self.options_container);
-	},
+	}
 
-	save: function(e){
-		(e).preventDefault();
+});
+
+
+MA.Profile = new Class({
+
+	Extends: MovieAction,
+
+	create: function(){
 		var self = this;
 
-		Api.request('movie.edit', {
-			'data': {
-				'id': self.movie.get('_id'),
-				'default_title': self.title_select.get('value'),
-				'profile_id': self.profile_select.get('value'),
-				'category_id': self.category_select.get('value')
-			},
-			'useSpinner': true,
-			'spinnerTarget': $(self.movie),
-			'onComplete': function(){
-				self.movie.quality.set('text', self.profile_select.getSelected()[0].get('text'));
-				self.movie.title.set('text', self.title_select.getSelected()[0].get('text'));
-			}
+		var profile = self.movie.profile;
+
+		self.detail_button = new BlockMenu(self, {
+			'class': 'profile',
+			'button_text': profile ? profile.get('label') : 'No profile',
+			'button_class': 'icon-dropdown'
 		});
 
-		self.movie.slide('out');
+		var profiles = Quality.getActiveProfiles();
+		if(profiles.length > 0){
+
+			$(self.detail_button).addEvents({
+				'click:relay(li a)': function(e, el){
+					(e).stopPropagation();
+
+					// Update category
+					Api.request('movie.edit', {
+						'data': {
+							'id': self.movie.get('_id'),
+							'profile_id': el.get('data-id')
+						}
+					});
+
+					$(self.detail_button).getElements('.icon-ok').removeClass('icon-ok');
+					el.addClass('icon-ok');
+
+					self.detail_button.button.set('text', el.get('text'));
+
+				}
+			});
+
+			profiles.each(function(pr){
+				self.detail_button.addLink(new Element('a', {
+					'text': pr.get('label'),
+					'class': profile && profile.get('_id') == pr.get('_id') ? 'icon-ok' : '',
+					'data-id': pr.get('_id')
+				}));
+			});
+		}
+		else {
+			$(self.detail_button).hide();
+		}
+
 	}
 
 });
@@ -653,26 +539,237 @@ MA.Edit = new Class({
 MA.Refresh = new Class({
 
 	Extends: MovieAction,
+	icon: 'refresh',
 
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.refresh', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+		return new Element('a.refresh', {
+			'text': 'Refresh',
 			'title': 'Refresh the movie info and do a forced search',
 			'events': {
 				'click': self.doRefresh.bind(self)
 			}
 		});
-
 	},
 
 	doRefresh: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stop();
 
 		Api.request('media.refresh', {
 			'data': {
 				'id': self.movie.get('_id')
+			}
+		});
+	}
+
+});
+
+var SuggestBase = new Class({
+
+	Extends: MovieAction,
+
+	getIMDB: function(){
+		return this.movie.data.info.imdb;
+	},
+
+	refresh: function(json){
+		var self = this;
+
+		if(json && json.movie){
+			self.movie.list.addMovies([json.movie], 1);
+
+			var last_added = self.movie.list.movies[self.movie.list.movies.length-1];
+			$(last_added).inject(self.movie, 'before');
+		}
+
+		self.movie.destroy();
+	}
+
+});
+
+MA.Add = new Class({
+
+	Extends: SuggestBase,
+	label: 'Add',
+	icon: 'plus',
+
+	create: function() {
+		var self = this;
+
+		self.button = new Element('a.add', {
+			'text': 'Add',
+			'title': 'Re-add the movie and mark all previous snatched/downloaded as ignored',
+			'events': {
+				'click': function(){
+					self.movie.openDetails();
+				}
+			}
+		});
+
+	},
+
+	getDetails: function(){
+		var self = this;
+
+		var m = new BlockSearchMovieItem(self.movie.data.info, {
+			'onAdded': self.movie.data.status == 'suggested' ? function(){
+
+				Api.request('suggestion.ignore', {
+					'data': {
+						'imdb': self.movie.data.info.imdb,
+						'remove_only': true
+					},
+					'onComplete': self.refresh.bind(self)
+				});
+
+			} : function(){
+				self.movie.destroy();
+			}
+		});
+		m.showOptions();
+
+		return m;
+	}
+
+});
+
+MA.SuggestSeen = new Class({
+
+	Extends: SuggestBase,
+	icon: 'eye',
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.seen', {
+			'text': 'Already seen',
+			'title': 'Already seen it!',
+			'events': {
+				'click': self.markAsSeen.bind(self)
+			}
+		});
+
+	},
+
+	markAsSeen: function(e){
+		var self = this;
+		(e).stopPropagation();
+
+		Api.request('suggestion.ignore', {
+			'data': {
+				'imdb': self.getIMDB(),
+				'mark_seen': 1
+			},
+			'onComplete': function(json){
+				self.refresh(json);
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+			}
+		});
+	}
+
+});
+
+MA.SuggestIgnore = new Class({
+
+	Extends: SuggestBase,
+	icon: 'error',
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.ignore', {
+			'text': 'Ignore',
+			'title': 'Don\'t suggest this movie anymore',
+			'events': {
+				'click': self.markAsIgnored.bind(self)
+			}
+		});
+
+	},
+
+	markAsIgnored: function(e){
+		var self = this;
+		(e).stopPropagation();
+
+		Api.request('suggestion.ignore', {
+			'data': {
+				'imdb': self.getIMDB()
+			},
+			'onComplete': function(json){
+				self.refresh(json);
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+			}
+		});
+	}
+
+});
+
+
+MA.ChartIgnore = new Class({
+
+	Extends: SuggestBase,
+	icon: 'error',
+
+	create: function() {
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.ignore', {
+			'text': 'Hide',
+			'title': 'Don\'t show this movie in charts',
+			'events': {
+				'click': self.markAsHidden.bind(self)
+			}
+		});
+
+	},
+
+	markAsHidden: function(e){
+		var self = this;
+		(e).stopPropagation();
+
+		Api.request('charts.ignore', {
+			'data': {
+				'imdb': self.getIMDB()
+			},
+			'onComplete': function(json){
+				if(self.movie.details){
+					self.movie.details.close();
+				}
+				self.movie.destroy();
 			}
 		});
 	}
@@ -684,11 +781,12 @@ MA.Readd = new Class({
 	Extends: MovieAction,
 
 	create: function(){
-		var self = this;
+		var self = this,
+			movie_done = self.movie.data.status == 'done',
+			snatched;
 
-		var movie_done = self.movie.data.status == 'done';
 		if(self.movie.data.releases && !movie_done)
-			var snatched = self.movie.data.releases.filter(function(release){
+			snatched = self.movie.data.releases.filter(function(release){
 				return release.status && (release.status == 'snatched' || release.status == 'seeding' || release.status == 'downloaded' || release.status == 'done');
 			}).length;
 
@@ -704,7 +802,7 @@ MA.Readd = new Class({
 
 	doReadd: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
 		Api.request('movie.add', {
 			'data': {
@@ -725,81 +823,70 @@ MA.Delete = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.delete', {
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+		return new Element('a.delete', {
+			'text': 'Delete',
 			'title': 'Remove the movie from this CP list',
 			'events': {
 				'click': self.showConfirm.bind(self)
 			}
 		});
-
 	},
 
 	showConfirm: function(e){
 		var self = this;
-		(e).preventDefault();
+		(e).stopPropagation();
 
-		if(!self.delete_container){
-			self.delete_container = new Element('div.buttons.delete_container').adopt(
-				new Element('a.cancel', {
-					'text': 'Cancel',
-					'events': {
-						'click': self.hideConfirm.bind(self)
-					}
-				}),
-				new Element('span.or', {
-					'text': 'or'
-				}),
-				new Element('a.button.delete', {
-					'text': 'Delete ' + self.movie.title.get('text'),
-					'events': {
-						'click': self.del.bind(self)
-					}
-				})
-			).inject(self.movie, 'top');
-		}
+		self.question = new Question('Are you sure you want to delete <strong>' + self.getTitle() + '</strong>?', '', [{
+			'text': 'Yes, delete '+self.getTitle(),
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					e.target.set('text', 'Deleting...');
 
-		self.movie.slide('in', self.delete_container);
+					self.del();
+				}
+			}
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
 
 	},
 
-	hideConfirm: function(e){
-		var self = this;
-		(e).preventDefault();
-
-		self.movie.removeView();
-		self.movie.slide('out');
-	},
-
-	del: function(e){
-		(e).preventDefault();
+	del: function(){
 		var self = this;
 
 		var movie = $(self.movie);
 
-		self.chain(
-			function(){
-				self.callChain();
+		Api.request('media.delete', {
+			'data': {
+				'id': self.movie.get('_id'),
+				'delete_from': self.movie.list.options.identifier
 			},
-			function(){
-				Api.request('media.delete', {
-					'data': {
-						'id': self.movie.get('_id'),
-						'delete_from': self.movie.list.options.identifier
-					},
-					'onComplete': function(){
-						movie.set('tween', {
-							'duration': 300,
-							'onComplete': function(){
-								self.movie.destroy()
-							}
-						});
-						movie.tween('height', 0);
+			'onComplete': function(){
+				if(self.question)
+					self.question.close();
+
+				dynamics.animate(movie, {
+					opacity: 0,
+					scale: 0
+				}, {
+					type: dynamics.bezier,
+					points: [{'x':0,'y':0,'cp':[{'x':0.876,'y':0}]},{'x':1,'y':1,'cp':[{'x':0.145,'y':1}]}],
+					duration: 400,
+					complete: function(){
+						self.movie.destroy();
 					}
 				});
 			}
-		);
-
-		self.callChain();
+		});
 
 	}
 
@@ -808,27 +895,16 @@ MA.Delete = new Class({
 MA.Files = new Class({
 
 	Extends: MovieAction,
+	label: 'Files',
 
-	create: function(){
+	getDetails: function(){
 		var self = this;
 
-		if(self.movie.data.releases && self.movie.data.releases.length > 0)
-			self.el = new Element('a.directory', {
-				'title': 'Available files',
-				'events': {
-					'click': self.show.bind(self)
-				}
-			});
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0)
+			return;
 
-	},
-
-	show: function(){
-		var self = this;
-
-		if(!self.options_container){
-			self.options_container = new Element('div.options').adopt(
-				self.files_container = new Element('div.files.table')
-			).inject(self.movie, 'top');
+		if(!self.files_container){
+			self.files_container = new Element('div.files.table');
 
 			// Header
 			new Element('div.item.head').adopt(
@@ -845,14 +921,56 @@ MA.Files = new Class({
 							new Element('div.file.item').adopt(
 								new Element('span.name', {'text': file}),
 								new Element('span.type', {'text': type})
-							).inject(rel)
+							).inject(rel);
 						});
 					});
 				});
 
 		}
 
-		self.movie.slide('in', self.options_container);
+		return self.files_container;
+	}
+
+});
+
+
+MA.MarkAsDone = new Class({
+
+	Extends: MovieAction,
+
+	create: function(){
+		var self = this;
+
+		self.button = self.createButton();
+		self.detail_button = self.createButton();
+
+	},
+
+	createButton: function(){
+		var self = this;
+
+		return new Element('a.mark_as_done', {
+			'text': 'Mark as done',
+			'title': 'Remove from available list and move to managed movies',
+			'events': {
+				'click': self.markMovieDone.bind(self)
+			}
+		});
+	},
+
+	markMovieDone: function(){
+		var self = this;
+
+		Api.request('media.delete', {
+			'data': {
+				'id': self.movie.get('_id'),
+				'delete_from': 'wanted'
+			},
+			'onComplete': function(){
+				self.movie.destroy();
+			}
+		});
+
 	}
 
 });

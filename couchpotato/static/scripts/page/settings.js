@@ -27,8 +27,8 @@ Page.Settings = new Class({
 	},
 
 	openTab: function(action){
-		var self = this,
-			action = (action == 'index' ? 'about' : action) || self.action;
+		var self = this;
+		action = (action == 'index' ? 'about' : action) || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);
@@ -44,15 +44,16 @@ Page.Settings = new Class({
 		var a = hide ? 'removeClass' : 'addClass';
 		var c = 'active';
 
+		tab_name = tab_name.split('/')[0];
 		var t = self.tabs[tab_name] || self.tabs[self.action] || self.tabs.general;
 
 		// Subtab
 		var subtab = null;
 		Object.each(self.params, function(param, subtab_name){
-			subtab = subtab_name;
+			subtab = param;
 		});
 
-		self.el.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
+		self.content.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
 			active.removeClass(c);
 		});
 
@@ -72,7 +73,7 @@ Page.Settings = new Class({
 				t.content.fireEvent('activate');
 		}
 
-		return t
+		return t;
 	},
 
 	getData: function(onComplete){
@@ -82,7 +83,7 @@ Page.Settings = new Class({
 			Api.request('settings', {
 				'useSpinner': true,
 				'spinnerOptions': {
-					'target': self.el
+					'target': self.content
 				},
 				'onComplete': function(json){
 					self.data = json;
@@ -99,7 +100,7 @@ Page.Settings = new Class({
 			return self.data.values[section][name];
 		}
 		catch(e){
-			return ''
+			return '';
 		}
 	},
 
@@ -112,41 +113,46 @@ Page.Settings = new Class({
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
-    sortByOrder: function(a, b){
-		return (a.order || 100) - (b.order || 100)
+	sortByOrder: function(a, b){
+		return (a.order || 100) - (b.order || 100);
 	},
 
 	create: function(json){
 		var self = this;
 
+		self.navigation = new Element('div.navigation').adopt(
+			new Element('h2[text=Settings]'),
+			new Element('div.advanced_toggle').adopt(
+				new Element('span', {
+					'text': 'Show advanced'
+				}),
+				new Element('label.switch').adopt(
+					self.advanced_toggle = new Element('input[type=checkbox]', {
+						'checked': +Cookie.read('advanced_toggle_checked'),
+						'events': {
+							'change': self.showAdvanced.bind(self)
+						}
+					}),
+					new Element('div.toggle')
+				)
+			)
+		);
+
 		self.tabs_container = new Element('ul.tabs');
+
 		self.containers = new Element('form.uniForm.containers', {
 			'events': {
 				'click:relay(.enabler.disabled h2)': function(e, el){
 					el.getPrevious().getElements('.check').fireEvent('click');
 				}
 			}
-		}).adopt(
-			new Element('label.advanced_toggle').adopt(
-				new Element('span', {
-					'text': 'Show advanced settings'
-				}),
-				self.advanced_toggle = new Element('input[type=checkbox].inlay', {
-					'checked': +Cookie.read('advanced_toggle_checked'),
-					'events': {
-						'change': self.showAdvanced.bind(self)
-					}
-				})
-			)
-		);
+		});
 		self.showAdvanced();
-
-		new Form.Check(self.advanced_toggle);
 
 		// Add content to tabs
 		var options = [];
 		Object.each(json.options, function(section, section_name){
-			section['section_name'] = section_name;
+			section.section_name = section_name;
 			options.include(section);
 		});
 
@@ -169,7 +175,7 @@ Page.Settings = new Class({
 				if(group.subtab){
 					if(!self.tabs[group.tab].subtabs[group.subtab])
 						self.createSubTab(group.subtab, group, self.tabs[group.tab], group.tab);
-					content_container = self.tabs[group.tab].subtabs[group.subtab].content
+					content_container = self.tabs[group.tab].subtabs[group.subtab].content;
 				}
 
 				if(group.list && !self.lists[group.list]){
@@ -203,7 +209,8 @@ Page.Settings = new Class({
 		});
 
 		setTimeout(function(){
-			self.el.adopt(
+			self.content.adopt(
+				self.navigation,
 				self.tabs_container,
 				self.containers
 			);
@@ -240,7 +247,7 @@ Page.Settings = new Class({
 			'groups': {}
 		});
 
-		return self.tabs[tab_name]
+		return self.tabs[tab_name];
 
 	},
 
@@ -272,23 +279,24 @@ Page.Settings = new Class({
 			'groups': {}
 		});
 
-		return parent_tab.subtabs[tab_name]
+		return parent_tab.subtabs[tab_name];
 
 	},
 
 	createGroup: function(group){
+		var hint;
 
 		if((typeOf(group.description) == 'array')){
-			var hint = new Element('span.hint.more_hint', {
+			hint = new Element('span.hint.more_hint', {
 				'html': group.description[0]
 			});
 
 			createTooltip(group.description[1]).inject(hint, 'top');
 		}
 		else {
-			var hint = new Element('span.hint', {
+			hint = new Element('span.hint', {
 				'html': group.description || ''
-			})
+			});
 		}
 
 		var icon;
@@ -300,7 +308,7 @@ Page.Settings = new Class({
 
 		var label = new Element('span.group_label', {
 			'text': group.label || (group.name).capitalize()
-		})
+		});
 
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
@@ -311,11 +319,7 @@ Page.Settings = new Class({
 	},
 
 	createList: function(content_container){
-		return new Element('div.option_list').grab(
-			new Element('h3', {
-				'text': 'Enable another'
-			})
-		).inject(content_container)
+		return new Element('div.option_list').inject(content_container);
 	}
 
 });
@@ -324,7 +328,7 @@ var OptionBase = new Class({
 
 	Implements: [Options, Events],
 
-	klass: 'textInput',
+	klass: '',
 	focused_class: 'focused',
 	save_on_change: true,
 
@@ -347,7 +351,7 @@ var OptionBase = new Class({
 			'keyup': self.changed.bind(self)
 		});
 
-		self.addEvent('injected', self.afterInject.bind(self))
+		self.addEvent('injected', self.afterInject.bind(self));
 
 	},
 
@@ -356,7 +360,7 @@ var OptionBase = new Class({
 	 */
 	createBase: function(){
 		var self = this;
-		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name)
+		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name + (self.klass ? '.' + self.klass : ''));
 	},
 
 	create: function(){
@@ -366,17 +370,16 @@ var OptionBase = new Class({
 		var self = this;
 		return new Element('label', {
 			'text': (self.options.label || self.options.name.replace('_', ' ')).capitalize()
-		})
+		});
 	},
 
 	setAdvanced: function(){
-		this.el.addClass(this.options.advanced ? 'advanced' : '')
+		this.el.addClass(this.options.advanced ? 'advanced' : '');
 	},
 
 	createHint: function(){
 		var self = this;
 		if(self.options.description){
-
 
 			if((typeOf(self.options.description) == 'array')){
 				var hint = new Element('p.formHint.more_hint', {
@@ -388,7 +391,7 @@ var OptionBase = new Class({
 			else {
 				new Element('p.formHint', {
 					'html': self.options.description || ''
-				}).inject(self.el)
+				}).inject(self.el);
 			}
 		}
 	},
@@ -405,7 +408,7 @@ var OptionBase = new Class({
 				if(self.changed_timer) clearTimeout(self.changed_timer);
 				self.changed_timer = self.save.delay(300, self);
 			}
-			self.fireEvent('change')
+			self.fireEvent('change');
 		}
 
 	},
@@ -480,7 +483,7 @@ Option.String = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue(),
@@ -490,7 +493,7 @@ Option.String = new Class({
 	},
 
 	getPlaceholder: function(){
-		return this.options.placeholder
+		return this.options.placeholder;
 	}
 });
 
@@ -502,24 +505,21 @@ Option.Dropdown = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('select', {
-				'name': self.postName()
-			})
+			new Element('div.select_wrapper.icon-dropdown').grab(
+				self.input = new Element('select', {
+					'name': self.postName()
+				})
+			)
 		);
 
 		Object.each(self.options.values, function(value){
 			new Element('option', {
 				'text': value[0],
 				'value': value[1]
-			}).inject(self.input)
+			}).inject(self.input);
 		});
 
 		self.input.set('value', self.getSettingValue());
-
-		var dd = new Form.Dropdown(self.input, {
-			'onChange': self.changed.bind(self)
-		});
-		self.input = dd.input;
 	}
 });
 
@@ -535,15 +535,13 @@ Option.Checkbox = new Class({
 
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'name': self.postName(),
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
 				'id': randomId
 			})
 		);
-
-		new Form.Check(self.input);
 
 	},
 
@@ -562,7 +560,7 @@ Option.Password = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('input.inlay', {
+			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue() ? '********' : '',
@@ -573,7 +571,7 @@ Option.Password = new Class({
 		self.input.addEvent('focus', function(){
 			self.input.set('value', '');
 			self.input.set('type', 'password');
-		})
+		});
 
 	}
 });
@@ -589,14 +587,16 @@ Option.Enabler = new Class({
 		var self = this;
 
 		self.el.adopt(
-			self.input = new Element('input.inlay', {
-				'type': 'checkbox',
-				'checked': self.getSettingValue(),
-				'id': 'r-'+randomString()
-			})
+			new Element('label.switch').adopt(
+				self.input = new Element('input', {
+					'type': 'checkbox',
+					'checked': self.getSettingValue(),
+					'id': 'r-'+randomString()
+				}),
+				new Element('div.toggle')
+			)
 		);
 
-		new Form.Check(self.input);
 	},
 
 	changed: function(){
@@ -610,8 +610,8 @@ Option.Enabler = new Class({
 
 		self.parentFieldset[ enabled ? 'removeClass' : 'addClass']('disabled');
 
-		if(self.parentList)
-			self.parentFieldset.inject(self.parentList.getElement('h3'), enabled ? 'before' : 'after');
+		//if(self.parentList)
+		//	self.parentFieldset.inject(self.parentList.getElement('h3'), enabled ? 'before' : 'after');
 
 	},
 
@@ -621,7 +621,7 @@ Option.Enabler = new Class({
 		self.parentFieldset = self.el.getParent('fieldset').addClass('enabler');
 		self.parentList = self.parentFieldset.getParent('.option_list');
 		self.el.inject(self.parentFieldset, 'top');
-		self.checkState()
+		self.checkState();
 	}
 
 });
@@ -649,7 +649,7 @@ Option.Directory = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.directory_inlay = new Element('span.directory.inlay', {
+			self.directory_inlay = new Element('span.directory', {
 				'events': {
 					'click': self.showBrowser.bind(self)
 				}
@@ -676,12 +676,13 @@ Option.Directory = new Class({
 		var self = this,
 			value = self.getValue(),
 			path_sep = Api.getOption('path_sep'),
-			active_selector = 'li:not(.blur):not(.empty)';
+			active_selector = 'li:not(.blur):not(.empty)',
+			first;
 
 		if(e.key == 'enter' || e.key == 'tab'){
 			(e).stop();
 
-			var first = self.dir_list.getElement(active_selector);
+			first = self.dir_list.getElement(active_selector);
 			if(first){
 				self.selectDirectory(first.get('data-value'));
 			}
@@ -691,20 +692,20 @@ Option.Directory = new Class({
 			// New folder
 			if(value.substr(-1) == path_sep){
 				if(self.current_dir != value)
-					self.selectDirectory(value)
+					self.selectDirectory(value);
 			}
 			else {
 				var pd = self.getParentDir(value);
 				if(self.current_dir != pd)
 					self.getDirs(pd);
 
-				var folder_filter = value.split(path_sep).getLast()
+				var folder_filter = value.split(path_sep).getLast();
 				self.dir_list.getElements('li').each(function(li){
-					var  valid = li.get('text').substr(0, folder_filter.length).toLowerCase() != folder_filter.toLowerCase()
-					li[valid ? 'addClass' : 'removeClass']('blur')
+					var valid = li.get('text').substr(0, folder_filter.length).toLowerCase() != folder_filter.toLowerCase();
+					li[valid ? 'addClass' : 'removeClass']('blur');
 				});
 
-				var first = self.dir_list.getElement(active_selector);
+				first = self.dir_list.getElement(active_selector);
 				if(first){
 					if(!self.dir_list_scroll)
 						self.dir_list_scroll = new Fx.Scroll(self.dir_list, {
@@ -722,13 +723,13 @@ Option.Directory = new Class({
 
 		self.input.set('value', dir);
 
-		self.getDirs()
+		self.getDirs();
 	},
 
 	previousDirectory: function(){
 		var self = this;
 
-		self.selectDirectory(self.getParentDir())
+		self.selectDirectory(self.getParentDir());
 	},
 
 	caretAtEnd: function(){
@@ -751,79 +752,79 @@ Option.Directory = new Class({
 
 		// Move caret to back of the input
 		if(!self.browser || self.browser && !self.browser.isVisible())
-			self.caretAtEnd()
+			self.caretAtEnd();
 
 		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
-				new Element('div.pointer'),
-				new Element('div.actions').adopt(
-					self.back_button = new Element('a.back', {
-						'html': '',
+				self.pointer = new Element('div.pointer'),
+				new Element('div.wrapper').adopt(
+					new Element('div.actions').adopt(
+						self.back_button = new Element('a.back', {
+							'html': '',
+							'events': {
+								'click': self.previousDirectory.bind(self)
+							}
+						}),
+						new Element('label', {
+							'text': 'Hidden folders'
+						}).adopt(
+							self.show_hidden = new Element('input[type=checkbox]', {
+								'events': {
+									'change': function(){
+										self.getDirs();
+									}
+								}
+							})
+						)
+					),
+					self.dir_list = new Element('ul', {
 						'events': {
-							'click': self.previousDirectory.bind(self)
+							'click:relay(li:not(.empty))': function(e, el){
+								(e).preventDefault();
+								self.selectDirectory(el.get('data-value'));
+							},
+							'mousewheel': function(e){
+								(e).stopPropagation();
+							}
 						}
 					}),
-					new Element('label', {
-						'text': 'Hidden folders'
-					}).adopt(
-						self.show_hidden = new Element('input[type=checkbox].inlay', {
+					new Element('div.actions').adopt(
+						new Element('a.clear.button', {
+							'text': 'Clear',
 							'events': {
-								'change': function(){
-									self.getDirs()
+								'click': function(e){
+									self.input.set('value', '');
+									self.hideBrowser(e, true);
+								}
+							}
+						}),
+						new Element('a.cancel', {
+							'text': 'Cancel',
+							'events': {
+								'click': self.hideBrowser.bind(self)
+							}
+						}),
+						new Element('span', {
+							'text': 'or'
+						}),
+						self.save_button = new Element('a.button.save', {
+							'text': 'Save',
+							'events': {
+								'click': function(e){
+									self.hideBrowser(e, true);
 								}
 							}
 						})
 					)
-				),
-				self.dir_list = new Element('ul', {
-					'events': {
-						'click:relay(li:not(.empty))': function(e, el){
-							(e).preventDefault();
-							self.selectDirectory(el.get('data-value'))
-						},
-						'mousewheel': function(e){
-							(e).stopPropagation();
-						}
-					}
-				}),
-				new Element('div.actions').adopt(
-					new Element('a.clear.button', {
-						'text': 'Clear',
-						'events': {
-							'click': function(e){
-								self.input.set('value', '');
-								self.hideBrowser(e, true);
-							}
-						}
-					}),
-					new Element('a.cancel', {
-						'text': 'Cancel',
-						'events': {
-							'click': self.hideBrowser.bind(self)
-						}
-					}),
-					new Element('span', {
-						'text': 'or'
-					}),
-					self.save_button = new Element('a.button.save', {
-						'text': 'Save',
-						'events': {
-							'click': function(e){
-								self.hideBrowser(e, true)
-							}
-						}
-					})
 				)
 			).inject(self.directory_inlay, 'before');
-
-			new Form.Check(self.show_hidden);
 		}
 
 		self.initial_directory = self.input.get('value');
 
 		self.getDirs();
 		self.browser.show();
-		self.el.addEvent('outerClick', self.hideBrowser.bind(self))
+		self.el.addEvent('outerClick', self.hideBrowser.bind(self));
 	},
 
 	hideBrowser: function(e, save){
@@ -836,7 +837,7 @@ Option.Directory = new Class({
 			self.input.set('value', self.initial_directory);
 
 		self.browser.hide();
-		self.el.removeEvents('outerClick')
+		self.el.removeEvents('outerClick');
 
 	},
 
@@ -848,7 +849,7 @@ Option.Directory = new Class({
 
 		var previous_dir = json.parent;
 
-		if(v == '')
+		if(v === '')
 			self.input.set('value', json.home);
 
 		if(previous_dir.length >= 1 && !json.is_root){
@@ -861,10 +862,10 @@ Option.Directory = new Class({
 
 			self.back_button.set('data-value', previous_dir);
 			self.back_button.set('html', '&laquo; ' + prev_dirname);
-			self.back_button.show()
+			self.back_button.show();
 		}
 		else {
-			self.back_button.hide()
+			self.back_button.hide();
 		}
 
 		if(self.use_cache)
@@ -879,12 +880,12 @@ Option.Directory = new Class({
 				new Element('li', {
 					'data-value': dir,
 					'text': self.getCurrentDirname(dir)
-				}).inject(self.dir_list)
+				}).inject(self.dir_list);
 			});
 		else
 			new Element('li.empty', {
 				'text': 'Selected folder is empty'
-			}).inject(self.dir_list)
+			}).inject(self.dir_list);
 
 		//fix for webkit type browsers to refresh the dom for the file browser
 		//http://stackoverflow.com/questions/3485365/how-can-i-force-webkit-to-redraw-repaint-to-propagate-style-changes
@@ -897,7 +898,7 @@ Option.Directory = new Class({
 			c = dir || self.getValue();
 
 		if(self.cached[c] && self.use_cache){
-			self.fillBrowser()
+			self.fillBrowser();
 		}
 		else {
 			Api.request('directory.list', {
@@ -909,7 +910,7 @@ Option.Directory = new Class({
 					self.current_dir = c;
 					self.fillBrowser(json);
 				}
-			})
+			});
 		}
 	},
 
@@ -922,16 +923,16 @@ Option.Directory = new Class({
 		var v = dir || self.getValue();
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
-		if(dirs.pop() == '')
+		if(dirs.pop() === '')
 			dirs.pop();
 
-		return dirs.join(sep) + sep
+		return dirs.join(sep) + sep;
 	},
 
 	getCurrentDirname: function(dir){
 		var dir_split = dir.split(Api.getOption('path_sep'));
 
-		return dir_split[dir_split.length-2] || Api.getOption('path_sep')
+		return dir_split[dir_split.length-2] || Api.getOption('path_sep');
 	},
 
 	getValue: function(){
@@ -976,7 +977,7 @@ Option.Directories = new Class({
 
 		var parent = self.el.getParent('fieldset');
 		var dirs = parent.getElements('.multi_directory');
-		if(dirs.length == 0)
+		if(dirs.length === 0)
 			$(dir).inject(parent);
 		else
 			$(dir).inject(dirs.getLast(), 'after');
@@ -1036,16 +1037,20 @@ Option.Directories = new Class({
 
 Option.Choice = new Class({
 	Extends: Option.String,
+	klass: 'choice',
 
 	afterInject: function(){
 		var self = this;
 
-		self.tags = [];
-		self.replaceInput();
-
-		self.select = new Element('select').adopt(
-			new Element('option[text=Add option]')
-		).inject(self.tag_input, 'after');
+		var wrapper = new Element('div.select_wrapper.icon-dropdown').grab(
+			self.select = new Element('select.select', {
+				'events': {
+					'change': self.addSelection.bind(self)
+				}
+			}).grab(
+				new Element('option[text=Add option]')
+			)
+		);
 
 		var o = self.options.options;
 		Object.each(o.choices, function(label, choice){
@@ -1055,333 +1060,14 @@ Option.Choice = new Class({
 			}).inject(self.select);
 		});
 
-		self.select = new Form.Dropdown(self.select, {
-			'onChange': self.addSelection.bind(self)
-		});
-	},
+		wrapper.inject(self.input, 'after');
 
-	replaceInput: function(){
-		var self = this;
-		self.initialized = self.initialized ? self.initialized+1 : 1;
-
-		var value = self.getValue();
-		var matches = value.match(/<([^>]*)>/g);
-
-		self.tag_input = new Element('ul.inlay', {
-			'events': {
-				'click': function(e){
-					if(e.target == self.tag_input){
-						var input = self.tag_input.getElement('li:last-child input');
-						input.fireEvent('focus');
-						input.focus();
-						input.setCaretPosition(input.get('value').length);
-					}
-
-					self.el.addEvent('outerClick', function(){
-						self.reset();
-						self.el.removeEvents('outerClick');
-					})
-				}
-			}
-		}).inject(self.input, 'after');
-		self.el.addClass('tag_input');
-
-		var mtches = [];
-		if(matches)
-			matches.each(function(match, mnr){
-				var pos = value.indexOf(match),
-					msplit = [value.substr(0, pos), value.substr(pos, match.length), value.substr(pos+match.length)];
-
-				msplit.each(function(matchsplit, snr){
-					if(msplit.length-1 == snr){
-						value = matchsplit;
-
-						if(matches.length-1 == mnr)
-							mtches.append([value]);
-
-						return;
-					}
-					mtches.append([value == matchsplit ? match : matchsplit]);
-				});
-			});
-
-		if(mtches.length == 0 && value != '')
-			mtches.include(value);
-
-		mtches.each(self.addTag.bind(self));
-
-		self.addLastTag();
-
-		// Sortable
-		self.sortable = new Sortables(self.tag_input, {
-			'revert': true,
-			'handle': '',
-			'opacity': 0.5,
-			'onComplete': function(){
-				self.setOrder();
-				self.reset();
-			}
-		});
-
-		// Calc width on show
-		var input_group = self.tag_input.getParent('.tab_content');
-		input_group.addEvent('activate', self.setAllWidth.bind(self));
-	},
-
-	addLastTag: function(){
-		if(this.tag_input.getElement('li.choice:last-child') || !this.tag_input.getElement('li'))
-			this.addTag('');
-	},
-
-	addTag: function(tag){
-		var self = this;
-		tag = new Option.Choice.Tag(tag, {
-			'onChange': self.setOrder.bind(self),
-			'onBlur': function(){
-				self.addLastTag();
-			},
-			'onGoLeft': function(){
-				self.goLeft(this)
-			},
-			'onGoRight': function(){
-				self.goRight(this)
-			}
-		});
-		$(tag).inject(self.tag_input);
-
-		if(self.initialized > 1)
-			tag.setWidth();
-		else
-			(function(){ tag.setWidth(); }).delay(10, self);
-
-		self.tags.include(tag);
-
-		return tag;
-	},
-
-	goLeft: function(from_tag){
-		var self = this;
-
-		from_tag.blur();
-
-		var prev_index = self.tags.indexOf(from_tag)-1;
-		if(prev_index >= 0)
-			self.tags[prev_index].selectFrom('right');
-		else
-			from_tag.focus();
-
-	},
-	goRight: function(from_tag){
-		var self = this;
-
-		from_tag.blur();
-
-		var next_index = self.tags.indexOf(from_tag)+1;
-		if(next_index < self.tags.length)
-			self.tags[next_index].selectFrom('left');
-		else
-			from_tag.focus();
-	},
-
-	setOrder: function(){
-		var self = this;
-
-		var value = '';
-		self.tag_input.getElements('li').each(function(el){
-			value += el.getElement('span').get('text');
-		});
-		self.addLastTag();
-
-		self.input.set('value', value);
-		self.input.fireEvent('change');
-		self.setAllWidth();
 	},
 
 	addSelection: function(){
 		var self = this;
-
-		var tag = self.addTag(self.el.getElement('.selection input').get('value'));
-		self.sortable.addItems($(tag));
-		self.setOrder();
-		self.setAllWidth();
-	},
-
-	reset: function(){
-		var self = this;
-
-		self.tag_input.destroy();
-		self.sortable.detach();
-
-		self.replaceInput();
-		self.setAllWidth();
-	},
-
-	setAllWidth: function(){
-		var self = this;
-		self.tags.each(function(tag){
-			tag.setWidth.delay(10, tag);
-		});
-	}
-
-});
-
-Option.Choice.Tag = new Class({
-
-	Implements: [Options, Events],
-
-	options: {
-		'pre': '<',
-		'post': '>'
-	},
-
-	initialize: function(tag, options){
-		var self = this;
-		self.setOptions(options);
-
-		self.tag = tag;
-		self.is_choice = tag.substr(0, 1) == self.options.pre && tag.substr(-1) == self.options.post;
-
-		self.create();
-	},
-
-	create: function(){
-		var self = this;
-
-		self.el =  new Element('li', {
-			'class': self.is_choice ? 'choice' : '',
-			'styles': {
-				'border': 0
-			},
-			'events': {
-				'mouseover': !self.is_choice ? self.fireEvent.bind(self, 'focus') : function(){}
-			}
-		}).adopt(
-			self.input = new Element(self.is_choice ? 'span' : 'input', {
-				'text': self.tag,
-				'value': self.tag,
-				'styles': {
-					'width': 0
-				},
-				'events': {
-					'keyup': self.is_choice ? null : function(e){
-						var current_caret_pos = self.input.getCaretPosition();
-						if(e.key == 'left' && current_caret_pos == self.last_caret_pos){
-							self.fireEvent('goLeft');
-						}
-						else if(e.key == 'right' && self.last_caret_pos === current_caret_pos){
-							self.fireEvent('goRight');
-						}
-						self.last_caret_pos = self.input.getCaretPosition();
-
-						self.setWidth();
-						self.fireEvent('change');
-					},
-					'focus': self.fireEvent.bind(self, 'focus'),
-					'blur': self.fireEvent.bind(self, 'blur')
-				}
-			}),
-			self.span = !self.is_choice ? new Element('span', {
-				'text': self.tag
-			}) : null,
-			self.del_button = new Element('a.delete', {
-				'events': {
-					'click': self.del.bind(self)
-				}
-			})
-		);
-
-		self.addEvent('focus', self.setWidth.bind(self));
-
-	},
-
-	blur: function(){
-		var self = this;
-
-		self.input.blur();
-
-		self.selected = false;
-		self.el.removeClass('selected');
-		self.input.removeEvents('outerClick');
-	},
-
-	focus: function(){
-		var self = this;
-		if(!self.is_choice){
-			this.input.focus();
-		}
-		else {
-			if(self.selected) return;
-			self.selected = true;
-			self.el.addClass('selected');
-			self.input.addEvent('outerClick', self.blur.bind(self));
-
-			var temp_input = new Element('input', {
-				'events': {
-					'keydown': function(e){
-						e.stop();
-
-						if(e.key == 'right'){
-							self.fireEvent('goRight');
-							this.destroy();
-						}
-						else if(e.key == 'left'){
-							self.fireEvent('goLeft');
-							this.destroy();
-						}
-						else if(e.key == 'backspace'){
-							self.del();
-							this.destroy();
-							self.fireEvent('goLeft');
-						}
-					}
-				},
-				'styles': {
-					'height': 0,
-					'width': 0,
-					'position': 'absolute',
-					'top': -200
-				}
-			});
-			self.el.adopt(temp_input);
-			temp_input.focus();
-		}
-	},
-
-	selectFrom: function(direction){
-		var self = this;
-
-		if(!direction || self.is_choice){
-			self.focus();
-		}
-		else {
-			self.focus();
-			var position = direction == 'left' ? 0 : self.input.get('value').length;
-			self.input.setCaretPosition(position);
-		}
-
-	},
-
-	setWidth: function(){
-		var self = this;
-
-		if(self.span && self.input){
-			self.span.set('text', self.input.get('value'));
-			self.input.setStyle('width', self.span.getSize().x+2);
-		}
-	},
-
-	del: function(){
-		var self = this;
-		self.el.destroy();
-		self.fireEvent('change');
-	},
-
-	getValue: function(){
-		return this.span.get('text');
-	},
-
-	toElement: function(){
-		return this.el;
+		self.input.set('value', self.input.get('value') + self.select.get('value'));
+		self.input.fireEvent('change');
 	}
 
 });
@@ -1412,7 +1098,7 @@ Option.Combined = new Class({
 			});
 
 			self.inputs[name].getParent('.ctrlHolder').setStyle('display', 'none');
-			self.inputs[name].addEvent('change', self.addEmpty.bind(self))
+			self.inputs[name].addEvent('change', self.addEmpty.bind(self));
 
 		});
 
@@ -1427,7 +1113,7 @@ Option.Combined = new Class({
 				'class': name,
 				'text': self.labels[name],
 				'title': self.descriptions[name]
-			}).inject(head)
+			}).inject(head);
 		});
 
 
@@ -1450,8 +1136,8 @@ Option.Combined = new Class({
 			var empty_count = 0;
 			self.options.combine.each(function(name){
 				var input = ctrl_holder.getElement('input.' + name);
-				if(input.get('value') == '' || input.get('type') == 'checkbox')
-					empty_count++
+				if(input.get('value') === '' || input.get('type') == 'checkbox')
+					empty_count++;
 			});
 			has_empty += (empty_count == self.options.combine.length) ? 1 : 0;
 			ctrl_holder[(empty_count == self.options.combine.length) ? 'addClass' : 'removeClass']('is_empty');
@@ -1474,19 +1160,17 @@ Option.Combined = new Class({
 			var value = values[name] || '';
 
 			if(name.indexOf('use') != -1){
-				var checkbox = new Element('input[type=checkbox].inlay.'+name, {
+				var checkbox = new Element('input[type=checkbox].'+name, {
 					'checked': +value,
 					'events': {
 						'click': self.saveCombined.bind(self),
 						'change': self.saveCombined.bind(self)
 					}
 				}).inject(item);
-
-				new Form.Check(checkbox);
 			}
 			else {
 				value_count++;
-				new Element('input[type=text].inlay.'+name, {
+				new Element('input[type=text].'+name, {
 					'value': value,
 					'placeholder': self.labels[name] || name,
 					'events': {
@@ -1504,7 +1188,7 @@ Option.Combined = new Class({
 
 		item[value_empty == value_count ? 'addClass' : 'removeClass']('is_empty');
 
-		new Element('a.icon2.delete', {
+		new Element('a.icon-cancel.delete', {
 			'events': {
 				'click': self.deleteCombinedItem.bind(self)
 			}
@@ -1516,10 +1200,9 @@ Option.Combined = new Class({
 	},
 
 	saveCombined: function(){
-		var self = this;
+		var self = this,
+			temp = {};
 
-
-		var temp = {};
 		self.items.each(function(item, nr){
 			self.options.combine.each(function(name){
 				var input = item.getElement('input.'+name);
@@ -1528,7 +1211,7 @@ Option.Combined = new Class({
 				if(!temp[name]) temp[name] = [];
 				temp[name][nr] = input.get('type') == 'checkbox' ? +input.get('checked') : input.get('value').trim();
 
-			})
+			});
 		});
 
 		self.options.combine.each(function(name){
@@ -1536,7 +1219,7 @@ Option.Combined = new Class({
 			self.inputs[name].fireEvent('change');
 		});
 
-		self.addEmpty()
+		self.addEmpty();
 
 	},
 
@@ -1559,10 +1242,10 @@ var createTooltip = function(description){
 	var tip = new Element('div.tooltip', {
 			'events': {
 				'mouseenter': function(){
-					tip.addClass('shown')
+					tip.addClass('shown');
 				},
 				'mouseleave': function(){
-					tip.removeClass('shown')
+					tip.removeClass('shown');
 				}
 			}
 		}).adopt(

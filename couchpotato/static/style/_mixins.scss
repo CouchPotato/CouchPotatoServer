@@ -1,0 +1,82 @@
+$primary_color: #ac0000;
+$secondary_color: #00d2c2;
+$background_color: #FFF;
+$menu_color: #111;
+$theme_off: #eaeaea;
+$text_color: #000;
+
+$font_size: 14px;
+$header_height: 80px;
+$header_width: 132px;
+$header_width_mobile: 44px;
+$padding: 20px;
+$border_radius: 3px;
+
+$cubic: cubic-bezier(0.9,0,0.1,1);
+
+$mq-phone: 320px !default;
+$mq-phablet: 480px !default;
+$mq-tablet: 768px !default;
+$mq-desktop: 1024px !default;
+$mq-desktop-plus: 1382px !default;
+
+@mixin media-phone {
+	@media (max-width : $mq-phone) {
+		@content;
+	}
+}
+
+@mixin media-phablet {
+	@media (max-width : $mq-phablet) {
+		@content;
+	}
+}
+
+@mixin media-tablet {
+	@media (max-width : $mq-tablet) {
+		@content;
+	}
+}
+
+@mixin media-desktop {
+	@media (max-width : $mq-desktop) {
+		@content;
+	}
+}
+
+@mixin media-desktop-plus {
+	@media (max-width : $mq-desktop-plus) {
+		@content;
+	}
+}
+
+
+@mixin media-phone-and-up {
+	@media (min-width : $mq-phone) {
+		@content;
+	}
+}
+
+@mixin media-phablet-and-up {
+	@media (min-width : $mq-phablet) {
+		@content;
+	}
+}
+
+@mixin media-tablet-and-up {
+	@media (min-width : $mq-tablet) {
+		@content;
+	}
+}
+
+@mixin media-desktop-and-up {
+	@media (min-width : $mq-desktop) {
+		@content;
+	}
+}
+
+@mixin media-desktop-plus-and-up {
+	@media (min-width : $mq-desktop-plus) {
+		@content;
+	}
+}

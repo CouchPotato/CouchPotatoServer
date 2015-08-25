@@ -966,6 +966,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             try:
                 for rel in rels:
+                    if not rel.get('media_id'): continue
                     movie_dict = db.get('id', rel.get('media_id'))
                     download_info = rel.get('download_info')
 
@@ -1348,12 +1349,12 @@ config = [{
                     'options': rename_options
                 },
                 {
-                    'advanced': True,                
+                    'advanced': True,
                     'name': 'replace_doubles',
                     'type': 'bool',
                     'label': 'Clean Name',
                     'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/RuudBurger/CouchPotatoServer/issues/2782">#2782</a>).'),
-                    'default': True 
+                    'default': True
                 },
                 {
                     'name': 'unrar',

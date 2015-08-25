@@ -40,7 +40,7 @@ from CodernityDB.sharded_index import ShardedIndex
         self.patchers.append(self.wrap_insert_id_index)
 
     @staticmethod
-    def wrap_insert_id_index(db_obj, clean=False):
+    def wrap_insert_id_index(db_obj, ind_obj, clean=False):
         def _insert_id_index(_rev, data):
             """
             Performs insert on **id** index.

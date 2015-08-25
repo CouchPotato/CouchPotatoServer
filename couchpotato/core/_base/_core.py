@@ -53,6 +53,7 @@ class Core(Plugin):
         addEvent('app.version', self.version)
         addEvent('app.load', self.checkDataDir)
         addEvent('app.load', self.cleanUpFolders)
+        addEvent('app.load.after', self.dependencies)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
@@ -72,6 +73,15 @@ class Core(Plugin):
                 ssl._create_default_https_context = ssl._create_unverified_context
         except:
             log.debug('Failed setting default ssl context: %s', traceback.format_exc())
+
+    def dependencies(self):
+
+        # Check if lxml is available
+        try: from lxml import etree
+        except: log.error('LXML not available, please install for better/faster scraping support: `http://lxml.de/installation.html`')
+
+        try: import OpenSSL
+        except: log.error('OpenSSL not available, please install for better requests validation: `https://pyopenssl.readthedocs.org/en/latest/install.html`')
 
     def md5Password(self, value):
         return md5(value) if value else ''
@@ -183,8 +193,9 @@ class Core(Plugin):
         if host == '0.0.0.0' or host == '':
             host = 'localhost'
         port = Env.setting('port')
+        ssl = Env.setting('ssl_cert') and Env.setting('ssl_key')
 
-        return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), Env.get('web_base'))
+        return '%s:%d%s' % (cleanHost(host, ssl = ssl).rstrip('/'), int(port), Env.get('web_base'))
 
     def createApiUrl(self):
         return '%sapi/%s' % (self.createBaseUrl(), Env.setting('api_key'))
@@ -274,6 +285,11 @@ config = [{
                     'default': uuid4().hex,
                     'readonly': 1,
                     'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
+                },
+                {
+                    'name': 'dereferer',
+                    'default': 'http://www.dereferer.org/?',
+                    'description': 'Derefer links to external sites, keep empty for no dereferer. Example: http://www.dereferer.org/? or http://www.nullrefer.com/?.',
                 },
                 {
                     'name': 'use_proxy',

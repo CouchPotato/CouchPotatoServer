@@ -1,0 +1,159 @@
+@import "_mixins";
+
+.page.log {
+
+	.nav {
+		text-align: right;
+		padding: 0;
+		margin: 0;
+
+		li {
+			display: inline-block;
+			padding: 5px 10px;
+			margin: 0;
+
+			&.select, &.clear {
+				cursor: pointer;
+			}
+
+			&:hover:not(.active):not(.filter) {
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			&.active {
+				font-weight: bold;
+				cursor: default;
+				background: rgba(255,255,255,.1);
+			}
+		}
+	}
+
+	.hint {
+		font-style: italic;
+		opacity: .5;
+		margin-top: 3px;
+	}
+
+	.container {
+		padding: $padding;
+		overflow: hidden;
+		line-height: 150%;
+
+		&.loading {
+			text-align: center;
+			font-size: 20px;
+			padding: 100px 50px;
+		}
+
+		select {
+			vertical-align: top;
+		}
+
+		.time {
+			clear: both;
+			font-size: .75em;
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			overflow: hidden;
+			padding: 0 3px;
+			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
+			display: flex;
+
+			&.highlight {
+				background: $theme_off;
+			}
+
+			span {
+				padding: 5px 0 3px;
+				display: inline-block;
+				vertical-align: middle;
+				width: 90px;
+			}
+
+			::selection {
+				background-color: #000;
+				color: #FFF;
+			}
+		}
+
+		.type.type {
+			margin-left: 10px;
+			width: 40px;
+		}
+
+		.message {
+			white-space: pre-wrap;
+			flex: 1 auto;
+		}
+
+
+		.error { color: #FFA4A4; }
+		.debug span { opacity: .6; }
+	}
+
+
+
+	[data-filter=INFO] .error,
+	[data-filter=INFO] .debug,
+	[data-filter=ERROR] .debug,
+	[data-filter=ERROR] .info,
+	[data-filter=DEBUG] .info,
+	[data-filter=DEBUG] .error {
+		display: none;
+	}
+}
+
+.report_popup.report_popup {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: 0;
+	z-index: 99999;
+	font-size: 14px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 1;
+	color: #FFF;
+	pointer-events: auto;
+
+	.button {
+		margin: 10px 0;
+		padding: 10px;
+		color: $background_color;
+		background: $primary_color;
+	}
+
+	.bug {
+		width: 80%;
+		height: 80%;
+		max-height: 800px;
+		max-width: 800px;
+
+		display: flex;
+		flex-flow: column nowrap;
+
+		> span {
+			margin: $padding/2 0 $padding 0;
+		}
+
+		textarea {
+			display: block;
+			width: 100%;
+			background: #FFF;
+			padding: 20px;
+			overflow: auto;
+			color: #666;
+			height: 70%;
+			font-size: 12px;
+		}
+	}
+}
+
+.do_report.do_report {
+	z-index: 10000;
+	position: absolute;
+	padding: 10px;
+	background: $primary_color;
+	color: #FFF;
+}

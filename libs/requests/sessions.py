@@ -63,11 +63,9 @@ def merge_setting(request_setting, session_setting, dict_class=OrderedDict):
     merged_setting.update(to_key_val_list(request_setting))
 
     # Remove keys that are set to None.
-    for (k, v) in request_setting.items():
+    for (k, v) in merged_setting.items():
         if v is None:
             del merged_setting[k]
-
-    merged_setting = dict((k, v) for (k, v) in merged_setting.items() if v is not None)
 
     return merged_setting
 
@@ -275,6 +273,12 @@ class Session(SessionRedirectMixin):
       >>> s = requests.Session()
       >>> s.get('http://httpbin.org/get')
       200
+
+    Or as a context manager::
+
+      >>> with requests.Session() as s:
+      >>>     s.get('http://httpbin.org/get')
+      200
     """
 
     __attrs__ = [
@@ -418,8 +422,8 @@ class Session(SessionRedirectMixin):
         :param auth: (optional) Auth tuple or callable to enable
             Basic/Digest/Custom HTTP Auth.
         :param timeout: (optional) How long to wait for the server to send
-            data before giving up, as a float, or a (`connect timeout, read
-            timeout <user/advanced.html#timeouts>`_) tuple.
+            data before giving up, as a float, or a :ref:`(connect timeout,
+            read timeout) <timeouts>` tuple.
         :type timeout: float or tuple
         :param allow_redirects: (optional) Set to True by default.
         :type allow_redirects: bool

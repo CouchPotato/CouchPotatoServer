@@ -25,6 +25,7 @@ OS X:
 
 * If you're on Leopard (10.5) install Python 2.6+: [Python 2.6.5](http://www.python.org/download/releases/2.6.5/)
 * Install [GIT](http://git-scm.com/)
+* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
 * Open up `Terminal`
 * Go to your App folder `cd /Applications`
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
@@ -35,6 +36,7 @@ Linux:
 
 * (Ubuntu / Debian) Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * (Fedora / CentOS) Install [GIT](http://git-scm.com/) with `yum install git`
+* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
@@ -49,7 +51,7 @@ Linux:
 * Open your browser and go to `http://localhost:5050/`
 
 Docker:
-* You can use [razorgirl's Dockerfile](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
+* You can use [linuxserver.io](https://github.com/linuxserver/docker-couchpotato) or [razorgirl's](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
 
 FreeBSD:
 
@@ -66,3 +68,17 @@ FreeBSD:
 * If not default install, specify options with startup flags in `ee /etc/rc.conf`
 * Finally, `service couchpotato start`
 * Open your browser and go to: `http://server:5050/`
+
+
+## Development
+
+Be sure you're running the latest version of [Python 2.7](http://python.org/).
+
+If you're going to add styling or doing some javascript work you'll need a few tools that build and compress scss -> css and combine the javascript files. [Node/NPM](https://nodejs.org/), [Grunt](http://gruntjs.com/installing-grunt), [Compass](http://compass-style.org/install/)
+
+After you've got these tools you can install the packages using `npm install`. Once this process has finished you can start CP using the command `grunt`. This will start all the needed tools and watches any files for changes.
+You can now change css and javascript and it wil reload the page when needed.
+
+By default it will combine files used in the core folder. If you're adding a new .scss or .js file, you might need to add it and then restart the grunt process for it to combine it properly.
+
+Don't forget to enable development inside the CP settings. This disables some functions and also makes sure javascript rrors are pushed to console instead of the log.
