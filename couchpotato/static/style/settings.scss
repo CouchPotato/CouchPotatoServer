@@ -255,7 +255,9 @@
 	}
 
 	&.show_advanced {
-		fieldset.advanced,
+		fieldset.advanced {
+			display: block;
+		}
 		fieldset:not(.disabled) > .ctrlHolder.advanced {
 			display: flex;
 		}
