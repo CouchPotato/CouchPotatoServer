@@ -137,7 +137,7 @@ class Logging(Plugin):
         re_split = r'\x1b'
         for log_line in logs_raw:
             split = re.split(re_split, log_line)
-            if split:
+            if split and len(split) == 3:
                 try:
                     date, time, log_type = splitString(split[0], ' ')
                     timestamp = '%s %s' % (date, time)

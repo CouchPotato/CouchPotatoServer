@@ -257,12 +257,7 @@ Page.Log = new Class({
 					})
 				),
 				textarea = new Element('textarea', {
-					'text': body,
-					'events': {
-						'click': function(){
-							this.select();
-						}
-					}
+					'text': body
 				}),
 				new Element('a.button', {
 					'target': '_blank',

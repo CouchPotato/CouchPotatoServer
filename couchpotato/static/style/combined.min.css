@@ -410,20 +410,21 @@
 .page.log .container{padding:20px;overflow:hidden;line-height:150%}
 .page.log .container.loading{text-align:center;font-size:20px;padding:100px 50px}
 .page.log .container select{vertical-align:top}
-.page.log .container .time{clear:both;font-size:11px;border-top:1px solid rgba(255,255,255,.1);position:relative;overflow:hidden;padding:0 3px;font-family:Lucida Console,Monaco,Nimbus Mono L,monospace,serif}
+.page.log .container .time{clear:both;font-size:.75em;border-top:1px solid rgba(255,255,255,.1);overflow:hidden;padding:0 3px;font-family:Lucida Console,Monaco,Nimbus Mono L,monospace,serif;display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.log .container .time.highlight{background:#eaeaea}
-.page.log .container .time span{padding:5px 0 3px;display:inline-block;vertical-align:middle}
+.page.log .container .time span{padding:5px 0 3px;display:inline-block;vertical-align:middle;width:90px}
 .page.log .container .time ::-moz-selection{background-color:#000;color:#FFF}
 .page.log .container .time ::selection{background-color:#000;color:#FFF}
-.page.log .container .type{margin-left:10px}
-.page.log .container .message{float:right;width:86%;white-space:pre-wrap}
+.page.log .container .type.type{margin-left:10px;width:40px}
+.page.log .container .message{white-space:pre-wrap;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
 .page.log .container .error{color:#FFA4A4}
 .page.log .container .debug span{opacity:.6}
 .page.log [data-filter=DEBUG] .error,.page.log [data-filter=DEBUG] .info,.page.log [data-filter=ERROR] .debug,.page.log [data-filter=ERROR] .info,.page.log [data-filter=INFO] .debug,.page.log [data-filter=INFO] .error{display:none}
 .report_popup.report_popup{position:fixed;left:0;right:0;bottom:0;top:0;z-index:99999;font-size:14px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;opacity:1;color:#FFF;pointer-events:auto}
 .disable_hover .scroll_content>*,.mask,.ripple{pointer-events:none}
-.report_popup.report_popup .button{display:inline-block;margin:10px 0;padding:10px;color:#FFF}
+.report_popup.report_popup .button{margin:10px 0;padding:10px;color:#FFF;background:#ac0000}
 .report_popup.report_popup .bug{width:80%;height:80%;max-height:800px;max-width:800px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:column nowrap;-ms-flex-flow:column nowrap;flex-flow:column nowrap}
+.report_popup.report_popup .bug>span{margin:10px 0 20px}
 .report_popup.report_popup .bug textarea{display:block;width:100%;background:#FFF;padding:20px;overflow:auto;color:#666;height:70%;font-size:12px}
 .do_report.do_report{z-index:10000;position:absolute;padding:10px;background:#ac0000;color:#FFF}
 .add_new_profile{padding:20px;display:block;text-align:center;font-size:20px;border-bottom:1px solid #eaeaea}
