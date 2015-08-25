@@ -49,3 +49,34 @@ $mq-desktop-plus: 1382px !default;
 		@content;
 	}
 }
+
+
+@mixin media-phone-and-up {
+	@media (min-width : $mq-phone) {
+		@content;
+	}
+}
+
+@mixin media-phablet-and-up {
+	@media (min-width : $mq-phablet) {
+		@content;
+	}
+}
+
+@mixin media-tablet-and-up {
+	@media (min-width : $mq-tablet) {
+		@content;
+	}
+}
+
+@mixin media-desktop-and-up {
+	@media (min-width : $mq-desktop) {
+		@content;
+	}
+}
+
+@mixin media-desktop-plus-and-up {
+	@media (min-width : $mq-desktop-plus) {
+		@content;
+	}
+}

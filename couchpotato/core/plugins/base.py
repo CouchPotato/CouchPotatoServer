@@ -1,17 +1,14 @@
 import threading
 from urllib import quote, getproxies
 from urlparse import urlparse
-import glob
-import inspect
 import os.path
-import re
 import time
 import traceback
 
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier, \
+from couchpotato.core.helpers.variable import md5, isLocalIP, scanForPassword, tryInt, getIdentifier, \
     randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -19,8 +16,6 @@ import requests
 from requests.packages.urllib3 import Timeout
 from requests.packages.urllib3.exceptions import MaxRetryError
 from tornado import template
-from tornado.web import StaticFileHandler
-
 
 log = CPLog(__name__)
 
@@ -32,7 +27,6 @@ class Plugin(object):
     plugin_path = None
 
     enabled_option = 'enabled'
-    auto_register_static = False
 
     _needs_shutdown = False
     _running = None
@@ -56,9 +50,6 @@ class Plugin(object):
         addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
         self._running = []
-
-        if self.auto_register_static:
-            self.registerStatic(inspect.getfile(self.__class__))
 
         # Setup database
         if self._database:
@@ -88,32 +79,6 @@ class Plugin(object):
 
         t = template.Template(open(os.path.join(os.path.dirname(parent_file), templ), 'r').read())
         return t.generate(**params)
-
-    def registerStatic(self, plugin_file, add_to_head = True):
-
-        # Register plugin path
-        self.plugin_path = os.path.dirname(plugin_file)
-        static_folder = toUnicode(os.path.join(self.plugin_path, 'static'))
-
-        if not os.path.isdir(static_folder):
-            return
-
-        # Get plugin_name from PluginName
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', self.__class__.__name__)
-        class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-        # View path
-        path = 'static/plugin/%s/' % class_name
-
-        # Add handler to Tornado
-        Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
-
-        # Register for HTML <HEAD>
-        if add_to_head:
-            for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
-                ext = getExt(f)
-                if ext in ['js', 'css']:
-                    fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
 
     def createFile(self, path, content, binary = False):
         path = sp(path)

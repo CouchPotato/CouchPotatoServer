@@ -195,6 +195,32 @@ input, textarea, select {
 
 	}
 
+	.donate {
+		position: absolute;
+		bottom: 44px + $padding/2;
+		left: 0;
+		right: 0;
+		padding: $padding/2 $padding;
+
+		&:before {
+			display: none;
+			font-size: 20px;
+			text-align: center;
+		}
+
+		@include media-phablet {
+			bottom: 44px * 3;
+			padding: $padding/2 0;
+
+			span {
+				display: none;
+			}
+
+			&:before {
+				display: block;
+			}
+		}
+	}
 
 	.menu, .search_form, .notification_menu  {
 		position: absolute;

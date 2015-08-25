@@ -91,6 +91,7 @@
 			}
 
 			.hint {
+				flex: 1;
 				margin-left: $padding/2;
 				font-size: 1rem;
 
@@ -166,6 +167,10 @@
 					width: 100%;
 					min-width: 200px;
 					border-radius: 0;
+
+					&::-ms-expand {
+						display: none;
+					}
 				}
 
 				&:before {
@@ -180,6 +185,7 @@
 			}
 
 			.formHint {
+				flex: 1;
 				opacity: .8;
 				margin-left: $padding;
 
@@ -550,6 +556,7 @@
 			select {
 				min-width: 0 !important;
 			}
+
 		}
 	}
 

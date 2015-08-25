@@ -23,6 +23,7 @@ Page.Home = new Class({
 		self.chain = new Chain();
 		self.chain.chain(
 			self.createAvailable.bind(self),
+			self.createBigsearch.bind(self),
 			self.createSoon.bind(self),
 			self.createSuggestions.bind(self),
 			self.createCharts.bind(self),
@@ -31,6 +32,18 @@ Page.Home = new Class({
 
 		self.chain.callChain();
 
+	},
+
+	createBigsearch: function(){
+		var self = this;
+
+		new Element('.big_search').grab(
+			new BlockSearch(self, {
+				'animate': false
+			})
+		).inject(self.content);
+
+		self.chain.callChain();
 	},
 
 	createAvailable: function(){
@@ -51,7 +64,7 @@ Page.Home = new Class({
 					'events': {
 						'click': function(e){
 							(e).preventDefault();
-							$(document.body).getElement('.search_form .icon-search').click();
+							$(document.body).getElement('.big_search input').focus();
 						}
 					}
 				})

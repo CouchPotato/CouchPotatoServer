@@ -8,9 +8,9 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="robots" content="noindex, nofollow" />
 
-		{% for url in fireEvent('clientscript.get_styles', location = 'front', single = True) %}
+		{% for url in fireEvent('clientscript.get_styles', single = True) %}
 		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
-		{% for url in fireEvent('clientscript.get_scripts', location = 'front', single = True) %}{% if 'combined.plugins' not in url %}
+		{% for url in fireEvent('clientscript.get_scripts', single = True) %}{% if 'combined.plugins' not in url %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}{% end %}
 
 		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />

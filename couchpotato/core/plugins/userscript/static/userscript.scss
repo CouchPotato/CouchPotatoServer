@@ -1,3 +1,5 @@
+@import "_mixins";
+
 .page.userscript {
 	position: absolute;
 	width: 100%;
@@ -6,33 +8,65 @@
 	left: 0;
 	right: 0;
 	padding: 0;
-}
 
-	.page.userscript .frame.loading {
+	.frame.loading {
 		text-align: center;
 		font-size: 20px;
 		padding: 20px;
 	}
-	
-	.page.userscript .media_result {
+
+	.media_result {
 		height: 140px;
+		display: flex;
 	}
-		.page.userscript .media_result .thumbnail {
-			width: 90px;
+
+	.thumbnail {
+		width: 90px;
+	}
+
+	.options {
+		left: 90px;
+		display: flex;
+		align-items: center;
+		padding: $padding/2;
+
+		> div {
+			display: flex;
+			flex-wrap: wrap;
+
+			div {
+				flex: 1 auto;
+				margin: 0;
+				padding: 0 $padding/4;
+			}
+
+			.title {
+				min-width: 100%;
+				margin-bottom: $padding;
+			}
+
+			.add {
+				text-align: right;
+
+				a {
+					display: block;
+					text-align: center;
+				}
+			}
+
+			select {
+				width: 100%;
+			}
 		}
-		.page.userscript .media_result .options {
-			left: 90px;
-			padding: 54px 15px;
-		}
-		
-		.page.userscript .media_result .year {
-			display: none;
-		}
-		
-		.page.userscript .media_result .options select[name="title"] {
-			width: 190px;
-		}
-		
-		.page.userscript .media_result .options select[name="profile"] {
-			width: 70px;
-		}
+	}
+
+	.message {
+		font-size: 1.5em;
+	}
+
+	.year,
+	.data {
+		display: none;
+	}
+
+}

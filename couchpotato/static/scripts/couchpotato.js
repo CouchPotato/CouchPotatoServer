@@ -110,6 +110,14 @@
 			$(self.block.header).addClass('header').adopt(
 				self.block.navigation = new BlockHeader(self, {}),
 				self.block.search = new BlockSearch(self, {}),
+				self.support = new Element('a.donate.icon-donate', {
+					'href': 'https://couchpota.to/support/',
+					'target': '_blank'
+				}).grab(
+					new Element('span', {
+						'text': 'Donate'
+					})
+				),
 				self.block.more = new BlockMenu(self, {'button_class': 'icon-settings'})
 			),
 			new Element('div.corner_background'),

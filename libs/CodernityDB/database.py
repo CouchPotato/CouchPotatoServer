@@ -339,7 +339,7 @@ class Database(object):
             self.__set_main_storage()
             self.__compat_things()
         for patch in getattr(ind_obj, 'patchers', ()):  # index can patch db object
-            patch(self)
+            patch(self, ind_obj)
         return name
 
     def edit_index(self, index, reindex=False, ind_kwargs=None):

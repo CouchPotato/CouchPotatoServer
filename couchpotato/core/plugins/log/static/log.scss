@@ -34,16 +34,16 @@
 		margin-top: 3px;
 	}
 
-	.loading {
-		text-align: center;
-		font-size: 20px;
-		padding: 50px;
-	}
-
 	.container {
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+
+		&.loading {
+			text-align: center;
+			font-size: 20px;
+			padding: 100px 50px;
+		}
 
 		select {
 			vertical-align: top;
@@ -51,12 +51,12 @@
 
 		.time {
 			clear: both;
-			font-size: 11px;
+			font-size: .75em;
 			border-top: 1px solid rgba(255, 255, 255, 0.1);
-			position: relative;
 			overflow: hidden;
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
+			display: flex;
 
 			&.highlight {
 				background: $theme_off;
@@ -66,6 +66,7 @@
 				padding: 5px 0 3px;
 				display: inline-block;
 				vertical-align: middle;
+				width: 90px;
 			}
 
 			::selection {
@@ -74,14 +75,14 @@
 			}
 		}
 
-		.type {
+		.type.type {
 			margin-left: 10px;
+			width: 40px;
 		}
 
 		.message {
-			float: right;
-			width: 86%;
 			white-space: pre-wrap;
+			flex: 1 auto;
 		}
 
 
@@ -117,10 +118,10 @@
 	pointer-events: auto;
 
 	.button {
-		display: inline-block;
 		margin: 10px 0;
 		padding: 10px;
 		color: $background_color;
+		background: $primary_color;
 	}
 
 	.bug {
@@ -131,6 +132,10 @@
 
 		display: flex;
 		flex-flow: column nowrap;
+
+		> span {
+			margin: $padding/2 0 $padding 0;
+		}
 
 		textarea {
 			display: block;

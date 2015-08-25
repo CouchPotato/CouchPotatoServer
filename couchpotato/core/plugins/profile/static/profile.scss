@@ -49,6 +49,7 @@
 					cursor: pointer;
 
 					&.handle {
+						cursor: move;
 						cursor: grab;
 					}
 
@@ -133,6 +134,7 @@
 			font-size: 20px;
 			width: 20px;
 			float: right;
+			cursor: move;
 			cursor: grab;
 			opacity: .5;
 			text-align: center;
