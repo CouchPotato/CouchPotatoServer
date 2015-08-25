@@ -40,9 +40,7 @@ Page.Wizard = new Class({
 			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the extension or drag the bookmarklet to your bookmarks.' +
 				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
 			'content': function(){
-				return App.createUserscriptButtons().setStyles({
-					'background-image': "url('https://couchpota.to/media/images/userscript.gif')"
-				});
+				return App.createUserscriptButtons();
 			}
 		},
 		'finish': {
