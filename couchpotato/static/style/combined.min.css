@@ -11,6 +11,7 @@
 .search_form .input input:focus::-webkit-input-placeholder{color:#000;opacity:.7}
 .search_form .input input:focus::-moz-placeholder{color:#000;opacity:.7}
 .search_form .input input:focus:-ms-input-placeholder{color:#000;opacity:.7}
+.page.home .search_form.filled .icon-search:before,.search_form.filled.focused .icon-search:before{content:'\e80e'}
 .search_form.filled .input input{background:rgba(234,234,234,.4)}
 .page.home .search_form,.search_form.focused,.search_form.shown{border-color:#04bce6}
 .page.home .search_form .wrapper,.search_form.focused .wrapper,.search_form.shown .wrapper{display:block;width:380px;-webkit-transform-origin:0 90%;transform-origin:0 90%}
@@ -59,7 +60,7 @@
 .page.home .search_form{display:block;padding:20px;width:100%;max-width:500px;margin:20px auto 0;height:106px;position:relative}
 @media (max-width:480px){.page.home .search_form{margin-top:10px;height:64px}
 }
-.page.home .search_form .icon-search{display:block;color:#000;right:20px;top:20px;width:66px;height:66px;line-height:66px;left:auto;-webkit-transform:none;transform:none;font-size:2em;opacity:.5;pointer-events:none}
+.page.home .search_form .icon-search{display:block;color:#000;right:20px;top:20px;width:66px;height:66px;line-height:66px;left:auto;-webkit-transform:none;transform:none;font-size:2em;opacity:.5}
 @media (max-width:480px){.page.home .search_form .icon-search{width:44px;height:44px;line-height:44px;right:10px;top:10px;font-size:1.5em}
 }
 .page.home .search_form .wrapper{border-radius:0;box-shadow:none;bottom:auto;top:20px;left:20px;right:20px;position:absolute;width:auto}

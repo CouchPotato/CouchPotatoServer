@@ -86,8 +86,15 @@
 		}
 	}
 
-	&.filled .input input {
-		background: rgba($theme_off, .4);
+	&.filled {
+		&.focused .icon-search:before,
+		.page.home & .icon-search:before {
+			content: '\e80e';
+		}
+
+		.input input {
+			background: rgba($theme_off, .4);
+		}
 	}
 
 	&.focused,
@@ -357,7 +364,6 @@
 			transform: none;
 			font-size: 2em;
 			opacity: .5;
-			pointer-events: none;
 
 			@include media-phablet {
 				right: $padding/2;
