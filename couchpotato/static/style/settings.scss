@@ -68,7 +68,7 @@
 
 	fieldset {
 		border: 0;
-		margin-bottom: $padding;
+		padding: $padding/2 0;
 		position: relative;
 
 		h2 {
@@ -276,6 +276,10 @@
 		&.enabler {
 			display: block;
 
+			&.disabled:hover {
+				background: rgba($theme_off, .2);
+			}
+
 			> :first-child {
 				position: absolute;
 				right: 0;
@@ -388,7 +392,7 @@
 			display: block;
 			width: 100%;
 			border-bottom: 1px solid $theme_off;
-			bottom: -$padding/2;
+			bottom: 0;
 
 			&:last-child {
 				border-bottom: 0;

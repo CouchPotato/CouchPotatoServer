@@ -776,7 +776,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
 .page.settings fieldset h2 .group_label,.page.settings fieldset h2 .icon{margin-right:10px}
-.page.settings fieldset{border:0;margin-bottom:20px;position:relative}
+.page.settings fieldset{border:0;padding:10px 0;position:relative}
 .page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
 .page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;font-size:1rem}
@@ -813,6 +813,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset.disabled .ctrlHolder{display:none}
 .page.settings fieldset.disabled>.ctrlHolder:first-child{display:-webkit-flex;display:-ms-flexbox;display:flex}
 .page.settings fieldset.enabler{display:block}
+.page.settings fieldset.enabler.disabled:hover{background:rgba(234,234,234,.2)}
 .page.settings fieldset.enabler>:first-child{position:absolute;right:0;border:0;padding:0}
 .page.settings fieldset.enabler>:first-child~h2{margin-right:86px}
 @media (max-width:480px){.page.settings fieldset.enabler>:first-child~h2{margin-right:0}
@@ -832,7 +833,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .option_list fieldset{position:relative}
 .page.settings .option_list fieldset h2 .group_label{min-width:100px}
 .page.settings .option_list fieldset.disabled h2{padding:0 20px}
-.page.settings .option_list fieldset:after{position:absolute;content:'';display:block;width:100%;border-bottom:1px solid #eaeaea;bottom:-10px}
+.page.settings .option_list fieldset:after{position:absolute;content:'';display:block;width:100%;border-bottom:1px solid #eaeaea;bottom:0}
 .page.settings .option_list fieldset:after:last-child{border-bottom:0}
 .page.settings .option_list h2{font-size:1em;font-weight:400}
 .page.settings .option_list h2 .hint{font-weight:300}
