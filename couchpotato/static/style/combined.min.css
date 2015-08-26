@@ -369,7 +369,7 @@
 .alph_nav .menus .actions,.alph_nav .menus .counter,.alph_nav .menus .more_menu{float:left}
 .alph_nav .menus .actions>a,.alph_nav .menus .counter>a,.alph_nav .menus .more_menu>a{display:inline-block;width:30px;line-height:80px;text-align:center}
 .alph_nav .menus .actions>a:hover,.alph_nav .menus .counter>a:hover,.alph_nav .menus .more_menu>a:hover{color:#ac0000}
-@media (max-width:480px){.alph_nav .menus .counter{display:none}
+@media (max-width:768px){.alph_nav .menus .counter{display:none}
 }
 .alph_nav .menus .actions a{display:inline-block}
 .alph_nav .menus .actions .active{display:none}

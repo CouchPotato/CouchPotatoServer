@@ -1160,7 +1160,7 @@ $mass_edit_height: 44px;
 			line-height: $header_height;
 			padding: 0 $padding/2;
 
-			@include media-phablet {
+			@include media-tablet {
 				display: none;
 			}
 		}
