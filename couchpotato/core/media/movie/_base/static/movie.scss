@@ -61,6 +61,10 @@ $mass_edit_height: 44px;
 			z-index: 2;
 			cursor: pointer;
 
+			@include media-phablet {
+				display: none;
+			}
+
 			&:hover {
 				opacity: 1 !important;
 			}
@@ -157,7 +161,7 @@ $mass_edit_height: 44px;
 		}
 	}
 
-	.actions {
+	.movie .actions {
 		transform: rotateY(360deg);
 
 		@include media-phablet {
@@ -333,6 +337,10 @@ $mass_edit_height: 44px;
 		&:hover, &.checked {
 			.info .title span {
 				margin-left: $padding;
+
+				@include media-phablet {
+					margin-left: 0;
+				}
 			}
 		}
 	}
@@ -1089,10 +1097,6 @@ $mass_edit_height: 44px;
 .alph_nav {
 	position: relative;
 
-	@include media-phablet {
-		display: none;
-	}
-
 	.mass_edit_form {
 		display: flex;
 		background: $background_color;
@@ -1117,6 +1121,10 @@ $mass_edit_height: 44px;
 
 		.select {
 			margin: 0 $padding/2 0 $padding;
+
+			@include media-phablet {
+				margin: 0 $padding/4 0 $padding/2;
+			}
 
 			input, .count {
 				margin-right: $padding/4;
@@ -1151,6 +1159,10 @@ $mass_edit_height: 44px;
 		.counter {
 			line-height: $header_height;
 			padding: 0 $padding/2;
+
+			@include media-phablet {
+				display: none;
+			}
 		}
 
 		.actions {
