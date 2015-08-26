@@ -59,7 +59,7 @@ class Base(TorrentMagnetProvider):
     def __init__(self):
         super(Base, self).__init__()
 
-        addEvent('app.load', self.doTest)
+        addEvent('app.test', self.doTest)
 
     def _search(self, media, quality, results):
 
