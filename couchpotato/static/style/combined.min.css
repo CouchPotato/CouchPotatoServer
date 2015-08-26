@@ -337,6 +337,7 @@
 .page.movie_details .releases .provider{min-width:110px;max-width:110px}
 .page.movie_details .releases .provider:before{content:"Provider:"}
 .page.movie_details .releases .actions{min-width:80px;max-width:80px}
+.page.movie_details .section_trailer.no_trailer{display:none}
 .page.movie_details .trailer_container{background:#000;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;cursor:pointer}
 .alph_nav .menus .button,.alph_nav .menus .counter{line-height:80px;padding:0 10px}
 .page.movie_details .trailer_container .background{opacity:.3;transition:all 300ms;-webkit-transform:scale(1.05) rotateY(360deg);transform:scale(1.05) rotateY(360deg);background:center no-repeat;background-size:cover;position:absolute;top:0;right:0;bottom:0;left:0;z-index:1}

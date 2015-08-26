@@ -400,12 +400,17 @@ MA.Trailer = new Class({
 			new Request.JSONP({
 				'url': url,
 				'onComplete': function(json){
-					self.video_id = json.items[0].id.videoId;
-					self.container.grab(new Element('div.background', {
-						'styles': {
-							'background-image': 'url('+json.items[0].snippet.thumbnails.high.url+')'
-						}
-					}));
+					if(json.items.length > 0){
+						self.video_id = json.items[0].id.videoId;
+						self.container.grab(new Element('div.background', {
+							'styles': {
+								'background-image': 'url('+json.items[0].snippet.thumbnails.high.url+')'
+							}
+						}));
+					}
+					else {
+						self.container.getParent('.section').addClass('no_trailer');
+					}
 				}
 			}).send();
 		}
@@ -416,12 +421,12 @@ MA.Trailer = new Class({
 
 	watch: function(){
 		var self = this;
-
 		self.container.set('html', '<iframe src="https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720" />');
 	}
 
 
 });
+
 
 MA.Category = new Class({
 
