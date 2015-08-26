@@ -1155,13 +1155,12 @@ $mass_edit_height: 44px;
 		}
 
 		.actions {
-
 			a {
-				display: none;
+				display: inline-block;
 			}
 
 			.active {
-				display: inline-block;
+				display: none;
 			}
 
 		}

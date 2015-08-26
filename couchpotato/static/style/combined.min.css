@@ -365,8 +365,8 @@
 .alph_nav .menus .actions,.alph_nav .menus .counter,.alph_nav .menus .more_menu{float:left}
 .alph_nav .menus .actions>a,.alph_nav .menus .counter>a,.alph_nav .menus .more_menu>a{display:inline-block;width:30px;line-height:80px;text-align:center}
 .alph_nav .menus .actions>a:hover,.alph_nav .menus .counter>a:hover,.alph_nav .menus .more_menu>a:hover{color:#ac0000}
-.alph_nav .menus .actions a{display:none}
-.alph_nav .menus .actions .active,.charts .chart{display:inline-block}
+.alph_nav .menus .actions a{display:inline-block}
+.alph_nav .menus .actions .active{display:none}
 .alph_nav .menus .filter .wrapper{width:320px}
 .alph_nav .menus .filter .button{margin-top:-2px}
 .alph_nav .menus .filter .search{position:relative}
@@ -382,7 +382,7 @@
 .alph_nav .menus .more_menu .wrapper ul{border-radius:3px 3px 0 0}
 .charts{clear:both;margin-bottom:30px}
 .charts>h2{height:40px}
-.charts .chart{width:50%;vertical-align:top;max-height:510px;scrollbar-base-color:#4e5969}
+.charts .chart{display:inline-block;width:50%;vertical-align:top;max-height:510px;scrollbar-base-color:#4e5969}
 .charts .chart .media_result.hidden{display:none}
 .charts .refresh{clear:both;position:relative}
 .charts .refresh .refreshing{display:block;padding:20px;font-size:20px;text-align:center}
