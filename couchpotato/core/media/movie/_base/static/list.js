@@ -13,6 +13,7 @@ var MovieList = new Class({
 		force_view: false
 	},
 
+	available_views: ['thumb', 'list'],
 	movies: [],
 	movies_added: {},
 	total_movies: 0,
@@ -529,6 +530,9 @@ var MovieList = new Class({
 
 	changeView: function(new_view){
 		var self = this;
+
+		if(self.available_views.indexOf(new_view) == -1)
+			new_view = 'thumb';
 
 		self.el
 			.removeClass(self.current_view+'_list')
