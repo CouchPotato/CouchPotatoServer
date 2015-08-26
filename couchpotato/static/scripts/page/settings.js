@@ -291,7 +291,7 @@ Page.Settings = new Class({
 				'html': group.description[0]
 			});
 
-			createTooltip(group.description[1]).inject(hint, 'top');
+			createTooltip(group.description[1]).inject(hint);
 		}
 		else {
 			hint = new Element('span.hint', {
@@ -386,7 +386,7 @@ var OptionBase = new Class({
 					'html': self.options.description[0]
 				}).inject(self.el);
 
-				createTooltip(self.options.description[1]).inject(hint, 'top');
+				createTooltip(self.options.description[1]).inject(hint);
 			}
 			else {
 				new Element('p.formHint', {
@@ -992,7 +992,7 @@ Option.Directories = new Class({
 			$(dir).addClass('is_empty');
 
 		// Add remove button
-		new Element('a.icon2.delete', {
+		new Element('a.icon-delete.delete', {
 			'events': {
 				'click': self.delItem.bind(self, dir)
 			}
@@ -1249,7 +1249,7 @@ var createTooltip = function(description){
 				}
 			}
 		}).adopt(
-			new Element('a.icon2.info'),
+			new Element('a.icon-info.info'),
 			new Element('div.tip', {
 				'html': description
 			})

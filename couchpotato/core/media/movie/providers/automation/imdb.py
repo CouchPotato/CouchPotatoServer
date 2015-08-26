@@ -181,7 +181,7 @@ class IMDBCharts(IMDBBase):
     def getChartList(self):
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
         movie_lists = []
-        max_items = int(self.conf('max_items', section = 'charts', default=5))
+        max_items = 10
 
         for name in self.charts:
             chart = self.charts[name].copy()

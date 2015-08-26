@@ -185,7 +185,7 @@ var Category = new Class({
 		var data = self.data;
 
 		self.el = new Element('div.category').adopt(
-			self.delete_button = new Element('span.delete.icon2', {
+			self.delete_button = new Element('span.delete.icon-delete', {
 				'events': {
 					'click': self.del.bind(self)
 				}

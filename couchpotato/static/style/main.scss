@@ -458,7 +458,8 @@ input, textarea, select {
 
 		@include media-phablet {
 			height: $header_width_mobile;
-			left: $header_width_mobile + $padding;
+			left: $header_width_mobile + $padding/2;
+			right: $padding/2;
 		}
 
 		ul {
@@ -490,6 +491,10 @@ input, textarea, select {
 
 		> ul > li:first-child {
 			margin-left: -$padding;
+
+			@include media-phablet {
+				margin-left: -$padding/2;
+			}
 		}
 
 		h2 {

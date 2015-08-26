@@ -37,9 +37,17 @@ var MovieDetails = new Class({
 			)
 		);
 
-		self.addSection('description', new Element('div', {
-			'text': parent.get('plot')
-		}));
+		var eta_date = parent.getETA('%b %Y') ;
+		self.addSection('description', new Element('div').adopt(
+			new Element('div', {
+				'text': parent.get('plot')
+			}),
+			new Element('div.meta', {
+				'html':
+					(eta_date ? ('<span>ETA:' + eta_date + '</span>') : '') +
+					'<span>' + (parent.get('genres') || []).join(', ') + '</span>'
+			})
+		));
 
 
 		// Title dropdown

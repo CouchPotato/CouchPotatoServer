@@ -116,7 +116,7 @@ class Bluray(Automation, RSS):
 
         if not movie_list['list']:
             movie_ids = []
-            max_items = int(self.conf('max_items', section='charts', default=5))
+            max_items = 10
             rss_movies = self.getRSSData(self.rss_url)
 
             for movie in rss_movies:

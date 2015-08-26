@@ -14,14 +14,7 @@ config = [{
             'type': 'list',
             'name': 'charts_providers',
             'tab': 'display',
-            'options': [
-                {
-                    'name': 'max_items',
-                    'default': 5,
-                    'type': 'int',
-                    'description': 'Maximum number of items displayed from each chart.',
-                },
-            ],
+            'options': [],
         },
     ],
 }]

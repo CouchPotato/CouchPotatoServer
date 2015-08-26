@@ -15,6 +15,21 @@
 		font-weight: bold;
 	}
 
+	> .delete {
+		position: absolute;
+		padding: $padding/3 $padding;
+		right: 0;
+		cursor: pointer;
+		opacity: 0.6;
+		color: #fd5353;
+		font-size: 1.5em;
+		z-index: 2;
+
+		&:hover {
+			opacity: 1;
+		}
+	}
+
 	.ctrlHolder {
 
 		.types {

@@ -342,7 +342,7 @@ class Release(Plugin):
                 db.update(rls)
 
             log_movie = '%s (%s) in %s' % (getTitle(media), media['info'].get('year'), rls['quality'])
-            snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
+            snatch_message = 'Snatched "%s": %s from %s' % (data.get('name'), log_movie, (data.get('provider', '') + data.get('provider_extra', '')))
             log.info(snatch_message)
             fireEvent('%s.snatched' % data['type'], message = snatch_message, data = media)
 
