@@ -278,6 +278,9 @@
 .page.movie_details.show .overlay{opacity:1;transition-delay:0s}
 .page.movie_details.show .overlay .close{opacity:1;transition-delay:300ms}
 .page.movie_details.show .scroll_content{transition-delay:200ms;-webkit-transform:translateX(0);transform:translateX(0)}
+.page.movie_details .section_description .meta{text-align:right;font-style:italic;font-size:.9em}
+.page.movie_details .section_description .meta span{display:inline-block;margin:10px 10px 0}
+.page.movie_details .section_description .meta span:last-child{margin-right:0}
 .page.movie_details .section_add{background:#eaeaea}
 .page.movie_details .section_add .options>div{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .page.movie_details .section_add .options>div select{display:block;width:100%}

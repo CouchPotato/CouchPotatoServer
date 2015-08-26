@@ -760,6 +760,23 @@ $mass_edit_height: 44px;
 		}
 	}
 
+	.section_description {
+		.meta {
+			text-align: right;
+			font-style: italic;
+			font-size: .90em;
+
+			span {
+				display: inline-block;
+				margin: $padding/2 $padding/2 0;
+
+				&:last-child {
+					margin-right: 0;
+				}
+			}
+		}
+	}
+
 	.section_add {
 		background: $theme_off;
 
