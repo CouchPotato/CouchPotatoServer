@@ -71,32 +71,34 @@ var UserscriptSettingTab = new Class({
 				'label': 'Install the browser extension or bookmarklet',
 				'description': 'Easily add movies via imdb.com, appletrailers and more'
 			}).inject(self.settings.tabs.automation.content, 'top').adopt(
-				new Element('a.userscript.button', {
-					'text': 'Install extension',
-					'href': 'https://couchpota.to/extension/',
-					'target': '_blank'
-				}),
-				new Element('span.or[text=or]'),
-				new Element('span.bookmarklet').adopt(
-					new Element('a.button.green', {
-						'text': '+CouchPotato',
-						/* jshint ignore:start */
-						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
-								host_url + Api.createUrl('userscript.bookmark') +
-								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
-						 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
-						/* jshint ignore:end */
-						'target': '',
-						'events': {
-							'click': function(e){
-								(e).stop();
-								alert('Drag it to your bookmark ;)');
-							}
-						}
+				new Element('div').adopt(
+					new Element('a.userscript.button', {
+						'text': 'Install extension',
+						'href': 'https://couchpota.to/extension/',
+						'target': '_blank'
 					}),
-					new Element('span', {
-						'text': '⇽ Drag this to your bookmarks'
-					})
+					new Element('span.or[text=or]'),
+					new Element('span.bookmarklet').adopt(
+						new Element('a.button.green', {
+							'text': '+CouchPotato',
+							/* jshint ignore:start */
+							'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+							host_url + Api.createUrl('userscript.bookmark') +
+							"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
+							"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+							/* jshint ignore:end */
+							'target': '',
+							'events': {
+								'click': function(e){
+									(e).stop();
+									alert('Drag it to your bookmark ;)');
+								}
+							}
+						}),
+						new Element('span', {
+							'text': '⇽ Drag this to your bookmarks'
+						})
+					)
 				),
 				new Element('img', {
 					'src': 'https://couchpota.to/media/images/userscript.gif'
