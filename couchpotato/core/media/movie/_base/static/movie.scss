@@ -453,10 +453,9 @@ $mass_edit_height: 44px;
 
 			.action {
 				position: relative;
-				display: block;
-				margin-bottom: 1px;
-				width: auto;
 				margin-right: $padding/2;
+				float: right;
+				clear: both;
 
 				&:first-child {
 					margin-top: $padding/2;
@@ -464,7 +463,7 @@ $mass_edit_height: 44px;
 
 				a {
 					transition: all 150ms $cubic;
-					display: inline-block;
+					display: block;
 					width: auto;
 					padding: $padding / 3;
 					color: #FFF;
