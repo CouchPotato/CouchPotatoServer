@@ -340,6 +340,11 @@ $mass_edit_height: 44px;
 
 .thumb_list {
 
+	$max-split: 20;
+	$split-jump: 225px;
+
+	padding: 0 $padding/4;
+
 	> div:last-child {
 		padding: 0 ($padding/2)+2px;
 		@include media-phablet {
@@ -347,47 +352,30 @@ $mass_edit_height: 44px;
 		}
 	}
 
-	@include media-tablet {
-		padding: 0 $padding/4;
-	}
-
-	@include media-phablet {
-		padding: 0 $padding/6;
-	}
-
-	> div {
-		display: flex;
-		flex-flow: row wrap;
-		align-items: stretch;
-	}
-
 	.movie {
+		display: inline-block;
+		vertical-align: top;
 		margin-bottom: $padding;
 		position: relative;
 		cursor: pointer;
-		flex: 1 auto;
 		width: 150px;
-		max-width: 200px;
 		border: 0 solid transparent;
-		border-width: 0 $padding/2;
+		border-width: 0 $padding/3;
 
-		@include media-desktop-plus {
-			max-width: 20%;
-			border-width: 0 $padding/2.5;
-		}
-
-		@include media-desktop {
-			max-width: 33.333%;
-			border-width: 0 $padding/3;
+		@while $max-split > 0 {
+			@media (min-width : $split-jump * ($max-split - 1)) and (max-width : $split-jump * $max-split) {
+				width: 100% / $max-split;
+			}
+			$max-split: $max-split - 1;
 		}
 
 		@include media-tablet {
-			max-width: 50%;
+			width: 33.333%;
 			border-width: 0 $padding/4;
 		}
 
 		@include media-phablet {
-			max-width: 50%;
+			width: 50%;
 			border-width: 0 $padding/5;
 		}
 

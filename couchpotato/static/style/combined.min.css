@@ -138,8 +138,7 @@
 .list_list .movie:hover{background:rgba(0,0,0,.1)}
 .list_list .movie input[type=checkbox]{left:20px;top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
 .list_list .movie .poster{display:none}
-.list_list .movie .info,.thumb_list>div{display:-webkit-flex;display:-ms-flexbox}
-.list_list .movie .info{padding:10px 20px;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
+.list_list .movie .info{padding:10px 20px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .list_list .movie .info .title{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
 .list_list .movie .info .title span{transition:margin 200ms cubic-bezier(.9,0,.1,1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:480px){.list_list .movie .info{display:block;padding:10px}
@@ -161,20 +160,53 @@
 .list_list .movie:hover .actions{display:none}
 }
 .list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:20px}
+.thumb_list{padding:0 5px}
 .thumb_list>div:last-child{padding:0 12px}
+.thumb_list .movie{display:inline-block;vertical-align:top;margin-bottom:20px;position:relative;cursor:pointer;width:150px;border:0 solid transparent;border-width:0 6.67px}
+@media (min-width:4275px) and (max-width:4500px){.thumb_list .movie{width:5%}
+}
+@media (min-width:4050px) and (max-width:4275px){.thumb_list .movie{width:5.26316%}
+}
+@media (min-width:3825px) and (max-width:4050px){.thumb_list .movie{width:5.55556%}
+}
+@media (min-width:3600px) and (max-width:3825px){.thumb_list .movie{width:5.88235%}
+}
+@media (min-width:3375px) and (max-width:3600px){.thumb_list .movie{width:6.25%}
+}
+@media (min-width:3150px) and (max-width:3375px){.thumb_list .movie{width:6.66667%}
+}
+@media (min-width:2925px) and (max-width:3150px){.thumb_list .movie{width:7.14286%}
+}
+@media (min-width:2700px) and (max-width:2925px){.thumb_list .movie{width:7.69231%}
+}
+@media (min-width:2475px) and (max-width:2700px){.thumb_list .movie{width:8.33333%}
+}
+@media (min-width:2250px) and (max-width:2475px){.thumb_list .movie{width:9.09091%}
+}
+@media (min-width:2025px) and (max-width:2250px){.thumb_list .movie{width:10%}
+}
+@media (min-width:1800px) and (max-width:2025px){.thumb_list .movie{width:11.11111%}
+}
+@media (min-width:1575px) and (max-width:1800px){.thumb_list .movie{width:12.5%}
+}
+@media (min-width:1350px) and (max-width:1575px){.thumb_list .movie{width:14.28571%}
+}
+@media (min-width:1125px) and (max-width:1350px){.thumb_list .movie{width:16.66667%}
+}
+@media (min-width:900px) and (max-width:1125px){.thumb_list .movie{width:20%}
+}
+@media (min-width:675px) and (max-width:900px){.thumb_list .movie{width:25%}
+}
+@media (min-width:450px) and (max-width:675px){.thumb_list .movie{width:33.33333%}
+}
+@media (min-width:225px) and (max-width:450px){.thumb_list .movie{width:50%}
+}
+@media (min-width:0px) and (max-width:225px){.thumb_list .movie{width:100%}
+}
+@media (max-width:768px){.thumb_list .movie{width:33.333%;border-width:0 5px}
+}
 @media (max-width:480px){.thumb_list>div:last-child{padding:0 3.33px}
-}
-.thumb_list>div{display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:stretch;-ms-flex-align:stretch;align-items:stretch}
-.thumb_list .movie{margin-bottom:20px;position:relative;cursor:pointer;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;width:150px;max-width:200px;border:0 solid transparent;border-width:0 10px}
-@media (max-width:1382px){.thumb_list .movie{max-width:20%;border-width:0 8px}
-}
-@media (max-width:1024px){.thumb_list .movie{max-width:33.333%;border-width:0 6.67px}
-}
-@media (max-width:768px){.thumb_list{padding:0 5px}
-.thumb_list .movie{max-width:50%;border-width:0 5px}
-}
-@media (max-width:480px){.thumb_list{padding:0 3.33px}
-.thumb_list .movie{max-width:50%;border-width:0 4px}
+.thumb_list .movie{width:50%;border-width:0 4px}
 }
 .thumb_list .movie input[type=checkbox]{top:10px;left:10px}
 .thumb_list .movie .poster_container{border-radius:3px;position:relative;width:100%;padding-bottom:150%;overflow:hidden}
