@@ -517,7 +517,7 @@
 }
 .wgroup_automation .group_userscript.group_userscript .userscript{margin-left:0}
 .group_userscript.group_userscript .bookmarklet span{margin-left:10px;display:inline-block}
-.group_userscript.group_userscript img{margin:20px;width:100%;max-width:600px}
+.group_userscript.group_userscript img{clear:both;margin:20px;width:100%;max-width:600px}
 @media (max-width:768px){.group_userscript.group_userscript img{margin:10px}
 }
 .wgroup_automation .group_userscript.group_userscript img{margin-left:0}
@@ -762,17 +762,23 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tabs li a{color:rgba(0,0,0,.5)}
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
+.page.settings fieldset h2 .group_label,.page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset{border:0;margin-bottom:20px;position:relative}
-.page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
-.page.settings fieldset h2 .icon{margin-right:10px}
+.page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
-.page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;margin-left:10px;font-size:1rem}
+.page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;font-size:1rem}
 @media (max-width:480px){.page.settings fieldset h2{display:block}
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
 .page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline;display:inline}
+.page.settings fieldset h2 .hint.more_hint{position:relative}
+.page.settings fieldset h2 .hint.more_hint .tooltip{display:inline;padding:10px}
+.page.settings fieldset h2 .hint.more_hint .tooltip .icon-info{vertical-align:middle;display:inline-block;text-align:center;border:1px solid #ac0000;border-radius:50%;width:18px;height:18px;line-height:16px;font-size:.8em;text-decoration:none}
+.page.settings fieldset h2 .hint.more_hint .tooltip .tip{left:0;right:0;position:absolute;background:#eaeaea;z-index:2;display:none;padding:10px;margin-left:-10px}
+.page.settings fieldset h2 .hint.more_hint .tooltip:hover .tip{display:block}
 .page.settings fieldset .ctrlHolder{padding:6.67px 20px;border-bottom:1px solid #eaeaea;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .page.settings fieldset .ctrlHolder:last-child{border-bottom:0}
+.page.settings fieldset .ctrlHolder:nth-child(2){margin-top:10px}
 .page.settings fieldset .ctrlHolder label{display:inline-block;min-width:150px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{min-width:200px}
 .page.settings fieldset .ctrlHolder input[type=checkbox]{width:auto;min-width:0}
@@ -798,7 +804,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset.enabler>:first-child~h2{margin-right:86px}
 @media (max-width:480px){.page.settings fieldset.enabler>:first-child~h2{margin-right:0}
 }
-.page.settings fieldset.enabler>:nth-child(3){margin-top:20px}
+.page.settings fieldset.enabler>:nth-child(2){margin-top:0}
+.page.settings fieldset.enabler>:nth-child(3){margin-top:10px}
 .page.settings fieldset .ctrlHolder.advanced,.page.settings fieldset.advanced{display:none;color:#ac0000}
 .page.settings.show_advanced fieldset.advanced{display:block}
 .page.settings.show_advanced fieldset:not(.disabled)>.ctrlHolder.advanced{display:-webkit-flex;display:-ms-flexbox;display:flex}
@@ -808,7 +815,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset.enabler.disabled .switch,.page.settings:not(.show_advanced) .advanced_toggle .switch{background:#eaeaea;border-color:#eaeaea}
 .page.settings fieldset.enabler.disabled .switch .toggle,.page.settings:not(.show_advanced) .advanced_toggle .switch .toggle{-webkit-transform:translateX(0);transform:translateX(0)}
 .page.settings fieldset.enabler.disabled .switch:hover,.page.settings:not(.show_advanced) .advanced_toggle .switch:hover{background:#b7b7b7;border-color:#b7b7b7}
-.page.settings .option_list{background:#FFF}
+.page.settings .option_list{background:#FFF;margin-top:10px}
 .page.settings .option_list fieldset{position:relative}
 .page.settings .option_list fieldset h2 .group_label{min-width:100px}
 .page.settings .option_list fieldset.disabled h2{padding:0 20px}
@@ -828,8 +835,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .combined_table .ctrlHolder{margin:0 0 0 20px;padding-left:0}
 .page.settings .combined_table .ctrlHolder .delete{display:none;font-size:20px;width:22px;height:22px;line-height:20px;text-align:center;vertical-align:middle}
 .page.settings .combined_table .ctrlHolder:hover .delete{display:inline-block}
+.page.settings .disabled .combined_table,.page.settings .multi_directory.is_empty .delete{display:none}
 .page.settings .combined_table .ctrlHolder.is_empty .delete,.page.settings .combined_table .ctrlHolder.is_empty input[type=checkbox]{visibility:hidden}
-.page.settings .disabled .combined_table{display:none}
 .page.settings .tab_about .usenet{padding:20px 20px 0;font-size:1.5em;line-height:1.3em}
 .page.settings .tab_about .usenet a{color:#ac0000;padding:0 5px}
 .page.settings .tab_about .usenet ul{list-style:none;float:left;width:50%;margin:10px 0;padding:0}
@@ -846,6 +853,8 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 @media (max-width:480px){.page.settings .directory{width:100%}
 }
 .page.settings .directory input{width:100%}
+.page.settings .multi_directory .delete{color:#ac0000;padding:0 10px;opacity:.6;font-size:1.5em}
+.page.settings .multi_directory .delete:hover{opacity:1}
 .page.settings .choice .select_wrapper{margin-left:20px;width:120px;min-width:120px}
 @media (max-width:480px){.page.settings .choice .select_wrapper{margin:10px 0 0}
 }
