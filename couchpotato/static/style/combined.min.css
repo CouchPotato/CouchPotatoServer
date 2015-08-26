@@ -771,11 +771,11 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
 .page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline;display:inline}
-.page.settings fieldset h2 .hint.more_hint{position:relative}
-.page.settings fieldset h2 .hint.more_hint .tooltip{display:inline;padding:10px}
-.page.settings fieldset h2 .hint.more_hint .tooltip .icon-info{vertical-align:middle;display:inline-block;text-align:center;border:1px solid #ac0000;border-radius:50%;width:18px;height:18px;line-height:16px;font-size:.8em;text-decoration:none}
-.page.settings fieldset h2 .hint.more_hint .tooltip .tip{left:0;right:0;position:absolute;background:#eaeaea;z-index:2;display:none;padding:10px;margin-left:-10px}
-.page.settings fieldset h2 .hint.more_hint .tooltip:hover .tip{display:block}
+.page.settings fieldset .more_hint{position:relative}
+.page.settings fieldset .more_hint .tooltip{display:inline;padding:10px}
+.page.settings fieldset .more_hint .tooltip .icon-info{vertical-align:middle;display:inline-block;text-align:center;border:1px solid #ac0000;border-radius:50%;width:18px;height:18px;line-height:16px;font-size:.8em;text-decoration:none}
+.page.settings fieldset .more_hint .tooltip .tip{bottom:100%;left:0;right:0;position:absolute;background:#eaeaea;z-index:20;display:none;padding:10px;margin-left:-10px}
+.page.settings fieldset .more_hint .tooltip:hover .tip{display:block}
 .page.settings fieldset .ctrlHolder{padding:6.67px 20px;border-bottom:1px solid #eaeaea;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .page.settings fieldset .ctrlHolder:last-child{border-bottom:0}
 .page.settings fieldset .ctrlHolder:nth-child(2){margin-top:10px}

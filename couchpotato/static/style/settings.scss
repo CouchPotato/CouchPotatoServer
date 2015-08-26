@@ -111,42 +111,45 @@
 					display: inline;
 				}
 
-				&.more_hint {
-					position: relative;
 
-					.tooltip {
-						display: inline;
-						padding: $padding/2;
+			}
+		}
 
-						.icon-info {
-							vertical-align: middle;
-							display: inline-block;
-							text-align: center;
-							border: 1px solid $primary_color;
-							border-radius: 50%;
-							width: 18px;
-							height: 18px;
-							line-height: 16px;
-							font-size: .8em;
-							text-decoration: none;
-						}
+		.more_hint {
+			position: relative;
 
-						.tip {
-							left: 0;
-							right: 0;
-							position: absolute;
-							background: $theme_off;
-							z-index: 2;
-							display: none;
-							padding: $padding/2;
-							margin-left: -$padding/2;
-						}
+			.tooltip {
+				display: inline;
+				padding: $padding/2;
 
-						&:hover {
-							.tip {
-								display: block;
-							}
-						}
+				.icon-info {
+					vertical-align: middle;
+					display: inline-block;
+					text-align: center;
+					border: 1px solid $primary_color;
+					border-radius: 50%;
+					width: 18px;
+					height: 18px;
+					line-height: 16px;
+					font-size: .8em;
+					text-decoration: none;
+				}
+
+				.tip {
+					bottom: 100%;
+					left: 0;
+					right: 0;
+					position: absolute;
+					background: $theme_off;
+					z-index: 20;
+					display: none;
+					padding: $padding/2;
+					margin-left: -$padding/2;
+				}
+
+				&:hover {
+					.tip {
+						display: block;
 					}
 				}
 			}
