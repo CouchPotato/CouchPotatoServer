@@ -118,7 +118,7 @@
 .movie.status_suggested .quality{display:none}
 .movies{position:relative}
 .movies .no_movies{display:block;padding:20px}
-@media (max-width:480px){.movies .no_movies{padding:10px}
+@media (max-width:768px){.movies .no_movies{padding:10px}
 }
 .movies .message{padding:20px 0;text-align:center}
 .movies>.description{position:absolute;top:0;right:20px;width:auto;line-height:80px}
@@ -130,8 +130,6 @@
 .movies>.loading .spinner{background-color:#000}
 .movies .movie .actions{-webkit-transform:rotateY(360deg);transform:rotateY(360deg)}
 .movies .progress div{width:50%;padding:5px 10px;display:-webkit-flex;display:-ms-flexbox;display:flex}
-@media (max-width:768px){.movies .progress div{width:100%}
-}
 .movies .progress div .folder{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px}
 .movies .progress div .percentage{font-weight:700}
 .list_list{font-weight:300}
@@ -143,7 +141,7 @@
 .list_list .movie .info{padding:10px 20px;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center}
 .list_list .movie .info .title{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
 .list_list .movie .info .title span{transition:margin 200ms cubic-bezier(.9,0,.1,1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:480px){.movies .movie .actions{pointer-events:none}
+@media (max-width:768px){.movies .progress div{width:100%}
 .list_list .movie .info{display:block;padding:10px}
 .list_list .movie .info .title{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
 .list_list .movie .info .title span{width:100%}
@@ -159,7 +157,7 @@
 .list_list .movie .actions a .icon,.list_list .movie .actions a:before{display:none}
 .list_list .movie .actions a:hover{color:#ac0000}
 .list_list .movie:hover .actions{display:block}
-@media (max-width:480px){.list_list .movie .info .quality span{margin:2px 2px 0 0}
+@media (max-width:768px){.list_list .movie .info .quality span{margin:2px 2px 0 0}
 .list_list .movie:hover .actions{display:none}
 }
 .list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:20px}
@@ -206,9 +204,10 @@
 }
 @media (min-width:0px) and (max-width:225px){.thumb_list .movie{width:100%}
 }
-@media (max-width:768px){.thumb_list .movie{width:33.333%;border-width:0 5px}
+@media (max-width:768px){.list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:0}
+.thumb_list .movie{width:33.333%;border-width:0 5px}
 }
-@media (max-width:480px){.list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:0}
+@media (max-width:480px){.movies .movie .actions{pointer-events:none}
 .thumb_list>div:last-child{padding:0 3.33px}
 .thumb_list .movie{width:50%;border-width:0 4px}
 }

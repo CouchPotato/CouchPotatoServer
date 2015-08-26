@@ -119,7 +119,7 @@ $mass_edit_height: 44px;
 		display: block;
 		padding: $padding;
 
-		@include media-phablet {
+		@include media-tablet {
 			padding: $padding/2;
 		}
 
@@ -238,7 +238,7 @@ $mass_edit_height: 44px;
 			flex-flow: row nowrap;
 			align-items: center;
 
-			@include media-phablet {
+			@include media-tablet {
 				display: block;
 				padding: $padding/2;
 			}
@@ -246,7 +246,7 @@ $mass_edit_height: 44px;
 			.title {
 				flex: 1 auto;
 
-				@include media-phablet {
+				@include media-tablet {
 					display: flex;
 					flex-flow: row nowrap;
 				}
@@ -257,7 +257,7 @@ $mass_edit_height: 44px;
 					text-overflow: ellipsis;
 					white-space: nowrap;
 
-					@include media-phablet {
+					@include media-tablet {
 						width: 100%;
 					}
 
@@ -285,7 +285,7 @@ $mass_edit_height: 44px;
 					font-size: .7em;
 					margin: 2px 0 0 2px;
 
-					@include media-phablet {
+					@include media-tablet {
 						margin: 2px 2px 0 0;
 					}
 				}
@@ -336,7 +336,7 @@ $mass_edit_height: 44px;
 		&:hover .actions {
 			display: block;
 
-			@include media-phablet {
+			@include media-tablet {
 				display: none;
 			}
 		}
@@ -347,7 +347,7 @@ $mass_edit_height: 44px;
 			.info .title span {
 				margin-left: $padding;
 
-				@include media-phablet {
+				@include media-tablet {
 					margin-left: 0;
 				}
 			}
