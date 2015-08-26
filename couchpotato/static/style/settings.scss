@@ -73,6 +73,7 @@
 
 		h2 {
 			display: flex;
+			flex-flow: row wrap;
 			align-items: baseline;
 			padding: 0 0 0 $padding;
 
@@ -90,9 +91,12 @@
 				}
 			}
 
+			.group_label {
+				margin-right: $padding/2;
+			}
+
 			.hint {
 				flex: 1;
-				margin-left: $padding/2;
 				font-size: 1rem;
 
 				@include media-phablet {
@@ -105,6 +109,45 @@
 					color: $primary_color;
 					text-decoration: underline;
 					display: inline;
+				}
+
+				&.more_hint {
+					position: relative;
+
+					.tooltip {
+						display: inline;
+						padding: $padding/2;
+
+						.icon-info {
+							vertical-align: middle;
+							display: inline-block;
+							text-align: center;
+							border: 1px solid $primary_color;
+							border-radius: 50%;
+							width: 18px;
+							height: 18px;
+							line-height: 16px;
+							font-size: .8em;
+							text-decoration: none;
+						}
+
+						.tip {
+							left: 0;
+							right: 0;
+							position: absolute;
+							background: $theme_off;
+							z-index: 2;
+							display: none;
+							padding: $padding/2;
+							margin-left: -$padding/2;
+						}
+
+						&:hover {
+							.tip {
+								display: block;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -123,6 +166,10 @@
 
 			&:last-child {
 				border-bottom: 0;
+			}
+
+			&:nth-child(2) {
+				margin-top: $padding/2;
 			}
 
 			label {
@@ -241,8 +288,12 @@
 				}
 			}
 
+			> :nth-child(2){
+				margin-top: 0;
+			}
+
 			> :nth-child(3){
-				margin-top: $padding;
+				margin-top: $padding/2;
 			}
 
 		}
@@ -310,6 +361,7 @@
 	/** Options list **/
 	.option_list {
 		background: #FFF;
+		margin-top: $padding/2;
 
 		fieldset {
 			position: relative;
@@ -501,6 +553,24 @@
 
 		input {
 			width: 100%;
+		}
+	}
+
+	.multi_directory {
+
+		.delete {
+			color: $primary_color;
+			padding: 0 $padding/2;
+			opacity: .6;
+			font-size: 1.5em;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+
+		&.is_empty .delete {
+			display: none;
 		}
 	}
 
