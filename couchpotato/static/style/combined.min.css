@@ -165,7 +165,7 @@
 @media (max-width:480px){.thumb_list>div:last-child{padding:0 3.33px}
 }
 .thumb_list>div{display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:stretch;-ms-flex-align:stretch;align-items:stretch}
-.thumb_list .movie{margin-bottom:20px;position:relative;cursor:pointer;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;width:150px;max-width:16.666666667%;border:0 solid transparent;border-width:0 10px}
+.thumb_list .movie{margin-bottom:20px;position:relative;cursor:pointer;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;width:150px;max-width:200px;border:0 solid transparent;border-width:0 10px}
 @media (max-width:1382px){.thumb_list .movie{max-width:20%;border-width:0 8px}
 }
 @media (max-width:1024px){.thumb_list .movie{max-width:33.333%;border-width:0 6.67px}
