@@ -6,9 +6,10 @@ $mass_edit_height: 44px;
 	bottom: auto;
 	z-index: 21;
 	height: $header_height;
+	background: $background_color;
 
 	.scroll_content {
-		overflow: inherit;
+		display: none;
 	}
 
 	@include media-phablet {
@@ -147,6 +148,7 @@ $mass_edit_height: 44px;
 
 		@include media-phablet {
 			line-height: $header_width_mobile;
+			padding: 0 $padding/2;
 		}
 	}
 

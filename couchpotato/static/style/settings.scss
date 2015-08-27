@@ -1,10 +1,10 @@
 @import "_mixins";
 
 .page.settings {
-	top: $header_height;
+	padding-top: $header_height;
 
 	@include media-phablet {
-		top: $header_width_mobile;
+		padding-top: $header_width_mobile;
 	}
 
 	&.active .scroll_content {

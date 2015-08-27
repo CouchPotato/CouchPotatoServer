@@ -61,12 +61,12 @@
 @media (max-width:480px){.page.home .search_form{margin-top:10px;height:64px}
 }
 .page.home .search_form .icon-search{display:block;color:#000;right:20px;top:20px;width:66px;height:66px;line-height:66px;left:auto;-webkit-transform:none;transform:none;font-size:2em;opacity:.5}
+.page.home .search_form .wrapper:before,.page.movies .scroll_content{display:none}
 @media (max-width:480px){.page.home .search_form .icon-search{width:44px;height:44px;line-height:44px;right:10px;top:10px;font-size:1.5em}
 }
 .page.home .search_form .wrapper{border-radius:0;box-shadow:none;bottom:auto;top:20px;left:20px;right:20px;position:absolute;width:auto}
 @media (max-width:480px){.page.home .search_form .wrapper{right:10px;top:10px;left:10px}
 }
-.page.home .search_form .wrapper:before{display:none}
 .page.home .search_form .wrapper .input{border-radius:0;left:0;position:absolute;top:0;height:66px}
 .page.home .search_form .wrapper .input input{box-shadow:0;font-size:2em;font-weight:400}
 .directory_list,.messages .message,.more_menu .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
@@ -91,8 +91,7 @@
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{width:140px;margin-right:2px}
 }
 .big_search{background:#eaeaea}
-.page.movies{bottom:auto;z-index:21;height:80px}
-.page.movies .scroll_content{overflow:inherit}
+.page.movies{bottom:auto;z-index:21;height:80px;background:#FFF}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0;transition:top 300ms cubic-bezier(.9,0,.1,1)}
 @media (max-width:480px){.page.movies{height:44px}
 .page.movies_manage,.page.movies_wanted{top:44px}
@@ -123,7 +122,7 @@
 }
 .movies .message{padding:20px 0;text-align:center}
 .movies.movies>h2{padding:0 20px;line-height:80px}
-@media (max-width:480px){.movies.movies>h2{line-height:44px}
+@media (max-width:480px){.movies.movies>h2{line-height:44px;padding:0 10px}
 }
 .movies>.description{position:absolute;top:0;right:20px;width:auto;line-height:80px}
 @media (max-width:768px){.movies>.description{display:none}
@@ -764,9 +763,9 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .table .item span{padding:1px 2px}
 .table .item span:first-child{padding-left:0}
 .table .item span:last-child{padding-right:0}
-.page.settings{top:80px}
+.page.settings{padding-top:80px}
 .page.settings.active .scroll_content{display:-webkit-flex;display:-ms-flexbox;display:flex}
-@media (max-width:480px){.page.settings{top:44px}
+@media (max-width:480px){.page.settings{padding-top:44px}
 .page.settings.active .scroll_content{display:block}
 }
 .page.settings .navigation{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:space-between;-ms-flex-pack:justify;justify-content:space-between}
