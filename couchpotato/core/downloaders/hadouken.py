@@ -254,7 +254,7 @@ class JsonRpcClient(object):
             obj = json.loads(response)
 
             if 'error' in obj.keys():
-                log.error('JSONRPC error, %s: %s', obj['error']['code'], obj['error']['message'])
+                log.error('JSONRPC error, %s: %s', (obj['error']['code'], obj['error']['message']))
                 return False
 
             if 'result' in obj.keys():
