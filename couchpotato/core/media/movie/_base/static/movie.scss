@@ -623,7 +623,7 @@ $mass_edit_height: 44px;
 
 			@include media-phablet {
 				padding: 0;
-				line-height: 1em;
+				line-height: $header_width_mobile;
 			}
 
 			h1 {
@@ -637,7 +637,6 @@ $mass_edit_height: 44px;
 				@include media-phablet {
 					min-width: 100%;
 					line-height: $header_width_mobile;
-					margin-top: $padding;
 
 					.more_menu {
 						width: 100%;
@@ -669,7 +668,7 @@ $mass_edit_height: 44px;
 					line-height: $header_height;
 
 					@include media-phablet {
-						line-height: $header_width_mobile/2;
+						line-height: $header_width_mobile;
 					}
 				}
 
@@ -767,7 +766,7 @@ $mass_edit_height: 44px;
 					line-height: $header_height;
 
 					@include media-phablet {
-						line-height: $header_width_mobile/2;
+						line-height: $header_width_mobile;
 					}
 
 					&:hover {
