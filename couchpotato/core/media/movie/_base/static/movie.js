@@ -277,7 +277,7 @@ var Movie = new Class({
 	onClick: function(e){
 		var self = this;
 
-		if(e.target.getParents('.actions').length == 0 && e.target != self.select_checkbox){
+		if(e.target.getParents('.actions').length === 0 && e.target != self.select_checkbox){
 			(e).stopPropagation();
 			self.addActions();
 			self.openDetails();
@@ -308,6 +308,11 @@ var Movie = new Class({
 		self.addActions();
 
 		if(self.list.current_view == 'thumb'){
+			self.el.addClass('hover_start');
+			setTimeout(function(){
+				self.el.removeClass('hover_start');
+			}, 300);
+
 			dynamics.css(self.el, {
 				scale: 1,
 				opacity: 1
