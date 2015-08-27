@@ -141,6 +141,15 @@ $mass_edit_height: 44px;
 		}
 	}
 
+	&.movies > h2 {
+		padding: 0 $padding;
+		line-height: $header_height;
+
+		@include media-phablet {
+			line-height: $header_width_mobile;
+		}
+	}
+
 	> .description {
 		position: absolute;
 		top: 0;

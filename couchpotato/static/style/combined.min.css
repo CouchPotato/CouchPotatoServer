@@ -122,6 +122,9 @@
 @media (max-width:768px){.movies .no_movies{padding:10px}
 }
 .movies .message{padding:20px 0;text-align:center}
+.movies.movies>h2{padding:0 20px;line-height:80px}
+@media (max-width:480px){.movies.movies>h2{line-height:44px}
+}
 .movies>.description{position:absolute;top:0;right:20px;width:auto;line-height:80px}
 @media (max-width:768px){.movies>.description{display:none}
 }
@@ -696,14 +699,14 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page .navigation{z-index:2;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;position:fixed;top:0;height:80px;left:152px;right:20px;background:#FFF;border-radius:3px 0 0}
 .more_menu .button,.more_menu a,.page .navigation ul li{display:inline-block}
 .more_menu,.more_menu .button:before{position:relative}
-@media (max-width:480px){.page h2{font-size:18px;padding:10px}
+@media (max-width:480px){.page h2{font-size:18px}
 .page .navigation{height:44px;left:54px;right:10px}
 }
 .page .navigation ul{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;list-style:none}
-.page .navigation ul li a{display:inline-block;font-size:24px;line-height:80px;padding:0 20px;color:rgba(0,0,0,.5)}
+.page .navigation ul li a{display:inline-block;font-size:24px;line-height:80px;padding:0 20px;color:rgba(0,0,0,.5);vertical-align:bottom}
 .page .navigation ul .active a{color:#000}
 .page .navigation>ul>li:first-child{margin-left:-20px}
-@media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:44px;padding:10px}
+@media (max-width:480px){.page .navigation ul li a{font-size:18px;line-height:44px;padding:0 10px}
 .page .navigation>ul>li:first-child{margin-left:-10px}
 }
 .page .navigation h2{padding:20px 20px 20px 0}
@@ -772,16 +775,20 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings .tab_content{display:none}
 .page.settings .tab_content.active{display:block}
 .page.settings .tabs{margin:0 20px 20px;list-style:none;font-size:24px}
+@media (max-width:480px){.page.settings .tabs{margin:0 10px 20px}
+}
 .page.settings .tabs ul{list-style:none;font-size:14px}
 .page.settings .tabs li a{color:rgba(0,0,0,.5)}
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
+@media (max-width:480px){.page.settings form.containers{margin:0 10px 0 0}
+}
 .page.settings fieldset h2 .group_label,.page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset{border:0;padding:10px 0;position:relative}
 .page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
 .page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;font-size:1rem}
-@media (max-width:480px){.page.settings fieldset h2{display:block}
+@media (max-width:480px){.page.settings fieldset h2{display:block;padding:0 0 0 10px}
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
 .page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline;display:inline}
@@ -796,7 +803,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 .page.settings fieldset .ctrlHolder label{display:inline-block;min-width:150px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{min-width:200px}
 .page.settings fieldset .ctrlHolder input[type=checkbox]{width:auto;min-width:0}
-@media (max-width:480px){.page.settings fieldset .ctrlHolder{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;padding-right:0}
+@media (max-width:480px){.page.settings fieldset .ctrlHolder{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;padding:6.67px 0 6.67px 10px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder label,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
 .page.settings fieldset .ctrlHolder input[type=checkbox]{margin-right:20px;-webkit-flex:none;-ms-flex:none;flex:none}
 }
