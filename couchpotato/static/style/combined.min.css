@@ -464,16 +464,26 @@
 .page.log .nav li.clear,.page.log .nav li.select{cursor:pointer}
 .page.log .nav li.active{font-weight:700;cursor:default}
 .page.log .hint{font-style:italic;opacity:.5;margin-top:3px}
+@media (max-width:768px){.page.log .nav li.filter,.page.log .nav li:nth-child(10),.page.log .nav li:nth-child(11),.page.log .nav li:nth-child(12),.page.log .nav li:nth-child(7),.page.log .nav li:nth-child(8),.page.log .nav li:nth-child(9){display:none}
+.page.log .nav li:last-child{display:inline-block}
+.page.log .hint{display:none}
+}
 .page.log .container{padding:20px;overflow:hidden;line-height:150%}
+@media (max-width:480px){.page.log .container{padding:20px 10px}
+}
 .page.log .container.loading{text-align:center;font-size:20px;padding:100px 50px}
 .page.log .container select{vertical-align:top}
 .page.log .container .time{clear:both;font-size:.75em;border-top:1px solid rgba(255,255,255,.1);overflow:hidden;padding:0 3px;font-family:Lucida Console,Monaco,Nimbus Mono L,monospace,serif;display:-webkit-flex;display:-ms-flexbox;display:flex}
+@media (max-width:480px){.page.log .container .time{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap}
+}
 .page.log .container .time.highlight{background:#eaeaea}
-.page.log .container .time span{padding:5px 0 3px;display:inline-block;vertical-align:middle;width:90px}
+.page.log .container .time span{padding:5px 0 3px;display:inline-block;vertical-align:middle;width:95px}
+.page.log .container .time .message{white-space:pre-wrap;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
+@media (max-width:480px){.page.log .container .time .message{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;margin-top:-5px;padding:0;display:block;width:100%}
+}
 .page.log .container .time ::-moz-selection{background-color:#000;color:#FFF}
 .page.log .container .time ::selection{background-color:#000;color:#FFF}
-.page.log .container .type.type{margin-left:10px;width:40px}
-.page.log .container .message{white-space:pre-wrap;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
+.page.log .container .type.type{margin-left:6.67px;width:40px}
 .page.log .container .error{color:#FFA4A4}
 .page.log .container .debug span{opacity:.6}
 .page.log [data-filter=DEBUG] .error,.page.log [data-filter=DEBUG] .info,.page.log [data-filter=ERROR] .debug,.page.log [data-filter=ERROR] .info,.page.log [data-filter=INFO] .debug,.page.log [data-filter=INFO] .error{display:none}
