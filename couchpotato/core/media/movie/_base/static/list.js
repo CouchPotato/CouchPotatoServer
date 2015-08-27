@@ -50,7 +50,7 @@ var MovieList = new Class({
 					},
 					'change:relay(.movie input)': function(e, el){
 						(e).stopPropagation();
-						el = el.getParent();
+						el = el.getParent('.movie');
 						var klass = el.retrieve('klass');
 						klass.fireEvent('select');
 						klass.select(klass.select_checkbox.get('checked'));

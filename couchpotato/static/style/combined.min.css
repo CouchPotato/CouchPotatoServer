@@ -95,7 +95,7 @@
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{width:140px;margin-right:2px}
 }
 .big_search{background:#eaeaea}
-.page.movies{bottom:auto;z-index:21;height:80px;background:#FFF}
+.page.movies{bottom:auto;z-index:21;height:80px}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0;will-change:top;transition:top 300ms cubic-bezier(.9,0,.1,1)}
 @media (max-width:480px){.page.movies{height:44px}
 .page.movies_manage,.page.movies_wanted{top:44px}
