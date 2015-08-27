@@ -388,6 +388,7 @@ $mass_edit_height: 44px;
 	}
 
 	.movie {
+		overflow: visible;
 		display: inline-block;
 		vertical-align: top;
 		margin-bottom: $padding;
@@ -396,6 +397,11 @@ $mass_edit_height: 44px;
 		width: 150px;
 		border: 0 solid transparent;
 		border-width: 0 $padding/3;
+
+		.inner {
+			will-change: transform;
+			transform: rotateZ(360deg);
+		}
 
 		@while $max-split > 0 {
 			@media (min-width : $split-jump * ($max-split - 1)) and (max-width : $split-jump * $max-split) {

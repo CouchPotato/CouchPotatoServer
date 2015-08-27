@@ -170,7 +170,8 @@
 .list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:20px}
 .thumb_list{padding:0 5px}
 .thumb_list>div:last-child{padding:0 12px}
-.thumb_list .movie{display:inline-block;vertical-align:top;margin-bottom:20px;position:relative;cursor:pointer;width:150px;border:0 solid transparent;border-width:0 6.67px}
+.thumb_list .movie{overflow:visible;display:inline-block;vertical-align:top;margin-bottom:20px;position:relative;cursor:pointer;width:150px;border:0 solid transparent;border-width:0 6.67px}
+.thumb_list .movie .inner{will-change:transform;-webkit-transform:rotateZ(360deg);transform:rotateZ(360deg)}
 @media (min-width:4275px) and (max-width:4500px){.thumb_list .movie{width:5%}
 }
 @media (min-width:4050px) and (max-width:4275px){.thumb_list .movie{width:5.26316%}

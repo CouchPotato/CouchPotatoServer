@@ -48,10 +48,6 @@ var MovieList = new Class({
 						(e).stopPropagation();
 						el.retrieve('klass').onMouseenter(e);
 					},
-					'mouseleave:relay(.movie)': function(e, el){
-						(e).stopPropagation();
-						el.retrieve('klass').onMouseleave(e);
-					},
 					'change:relay(.movie input)': function(e, el){
 						(e).stopPropagation();
 						el = el.getParent();
