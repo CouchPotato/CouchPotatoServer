@@ -40,7 +40,11 @@ input, textarea, select {
 	padding: $padding/3;
 	background: $background_color;
 	border: 1px solid darken($theme_off, 20);
+	border-radius: 0;
+}
 
+input, textarea {
+	-webkit-appearance: none;
 }
 
 .button {

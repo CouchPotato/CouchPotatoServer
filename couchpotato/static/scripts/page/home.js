@@ -105,7 +105,7 @@ Page.Home = new Class({
 			'identifier': 'soon',
 			'limit': 12,
 			'title': 'Available soon',
-			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
+			'description': 'Should be available soon as they will be released on DVD/Blu-ray in the coming weeks.',
 			'filter': {
 				'random': true
 			},

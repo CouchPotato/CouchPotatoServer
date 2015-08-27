@@ -21,6 +21,7 @@ $mass_edit_height: 44px;
 .page.movies_manage {
 	top: $header_height;
 	padding: 0;
+	will-change: top;
 	transition: top 300ms $cubic;
 
 	@include media-phablet {
@@ -61,6 +62,7 @@ $mass_edit_height: 44px;
 		input[type=checkbox] {
 			display: inline-block;
 			position: absolute;
+			will-change: opacity;
 			transition: opacity 200ms;
 			opacity: 0;
 			z-index: 2;
@@ -186,7 +188,8 @@ $mass_edit_height: 44px;
 	}
 
 	.movie .actions {
-		transform: rotateY(360deg);
+		will-change: transform, opacity;
+		transform: rotateZ(360deg);
 
 		@include media-phablet {
 			pointer-events: none;
@@ -474,6 +477,7 @@ $mass_edit_height: 44px;
 
 		.actions {
 			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,1) 80%);
+			will-change: opacity;
 			transition: opacity 400ms;
 			opacity: 1;
 			visibility: hidden;
@@ -496,6 +500,8 @@ $mass_edit_height: 44px;
 
 				a {
 					transition: all 150ms $cubic;
+					will-change: color, background;
+					transition-property: color, background;
 					display: block;
 					width: auto;
 					padding: $padding / 3;
@@ -526,6 +532,7 @@ $mass_edit_height: 44px;
 		.mask {
 			bottom: 44px;
 			border-radius: $border_radius;
+			will-change: opacity;
 			transition: opacity 30ms;
 		}
 	}
@@ -550,7 +557,8 @@ $mass_edit_height: 44px;
 		background: rgba(0,0,0,.6);
 		border-radius: $border_radius 0 0 $border_radius;
 		opacity: 0;
-		transform: rotateY(360deg);
+		will-change: opacity;
+		transform: rotateZ(360deg);
 		transition: opacity 300ms ease 400ms;
 		z-index: 1;
 
@@ -572,6 +580,7 @@ $mass_edit_height: 44px;
 			width: 100%;
 			height: 100%;
 			opacity: 0;
+			will-change: opacity;
 			transition: opacity 300ms ease 200ms;
 
 			&:before {
@@ -595,7 +604,8 @@ $mass_edit_height: 44px;
 		background: $background_color;
 		border-radius: $border_radius 0 0 $border_radius;
 		overflow-y: auto;
-		transform: translateX(100%) rotateY(360deg);
+		will-change: transform;
+		transform: translateX(100%) rotateZ(360deg);
 		transition: transform 350ms $cubic;
 
 		@include media-phablet {
@@ -608,7 +618,8 @@ $mass_edit_height: 44px;
 			padding: 0 $padding;
 			position: relative;
 			z-index: 2;
-			transform: rotateY(360deg);
+			will-change: transform, opacity;
+			transform: rotateZ(360deg);
 
 			@include media-phablet {
 				padding: 0;
@@ -770,7 +781,8 @@ $mass_edit_height: 44px;
 		.section {
 			padding: $padding;
 			border-top: 1px solid rgba(0,0,0,.1);
-			transform: rotateY(360deg);
+			will-change: transform, opacity;
+			transform: rotateZ(360deg);
 
 			@include media-phablet {
 				padding: $padding/2;
@@ -793,7 +805,7 @@ $mass_edit_height: 44px;
 
 		.scroll_content {
 			transition-delay: 200ms;
-			transform: translateX(0) rotateY(360deg);
+			transform: translateX(0) rotateZ(360deg);
 		}
 	}
 
@@ -1038,8 +1050,6 @@ $mass_edit_height: 44px;
 
 		.background {
 			opacity: .3;
-			transition: all 300ms;
-			transform: scale(1.05) rotateY(360deg);
 			background: no-repeat center;
 			background-size: cover;
 			position: absolute;
@@ -1051,7 +1061,6 @@ $mass_edit_height: 44px;
 		}
 
 		.icon-play {
-
 			opacity: 0.9;
 			position: absolute;
 			z-index: 2;
@@ -1059,6 +1068,7 @@ $mass_edit_height: 44px;
 			width: 100%;
 			top: 50%;
 			transform: translateY(-50%);
+			will-change: opacity;
 			transition: all 300ms;
 			color: #FFF;
 			font-size: $play-size;
@@ -1080,6 +1090,7 @@ $mass_edit_height: 44px;
 				left: 50%;
 				margin-left: $play-size/2;
 				transform: translateY(-54%);
+				will-change: opacity;
 
 				@include media-desktop {
 					margin-left: $play-size/4;
@@ -1140,6 +1151,7 @@ $mass_edit_height: 44px;
 		left: $header_width;
 		flex-flow: row nowrap;
 		align-items: center;
+		will-change: max-height;
 		transition: max-height 300ms $cubic;
 		max-height: 0;
 		overflow: hidden;
