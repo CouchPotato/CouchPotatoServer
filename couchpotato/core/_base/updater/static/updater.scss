@@ -1,0 +1,17 @@
+@import "_mixins";
+
+.update.message {
+	background: $background_color;
+	padding: $padding;
+	text-align: center;
+	font-size: 1.25em;
+
+	@include media-tablet {
+		font-size: 1em;
+	}
+
+	a {
+		color: $primary_color;
+		padding: $padding/4;
+	}
+}

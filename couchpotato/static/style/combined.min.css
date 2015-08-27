@@ -1,5 +1,9 @@
 .page.movie_details,.thumb_list .movie.hover_start .actions{pointer-events:none}
 .movies>.description a:hover,.page.movie_details .releases .buttons a:hover{text-decoration:underline}
+.update.message{background:#FFF;padding:20px;text-align:center;font-size:1.25em}
+@media (max-width:768px){.update.message{font-size:1em}
+}
+.update.message a{color:#ac0000;padding:5px}
 .search_form{display:inline-block;z-index:11;width:44px;position:relative}
 .search_form .icon-search{position:absolute;z-index:2;top:50%;left:0;height:100%;text-align:center;color:#FFF;font-size:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
 .search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
@@ -682,13 +686,12 @@ input,textarea{-webkit-appearance:none}
 }
 .header .more_menu .wrapper{bottom:0;left:44px;right:auto;padding-left:4px}
 .corner_background{display:block;position:absolute;height:10px;width:10px;background:#ac0000;top:0;left:132px}
-.content,.content .pages{height:100%;position:relative}
 @media (max-width:480px){.corner_background{left:44px}
 }
-.content{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;background:#FFF;border-radius:3px 0 0 3px}
+.content{position:relative;height:100%;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:column nowrap;-ms-flex-flow:column nowrap;flex-flow:column nowrap;background:#FFF;border-radius:3px 0 0 3px}
 .content h1,.content h2,.content h3{padding:0;margin:0}
-.content .pages{width:100%}
-.content .footer{position:fixed;bottom:0;height:20px;width:100%}
+.content .pages{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;width:100%;position:relative}
+.content .footer{width:100%}
 .page{position:absolute;top:0;left:0;right:0;bottom:0;display:none}
 .page.active{display:block}
 .page>.scroll_content{position:relative;height:100%;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -763,9 +766,9 @@ input,textarea{-webkit-appearance:none}
 .table .item span{padding:1px 2px}
 .table .item span:first-child{padding-left:0}
 .table .item span:last-child{padding-right:0}
-.page.settings{top:80px}
+.page.settings{padding-top:80px}
 .page.settings.active .scroll_content{display:-webkit-flex;display:-ms-flexbox;display:flex}
-@media (max-width:480px){.page.settings{top:44px}
+@media (max-width:480px){.page.settings{padding-top:44px}
 .page.settings.active .scroll_content{display:block}
 }
 .page.settings .navigation{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-justify-content:space-between;-ms-flex-pack:justify;justify-content:space-between}
@@ -774,16 +777,20 @@ input,textarea{-webkit-appearance:none}
 .page.settings .tab_content{display:none}
 .page.settings .tab_content.active{display:block}
 .page.settings .tabs{margin:0 20px 20px;list-style:none;font-size:24px}
+@media (max-width:480px){.page.settings .tabs{margin:0 10px 20px}
+}
 .page.settings .tabs ul{list-style:none;font-size:14px}
 .page.settings .tabs li a{color:rgba(0,0,0,.5)}
 .page.settings .tabs li.active a{color:#000}
 .page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
+@media (max-width:480px){.page.settings form.containers{margin:0 10px 0 0}
+}
 .page.settings fieldset h2 .group_label,.page.settings fieldset h2 .icon{margin-right:10px}
 .page.settings fieldset{border:0;padding:10px 0;position:relative}
 .page.settings fieldset h2{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;-webkit-align-items:baseline;-ms-flex-align:baseline;align-items:baseline;padding:0 0 0 20px}
 .page.settings fieldset h2 .icon img{vertical-align:middle;position:relative;top:-1px}
 .page.settings fieldset h2 .hint{-webkit-flex:1;-ms-flex:1;flex:1;font-size:1rem}
-@media (max-width:480px){.page.settings fieldset h2{display:block}
+@media (max-width:480px){.page.settings fieldset h2{display:block;padding:0 0 0 10px}
 .page.settings fieldset h2 .hint{margin:0;display:block}
 }
 .page.settings fieldset h2 .hint a{font-weight:400;color:#ac0000;text-decoration:underline;display:inline}
@@ -798,7 +805,7 @@ input,textarea{-webkit-appearance:none}
 .page.settings fieldset .ctrlHolder label{display:inline-block;min-width:150px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{min-width:200px}
 .page.settings fieldset .ctrlHolder input[type=checkbox]{width:auto;min-width:0}
-@media (max-width:480px){.page.settings fieldset .ctrlHolder{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;padding-right:0}
+@media (max-width:480px){.page.settings fieldset .ctrlHolder{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap;padding:6.67px 0 6.67px 10px}
 .page.settings fieldset .ctrlHolder input,.page.settings fieldset .ctrlHolder label,.page.settings fieldset .ctrlHolder select,.page.settings fieldset .ctrlHolder textarea{-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
 .page.settings fieldset .ctrlHolder input[type=checkbox]{margin-right:20px;-webkit-flex:none;-ms-flex:none;flex:none}
 }

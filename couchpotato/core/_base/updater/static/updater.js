@@ -84,7 +84,7 @@ var UpdaterBase = new Class({
 					'click': self.doUpdate.bind(self)
 				}
 			})
-		).inject(document.body);
+		).inject(App.getBlock('footer'));
 	},
 
 	doUpdate: function(){
