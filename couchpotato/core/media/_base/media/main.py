@@ -306,6 +306,7 @@ class MediaPlugin(MediaBase):
             media_ids.remove(media_id)
             if len(media_ids) == 0 or len(medias) == limit: break
 
+        total_count -= len(media_ids)
         return total_count, medias
 
     def listView(self, **kwargs):
