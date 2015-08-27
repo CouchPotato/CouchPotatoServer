@@ -7,6 +7,10 @@ $mass_edit_height: 44px;
 	z-index: 21;
 	height: $header_height;
 
+	.scroll_content {
+		overflow: inherit;
+	}
+
 	@include media-phablet {
 		height: $header_width_mobile;
 	}
