@@ -153,7 +153,7 @@ var MovieList = new Class({
 		if(!self.navigation_counter) return;
 
 		self.counter_count = count;
-		self.navigation_counter.set('text', (count || 0) + ' movies');
+		self.navigation_counter.set('text', count === 1 ? '1 movie' : (count || 0) + ' movies');
 
 		if (self.empty_message) {
 			self.empty_message.destroy();

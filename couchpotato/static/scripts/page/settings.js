@@ -209,8 +209,11 @@ Page.Settings = new Class({
 		});
 
 		setTimeout(function(){
+			self.el.grab(
+				self.navigation
+			);
+
 			self.content.adopt(
-				self.navigation,
 				self.tabs_container,
 				self.containers
 			);

@@ -1,10 +1,10 @@
 @import "_mixins";
 
 .page.settings {
-	top: $header_height;
+	padding-top: $header_height;
 
 	@include media-phablet {
-		top: $header_width_mobile;
+		padding-top: $header_width_mobile;
 	}
 
 	&.active .scroll_content {
@@ -42,6 +42,10 @@
 		list-style: none;
 		font-size: 24px;
 
+		@include media-phablet {
+			margin: 0 $padding/2 $padding;
+		}
+
 		ul {
 			list-style: none;
 			font-size: $font_size;
@@ -64,6 +68,10 @@
 	form.containers {
 		margin: 0 $padding 0 0;
 		flex: 1 1 auto;
+
+		@include media-phablet {
+			margin: 0 $padding/2 0 0;
+		}
 	}
 
 	fieldset {
@@ -79,6 +87,7 @@
 
 			@include media-phablet {
 				display: block;
+				padding: 0 0 0 $padding/2;
 			}
 
 			.icon {
@@ -164,7 +173,7 @@
 
 			@include media-phablet {
 				flex-flow: row wrap;
-				padding-right: 0;
+				padding: $padding/3 0 $padding/3 $padding/2;
 			}
 
 			&:last-child {

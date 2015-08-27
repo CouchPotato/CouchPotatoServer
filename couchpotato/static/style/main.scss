@@ -440,7 +440,6 @@ input, textarea, select {
 
 		@include media-phablet {
 			font-size: 18px;
-			padding: $padding/2;
 		}
 	}
 
@@ -475,11 +474,12 @@ input, textarea, select {
 					line-height: $header_height;
 					padding: 0 $padding;
 					color: rgba(0,0,0,.5);
+					vertical-align: bottom;
 
 					@include media-phablet {
 						font-size: 18px;
 						line-height: $header_width_mobile;
-						padding: $padding/2;
+						padding: 0 $padding/2;
 					}
 				}
 			}
