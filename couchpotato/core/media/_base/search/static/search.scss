@@ -6,10 +6,6 @@
 	width: 44px;
 	position: relative;
 
-	* {
-		transform: translateZ(0);
-	}
-
 	.icon-search {
 		position: absolute;
 		z-index: 2;
@@ -246,7 +242,8 @@
 					cursor: pointer;
 					border-top: 1px solid rgba(255,255,255, 0.08);
 					transition: all .4s cubic-bezier(0.9,0,0.1,1);
-					transform: translateX(0);
+					will-change: transform;
+					transform: translateX(0) rotateZ(360deg);
 					background: $background_color;
 
 					@include media-phablet {
@@ -254,11 +251,11 @@
 					}
 
 					&:hover {
-						transform: translateX(2%);
+						transform: translateX(2%) rotateZ(360deg);
 					}
 
 					&.open {
-						transform: translateX(100%);
+						transform: translateX(100%) rotateZ(360deg);
 					}
 
 					.info {

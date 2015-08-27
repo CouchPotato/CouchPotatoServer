@@ -40,7 +40,11 @@ input, textarea, select {
 	padding: $padding/3;
 	background: $background_color;
 	border: 1px solid darken($theme_off, 20);
+	border-radius: 0;
+}
 
+input, textarea {
+	-webkit-appearance: none;
 }
 
 .button {
@@ -381,6 +385,9 @@ input, textarea, select {
 	height: 100%;
 	flex: 1 auto;
 
+	display: flex;
+	flex-flow: column nowrap;
+
 	background: $background_color;
 	border-radius: $border_radius 0 0 $border_radius;
 	//overflow: hidden;
@@ -391,16 +398,12 @@ input, textarea, select {
 	}
 
 	.pages {
-		height: 100%;
+		flex: 1 auto;
 		width: 100%;
-		//overflow: hidden;
 		position: relative;
 	}
 
 	.footer {
-		position: fixed;
-		bottom: 0;
-		height: $padding;
 		width: 100%;
 	}
 }

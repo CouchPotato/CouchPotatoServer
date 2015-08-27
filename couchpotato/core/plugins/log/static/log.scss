@@ -12,6 +12,16 @@
 			padding: 5px 10px;
 			margin: 0;
 
+			@include media-tablet {
+				&.filter, &:nth-child(7),&:nth-child(8),&:nth-child(9),&:nth-child(10),&:nth-child(11),&:nth-child(12) {
+					display: none;
+				}
+
+				&:last-child {
+					display: inline-block;
+				}
+			}
+
 			&.select, &.clear {
 				cursor: pointer;
 			}
@@ -32,12 +42,20 @@
 		font-style: italic;
 		opacity: .5;
 		margin-top: 3px;
+
+		@include media-tablet {
+			display: none;
+		}
 	}
 
 	.container {
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+
+		@include media-phablet {
+			padding: $padding $padding/2;
+		}
 
 		&.loading {
 			text-align: center;
@@ -58,6 +76,10 @@
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 			display: flex;
 
+			@include media-phablet {
+				flex-flow: row wrap;
+			}
+
 			&.highlight {
 				background: $theme_off;
 			}
@@ -66,7 +88,20 @@
 				padding: 5px 0 3px;
 				display: inline-block;
 				vertical-align: middle;
-				width: 90px;
+				width: 95px;
+			}
+
+			.message {
+				white-space: pre-wrap;
+				flex: 1 auto;
+
+				@include media-phablet {
+					flex: 1 auto;
+					margin-top: -$padding/4;
+					padding: 0;
+					display: block;
+					width: 100%;
+				}
 			}
 
 			::selection {
@@ -76,13 +111,8 @@
 		}
 
 		.type.type {
-			margin-left: 10px;
+			margin-left: $padding/3;
 			width: 40px;
-		}
-
-		.message {
-			white-space: pre-wrap;
-			flex: 1 auto;
 		}
 
 
