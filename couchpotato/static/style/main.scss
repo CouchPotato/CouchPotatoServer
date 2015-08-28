@@ -43,7 +43,7 @@ input, textarea, select {
 	border-radius: 0;
 }
 
-input, textarea {
+input[type=text], textarea {
 	-webkit-appearance: none;
 }
 

@@ -643,7 +643,7 @@ body,html{font-size:14px;line-height:1.5;font-family:OpenSans,"Helvetica Neue",H
 body{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
 a{position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#FFF;border:1px solid #b7b7b7;border-radius:0}
-input,textarea{-webkit-appearance:none}
+input[type=text],textarea{-webkit-appearance:none}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
 .ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;-webkit-transform:translate(-50%,-50%) scale(1) rotateZ(360deg);transform:translate(-50%,-50%) scale(1) rotateZ(360deg);opacity:.2;transition:all 1.5s ease;transition-property:opacity,-webkit-transform;transition-property:opacity,transform}
