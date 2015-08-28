@@ -94,7 +94,10 @@
 				window.open(url);
 			else if(History.getPath() != url)
 				History.push(url);
+
 		}
+
+		self.fireEvent('history.push');
 	},
 
 	isMac: function(){
