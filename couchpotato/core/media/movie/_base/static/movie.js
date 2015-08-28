@@ -15,7 +15,9 @@ var Movie = new Class({
 
 		self.buttons = [];
 
-		self.el = new Element('a.movie');
+		self.el = new Element('a.movie').grab(
+			self.inner = new Element('div.inner')
+		);
 		self.el.store('klass', self);
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
@@ -226,7 +228,7 @@ var Movie = new Class({
 			});
 		}
 
-		self.el.adopt(
+		self.inner.adopt(
 			self.select_checkbox = new Element('input[type=checkbox]'),
 			new Element('div.poster_container').adopt(
 				thumbnail,
@@ -313,12 +315,11 @@ var Movie = new Class({
 				self.el.removeClass('hover_start');
 			}, 300);
 
-			dynamics.css(self.el, {
-				scale: 1,
-				opacity: 1
+			dynamics.css(self.inner, {
+				scale: 1
 			});
 
-			dynamics.animate(self.el, {
+			dynamics.animate(self.inner, {
 				scale: 0.9
 			}, { type: dynamics.bounce });
 
@@ -342,19 +343,6 @@ var Movie = new Class({
 
 			});
 		}
-	},
-
-	onMouseleave: function(){
-		var self = this;
-
-		if(App.mobile_screen) return;
-
-		if(self.list.current_view == 'thumb'){
-			dynamics.animate(self.el, {
-				scale: 1
-			}, { type: dynamics.spring });
-		}
-
 	},
 
 	updateReleases: function(){

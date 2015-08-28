@@ -6,7 +6,6 @@ $mass_edit_height: 44px;
 	bottom: auto;
 	z-index: 21;
 	height: $header_height;
-	background: $background_color;
 
 	.scroll_content {
 		display: none;
@@ -388,6 +387,7 @@ $mass_edit_height: 44px;
 	}
 
 	.movie {
+		overflow: visible;
 		display: inline-block;
 		vertical-align: top;
 		margin-bottom: $padding;
@@ -396,6 +396,11 @@ $mass_edit_height: 44px;
 		width: 150px;
 		border: 0 solid transparent;
 		border-width: 0 $padding/3;
+
+		.inner {
+			will-change: transform;
+			transform: rotateZ(360deg);
+		}
 
 		@while $max-split > 0 {
 			@media (min-width : $split-jump * ($max-split - 1)) and (max-width : $split-jump * $max-split) {
@@ -479,7 +484,7 @@ $mass_edit_height: 44px;
 			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,1) 80%);
 			will-change: opacity;
 			transition: opacity 400ms;
-			opacity: 1;
+			opacity: 0;
 			visibility: hidden;
 			position: absolute;
 			top: 0;

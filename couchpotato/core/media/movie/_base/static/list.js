@@ -48,13 +48,9 @@ var MovieList = new Class({
 						(e).stopPropagation();
 						el.retrieve('klass').onMouseenter(e);
 					},
-					'mouseleave:relay(.movie)': function(e, el){
-						(e).stopPropagation();
-						el.retrieve('klass').onMouseleave(e);
-					},
 					'change:relay(.movie input)': function(e, el){
 						(e).stopPropagation();
-						el = el.getParent();
+						el = el.getParent('.movie');
 						var klass = el.retrieve('klass');
 						klass.fireEvent('select');
 						klass.select(klass.select_checkbox.get('checked'));

@@ -95,7 +95,7 @@
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{width:140px;margin-right:2px}
 }
 .big_search{background:#eaeaea}
-.page.movies{bottom:auto;z-index:21;height:80px;background:#FFF}
+.page.movies{bottom:auto;z-index:21;height:80px}
 .page.movies_manage,.page.movies_wanted{top:80px;padding:0;will-change:top;transition:top 300ms cubic-bezier(.9,0,.1,1)}
 @media (max-width:480px){.page.movies{height:44px}
 .page.movies_manage,.page.movies_wanted{top:44px}
@@ -170,7 +170,8 @@
 .list_list.with_navigation .movie.checked .info .title span,.list_list.with_navigation .movie:hover .info .title span{margin-left:20px}
 .thumb_list{padding:0 5px}
 .thumb_list>div:last-child{padding:0 12px}
-.thumb_list .movie{display:inline-block;vertical-align:top;margin-bottom:20px;position:relative;cursor:pointer;width:150px;border:0 solid transparent;border-width:0 6.67px}
+.thumb_list .movie{overflow:visible;display:inline-block;vertical-align:top;margin-bottom:20px;position:relative;cursor:pointer;width:150px;border:0 solid transparent;border-width:0 6.67px}
+.thumb_list .movie .inner{will-change:transform;-webkit-transform:rotateZ(360deg);transform:rotateZ(360deg)}
 @media (min-width:4275px) and (max-width:4500px){.thumb_list .movie{width:5%}
 }
 @media (min-width:4050px) and (max-width:4275px){.thumb_list .movie{width:5.26316%}
@@ -228,7 +229,7 @@
 .thumb_list .movie .info .eta{opacity:.5;float:right;margin-left:4px}
 .thumb_list .movie .info .quality{white-space:nowrap;overflow:hidden}
 .thumb_list .movie .info .quality span{font-size:.8em;margin-right:2px}
-.thumb_list .movie .actions{background-image:linear-gradient(25deg,rgba(172,0,0,0) 0,#ac0000 80%);will-change:opacity;transition:opacity 400ms;opacity:1;visibility:hidden;position:absolute;top:0;right:0;bottom:0;left:0;text-align:right}
+.thumb_list .movie .actions{background-image:linear-gradient(25deg,rgba(172,0,0,0) 0,#ac0000 80%);will-change:opacity;transition:opacity 400ms;opacity:0;visibility:hidden;position:absolute;top:0;right:0;bottom:0;left:0;text-align:right}
 .thumb_list .movie .actions .action{position:relative;margin-right:10px;float:right;clear:both}
 .thumb_list .movie .actions .action:first-child{margin-top:10px}
 .thumb_list .movie .actions .action a{transition:all 150ms cubic-bezier(.9,0,.1,1);will-change:color,background;transition-property:color,background;display:block;width:auto;padding:6.67px;color:#FFF;border-radius:2px}
