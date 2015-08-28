@@ -346,7 +346,7 @@ MA.Release = new Class({
 				if(json.success){
 					if(icon)
 						icon.addClass('completed');
-					release_el.getElement('.release_status').set('text', 'snatched');
+					release_el.getElement('.status').set('text', 'snatched');
 				}
 				else
 					if(icon)
