@@ -411,8 +411,10 @@
 					box-shadow: 0;
 					font-size: 2em;
 					font-weight: 400;
+					padding-right: $input_height;
 
 					@include media-phablet {
+						padding-right: $input_height_mobile;
 						font-size: 1em;
 					}
 				}

@@ -73,11 +73,11 @@
 @media (max-width:480px){.page.home .search_form .wrapper{right:10px;top:10px;left:10px}
 }
 .page.home .search_form .wrapper .input{border-radius:0;left:0;position:absolute;top:0;height:66px}
-.page.home .search_form .wrapper .input input{box-shadow:0;font-size:2em;font-weight:400}
+.page.home .search_form .wrapper .input input{box-shadow:0;font-size:2em;font-weight:400;padding-right:66px}
 .directory_list,.messages .message,.more_menu .wrapper{box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .page.home .search_form .wrapper .results_container{min-height:66px;position:absolute;top:66px;left:0;right:0;border:1px solid #b7b7b7;border-top:0}
 @media (max-width:480px){.page.home .search_form .wrapper .input{height:44px}
-.page.home .search_form .wrapper .input input{font-size:1em}
+.page.home .search_form .wrapper .input input{padding-right:44px;font-size:1em}
 .page.home .search_form .wrapper .results_container{top:44px;min-height:44px}
 }
 @media (min-width:480px){.page.home .search_form .wrapper .results_container .results{max-height:400px}
