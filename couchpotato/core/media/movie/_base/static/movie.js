@@ -174,7 +174,7 @@ var Movie = new Class({
 
 		self.actions = [];
 		self.data = notification.data;
-		self.el.empty();
+		self.inner.empty();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.category = CategoryList.getCategory(self.data.category_id) || {};
