@@ -897,6 +897,8 @@ input[type=text],textarea{-webkit-appearance:none}
 @media (max-width:480px){.page.settings .choice .select_wrapper{margin:10px 0 0}
 }
 .page.settings .choice .select_wrapper select{min-width:0!important}
+.page.settings .renamer_to.renamer_to{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap}
+.page.settings .renamer_to.renamer_to .ctrlHolder{width:100%}
 .directory_list{z-index:2;position:absolute;width:450px;margin:28px 0 20px;background:#ac0000;border-radius:3px 3px 0 0}
 .directory_list .pointer{border-right:6px solid transparent;border-left:6px solid transparent;border-bottom:6px solid #ac0000;display:block;position:absolute;width:0;margin:-6px 0 0 100px}
 .directory_list .wrapper{background:#FFF;border-radius:3px 3px 0 0;margin-top:5px}
