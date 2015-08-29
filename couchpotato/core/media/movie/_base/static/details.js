@@ -10,8 +10,7 @@ var MovieDetails = new Class({
 
 		self.sections = {};
 
-		var category = parent.get('category'),
-			profile = parent.profile;
+		var category = parent.get('category');
 
 		self.el = new Element('div',{
 			'class': 'page active movie_details level_' + (options.level || 0)
@@ -123,6 +122,12 @@ var MovieDetails = new Class({
 			});
 		}
 
+		self.outer_click = function(){
+			self.close();
+		};
+
+		App.addEvent('history.push', self.outer_click)
+
 	},
 
 	close: function(){
@@ -157,6 +162,8 @@ var MovieDetails = new Class({
 		else {
 			self.el.removeClass('show');
 		}
+
+		App.removeEvent('history.push', self.outer_click)
 	}
 
 });

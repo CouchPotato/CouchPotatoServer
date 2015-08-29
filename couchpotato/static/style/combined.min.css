@@ -343,28 +343,31 @@
 .page.movie_details .releases .provider{min-width:110px;max-width:110px}
 .page.movie_details .releases .provider:before{content:"Provider:"}
 .page.movie_details .releases .actions{min-width:80px;max-width:80px}
-.page.movie_details .section_trailer.no_trailer{display:none}
-.page.movie_details .trailer_container{background:#000;position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;cursor:pointer}
+.page.movie_details .section_trailer.section_trailer{padding:0;background:#111;max-height:450px;overflow:hidden}
+.page.movie_details .section_trailer.section_trailer.no_trailer{display:none}
+.page.movie_details .section_trailer.section_trailer .trailer_container{max-height:450px;position:relative;overflow:hidden;max-width:800px;margin:0 auto;cursor:pointer}
+.page.movie_details .section_trailer.section_trailer .trailer_container .background{opacity:.3;background:center no-repeat;background-size:cover;position:relative;z-index:1;max-height:450px;padding-bottom:56.25%}
 .alph_nav .menus .button,.alph_nav .menus .counter{line-height:80px;padding:0 10px}
-.page.movie_details .trailer_container .background{opacity:.3;background:center no-repeat;background-size:cover;position:absolute;top:0;right:0;bottom:0;left:0;z-index:1}
-.page.movie_details .trailer_container .icon-play{opacity:.9;position:absolute;z-index:2;text-align:center;width:100%;top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%);will-change:opacity;transition:all 300ms;color:#FFF;font-size:110px}
-@media (max-width:1024px){.page.movie_details .trailer_container .icon-play{font-size:55px}
+.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play{opacity:.9;position:absolute;z-index:2;text-align:center;width:100%;top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%);will-change:opacity;transition:all 300ms;color:#FFF;font-size:110px}
+@media (max-width:1024px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play{font-size:55px}
 }
-@media (max-width:480px){.page.movie_details .trailer_container .icon-play{font-size:31.43px}
+@media (max-width:480px){.page.movie_details .section_trailer.section_trailer{max-height:450px}
+.page.movie_details .section_trailer.section_trailer .trailer_container{margin-bottom:10px}
+.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play{font-size:31.43px}
 }
-.page.movie_details .trailer_container .icon-play span{transition:all 300ms;opacity:.9;position:absolute;font-size:1em;top:50%;left:50%;margin-left:55px;-webkit-transform:translateY(-54%);transform:translateY(-54%);will-change:opacity}
-@media (max-width:1024px){.page.movie_details .trailer_container .icon-play span{margin-left:27.5px}
+.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span{transition:all 300ms;opacity:.9;position:absolute;font-size:1em;top:50%;left:50%;margin-left:55px;-webkit-transform:translateY(-54%);transform:translateY(-54%);will-change:opacity}
+@media (max-width:1024px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span{margin-left:27.5px}
 }
-@media (max-width:480px){.page.movie_details .trailer_container .icon-play span{margin-left:15.71px}
+@media (max-width:480px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span{margin-left:15.71px}
 }
-.page.movie_details .trailer_container .icon-play span:first-child{margin-left:-55px;-webkit-transform:translate(-100%,-54%);transform:translate(-100%,-54%)}
-@media (max-width:1024px){.page.movie_details .trailer_container .icon-play span:first-child{margin-left:-27.5px}
+.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span:first-child{margin-left:-55px;-webkit-transform:translate(-100%,-54%);transform:translate(-100%,-54%)}
+@media (max-width:1024px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span:first-child{margin-left:-27.5px}
 }
-@media (max-width:480px){.page.movie_details .trailer_container .icon-play span:first-child{margin-left:-15.71px}
+@media (max-width:480px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play span:first-child{margin-left:-15.71px}
 }
-.page.movie_details .trailer_container:hover{color:#ac0000}
-.page.movie_details .trailer_container:hover .icon-play,.page.movie_details .trailer_container:hover .icon-play span{opacity:1}
-.page.movie_details .trailer_container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+.page.movie_details .section_trailer.section_trailer .trailer_container:hover{color:#ac0000}
+.page.movie_details .section_trailer.section_trailer .trailer_container:hover .icon-play,.page.movie_details .section_trailer.section_trailer .trailer_container:hover .icon-play span{opacity:1}
+.page.movie_details .section_trailer.section_trailer .trailer_container iframe{position:absolute;width:100%;height:100%;border:0;top:0;left:0;max-height:450px;z-index:10}
 .alph_nav{position:relative}
 .alph_nav .mass_edit_form{display:-webkit-flex;display:-ms-flexbox;display:flex;background:#FFF;position:fixed;top:80px;right:0;left:132px;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap;-webkit-align-items:center;-ms-flex-align:center;align-items:center;will-change:max-height;transition:max-height 300ms cubic-bezier(.9,0,.1,1);max-height:0;overflow:hidden}
 .mass_editing .alph_nav .mass_edit_form{max-height:44px}
@@ -640,7 +643,7 @@ body,html{font-size:14px;line-height:1.5;font-family:OpenSans,"Helvetica Neue",H
 body{display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-flex-flow:row nowrap;-ms-flex-flow:row nowrap;flex-flow:row nowrap}
 a{position:relative;overflow:hidden;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#FFF;border:1px solid #b7b7b7;border-radius:0}
-input,textarea{-webkit-appearance:none}
+input[type=text],textarea{-webkit-appearance:none}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
 .ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;-webkit-transform:translate(-50%,-50%) scale(1) rotateZ(360deg);transform:translate(-50%,-50%) scale(1) rotateZ(360deg);opacity:.2;transition:all 1.5s ease;transition-property:opacity,-webkit-transform;transition-property:opacity,transform}
