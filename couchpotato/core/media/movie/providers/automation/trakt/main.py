@@ -1,7 +1,10 @@
 import json
+import traceback
+import time
 
-from couchpotato import Env
+from couchpotato import Env, fireEvent
 from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.base import Provider
@@ -36,13 +39,42 @@ class Trakt(Automation, TraktBase):
     urls = {
         'watchlist': 'sync/watchlist/movies/',
         'oauth': 'https://api.couchpota.to/authorize/trakt/',
+        'refresh_token': 'https://api.couchpota.to/authorize/trakt_refresh/',
     }
 
     def __init__(self):
+        super(Trakt, self).__init__()
+
         addApiView('automation.trakt.auth_url', self.getAuthorizationUrl)
         addApiView('automation.trakt.credentials', self.getCredentials)
 
-        super(Trakt, self).__init__()
+        fireEvent('schedule.interval', 'updater.check', self.refreshToken, hours = 24)
+        addEvent('app.load', self.refreshToken)
+
+    def refreshToken(self):
+
+        token = self.conf('automation_oauth_token')
+        refresh_token = self.conf('automation_oauth_refresh')
+        if token and refresh_token:
+
+            prop_name = 'last_trakt_refresh'
+            last_refresh = int(Env.prop(prop_name, default = 0))
+
+            if last_refresh < time.time()-4838400:  # refresh every 8 weeks
+                log.debug('Refreshing trakt token')
+
+                url = self.urls['refresh_token'] + '?token=' + self.conf('automation_oauth_refresh')
+                data = fireEvent('cp.api_call', url, cache_timeout = 0, single = True)
+                if data and 'oauth' in data and 'refresh' in data:
+                    log.debug('Oauth refresh: %s', data)
+                    self.conf('automation_oauth_token', value = data.get('oauth'))
+                    self.conf('automation_oauth_refresh', value = data.get('refresh'))
+                    Env.prop(prop_name, value = int(time.time()))
+                else:
+                    log.error('Failed refreshing Trakt token, please re-register in settings')
+
+        elif token and not refresh_token:
+            log.error('Refresh token is missing, please re-register Trakt for autorefresh of the token in the future')
 
     def getIMDBids(self):
         movies = []
@@ -69,8 +101,14 @@ class Trakt(Automation, TraktBase):
     def getCredentials(self, **kwargs):
         try:
             oauth_token = kwargs.get('oauth')
+            refresh_token = kwargs.get('refresh')
+
+            log.debug('oauth_token is: %s', oauth_token)
+            self.conf('automation_oauth_token', value = oauth_token)
+            self.conf('automation_oauth_refresh', value = refresh_token)
+
+            Env.prop('last_trakt_refresh', value = int(time.time()))
         except:
-            return 'redirect', Env.get('web_base') + 'settings/automation/'
-        log.debug('oauth_token is: %s', oauth_token)
-        self.conf('automation_oauth_token', value = oauth_token)
+            log.error('Failed setting trakt token: %s', traceback.format_exc())
+
         return 'redirect', Env.get('web_base') + 'settings/automation/'
