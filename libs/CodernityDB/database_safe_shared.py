@@ -59,8 +59,7 @@ class SafeDatabase(Database):
 
     def __init__(self, path, *args, **kwargs):
         super(SafeDatabase, self).__init__(path, *args, **kwargs)
-        self.indexes_locks = defaultdict(
-            lambda: cdb_environment['rlock_obj']())
+        self.indexes_locks = defaultdict(cdb_environment['rlock_obj'])
         self.close_open_lock = cdb_environment['rlock_obj']()
         self.main_lock = cdb_environment['rlock_obj']()
         self.id_revs = {}
@@ -94,7 +93,6 @@ class SafeDatabase(Database):
 
     def initialize(self, *args, **kwargs):
         with self.close_open_lock:
-            self.close_open_lock.acquire()
             res = super(SafeDatabase, self).initialize(*args, **kwargs)
             for name in self.indexes_names.iterkeys():
                 self.indexes_locks[name] = cdb_environment['rlock_obj']()

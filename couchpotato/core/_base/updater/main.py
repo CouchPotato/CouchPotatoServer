@@ -163,7 +163,6 @@ class BaseUpdater(Plugin):
     update_failed = False
     update_version = None
     last_check = 0
-    auto_register_static = False
 
     def doUpdate(self):
         pass

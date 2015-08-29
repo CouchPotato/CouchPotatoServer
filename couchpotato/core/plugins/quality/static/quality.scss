@@ -1,0 +1,19 @@
+@import "_mixins";
+
+.group_sizes {
+
+	.item {
+		.label {
+			min-width: 150px;
+		}
+
+		.min, .max {
+			display: inline-block;
+			width: 70px !important;
+			min-width: 0 !important;
+			margin-right: $padding/2;
+			text-align: center;
+		}
+	}
+
+}

@@ -31,13 +31,33 @@ class Hadouken(DownloaderBase):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.conf('api_key'):
-            log.error('Config properties are not filled in correctly, API key is missing.')
-            return False
+        # This is where v4 and v5 begin to differ
+        if(self.conf('version') == 'v4'):
+            if not self.conf('api_key'):
+                log.error('Config properties are not filled in correctly, API key is missing.')
+                return False
 
-        self.hadouken_api = HadoukenAPI(host[0], port = host[1], api_key = self.conf('api_key'))
+            url = 'http://' + str(host[0]) + ':' + str(host[1]) + '/jsonrpc'
+            client = JsonRpcClient(url, 'Token ' + self.conf('api_key'))
+            self.hadouken_api = HadoukenAPIv4(client)
 
-        return True
+            return True
+        else:
+            auth_type = self.conf('auth_type')
+            header = None
+
+            if auth_type == 'api_key':
+                header = 'Token ' + self.conf('api_key')
+            elif auth_type == 'user_pass':
+                header = 'Basic ' + b64encode(self.conf('auth_user') + ':' + self.conf('auth_pass'))
+
+            url = 'http://' + str(host[0]) + ':' + str(host[1]) + '/api'
+            client = JsonRpcClient(url, header)
+            self.hadouken_api = HadoukenAPIv5(client)
+
+            return True
+
+        return False
 
     def download(self, data = None, media = None, filedata = None):
         """ Send a torrent/nzb file to the downloader
@@ -66,6 +86,8 @@ class Hadouken(DownloaderBase):
 
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
+            # Set the tags array since that is what v5 expects.
+            torrent_params['tags'] = [self.conf('label')]
 
         torrent_filename = self.createFileName(data, filedata, media)
 
@@ -132,70 +154,24 @@ class Hadouken(DownloaderBase):
             if torrent is None:
                 continue
 
-            torrent_filelist = self.hadouken_api.get_files_by_hash(torrent['InfoHash'])
+            torrent_filelist = self.hadouken_api.get_files_by_hash(torrent.info_hash)
             torrent_files = []
 
-            save_path = torrent['SavePath']
-
-            # The 'Path' key for each file_item contains
-            # the full path to the single file relative to the
-            # torrents save path.
-
-            # For a single file torrent the result would be,
-            # - Save path: "C:\Downloads"
-            # - file_item['Path'] = "file1.iso"
-            # Resulting path: "C:\Downloads\file1.iso"
-
-            # For a multi file torrent the result would be,
-            # - Save path: "C:\Downloads"
-            # - file_item['Path'] = "dirname/file1.iso"
-            # Resulting path: "C:\Downloads\dirname/file1.iso"
-
             for file_item in torrent_filelist:
-                torrent_files.append(sp(os.path.join(save_path, file_item['Path'])))
+                torrent_files.append(sp(os.path.join(torrent.save_path, file_item)))
 
             release_downloads.append({
-                'id': torrent['InfoHash'].upper(),
-                'name': torrent['Name'],
-                'status': self.get_torrent_status(torrent),
-                'seed_ratio': self.get_seed_ratio(torrent),
-                'original_status': torrent['State'],
+                'id': torrent.info_hash.upper(),
+                'name': torrent.name,
+                'status': torrent.get_status(),
+                'seed_ratio': torrent.get_seed_ratio(),
+                'original_status': torrent.state,
                 'timeleft': -1,
-                'folder': sp(save_path if len(torrent_files == 1) else os.path.join(save_path, torrent['Name'])),
+                'folder': sp(torrent.save_path if len(torrent_files == 1) else os.path.join(torrent.save_path, torrent.name)),
                 'files': torrent_files
             })
 
         return release_downloads
-
-    def get_seed_ratio(self, torrent):
-        """ Returns the seed ratio for a given torrent.
-
-        Keyword arguments:
-        torrent -- The torrent to calculate seed ratio for.
-        """
-
-        up = torrent['TotalUploadedBytes']
-        down = torrent['TotalDownloadedBytes']
-
-        if up > 0 and down > 0:
-            return up / down
-
-        return 0
-
-    def get_torrent_status(self, torrent):
-        """ Returns the CouchPotato status for a given torrent.
-
-        Keyword arguments:
-        torrent -- The torrent to translate status for.
-        """
-
-        if torrent['IsSeeding'] and torrent['IsFinished'] and torrent['Paused']:
-            return 'completed'
-
-        if torrent['IsSeeding']:
-            return 'seeding'
-
-        return 'busy'
 
     def pause(self, release_download, pause = True):
         """ Pauses or resumes the torrent specified by the ID field
@@ -243,45 +219,85 @@ class Hadouken(DownloaderBase):
         return self.hadouken_api.remove(release_download['id'], remove_data = delete_files)
 
 
-class HadoukenAPI(object):
-    def __init__(self, host = 'localhost', port = 7890, api_key = None):
-        self.url = 'http://' + str(host) + ':' + str(port)
-        self.api_key = api_key
-        self.requestId = 0;
+class JsonRpcClient(object):
+    def __init__(self, url, auth_header = None):
+        self.url = url
+        self.requestId = 0
 
         self.opener = urllib2.build_opener()
-        self.opener.addheaders = [('User-agent', 'couchpotato-hadouken-client/1.0'), ('Accept', 'application/json')]
+        self.opener.addheaders = [
+            ('User-Agent', 'couchpotato-hadouken-client/1.0'),
+            ('Accept', 'application/json'),
+            ('Content-Type', 'application/json')
+        ]
 
-        if not api_key:
-            log.error('API key missing.')
+        if auth_header:
+            self.opener.addheaders.append(('Authorization', auth_header))
 
-    def add_file(self, filedata, torrent_params):
+    def invoke(self, method, params):
+        self.requestId += 1
+
+        data = {
+            'jsonrpc': '2.0',
+            'id': self.requestId,
+            'method': method,
+            'params': params
+        }
+
+        request = urllib2.Request(self.url, data = json.dumps(data))
+
+        try:
+            f = self.opener.open(request)
+            response = f.read()
+            f.close()
+
+            obj = json.loads(response)
+
+            if 'error' in obj.keys():
+                log.error('JSONRPC error, %s: %s', (obj['error']['code'], obj['error']['message']))
+                return False
+
+            if 'result' in obj.keys():
+                return obj['result']
+
+            return True
+        except httplib.InvalidURL as err:
+            log.error('Invalid Hadouken host, check your config %s', err)
+        except urllib2.HTTPError as err:
+            if err.code == 401:
+                log.error('Could not authenticate, check your config')
+            else:
+                log.error('Hadouken HTTPError: %s', err)
+        except urllib2.URLError as err:
+            log.error('Unable to connect to Hadouken %s', err)
+
+        return False
+
+
+class HadoukenAPI(object):
+    def __init__(self, rpc_client):
+        self.rpc = rpc_client
+
+        if not rpc_client:
+            log.error('No JSONRPC client specified.')
+
+    def add_file(self, data, params):
         """ Add a file to Hadouken with the specified parameters.
 
         Keyword arguments:
         filedata -- The binary torrent data.
         torrent_params -- Additional parameters for the file.
         """
-        data = {
-            'method': 'torrents.addFile',
-            'params': [b64encode(filedata), torrent_params]
-        }
+        pass
 
-        return self._request(data)
-
-    def add_magnet_link(self, magnetLink, torrent_params):
+    def add_magnet_link(self, link, params):
         """ Add a magnet link to Hadouken with the specified parameters.
 
         Keyword arguments:
         magnetLink -- The magnet link to send.
         torrent_params -- Additional parameters for the magnet link.
         """
-        data = {
-            'method': 'torrents.addUrl',
-            'params': [magnetLink, torrent_params]
-        }
-
-        return self._request(data)
+        pass
 
     def get_by_hash_list(self, infoHashList):
         """ Gets a list of torrents filtered by the given info hash list.
@@ -289,12 +305,7 @@ class HadoukenAPI(object):
         Keyword arguments:
         infoHashList -- A list of info hashes.
         """
-        data = {
-            'method': 'torrents.getByInfoHashList',
-            'params': [infoHashList]
-        }
-
-        return self._request(data)
+        pass
 
     def get_files_by_hash(self, infoHash):
         """ Gets a list of files for the torrent identified by the
@@ -303,26 +314,11 @@ class HadoukenAPI(object):
         Keyword arguments:
         infoHash -- The info hash of the torrent to return files for.
         """
-        data = {
-            'method': 'torrents.getFiles',
-            'params': [infoHash]
-        }
-
-        return self._request(data)
+        pass
 
     def get_version(self):
         """ Gets the version, commitish and build date of Hadouken. """
-        data = {
-            'method': 'core.getVersion',
-            'params': None
-        }
-
-        result = self._request(data)
-
-        if not result:
-            return False
-
-        return result['Version']
+        pass
 
     def pause(self, infoHash, pause):
         """ Pauses/unpauses the torrent identified by the given info hash.
@@ -331,15 +327,7 @@ class HadoukenAPI(object):
         infoHash -- The info hash of the torrent to operate on.
         pause -- If true, pauses the torrent. Otherwise resumes.
         """
-        data = {
-            'method': 'torrents.pause',
-            'params': [infoHash]
-        }
-
-        if not pause:
-            data['method'] = 'torrents.resume'
-
-        return self._request(data)
+        pass
 
     def remove(self, infoHash, remove_data = False):
         """ Removes the torrent identified by the given info hash and
@@ -349,46 +337,190 @@ class HadoukenAPI(object):
         infoHash -- The info hash of the torrent to remove.
         remove_data -- If true, removes the data associated with the torrent.
         """
-        data = {
-            'method': 'torrents.remove',
-            'params': [infoHash, remove_data]
-        }
-
-        return self._request(data)
+        pass
 
 
-    def _request(self, data):
-        self.requestId += 1
+class TorrentItem(object):
+    @property
+    def info_hash(self):
+        pass
 
-        data['jsonrpc'] = '2.0'
-        data['id'] = self.requestId
+    @property
+    def save_path(self):
+        pass
 
-        request = urllib2.Request(self.url + '/jsonrpc', data = json.dumps(data))
-        request.add_header('Authorization', 'Token ' + self.api_key)
-        request.add_header('Content-Type', 'application/json')
+    @property
+    def name(self):
+        pass
 
-        try:
-            f = self.opener.open(request)
-            response = f.read()
-            f.close()
+    @property
+    def state(self):
+        pass
 
-            obj = json.loads(response)
+    def get_status(self):
+        """ Returns the CouchPotato status for a given torrent."""
+        pass
 
-            if not 'error' in obj.keys():
-                return obj['result']
+    def get_seed_ratio(self):
+        """ Returns the seed ratio for a given torrent."""
+        pass
 
-            log.error('JSONRPC error, %s: %s', obj['error']['code'], obj['error']['message'])
-        except httplib.InvalidURL as err:
-            log.error('Invalid Hadouken host, check your config %s', err)
-        except urllib2.HTTPError as err:
-            if err.code == 401:
-                log.error('Invalid Hadouken API key, check your config')
-            else:
-                log.error('Hadouken HTTPError: %s', err)
-        except urllib2.URLError as err:
-            log.error('Unable to connect to Hadouken %s', err)
 
-        return False
+class TorrentItemv5(TorrentItem):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def info_hash(self):
+        return self.obj['infoHash']
+
+    def save_path(self):
+        return self.obj['savePath']
+
+    def name(self):
+        return self.obj['name']
+
+    def state(self):
+        return self.obj['state']
+
+    def get_status(self):
+        if self.obj['isSeeding'] and self.obj['isFinished'] and self.obj['isPaused']:
+            return 'completed'
+
+        if self.obj['isSeeding']:
+            return 'seeding'
+
+        return 'busy'
+
+    def get_seed_ratio(self):
+        up   = self.obj['uploadedBytesTotal']
+        down = self.obj['downloadedBytesTotal']
+
+        if up > 0 and down > 0:
+            return up / down
+
+        return 0
+
+
+class HadoukenAPIv5(HadoukenAPI):
+    def add_file(self, data, params):
+        return self.rpc.invoke('session.addTorrentFile', [b64encode(data), params])
+
+    def add_magnet_link(self, link, params):
+        return self.rpc.invoke('session.addTorrentUri', [link, params])
+
+    def get_by_hash_list(self, infoHashList):
+        torrents = self.rpc.invoke('session.getTorrents')
+        result = []
+
+        for torrent in torrents.values():
+            if torrent['infoHash'] in infoHashList:
+                result.append(TorrentItemv5(torrent))
+
+        return result
+
+    def get_files_by_hash(self, infoHash):
+        files = self.rpc.invoke('torrent.getFiles', [infoHash])
+        result = []
+
+        for file in files:
+            result.append(file['path'])
+
+        return result
+
+    def get_version(self):
+        result = self.rpc.invoke('core.getSystemInfo', None)
+
+        if not result:
+            return False
+
+        return result['versions']['hadouken']
+
+    def pause(self, infoHash, pause):
+        if pause:
+            return self.rpc.invoke('torrent.pause', [infoHash])
+
+        return self.rpc.invoke('torrent.resume', [infoHash])
+
+    def remove(self, infoHash, remove_data = False):
+        return self.rpc.invoke('session.removeTorrent', [infoHash, remove_data])
+
+
+class TorrentItemv4(TorrentItem):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def info_hash(self):
+        return self.obj['InfoHash']
+
+    def save_path(self):
+        return self.obj['SavePath']
+
+    def name(self):
+        return self.obj['Name']
+
+    def state(self):
+        return self.obj['State']
+
+    def get_status(self):
+        if self.obj['IsSeeding'] and self.obj['IsFinished'] and self.obj['Paused']:
+            return 'completed'
+
+        if self.obj['IsSeeding']:
+            return 'seeding'
+
+        return 'busy'
+
+    def get_seed_ratio(self):
+        up   = self.obj['TotalUploadedBytes']
+        down = self.obj['TotalDownloadedBytes']
+
+        if up > 0 and down > 0:
+            return up / down
+
+        return 0
+
+
+class HadoukenAPIv4(object):
+    def add_file(self, data, params):
+        return self.rpc.invoke('torrents.addFile', [b64encode(data), params])
+
+    def add_magnet_link(self, link, params):
+        return self.rpc.invoke('torrents.addUrl', [link, params])
+
+    def get_by_hash_list(self, infoHashList):
+        torrents = self.rpc.invoke('torrents.getByInfoHashList', [infoHashList])
+        result = []
+
+        for torrent in torrents:
+            result.append(TorrentItemv4(torrent))
+
+        return result
+
+    def get_files_by_hash(self, infoHash):
+        files = self.rpc.invoke('torrents.getFiles', [infoHash])
+        result = []
+
+        for file in files:
+            result.append(file['Path'])
+
+        return result
+
+    def get_version(self):
+        result = self.rpc.invoke('core.getVersion', None)
+
+        if not result:
+            return False
+
+        return result['Version']
+
+    def pause(self, infoHash, pause):
+        if pause:
+            return self.rpc.invoke('torrents.pause', [infoHash])
+
+        return self.rpc.invoke('torrents.resume', [infoHash])
+
+    def remove(self, infoHash, remove_data = False):
+        return self.rpc.invoke('torrents.remove', [infoHash, remove_data])
 
 
 config = [{
@@ -409,13 +541,40 @@ config = [{
                     'radio_group': 'torrent'
                 },
                 {
+                    'name': 'version',
+                    'label': 'Version',
+                    'type': 'dropdown',
+                    'default': 'v4',
+                    'values': [('v4.x', 'v4'), ('v5.x', 'v5')],
+                    'description': 'Hadouken version.',
+                },
+                {
                     'name': 'host',
                     'default': 'localhost:7890'
                 },
                 {
+                    'name': 'auth_type',
+                    'label': 'Auth. type',
+                    'type': 'dropdown',
+                    'default': 'api_key',
+                    'values': [('None', 'none'), ('API key/Token', 'api_key'), ('Username/Password', 'user_pass')],
+                    'description': 'Type of authentication',
+                },
+                {
                     'name': 'api_key',
-                    'label': 'API key',
+                    'label': 'API key (v4)/Token (v5)',
                     'type': 'password'
+                },
+                {
+                    'name': 'auth_user',
+                    'label': 'Username',
+                    'description': '(only for v5)'
+                },
+                {
+                    'name': 'auth_pass',
+                    'label': 'Password',
+                    'type': 'password',
+                    'description': '(only for v5)'
                 },
                 {
                     'name': 'label',

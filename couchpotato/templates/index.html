@@ -2,37 +2,35 @@
 <!doctype html>
 <html>
 	<head>
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="mobile-web-app-capable" content="yes" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="msapplication-tap-highlight" content="no" />
 
-		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
-		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
-		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
+		{% for url in fireEvent('clientscript.get_styles', single = True) %}
+		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
+		{% for url in fireEvent('clientscript.get_scripts', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
-
-		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'head', single = True) %}
-		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
-		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'head', single = True) %}
-		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 
 		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
 
-		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
+		{% if Env.get('dev') %}
+		<script src="//localhost:35729/livereload.js?snipver=1"></script>
+		{% end %}
 
 		<script type="text/javascript">
 
-            window.addEvent('load', function(){
+			window.addEvent('load', function(){
 
-                if(window.getSize().x <= 480)
-                    setTimeout(function(){
-                        window.scrollTo(0, 1);
-                        window.scrollTo(0, 0);
-                    }, 100);
+				if(window.getSize().x <= 480)
+					setTimeout(function(){
+						window.scrollTo(0, 1);
+						window.scrollTo(0, 0);
+					}, 100);
 
-            });
+			});
 
 			window.addEvent('domready', function() {
 
@@ -47,21 +45,24 @@
 				$(document.body).set('data-api', window.location.protocol + '//' + window.location.host + Api.createUrl().replace('/default/', '/'));
 
 				// Catch errors
-				window.onerror = function(message, file, line){
+				var dev = {{ json_encode(Env.get('dev')) }};
+				if(!dev){
+					window.onerror = function(message, file, line){
 
-					p(message, file, line);
+						p(message, file, line);
 
-					Api.request('logging.log', {
-						'data': {
-							'type': 'error',
-							'message': Browser.name + ' ' + Browser.version + ': \n' + message,
-							'page': window.location.href.replace(window.location.host, 'HOST'),
-							'file': file.replace(window.location.host, 'HOST'),
-							'line': line
-						}
-					});
+						Api.request('logging.log', {
+							'data': {
+								'type': 'error',
+								'message': Browser.name + ' ' + Browser.version + ': \n' + message,
+								'page': window.location.href.replace(window.location.host, 'HOST'),
+								'file': file.replace(window.location.host, 'HOST'),
+								'line': line
+							}
+						});
 
-					return true;
+						return true;
+					}
 				}
 
 				Quality.setup({
@@ -72,7 +73,9 @@
 				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({
+					'dev': dev,
 					'base_url': {{ json_encode(Env.get('web_base')) }},
+					'dereferer': {{ json_encode(Env.setting('dereferer')) }},
 					'args': {{ json_encode(Env.get('args', unicode = True)) }},
 					'options': {{ json_encode(('%s' % Env.get('options'))) }},
 					'app_dir': {{ json_encode(Env.get('app_dir', unicode = True)) }},

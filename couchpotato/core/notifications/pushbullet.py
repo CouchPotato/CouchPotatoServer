@@ -1,6 +1,3 @@
-import base64
-import json
-
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
@@ -19,19 +16,12 @@ class Pushbullet(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
-        devices = self.getDevices()
-        if devices is None:
-            return False
-
         # Get all the device IDs linked to this user
-        if not len(devices):
-            devices = [None]
-
+        devices = self.getDevices() or [None]
         successful = 0
         for device in devices:
             response = self.request(
                 'pushes',
-                cache = False,
                 device_iden = device,
                 type = 'note',
                 title = self.default_title,
@@ -43,24 +33,34 @@ class Pushbullet(Notification):
             else:
                 log.error('Unable to push notification to Pushbullet device with ID %s' % device)
 
+        for channel in self.getChannels():
+            self.request(
+                'pushes',
+                channel_tag = channel,
+                type = 'note',
+                title = self.default_title,
+                body = toUnicode(message)
+            )
+
         return successful == len(devices)
 
     def getDevices(self):
         return splitString(self.conf('devices'))
 
-    def request(self, method, cache = True, **kwargs):
-        try:
-            base64string = base64.encodestring('%s:' % self.conf('api_key'))[:-1]
+    def getChannels(self):
+        return splitString(self.conf('channels'))
 
+    def request(self, method, **kwargs):
+        try:
             headers = {
-                "Authorization": "Basic %s" % base64string
+                'Access-Token': self.conf('api_key')
             }
 
-            if cache:
-                return self.getJsonData(self.url % method, headers = headers, data = kwargs)
-            else:
-                data = self.urlopen(self.url % method, headers = headers, data = kwargs)
-                return json.loads(data)
+            if kwargs.get('device_iden') is None:
+                try: del kwargs['device_iden']
+                except: pass
+
+            return self.getJsonData(self.url % method, cache_timeout = -1, headers = headers, data = kwargs)
 
         except Exception as ex:
             log.error('Pushbullet request failed')
@@ -92,6 +92,12 @@ config = [{
                     'default': '',
                     'advanced': True,
                     'description': 'IDs of devices to send notifications to, empty = all devices'
+                },
+                {
+                    'name': 'channels',
+                    'default': '',
+                    'advanced': True,
+                    'description': 'IDs of channels to send notifications to, empty = no channels'
                 },
                 {
                     'name': 'on_snatch',

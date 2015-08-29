@@ -1,0 +1,63 @@
+@import "_mixins";
+
+.page.wizard {
+	top: 0 !important;
+
+	.navigation.navigation {
+		display: none;
+	}
+
+	.tab_content.tab_content {
+		display: block;
+
+		fieldset {
+
+			.ctrlHolder, h2 {
+				padding: $padding/4;
+			}
+
+		}
+	}
+
+	h1 {
+		padding: 10px 0;
+		display: block;
+		font-size: 30px;
+		margin: 80px 5px 0;
+		font-weight: 300;
+	}
+
+	.description {
+		padding: $padding/2 $padding/4;
+		font-size: 1.45em;
+		line-height: 1.4em;
+		display: block;
+	}
+
+	form.uniForm.containers {
+		margin: 0;
+	}
+
+	form > div {
+		min-height: 300px;
+		max-width: $mq-desktop;
+		padding: $padding;
+		margin: 0 auto;
+
+		@include media-phablet {
+			padding: $padding/2;
+		}
+	}
+
+	.button.green {
+		padding: 20px;
+		font-size: 25px;
+		margin: 10px 0 80px;
+		display: inline-block;
+	}
+
+	.tab_nzb_providers {
+		margin: 20px 0 0 0;
+	}
+
+}

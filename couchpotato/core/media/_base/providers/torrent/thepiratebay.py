@@ -2,6 +2,7 @@ import re
 import traceback
 
 from bs4 import BeautifulSoup
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -26,18 +27,39 @@ class Base(TorrentMagnetProvider):
     proxy_list = [
         'https://thepiratebay.mn',
         'https://thepiratebay.gd',
-        'https://thepiratebay.bg',
         'https://thepiratebay.la',
-        'https://thepiratebay.am',
-        'https://thepiratebay.gs',
-        'http://proxybay.fr',
-        'http://pirateproxy.in',
-        'http://proxybay.pw',
         'https://pirateproxy.sx',
+        'https://piratebay.host',
+        'https://thepiratebay.expert',
+        'https://pirateproxy.wf',
+        'https://pirateproxy.tf',
+        'https://urbanproxy.eu',
+        'https://pirate.guru',
+        'https://piratebays.co',
+        'https://pirateproxy.yt',
+        'https://thepiratebay.uk.net',
+        'https://tpb.ninja',
+        'https://thehiddenbay.me',
+        'https://ukunlocked.com',
+        'https://thebay.tv',
+        'https://tpb.freed0m4all.net',
+        'https://piratebays.eu',
+        'https://thepirateproxy.co',
+        'https://thepiratebayz.com',
+        'https://zaatoka.eu',
+        'https://piratemirror.net',
+        'https://theproxypirate.pw',
+        'https://torrentdr.com',
         'https://tpbproxy.co',
         'https://arrr.xyz',
+        'https://www.cleantpbproxy.com',
         'http://tpb.dashitz.com',
     ]
+
+    def __init__(self):
+        super(Base, self).__init__()
+
+        addEvent('app.test', self.doTest)
 
     def _search(self, media, quality, results):
 
@@ -121,6 +143,18 @@ class Base(TorrentMagnetProvider):
 
         item['description'] = description
         return item
+
+    def doTest(self):
+
+        for url in self.proxy_list:
+            try:
+                data = self.urlopen(url + '/search/test+search')
+
+                if 'value="test+search"' in data:
+                    log.info('Success %s', url)
+                    continue
+            except:
+                log.error('%s', traceback.format_exc(0))
 
 
 config = [{

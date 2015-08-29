@@ -92,7 +92,7 @@ class DebugTreeBasedIndex(TreeBasedIndex):
                                  + nr_of_elements * (self.key_size + self.pointer_size))
         node = struct.unpack('<' + self.node_heading_format + self.pointer_format
                              + nr_of_elements * (
-                             self.key_format + self.pointer_format),
+                                 self.key_format + self.pointer_format),
                              data)
         print node
         print

@@ -27,8 +27,8 @@ def request(method, url, **kwargs):
     :param files: (optional) Dictionary of ``'name': file-like-objects`` (or ``{'name': ('filename', fileobj)}``) for multipart encoding upload.
     :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
     :param timeout: (optional) How long to wait for the server to send data
-        before giving up, as a float, or a (`connect timeout, read timeout
-        <user/advanced.html#timeouts>`_) tuple.
+        before giving up, as a float, or a :ref:`(connect timeout, read
+        timeout) <timeouts>` tuple.
     :type timeout: float or tuple
     :param allow_redirects: (optional) Boolean. Set to True if POST/PUT/DELETE redirect following is allowed.
     :type allow_redirects: bool
@@ -55,17 +55,18 @@ def request(method, url, **kwargs):
     return response
 
 
-def get(url, **kwargs):
+def get(url, params=None, **kwargs):
     """Sends a GET request.
 
     :param url: URL for the new :class:`Request` object.
+    :param params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
     :param \*\*kwargs: Optional arguments that ``request`` takes.
     :return: :class:`Response <Response>` object
     :rtype: requests.Response
     """
 
     kwargs.setdefault('allow_redirects', True)
-    return request('get', url, **kwargs)
+    return request('get', url, params=params, **kwargs)
 
 
 def options(url, **kwargs):

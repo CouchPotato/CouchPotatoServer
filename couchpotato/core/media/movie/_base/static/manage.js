@@ -1,4 +1,4 @@
-Page.Manage = new Class({
+var MoviesManage = new Class({
 
 	Extends: PageBase,
 
@@ -33,15 +33,12 @@ Page.Manage = new Class({
 					'release_status': 'done',
 					'status_or': 1
 				},
-				'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Readd, MA.Edit, MA.Delete],
+				'actions': [MA.IMDB, MA.Files, MA.Trailer, MA.Readd, MA.Delete],
 				'menu': [self.refresh_button, self.refresh_quick],
 				'on_empty_element': new Element('div.empty_manage').adopt(
 					new Element('div', {
-						'text': 'Seems like you don\'t have anything in your library yet.'
-					}),
-					new Element('div', {
-						'text': 'Add your existing movie folders in '
-					}).adopt(
+						'text': 'Seems like you don\'t have anything in your library yet. Add your existing movie folders in '
+					}).grab(
 						new Element('a', {
 							'text': 'Settings > Manage',
 							'href': App.createUrl('settings/manage')
@@ -49,7 +46,7 @@ Page.Manage = new Class({
 					),
 					new Element('div.after_manage', {
 						'text': 'When you\'ve done that, hit this button → '
-					}).adopt(
+					}).grab(
 						new Element('a.button.green', {
 							'text': 'Hit me, but not too hard',
 							'events':{
@@ -59,7 +56,7 @@ Page.Manage = new Class({
 					)
 				)
 			});
-			$(self.list).inject(self.el);
+			$(self.list).inject(self.content);
 
 			// Check if search is in progress
 			self.startProgressInterval();
@@ -113,7 +110,8 @@ Page.Manage = new Class({
 							return;
 
 						if(!self.progress_container)
-							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after');
+							self.progress_container = new Element('div.progress')
+								.inject(self.list, 'top');
 
 						self.progress_container.empty();
 
@@ -126,12 +124,12 @@ Page.Manage = new Class({
 									(folder_progress.eta > 0 ? ', ' + new Date ().increment('second', folder_progress.eta).timeDiffInWords().replace('from now', 'to go') : '')
 								}),
 								new Element('span.percentage', {'text': folder_progress.total ? Math.round(((folder_progress.total-folder_progress.to_go)/folder_progress.total)*100) + '%' : '0%'})
-							).inject(self.progress_container)
+							).inject(self.progress_container);
 						});
 
 					}
 				}
-			})
+			});
 
 		}, 1000);
 	},
@@ -141,10 +139,10 @@ Page.Manage = new Class({
 
 		for (folder in progress_object) {
 			if (progress_object.hasOwnProperty(folder)) {
-				temp_array.push(folder)
+				temp_array.push(folder);
 			}
 		}
-		return temp_array.stableSort()
+		return temp_array.stableSort();
 	}
 
 });

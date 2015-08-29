@@ -1,0 +1,125 @@
+@import "_mixins";
+
+.page.userscript {
+	position: absolute;
+	width: 100%;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 0;
+
+	.frame.loading {
+		text-align: center;
+		font-size: 20px;
+		padding: 20px;
+	}
+
+	.media_result {
+		height: 140px;
+		display: flex;
+	}
+
+	.thumbnail {
+		width: 90px;
+	}
+
+	.options {
+		left: 90px;
+		display: flex;
+		align-items: center;
+		padding: $padding/2;
+
+		> div {
+			display: flex;
+			flex-wrap: wrap;
+
+			div {
+				flex: 1 auto;
+				margin: 0;
+				padding: 0 $padding/4;
+			}
+
+			.title {
+				min-width: 100%;
+				margin-bottom: $padding;
+			}
+
+			.add {
+				text-align: right;
+
+				a {
+					display: block;
+					text-align: center;
+				}
+			}
+
+			select {
+				width: 100%;
+			}
+		}
+	}
+
+	.message {
+		font-size: 1.5em;
+	}
+
+	.year,
+	.data {
+		display: none;
+	}
+
+}
+
+
+.group_userscript.group_userscript {
+	display: block;
+
+	.empty_wanted & {
+		padding: $padding 0;
+	}
+
+	.wgroup_automation & {
+		padding: $padding/2 0;
+		margin-left: 0;
+	}
+
+	h2 {
+		margin: 0 0 $padding/2;
+	}
+
+	.userscript {
+		margin-left: $padding;
+
+		@include media-tablet {
+			margin-left: $padding/2;
+		}
+
+		.wgroup_automation & {
+			margin-left: 0;
+		}
+	}
+
+	.bookmarklet {
+
+		span {
+			margin-left: 10px;
+			display: inline-block;
+		}
+	}
+
+	img {
+		clear: both;
+		margin: $padding;
+		width: 100%;
+		max-width: 600px;
+
+		@include media-tablet {
+			margin: $padding/2;
+		}
+
+		.wgroup_automation & {
+			margin-left: 0;
+		}
+	}
+}

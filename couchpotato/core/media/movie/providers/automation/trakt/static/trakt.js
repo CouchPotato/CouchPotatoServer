@@ -17,7 +17,7 @@ var TraktAutomation = new Class({
 
 			var trakt_set = 0;
 		 	fieldset.getElements('input[type=text]').each(function(el){
-		 		trakt_set += +(el.get('value') != '');
+		 		trakt_set += +(el.get('value') !== '');
 		 	});
 
 			new Element('.ctrlHolder').adopt(
@@ -58,7 +58,7 @@ var TraktAutomation = new Class({
 				})
 
 			).inject(fieldset);
-		})
+		});
 
 	}
 

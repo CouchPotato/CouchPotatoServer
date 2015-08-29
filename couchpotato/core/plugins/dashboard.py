@@ -64,7 +64,7 @@ class Dashboard(Plugin):
                 except RecordDeleted:
                     log.debug('Record already deleted: %s', media_id)
                     continue
-                
+
                 except RecordNotFound:
                     log.debug('Record not found: %s', media_id)
                     continue
@@ -96,7 +96,7 @@ class Dashboard(Plugin):
                         if late:
                             media['releases'] = fireEvent('release.for_media', media['_id'], single = True)
 
-                            for release in media.get('releases'):
+                            for release in media.get('releases', []):
                                 if release.get('status') in ['snatched', 'available', 'seeding', 'downloaded']:
                                     add = False
                                     break
