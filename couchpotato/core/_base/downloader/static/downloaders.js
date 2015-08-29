@@ -54,9 +54,9 @@ var DownloadersBase = new Class({
 									}).inject(button, 'after');
 								}
 
-								(function(){
+								requestTimeout(function(){
 									message.destroy();
-								}).delay(3000);
+								}, 3000);
 							}
 						});
 					}

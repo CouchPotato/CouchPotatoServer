@@ -208,7 +208,7 @@ Page.Settings = new Class({
 			});
 		});
 
-		setTimeout(function(){
+		requestTimeout(function(){
 			self.el.grab(
 				self.navigation
 			);
@@ -408,8 +408,8 @@ var OptionBase = new Class({
 
 		if(self.getValue() != self.previous_value){
 			if(self.save_on_change){
-				if(self.changed_timer) clearTimeout(self.changed_timer);
-				self.changed_timer = self.save.delay(300, self);
+				if(self.changed_timer) clearRequestTimeout(self.changed_timer);
+				self.changed_timer = requestTimeout(self.save.bind(self), 300);
 			}
 			self.fireEvent('change');
 		}
@@ -442,9 +442,9 @@ var OptionBase = new Class({
 		self.previous_value = self.getValue();
 		self.el.addClass(sc);
 
-		(function(){
+		requestTimeout(function(){
 			self.el.removeClass(sc);
-		}).delay(3000, self);
+		}, 3000);
 	},
 
 	setName: function(name){
@@ -1132,7 +1132,7 @@ Option.Combined = new Class({
 	addEmpty: function(){
 		var self = this;
 
-		if(self.add_empty_timeout) clearTimeout(self.add_empty_timeout);
+		if(self.add_empty_timeout) clearRequestTimeout(self.add_empty_timeout);
 
 		var has_empty = 0;
 		self.items.each(function(ctrl_holder){
@@ -1147,7 +1147,7 @@ Option.Combined = new Class({
 		});
 		if(has_empty > 0) return;
 
-		self.add_empty_timeout = setTimeout(function(){
+		self.add_empty_timeout = requestTimeout(function(){
 			self.createItem({'use': true});
 		}, 10);
 	},

@@ -29,7 +29,7 @@ var Question = new Class( {
 			)
 		).inject(document.body);
 
-		setTimeout(function(){
+		requestTimeout(function(){
 			self.container.addClass('show');
 
 			self.inner.getElements('> *').each(function(el, nr){

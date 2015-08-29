@@ -232,8 +232,8 @@ var Category = new Class({
 	save: function(delay){
 		var self = this;
 
-		if(self.save_timer) clearTimeout(self.save_timer);
-		self.save_timer = (function(){
+		if(self.save_timer) clearRequestTimeout(self.save_timer);
+		self.save_timer = requestTimeout(function(){
 
 			Api.request('category.save', {
 				'data': self.getData(),
@@ -248,7 +248,7 @@ var Category = new Class({
 				}
 			});
 
-		}).delay(delay || 0, self);
+		}, delay || 0);
 
 	},
 

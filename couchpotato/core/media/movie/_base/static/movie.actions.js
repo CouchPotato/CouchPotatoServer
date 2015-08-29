@@ -392,7 +392,7 @@ MA.Trailer = new Class({
 				self.background = new Element('div.background')
 			);
 
-			setTimeout(function(){
+			requestTimeout(function(){
 
 				var url = data_url.substitute({
 					'title': encodeURI(self.getTitle()),

@@ -37,15 +37,15 @@ var BlockSearch = new Class({
 							'change': self.keyup.bind(self),
 							'keyup': self.keyup.bind(self),
 							'focus': function(){
-								if(focus_timer) clearTimeout(focus_timer);
+								if(focus_timer) clearRequestTimeout(focus_timer);
 								if(this.get('value'))
 									self.hideResults(false);
 							},
 							'blur': function(){
-								focus_timer = (function(){
+								focus_timer = requestTimeout(function(){
 									self.el.removeClass('focused');
 									self.last_q = null;
-								}).delay(100);
+								}, 100);
 							}
 						}
 					})
@@ -127,8 +127,8 @@ var BlockSearch = new Class({
 			if(self.api_request && self.api_request.isRunning())
 				self.api_request.cancel();
 
-			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer);
-			self.autocomplete_timer = self.autocomplete.delay(300, self);
+			if(self.autocomplete_timer) clearRequestTimeout(self.autocomplete_timer);
+			self.autocomplete_timer = requestTimeout(self.autocomplete.bind(self), 300);
 		}
 
 	},
@@ -152,7 +152,7 @@ var BlockSearch = new Class({
 		self.hideResults(false);
 
 		if(!cache){
-			setTimeout(function(){
+			requestTimeout(function(){
 				self.mask.addClass('show');
 			}, 10);
 
