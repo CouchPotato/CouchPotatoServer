@@ -6,6 +6,10 @@
 	width: 44px;
 	position: relative;
 
+	* {
+		transform: rotateZ(360deg); // Mobile IE redraw fix
+	}
+
 	.icon-search {
 		position: absolute;
 		z-index: 2;
@@ -287,7 +291,6 @@
 								opacity: .4;
 								padding: 0 5px;
 								width: auto;
-								display: none;
 							}
 
 							.in_wanted,
