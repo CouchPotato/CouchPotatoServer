@@ -482,8 +482,9 @@ $mass_edit_height: 44px;
 
 		.actions {
 			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,1) 80%);
-			will-change: opacity;
-			transition: opacity 400ms;
+			will-change: opacity, visibility;
+			transition: all 400ms;
+			transition-property: opacity, visibility;
 			opacity: 0;
 			visibility: hidden;
 			position: absolute;
@@ -611,7 +612,7 @@ $mass_edit_height: 44px;
 		overflow-y: auto;
 		will-change: transform;
 		transform: translateX(100%) rotateZ(360deg);
-		transition: transform 350ms $cubic;
+		transition: transform 450ms $cubic;
 
 		@include media-phablet {
 			left: $header_width_mobile;
@@ -808,7 +809,7 @@ $mass_edit_height: 44px;
 		}
 
 		.scroll_content {
-			transition-delay: 200ms;
+			transition-delay: 50ms;
 			transform: translateX(0) rotateZ(360deg);
 		}
 	}
