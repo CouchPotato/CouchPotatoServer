@@ -647,7 +647,7 @@ input,select,textarea{font-size:1em;font-weight:300;padding:6.67px;background:#F
 input[type=text],textarea{-webkit-appearance:none}
 .button{color:#ac0000;font-weight:300;padding:5px;cursor:pointer;border:1px solid #ac0000;border-radius:3px;margin:0 5px;transition:all 150ms}
 .button:hover{background:#ac0000;color:#FFF}
-.ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;-webkit-transform:translate(-50%,-50%) scale(1) rotateZ(360deg);transform:translate(-50%,-50%) scale(1) rotateZ(360deg);opacity:.2;transition:all 1.5s ease;transition-property:opacity,-webkit-transform;transition-property:opacity,transform}
+.ripple{position:absolute;height:10px;width:10px;border-radius:50%;background:#ac0000;will-change:transform,opacity;-webkit-transform:translate(-50%,-50%) scale(1) rotateZ(360deg);transform:translate(-50%,-50%) scale(1) rotateZ(360deg);opacity:.2;transition:all 1.5s ease;transition-property:opacity,-webkit-transform;transition-property:opacity,transform}
 .ripple.animate{-webkit-transform:translate(-50%,-50%) scale(100) rotateZ(360deg);transform:translate(-50%,-50%) scale(100) rotateZ(360deg);opacity:0}
 .header{width:132px;min-width:132px;position:relative;z-index:100}
 @media (max-width:480px){.header{width:44px;min-width:44px;z-index:21}

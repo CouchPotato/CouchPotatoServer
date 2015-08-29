@@ -69,6 +69,7 @@ input[type=text], textarea {
 	width: 10px;
 	border-radius: 50%;
 	background: $primary_color;
+	will-change: transform, opacity;
 	transform: translate(-50%, -50%) scale(1) rotateZ(360deg);
 	opacity: 0.2;
 	transition: all 1.5s ease;
