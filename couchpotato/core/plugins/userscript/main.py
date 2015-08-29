@@ -56,12 +56,15 @@ class Userscript(Plugin):
 
             def get(self, random, route):
 
+                bookmarklet_host = Env.setting('bookmarklet_host')
+                loc = bookmarklet_host if bookmarklet_host else "{0}://{1}".format(self.request.protocol, self.request.headers.get('X-Forwarded-Host') or self.request.headers.get('host'))
+
                 params = {
                     'includes': fireEvent('userscript.get_includes', merge = True),
                     'excludes': fireEvent('userscript.get_excludes', merge = True),
                     'version': klass.getVersion(),
                     'api': '%suserscript/' % Env.get('api_base'),
-                    'host': '%s://%s' % (self.request.protocol, self.request.headers.get('X-Forwarded-Host') or self.request.headers.get('host')),
+                    'host': loc,
                 }
 
                 script = klass.renderTemplate(__file__, 'template.js_tmpl', **params)
