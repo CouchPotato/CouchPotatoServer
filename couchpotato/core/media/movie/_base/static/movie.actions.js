@@ -405,6 +405,7 @@ MA.Trailer = new Class({
 						if(json.items.length > 0){
 							self.video_id = json.items[0].id.videoId;
 							self.background.setStyle('background-image', 'url('+json.items[0].snippet.thumbnails.high.url+')');
+							self.background.addClass('visible');
 						}
 						else {
 							self.container.getParent('.section').addClass('no_trailer');
@@ -412,7 +413,7 @@ MA.Trailer = new Class({
 					}
 				}).send();
 
-			}, 2000);
+			}, 1000);
 		}
 
 		return self.container;

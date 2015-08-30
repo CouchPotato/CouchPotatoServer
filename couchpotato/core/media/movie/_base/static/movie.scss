@@ -1070,13 +1070,19 @@ $mass_edit_height: 44px;
 			}
 
 			.background {
-				opacity: .3;
+				opacity: 0;
 				background: no-repeat center;
 				background-size: cover;
 				position: relative;
 				z-index: 1;
 				max-height: $max_height;
 				padding-bottom: 56.25%;
+				will-change: opacity;
+				transition: opacity 1000ms;
+
+				&.visible {
+					opacity: .4;
+				}
 			}
 
 			.icon-play {

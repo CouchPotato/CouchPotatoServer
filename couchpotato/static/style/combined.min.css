@@ -347,8 +347,9 @@
 .page.movie_details .section_trailer.section_trailer{padding:0;background:#111;max-height:450px;overflow:hidden}
 .page.movie_details .section_trailer.section_trailer.no_trailer{display:none}
 .page.movie_details .section_trailer.section_trailer .trailer_container{max-height:450px;position:relative;overflow:hidden;max-width:800px;margin:0 auto;cursor:pointer}
-.page.movie_details .section_trailer.section_trailer .trailer_container .background{opacity:.3;background:center no-repeat;background-size:cover;position:relative;z-index:1;max-height:450px;padding-bottom:56.25%}
+.page.movie_details .section_trailer.section_trailer .trailer_container .background{opacity:0;background:center no-repeat;background-size:cover;position:relative;z-index:1;max-height:450px;padding-bottom:56.25%;will-change:opacity;transition:opacity 1000ms}
 .alph_nav .menus .button,.alph_nav .menus .counter{line-height:80px;padding:0 10px}
+.page.movie_details .section_trailer.section_trailer .trailer_container .background.visible{opacity:.4}
 .page.movie_details .section_trailer.section_trailer .trailer_container .icon-play{opacity:.9;position:absolute;z-index:2;text-align:center;width:100%;top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%);will-change:opacity;transition:all 300ms;color:#FFF;font-size:110px}
 @media (max-width:1024px){.page.movie_details .section_trailer.section_trailer .trailer_container .icon-play{font-size:55px}
 }
