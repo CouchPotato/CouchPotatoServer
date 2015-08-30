@@ -417,13 +417,16 @@ var OptionBase = new Class({
 	},
 
 	save: function(){
-		var self = this;
+		var self = this,
+			value = self.getValue();
+
+		App.fireEvent('setting.save.'+self.section+'.'+self.name, value)
 
 		Api.request('settings.save', {
 			'data': {
 				'section': self.section,
 				'name': self.name,
-				'value': self.getValue()
+				'value': value
 			},
 			'useSpinner': true,
 			'spinnerOptions': {

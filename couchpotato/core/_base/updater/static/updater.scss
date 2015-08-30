@@ -1,7 +1,7 @@
 @import "_mixins";
 
 .update.message {
-	background: $background_color;
+	@include theme(background, background);
 	padding: $padding;
 	text-align: center;
 	font-size: 1.25em;
@@ -11,7 +11,7 @@
 	}
 
 	a {
-		color: $primary_color;
+		@include theme(color, primary);
 		padding: $padding/4;
 	}
 }

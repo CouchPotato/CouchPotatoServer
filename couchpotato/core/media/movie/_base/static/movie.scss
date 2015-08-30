@@ -90,16 +90,27 @@ $mass_edit_height: 44px;
 
 		span {
 			display: inline-block;
-			background: rgba(0,0,0,.25);
+			background: get-theme(off);
 			border: 1px solid transparent;
-			color: #FFF;
+			color: rgba(get-theme(text), .5);
 			border-radius: 1px;
 			padding: 1px 3px;
 
-			&.failed { background: #993619; }
-			&.available { color: #009902; border-color: #009902; background: #FFF }
-			&.snatched { background: #568f99; color: #FFF }
+			@include theme-dark {
+				color: rgba(get-theme-dark(text), .5);
+				background: get-theme-dark(off);
+			}
+
+			&.failed { background: #993619; color: #FFF; }
+			&.available { color: #009902; border-color: #009902; background: get-theme(background);}
+			&.snatched { background: #548399; color: #FFF }
 			&.downloaded, &.done { background: #009902; color: #FFF }
+
+			@include theme-dark {
+				&.available { border-color: transparent; background: get-theme-dark(off);}
+				&.snatched { background: #548399; }
+				&.downloaded, &.done { background: #009902; color: #FFF; }
+			}
 		}
 	}
 
@@ -130,7 +141,7 @@ $mass_edit_height: 44px;
 		}
 
 		a {
-			color: $primary_color;
+			@include theme(color, primary);
 		}
 	}
 
@@ -139,7 +150,7 @@ $mass_edit_height: 44px;
 		text-align: center;
 
 		a {
-			color: $primary_color;
+			@include theme(color, primary);
 		}
 	}
 
@@ -159,13 +170,14 @@ $mass_edit_height: 44px;
 		right: $padding;
 		width: auto;
 		line-height: $header_height;
+		opacity: .7;
 
 		@include media-tablet {
 			display: none;
 		}
 
 		a {
-			color: $primary_color;
+			@include theme(color, primary);
 			display: inline;
 
 			&:hover {
@@ -175,14 +187,14 @@ $mass_edit_height: 44px;
 	}
 
 	> .loading {
-		background: #FFF;
+		@include theme(background, background);
 
 		.message {
-			color: #000;
+			@include theme(color, text);
 		}
 
 		.spinner {
-			background-color: #000;
+			@include theme(background-color, background);
 		}
 	}
 
@@ -226,7 +238,9 @@ $mass_edit_height: 44px;
 
 	.movie {
 		display: block;
-		border-bottom: 1px solid $theme_off;
+		border-bottom: 1px solid transparent;
+		@include theme(border-color, off);
+
 		position: relative;
 		cursor: pointer;
 
@@ -235,7 +249,11 @@ $mass_edit_height: 44px;
 		}
 
 		&:hover {
-			background: rgba(0,0,0,.1);
+			background: get-theme(off);
+
+			@include theme-dark {
+				background: get-theme-dark(off);
+			}
 		}
 
 		input[type=checkbox] {
@@ -330,18 +348,19 @@ $mass_edit_height: 44px;
 			a {
 				height: 100%;
 				display: block;
-				background: $background_color;
+				@include theme(background, background);
+				@include theme(color, text);
 				padding: $padding / 2;
 				width: auto;
 				float: right;
-				color: $text_color;
+				@include theme(text, text);
 
 				&:before {
 					display: none;
 				}
 
 				&:hover {
-					color: $primary_color;
+					@include theme(color, primary);
 				}
 
 				.icon {
@@ -434,7 +453,8 @@ $mass_edit_height: 44px;
 
 		.poster {
 			position: absolute;
-			background: $theme_off center no-repeat;
+			background: center no-repeat;
+			@include theme(background-color, off);
 			background-size: cover;
 			overflow: hidden;
 			height: 100%;
@@ -443,7 +463,7 @@ $mass_edit_height: 44px;
 
 		.info {
 			clear: both;
-			font-size: .85em;
+			font-size: .9em;
 
 			.title {
 				display: flex;
@@ -472,6 +492,7 @@ $mass_edit_height: 44px;
 			.quality {
 				white-space: nowrap;
 				overflow: hidden;
+				font-size: .9em;
 
 				span {
 					font-size: .8em;
@@ -481,7 +502,11 @@ $mass_edit_height: 44px;
 		}
 
 		.actions {
-			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,1) 80%);
+			background-image: linear-gradient(25deg, rgba(get-theme(primary),0) 0%, rgba(get-theme(primary),1) 80%);
+			@include theme-dark {
+				background-image: linear-gradient(25deg, rgba(get-theme-dark(primary),0) 0%, rgba(get-theme-dark(primary),1) 80%);
+			}
+
 			will-change: opacity, visibility;
 			transition: all 400ms;
 			transition-property: opacity, visibility;
@@ -511,12 +536,13 @@ $mass_edit_height: 44px;
 					display: block;
 					width: auto;
 					padding: $padding / 3;
-					color: #FFF;
+					@include theme(color, background);
 					border-radius: $border_radius - 1px;
+					font-weight: 400;
 
 					&:hover {
-						background: #FFF;
-						color: $primary_color;
+						@include theme(background, background);
+						@include theme(color, primary);
 					}
 				}
 			}
@@ -546,7 +572,6 @@ $mass_edit_height: 44px;
 }
 
 .page.movie_details {
-
 	pointer-events: none;
 	$gab-width: $header_width/3;
 
@@ -575,6 +600,7 @@ $mass_edit_height: 44px;
 		@include media-phablet {
 			left: 0;
 			border-radius: 0;
+			transition: none;
 		}
 
 		.close {
@@ -607,7 +633,7 @@ $mass_edit_height: 44px;
 		bottom: 0;
 		right: 0;
 		left: $header_width + $gab-width;
-		background: $background_color;
+		@include theme(background, background);
 		border-radius: $border_radius 0 0 $border_radius;
 		overflow-y: auto;
 		will-change: transform;
@@ -621,7 +647,7 @@ $mass_edit_height: 44px;
 		> .head {
 			display: flex;
 			flex-flow: row wrap;
-			padding: 0 $padding;
+			padding: 0 $padding 0 $padding/2;
 			position: relative;
 			z-index: 2;
 			will-change: transform, opacity;
@@ -636,7 +662,6 @@ $mass_edit_height: 44px;
 				flex: 1 auto;
 				margin: 0;
 				font-size: 24px;
-				color: rgba(0,0,0,.5);
 				font-weight: 300;
 				max-width: 100%;
 
@@ -672,6 +697,11 @@ $mass_edit_height: 44px;
 
 				> a {
 					line-height: $header_height;
+					@include theme(color, primary);
+
+					&:hover {
+						@include theme(color, text);
+					}
 
 					@include media-phablet {
 						line-height: $header_width_mobile;
@@ -725,7 +755,7 @@ $mass_edit_height: 44px;
 						}
 
 						&:hover, &.icon-ok {
-							color: $primary_color;
+							@include theme(color, primary);
 						}
 					}
 				}
@@ -768,7 +798,7 @@ $mass_edit_height: 44px;
 				> a {
 					display: inline-block;
 					padding: 0 10px;
-					color: $primary_color;
+					@include theme(color, primary);
 					line-height: $header_height;
 
 					@include media-phablet {
@@ -776,7 +806,7 @@ $mass_edit_height: 44px;
 					}
 
 					&:hover {
-						color: #000;
+						@include theme(color, text);
 					}
 				}
 
@@ -788,6 +818,10 @@ $mass_edit_height: 44px;
 			border-top: 1px solid rgba(0,0,0,.1);
 			will-change: transform, opacity;
 			transform: rotateZ(360deg);
+
+			@include theme-dark {
+				border-color: rgba(255,255,255,.1);
+			}
 
 			@include media-phablet {
 				padding: $padding/2;
@@ -832,7 +866,7 @@ $mass_edit_height: 44px;
 	}
 
 	.section_add {
-		background: $theme_off;
+		@include theme(background, off);
 
 		.options > div {
 			display: flex;
@@ -867,7 +901,7 @@ $mass_edit_height: 44px;
 					margin: 0;
 
 					&:hover {
-						background: $primary_color;
+						@include theme(background, primary);
 					}
 				}
 
@@ -907,18 +941,11 @@ $mass_edit_height: 44px;
 
 			a {
 				display: inline;
+				@include theme(color, primary);
 
 				&:hover {
 					text-decoration: underline;
 				}
-			}
-
-			.orange {
-				color: #ffa500;
-			}
-
-			.green {
-				color: #008000;
 			}
 		}
 
@@ -928,7 +955,8 @@ $mass_edit_height: 44px;
 			}
 
 			&:not(.head):hover {
-				background: $theme_off;
+				@include theme(background, off);
+				@include theme(text, text);
 			}
 
 			span {
@@ -1004,10 +1032,10 @@ $mass_edit_height: 44px;
 					vertical-align: top;
 					padding: $padding/3;
 					min-width: 26px;
-					color: $text_color;
+					@include theme(color, text);
 
 					&:hover {
-						color: $primary_color;
+						@include theme(color, primary);
 					}
 
 					@include media-phablet {
@@ -1141,7 +1169,7 @@ $mass_edit_height: 44px;
 			}
 
 			&:hover {
-				color: $primary_color;
+				@include theme(color, primary);
 
 				.icon-play {
 					opacity: 1;
@@ -1173,7 +1201,7 @@ $mass_edit_height: 44px;
 
 	.mass_edit_form {
 		display: flex;
-		background: $background_color;
+		@include theme(background, background);
 		position: fixed;
 		top: $header_height;
 		right: 0;
@@ -1213,7 +1241,6 @@ $mass_edit_height: 44px;
 		.button {
 			padding: 0 $padding/2;
 			line-height: $header_height;
-			color: rgba(0, 0, 0, 0.5);
 		}
 
 		.counter, .more_menu, .actions {
@@ -1231,7 +1258,7 @@ $mass_edit_height: 44px;
 				text-align: center;
 
 				&:hover {
-					color: $primary_color;
+					@include theme(color, primary);
 				}
 			}
 		}
@@ -1289,9 +1316,10 @@ $mass_edit_height: 44px;
 				input {
 					width: 100%;
 					padding: $padding/2 $padding/2 $padding/2 $padding*1.5;
-					background: $background_color;
+					@include theme(background, background);
 					border: none;
-					border-bottom: 1px solid $theme_off;
+					border-bottom: 1px solid transparent;
+					@include theme(border-color, off);
 
 					@include media-phablet {
 						font-size: 1.2em;
@@ -1308,20 +1336,20 @@ $mass_edit_height: 44px;
 					height: 30px;
 					line-height: 30px;
 					text-align: center;
-					color: rgba(0,0,0,.2);
+					opacity: .2;
 					cursor: default;
 					border: 0;
 
 					&.active {
-						background: $theme_off;
+						@include theme(background, off);
 					}
 
 					&.available {
-						color: rgba(0,0,0,1);
+						opacity: 1;
 						cursor: pointer;
 
 						&:hover {
-							background: $theme_off;
+							@include theme(background, off);
 						}
 					}
 				}
@@ -1330,9 +1358,9 @@ $mass_edit_height: 44px;
 
 		.more_menu {
 
-			&.show .button {
-				color: rgba(0, 0, 0, 1);
-			}
+			//&.show .button {
+			//	color: rgba(0, 0, 0, 1);
+			//}
 
 			.wrapper {
 				top: $header_height - 10px;

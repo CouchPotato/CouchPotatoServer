@@ -2,7 +2,7 @@
 
 /*** Login ***/
 .page.login {
-	background: $background_color;
+	@include theme(background, background);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -13,7 +13,7 @@
 		font-size: 60px;
 		font-family: Lobster;
 		font-weight: normal;
-		color: $primary_color;
+		@include theme(color, primary);
 		text-align: center;
 	}
 

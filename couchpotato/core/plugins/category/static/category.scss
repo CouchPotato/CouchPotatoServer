@@ -50,7 +50,8 @@
 
 	li {
 		cursor: grab;
-		border-bottom: 1px solid $theme_off;
+		border-bottom: 1px solid transparent;
+		@include theme(border-color, off);
 		padding: 5px;
 		list-style: none;
 
