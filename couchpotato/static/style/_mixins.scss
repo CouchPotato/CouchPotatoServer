@@ -1,9 +1,13 @@
-$primary_color: #ac0000;
-$secondary_color: #00d2c2;
-$background_color: #FFF;
 $menu_color: #111;
-$theme_off: #eaeaea;
-$text_color: #000;
+
+$vars: 			'primary', 'background', 	'off', 					'text';
+$theme_light: 	#ac0000, 	#FFF, 			darken(#FFF, 8), 		#000;
+$theme_dark: 	#39c29f, 	#2d2d2d, 		lighten(#2d2d2d, 5), 	#FFF;
+
+//$primary_color: nth($theme_light, 1);
+//$theme_off: nth($theme_light, 2);
+//$background_color:nth($theme_light, 3);
+//$text_color: nth($theme_light, 4);
 
 $font_size: 14px;
 $header_height: 80px;
@@ -11,6 +15,28 @@ $header_width: 132px;
 $header_width_mobile: 44px;
 $padding: 20px;
 $border_radius: 3px;
+
+@mixin theme($property, $value) {
+	#{$property}: nth($theme_light, index($vars, $value));
+
+	.dark & {
+		#{$property}: nth($theme_dark, index($vars, $value));
+	}
+}
+
+@mixin theme-dark {
+	.dark & {
+		@content;
+	}
+}
+
+@function get-theme($property){
+	@return nth($theme_light, index($vars, $property));
+}
+
+@function get-theme-dark($property){
+	@return nth($theme_dark, index($vars, $property));
+}
 
 $cubic: cubic-bezier(0.9,0,0.1,1);
 

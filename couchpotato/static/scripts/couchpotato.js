@@ -167,6 +167,11 @@
 			self.block.more.addLink(a);
 		});
 
+		// Set theme
+		self.addEvent('setting.save.core.dark_theme', function(enabled){
+			document.html[enabled ? 'addClass' : 'removeClass']('dark');
+		});
+
 	},
 
 	createPages: function(){

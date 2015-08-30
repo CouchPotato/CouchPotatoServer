@@ -27,7 +27,7 @@
 			}
 
 			&:hover:not(.active):not(.filter) {
-				background: rgba(255, 255, 255, 0.1);
+				background: rgba(255,255,255,.1);
 			}
 
 			&.active {
@@ -70,7 +70,7 @@
 		.time {
 			clear: both;
 			font-size: .75em;
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			border-top: 1px solid rgba(255,255,255,.1);
 			overflow: hidden;
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
@@ -81,7 +81,7 @@
 			}
 
 			&.highlight {
-				background: $theme_off;
+				@include theme(background, off);
 			}
 
 			span {
@@ -105,8 +105,8 @@
 			}
 
 			::selection {
-				background-color: #000;
-				color: #FFF;
+				@include theme(background-color, background);
+				@include theme(color, text);
 			}
 		}
 
@@ -150,8 +150,8 @@
 	.button {
 		margin: 10px 0;
 		padding: 10px;
-		color: $background_color;
-		background: $primary_color;
+		color: #FFF;
+		@include theme(background, primary);
 	}
 
 	.bug {
@@ -184,6 +184,6 @@
 	z-index: 10000;
 	position: absolute;
 	padding: 10px;
-	background: $primary_color;
-	color: #FFF;
+	@include theme(background, primary);
+	color: #FFF !important;
 }

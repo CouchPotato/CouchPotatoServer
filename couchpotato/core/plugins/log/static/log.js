@@ -40,7 +40,7 @@ Page.Log = new Class({
 			'events': {
 				'mouseup:relay(.time)': function(e){
 					requestTimeout(function(){
-						self.showSelectionButton(2);
+						self.showSelectionButton(e);
 					}, 100);
 				}
 			}
