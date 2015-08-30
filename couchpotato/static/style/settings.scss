@@ -1,10 +1,10 @@
 @import "_mixins";
 
 .page.settings {
-	top: $header_height;
+	padding-top: $header_height;
 
 	@include media-phablet {
-		top: $header_width_mobile;
+		padding-top: $header_width_mobile;
 	}
 
 	&.active .scroll_content {
@@ -42,6 +42,10 @@
 		list-style: none;
 		font-size: 24px;
 
+		@include media-phablet {
+			margin: 0 $padding/2 $padding;
+		}
+
 		ul {
 			list-style: none;
 			font-size: $font_size;
@@ -50,11 +54,15 @@
 		li {
 			a {
 				color: rgba(0,0,0,.5);
+
+				@include theme-dark {
+					color: rgba(255,255,255,.5);
+				}
 			}
 
 			&.active {
 				a {
-					color: #000;
+					@include theme(color, text);
 				}
 			}
 		}
@@ -64,20 +72,26 @@
 	form.containers {
 		margin: 0 $padding 0 0;
 		flex: 1 1 auto;
+
+		@include media-phablet {
+			margin: 0 $padding/2 0 0;
+		}
 	}
 
 	fieldset {
 		border: 0;
-		margin-bottom: $padding;
+		padding: $padding/2 0;
 		position: relative;
 
 		h2 {
 			display: flex;
+			flex-flow: row wrap;
 			align-items: baseline;
 			padding: 0 0 0 $padding;
 
 			@include media-phablet {
 				display: block;
+				padding: 0 0 0 $padding/2;
 			}
 
 			.icon {
@@ -90,9 +104,12 @@
 				}
 			}
 
+			.group_label {
+				margin-right: $padding/2;
+			}
+
 			.hint {
 				flex: 1;
-				margin-left: $padding/2;
 				font-size: 1rem;
 
 				@include media-phablet {
@@ -102,27 +119,75 @@
 
 				a {
 					font-weight: 400;
-					color: $primary_color;
+					@include theme(color, primary);
 					text-decoration: underline;
 					display: inline;
+				}
+
+
+			}
+		}
+
+		.more_hint {
+			position: relative;
+
+			.tooltip {
+				display: inline;
+				padding: $padding/2;
+
+				.icon-info {
+					vertical-align: middle;
+					display: inline-block;
+					text-align: center;
+					border: 1px solid transparent;
+					@include theme(border-color, primary);
+					border-radius: 50%;
+					width: 18px;
+					height: 18px;
+					line-height: 16px;
+					font-size: .8em;
+					text-decoration: none;
+				}
+
+				.tip {
+					bottom: 100%;
+					left: 0;
+					right: 0;
+					position: absolute;
+					@include theme(background, off);
+					z-index: 20;
+					display: none;
+					padding: $padding/2;
+					margin-left: -$padding/2;
+				}
+
+				&:hover {
+					.tip {
+						display: block;
+					}
 				}
 			}
 		}
 
 		.ctrlHolder {
 			padding: $padding/3 $padding;
-			border-bottom: 1px solid $theme_off;
+			border-bottom: 1px solid transparent;
+			@include theme(border-color, off);
 			display: flex;
 			flex-flow: row nowrap;
 			align-items: center;
 
 			@include media-phablet {
 				flex-flow: row wrap;
-				padding-right: 0;
+				padding: $padding/3 0 $padding/3 $padding/2;
 			}
 
 			&:last-child {
 				border-bottom: 0;
+			}
+
+			&:nth-child(2) {
+				margin-top: $padding/2;
 			}
 
 			label {
@@ -191,7 +256,7 @@
 
 				a {
 					font-weight: 400;
-					color: $primary_color;
+					@include theme(color, primary);
 					text-decoration: underline;
 				}
 
@@ -226,6 +291,14 @@
 		&.enabler {
 			display: block;
 
+			&.disabled:hover {
+				background: rgba(255,255,255,.1);
+
+				@include theme-dark {
+					background: rgba(0,0,0,.1);
+				}
+			}
+
 			> :first-child {
 				position: absolute;
 				right: 0;
@@ -241,8 +314,12 @@
 				}
 			}
 
+			> :nth-child(2){
+				margin-top: 0;
+			}
+
 			> :nth-child(3){
-				margin-top: $padding;
+				margin-top: $padding/2;
 			}
 
 		}
@@ -251,7 +328,7 @@
 	fieldset.advanced,
 	fieldset .ctrlHolder.advanced {
 		display: none;
-		color: $primary_color;
+		@include theme(color, primary);
 	}
 
 	&.show_advanced {
@@ -265,9 +342,8 @@
 
 	.switch {
 		$switch_height: 20px;
-		$switch_active: $primary_color;
 		display: inline-block;
-		background: $switch_active;
+		@include theme(background, primary);
 		height: $switch_height;
 		width: $switch_height * 2.5;
 		min-width: 0 !important;
@@ -280,7 +356,7 @@
 		}
 
 		.toggle {
-			background: #FFF;
+			@include theme(background, background);
 			margin: 1px;
 			height: $switch_height - 2px;
 			width: $switch_height - 2px;
@@ -293,8 +369,8 @@
 
 	fieldset.enabler.disabled .switch,
 	&:not(.show_advanced) .advanced_toggle .switch {
-		background: $theme_off;
-		border-color: $theme_off;
+		@include theme(background, off);
+		@include theme(border-color, off);
 
 		.toggle {
 			transform: translateX(0);
@@ -302,14 +378,20 @@
 
 
 		&:hover {
-			background: darken($theme_off, 20);
-			border-color: darken($theme_off, 20);
+			background: darken(get-theme(off), 20);
+			border-color: darken(get-theme(off), 20);
+
+			@include theme-dark {
+				background: darken(get-theme-dark(off), 20);
+				border-color: darken(get-theme-dark(off), 20);
+			}
 		}
 	}
 
 	/** Options list **/
 	.option_list {
-		background: #FFF;
+		@include theme(background, background);
+		margin-top: $padding/2;
 
 		fieldset {
 			position: relative;
@@ -332,8 +414,9 @@
 			content: '';
 			display: block;
 			width: 100%;
-			border-bottom: 1px solid $theme_off;
-			bottom: -$padding/2;
+			border-bottom: 1px solid transparent;
+			@include theme(border-color, off);
+			bottom: 0;
 
 			&:last-child {
 				border-bottom: 0;
@@ -421,7 +504,7 @@
 			line-height: 1.3em;
 
 			a {
-				color: $primary_color;
+				@include theme(color, primary);
 				padding: 0 5px;
 			}
 
@@ -450,6 +533,10 @@
 			padding: 0 0 0 4%;
 			margin: 20px 0 0;
 			border-left: 1px solid rgba(0,0,0,.2);
+
+			@include theme-dark {
+				border-color: rgba(255,255,255,.2);
+			}
 
 			form {
 				padding: 10px 0 0;
@@ -504,6 +591,24 @@
 		}
 	}
 
+	.multi_directory {
+
+		.delete {
+			@include theme(color, primary);
+			padding: 0 $padding/2;
+			opacity: .6;
+			font-size: 1.5em;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+
+		&.is_empty .delete {
+			display: none;
+		}
+	}
+
 	.choice {
 		.select_wrapper {
 			margin-left: $padding;
@@ -521,6 +626,14 @@
 		}
 	}
 
+	.renamer_to.renamer_to {
+		flex-flow: row wrap;
+
+		.ctrlHolder {
+			width: 100%;
+		}
+	}
+
 }
 
 .directory_list {
@@ -528,14 +641,19 @@
 	position: absolute;
 	width: 450px;
 	margin: 28px 0 20px 0;
-	background: $primary_color;
+	@include theme(background, primary);
 	box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
 	border-radius: $border_radius $border_radius 0 0;
+
+	@include theme-dark {
+		box-shadow: 0 5px 15px 2px rgba(0,0,0,.4);
+	}
 
 	.pointer {
 		border-right: 6px solid transparent;
 		border-left: 6px solid transparent;
-		border-bottom: 6px solid $primary_color;
+		border-bottom: 6px solid transparent;
+		@include theme(border-bottom-color, primary);
 		display: block;
 		position: absolute;
 		width: 0;
@@ -543,7 +661,7 @@
 	}
 
 	.wrapper {
-		background: $background_color;
+		@include theme(background, background);
 		border-radius: $border_radius $border_radius 0 0;
 		margin-top: 5px;
 	}
@@ -573,7 +691,7 @@
 		}
 
 		&:hover {
-			color: $primary_color;
+			@include theme(color, primary);
 		}
 
 		&.empty {
@@ -637,7 +755,7 @@
 			}
 
 			> .cancel {
-				color: rgba(0,0,0,.4);
+				opacity: .7;
 			}
 
 			> .save {

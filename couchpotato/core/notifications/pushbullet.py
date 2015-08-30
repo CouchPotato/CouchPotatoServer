@@ -1,6 +1,3 @@
-import base64
-import json
-
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
@@ -20,12 +17,11 @@ class Pushbullet(Notification):
         if not data: data = {}
 
         # Get all the device IDs linked to this user
-        devices = self.getDevices() or []
+        devices = self.getDevices() or [None]
         successful = 0
         for device in devices:
             response = self.request(
                 'pushes',
-                cache = False,
                 device_iden = device,
                 type = 'note',
                 title = self.default_title,
@@ -38,9 +34,8 @@ class Pushbullet(Notification):
                 log.error('Unable to push notification to Pushbullet device with ID %s' % device)
 
         for channel in self.getChannels():
-            response = self.request(
+            self.request(
                 'pushes',
-                cache = False,
                 channel_tag = channel,
                 type = 'note',
                 title = self.default_title,
@@ -55,19 +50,17 @@ class Pushbullet(Notification):
     def getChannels(self):
         return splitString(self.conf('channels'))
 
-    def request(self, method, cache = True, **kwargs):
+    def request(self, method, **kwargs):
         try:
-            base64string = base64.encodestring('%s:' % self.conf('api_key'))[:-1]
-
             headers = {
-                'Authorization': 'Basic %s' % base64string
+                'Access-Token': self.conf('api_key')
             }
 
-            if cache:
-                return self.getJsonData(self.url % method, headers = headers, data = kwargs)
-            else:
-                data = self.urlopen(self.url % method, headers = headers, data = kwargs)
-                return json.loads(data)
+            if kwargs.get('device_iden') is None:
+                try: del kwargs['device_iden']
+                except: pass
+
+            return self.getJsonData(self.url % method, cache_timeout = -1, headers = headers, data = kwargs)
 
         except Exception as ex:
             log.error('Pushbullet request failed')

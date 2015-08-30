@@ -1,4 +1,4 @@
-﻿var CouchPotato = new Class({
+var CouchPotato = new Class({
 
 	Implements: [Events, Options],
 
@@ -69,8 +69,8 @@
 
 		ripple.inject(el);
 
-		setTimeout(function(){ ripple.addClass('animate'); }, 0);
-		setTimeout(function(){ ripple.dispose(); }, 2100);
+		requestTimeout(function(){ ripple.addClass('animate'); }, 0);
+		requestTimeout(function(){ ripple.dispose(); }, 2100);
 	},
 
 	getOption: function(name){
@@ -94,7 +94,10 @@
 				window.open(url);
 			else if(History.getPath() != url)
 				History.push(url);
+
 		}
+
+		self.fireEvent('history.push');
 	},
 
 	isMac: function(){
@@ -164,16 +167,11 @@
 			self.block.more.addLink(a);
 		});
 
-
-		new ScrollSpy({
-			min: 10,
-			onLeave: function(){
-				$(self.block.header).removeClass('with_shadow');
-			},
-			onEnter: function(){
-				$(self.block.header).addClass('with_shadow');
-			}
+		// Set theme
+		self.addEvent('setting.save.core.dark_theme', function(enabled){
+			document.html[enabled ? 'addClass' : 'removeClass']('dark');
 		});
+
 	},
 
 	createPages: function(){
@@ -271,7 +269,7 @@
 				'click': function(e){
 					(e).preventDefault();
 					self.shutdown();
-					q.close.delay(100, q);
+					requestTimeout(q.close.bind(q), 100);
 				}
 			}
 		}, {
@@ -298,7 +296,7 @@
 				'click': function(e){
 					(e).preventDefault();
 					self.restart(message, title);
-					q.close.delay(100, q);
+					requestTimeout(q.close.bind(q), 100);
 				}
 			}
 		}, {
@@ -319,10 +317,12 @@
 	checkAvailable: function(delay, onAvailable){
 		var self = this;
 
-		(function(){
+		requestTimeout(function(){
 
 			var onFailure = function(){
-				self.checkAvailable.delay(1000, self, [delay, onAvailable]);
+				requestTimeout(function(){
+					self.checkAvailable(delay, onAvailable);
+				}, 1000);
 				self.fireEvent('unload');
 			};
 
@@ -341,7 +341,7 @@
 				}
 			});
 
-		}).delay(delay || 0);
+		}, delay || 0);
 	},
 
 	blockPage: function(message, title){
@@ -358,7 +358,7 @@
 
 		createSpinner(self.mask);
 
-		setTimeout(function(){
+		requestTimeout(function(){
 			self.mask.addClass('show');
 		}, 10);
 	},
@@ -395,32 +395,34 @@
 		var host_url = window.location.protocol + '//' + window.location.host;
 
 		return new Element('div.group_userscript').adopt(
-			new Element('a.userscript.button', {
-				'text': 'Install extension',
-				'href': 'https://couchpota.to/extension/',
-				'target': '_blank'
-			}),
-			new Element('span.or[text=or]'),
-			new Element('span.bookmarklet').adopt(
-				new Element('a.button', {
-					'text': '+CouchPotato',
-					/* jshint ignore:start */
-					'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
-							host_url + Api.createUrl('userscript.bookmark') +
-							"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
-					 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
-					/* jshint ignore:end */
-					'target': '',
-					'events': {
-						'click': function(e){
-							(e).stop();
-							alert('Drag it to your bookmark ;)');
-						}
-					}
+			new Element('div').adopt(
+				new Element('a.userscript.button', {
+					'text': 'Install extension',
+					'href': 'https://couchpota.to/extension/',
+					'target': '_blank'
 				}),
-				new Element('span', {
-					'text': '⇽ Drag this to your bookmarks'
-				})
+				new Element('span.or[text=or]'),
+				new Element('span.bookmarklet').adopt(
+					new Element('a.button', {
+						'text': '+CouchPotato',
+						/* jshint ignore:start */
+						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+						host_url + Api.createUrl('userscript.bookmark') +
+						"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
+						"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+						/* jshint ignore:end */
+						'target': '',
+						'events': {
+							'click': function(e){
+								(e).stop();
+								alert('Drag it to your bookmark ;)');
+							}
+						}
+					}),
+					new Element('span', {
+						'text': '⇽ Drag this to your bookmarks'
+					})
+				)
 			),
 			new Element('img', {
 				'src': 'https://couchpota.to/media/images/userscript.gif'
@@ -454,7 +456,7 @@
 		// Create parallel callback
 		self.global_events[name].each(function(handle){
 
-			setTimeout(function(){
+			requestTimeout(function(){
 				var results = handle.apply(handle, args || []);
 
 				if(on_complete)

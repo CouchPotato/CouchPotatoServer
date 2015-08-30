@@ -23,7 +23,8 @@ module.exports = function(grunt){
 		'couchpotato/static/scripts/vendor/Array.stableSort.js',
 		'couchpotato/static/scripts/vendor/history.js',
 		'couchpotato/static/scripts/vendor/dynamics.js',
-		'couchpotato/static/scripts/vendor/fastclick.js'
+		'couchpotato/static/scripts/vendor/fastclick.js',
+		'couchpotato/static/scripts/vendor/requestAnimationFrame.js'
 	];
 
 	var scripts_files = [

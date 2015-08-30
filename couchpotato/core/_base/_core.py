@@ -272,6 +272,13 @@ config = [{
                     'description': 'Launch the browser when I start.',
                     'wizard': True,
                 },
+                {
+                    'name': 'dark_theme',
+                    'default': False,
+                    'type': 'bool',
+                    'description': 'For people with sensitive skin',
+                    'wizard': True,
+                },
             ],
         },
         {

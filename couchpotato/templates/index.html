@@ -1,6 +1,6 @@
 {% autoescape None %}
 <!doctype html>
-<html>
+<html class="{{ 'dark' if Env.setting('dark_theme') else '' }}">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -21,16 +21,6 @@
 		{% end %}
 
 		<script type="text/javascript">
-
-			window.addEvent('load', function(){
-
-				if(window.getSize().x <= 480)
-					setTimeout(function(){
-						window.scrollTo(0, 1);
-						window.scrollTo(0, 0);
-					}, 100);
-
-			});
 
 			window.addEvent('domready', function() {
 

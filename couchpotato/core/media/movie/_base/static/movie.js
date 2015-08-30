@@ -15,7 +15,9 @@ var Movie = new Class({
 
 		self.buttons = [];
 
-		self.el = new Element('a.movie');
+		self.el = new Element('a.movie').grab(
+			self.inner = new Element('div.inner')
+		);
 		self.el.store('klass', self);
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
@@ -55,7 +57,7 @@ var Movie = new Class({
 
 		App.getPageContainer().grab(self.details);
 
-		self.details.open.delay(10, self.details);
+		requestTimeout(self.details.open.bind(self.details), 20);
 	},
 
 	addEvents: function(){
@@ -68,7 +70,9 @@ var Movie = new Class({
 			if(self.data._id != notification.data._id) return;
 
 			self.busy(false);
-			self.update.delay(2000, self, notification);
+			requestTimeout(function(){
+				self.update(notification);
+			}, 2000);
 		};
 		App.on('movie.update', self.global_events['movie.update']);
 
@@ -135,10 +139,10 @@ var Movie = new Class({
 		var self = this;
 
 		if(!set_busy){
-			setTimeout(function(){
+			requestTimeout(function(){
 				if(self.spinner){
 					self.mask.fade('out');
-					setTimeout(function(){
+					requestTimeout(function(){
 						if(self.mask)
 							self.mask.destroy();
 						if(self.spinner)
@@ -170,7 +174,7 @@ var Movie = new Class({
 
 		self.actions = [];
 		self.data = notification.data;
-		self.el.empty();
+		self.inner.empty();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.category = CategoryList.getCategory(self.data.category_id) || {};
@@ -182,30 +186,11 @@ var Movie = new Class({
 	},
 
 	create: function(){
-		var self = this,
-			d = new Date();
+		var self = this;
 
 		self.el.addClass('status_'+self.get('status'));
 
-		var eta = null,
-			eta_date = null,
-			now = Math.round(+d/1000);
-
-		if(self.data.info.release_date)
-			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
-				if (timestamp > 0 && (eta === null || Math.abs(timestamp - now) < Math.abs(eta - now)))
-					eta = timestamp;
-			});
-
-		if(eta){
-			eta_date = new Date(eta * 1000);
-			if(+eta_date/1000 < now){
-				eta_date = null;
-			}
-			else {
-				eta_date = eta_date.format('%b') + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : '');
-			}
-		}
+		var eta_date = self.getETA();
 
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
@@ -245,7 +230,7 @@ var Movie = new Class({
 			});
 		}
 
-		self.el.adopt(
+		self.inner.adopt(
 			self.select_checkbox = new Element('input[type=checkbox]'),
 			new Element('div.poster_container').adopt(
 				thumbnail,
@@ -260,7 +245,7 @@ var Movie = new Class({
 						'text': self.data.info.year || 'n/a'
 					})
 				),
-				eta_date && (now+8035200 > eta) ? new Element('div.eta', {
+				eta_date ? new Element('div.eta', {
 					'text': eta_date,
 					'title': 'ETA'
 				}) : null,
@@ -296,13 +281,14 @@ var Movie = new Class({
 	onClick: function(e){
 		var self = this;
 
-		if(e.target.getParents('.actions').length == 0 && e.target != self.select_checkbox){
+		if(e.target.getParents('.actions').length === 0 && e.target != self.select_checkbox){
 			(e).stopPropagation();
+			self.addActions();
 			self.openDetails();
 		}
 	},
 
-	onMouseenter: function(){
+	addActions: function(){
 		var self = this;
 
 		if(self.actions.length <= 0){
@@ -317,16 +303,25 @@ var Movie = new Class({
 				self.actions.push(action);
 			});
 		}
+	},
+
+	onMouseenter: function(){
+		var self = this;
 
 		if(App.mobile_screen) return;
+		self.addActions();
 
 		if(self.list.current_view == 'thumb'){
-			dynamics.css(self.el, {
-				scale: 1,
-				opacity: 1
+			self.el.addClass('hover_start');
+			requestTimeout(function(){
+				self.el.removeClass('hover_start');
+			}, 300);
+
+			dynamics.css(self.inner, {
+				scale: 1
 			});
 
-			dynamics.animate(self.el, {
+			dynamics.animate(self.inner, {
 				scale: 0.9
 			}, { type: dynamics.bounce });
 
@@ -350,19 +345,6 @@ var Movie = new Class({
 
 			});
 		}
-	},
-
-	onMouseleave: function(){
-		var self = this;
-
-		if(App.mobile_screen) return;
-
-		if(self.list.current_view == 'thumb'){
-			dynamics.animate(self.el, {
-				scale: 1
-			}, { type: dynamics.spring });
-		}
-
 	},
 
 	updateReleases: function(){
@@ -427,6 +409,32 @@ var Movie = new Class({
 		catch (e){ }
 
 		return self.get('imdb');
+	},
+
+	getETA: function(format){
+		var self = this,
+			d = new Date(),
+			now = Math.round(+d/1000),
+			eta = null,
+			eta_date = '';
+
+		if(self.data.info.release_date)
+			[self.data.info.release_date.dvd, self.data.info.release_date.theater].each(function(timestamp){
+				if (timestamp > 0 && (eta === null || Math.abs(timestamp - now) < Math.abs(eta - now)))
+					eta = timestamp;
+			});
+
+		if(eta){
+			eta_date = new Date(eta * 1000);
+			if(+eta_date/1000 < now){
+				eta_date = null;
+			}
+			else {
+				eta_date = format ? eta_date.format(format) : (eta_date.format('%b') + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : ''));
+			}
+		}
+
+		return (now+8035200 > eta) ? eta_date : '';
 	},
 
 	get: function(attr){

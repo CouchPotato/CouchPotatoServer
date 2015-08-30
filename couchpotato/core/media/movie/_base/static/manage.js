@@ -84,7 +84,7 @@ var MoviesManage = new Class({
 	startProgressInterval: function(){
 		var self = this;
 
-		self.progress_interval = setInterval(function(){
+		self.progress_interval = requestInterval(function(){
 
 			if(self.progress_request && self.progress_request.running)
 				return;
@@ -94,7 +94,7 @@ var MoviesManage = new Class({
 				'onComplete': function(json){
 
 					if(!json || !json.progress){
-						clearInterval(self.progress_interval);
+						clearRequestInterval(self.progress_interval);
 						self.update_in_progress = false;
 						if(self.progress_container){
 							self.progress_container.destroy();

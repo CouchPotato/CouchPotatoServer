@@ -346,7 +346,7 @@ MA.Release = new Class({
 				if(json.success){
 					if(icon)
 						icon.addClass('completed');
-					release_el.getElement('.release_status').set('text', 'snatched');
+					release_el.getElement('.status').set('text', 'snatched');
 				}
 				else
 					if(icon)
@@ -377,37 +377,43 @@ MA.Trailer = new Class({
 		var self = this,
 			data_url = 'https://www.googleapis.com/youtube/v3/search?q="{title}" {year} trailer&maxResults=1&type=video&videoDefinition=high&videoEmbeddable=true&part=snippet&key=AIzaSyAT3li1KjfLidaL6Vt8T92MRU7n4VOrjYk';
 
-
 		if(!self.player_container){
 			self.id = 'trailer-'+randomString();
-			self.player_container = new Element('div.icon-play[id='+self.id+']', {
-				'events': {
-					'click': self.watch.bind(self)
-				}
-			}).adopt(
-				new Element('span[text="watch"]'),
-				new Element('span[text="trailer"]')
+
+			self.container = new Element('div.trailer_container').adopt(
+				self.player_container = new Element('div.icon-play[id='+self.id+']', {
+					'events': {
+						'click': self.watch.bind(self)
+					}
+				}).adopt(
+					new Element('span[text="watch"]'),
+					new Element('span[text="trailer"]')
+				),
+				self.background = new Element('div.background')
 			);
 
-			self.container = new Element('div.trailer_container')
-				.grab(self.player_container);
+			requestTimeout(function(){
 
-			var url = data_url.substitute({
-				'title': encodeURI(self.getTitle()),
-				'year': self.get('year')
-			});
+				var url = data_url.substitute({
+					'title': encodeURI(self.getTitle()),
+					'year': self.get('year')
+				});
 
-			new Request.JSONP({
-				'url': url,
-				'onComplete': function(json){
-					self.video_id = json.items[0].id.videoId;
-					self.container.grab(new Element('div.background', {
-						'styles': {
-							'background-image': 'url('+json.items[0].snippet.thumbnails.high.url+')'
+				new Request.JSONP({
+					'url': url,
+					'onComplete': function(json){
+						if(json.items.length > 0){
+							self.video_id = json.items[0].id.videoId;
+							self.background.setStyle('background-image', 'url('+json.items[0].snippet.thumbnails.high.url+')');
+							self.background.addClass('visible');
 						}
-					}));
-				}
-			}).send();
+						else {
+							self.container.getParent('.section').addClass('no_trailer');
+						}
+					}
+				}).send();
+
+			}, 1000);
 		}
 
 		return self.container;
@@ -417,11 +423,14 @@ MA.Trailer = new Class({
 	watch: function(){
 		var self = this;
 
-		self.container.set('html', '<iframe src="https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720" />');
+		new Element('iframe', {
+			'src': 'https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720'
+		}).inject(self.container);
 	}
 
 
 });
+
 
 MA.Category = new Class({
 

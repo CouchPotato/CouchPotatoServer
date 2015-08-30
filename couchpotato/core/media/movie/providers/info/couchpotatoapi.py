@@ -40,8 +40,13 @@ class CouchPotatoApi(MovieProvider):
 
         addEvent('release.validate', self.validate)
 
+        addEvent('cp.api_call', self.call)
+
         addEvent('cp.source_url', self.getSourceUrl)
         addEvent('cp.messages', self.getMessages)
+
+    def call(self, url, **kwargs):
+        return self.getJsonData(url, headers = self.getRequestHeaders(), **kwargs)
 
     def getMessages(self, last_check = 0):
 

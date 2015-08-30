@@ -26,6 +26,30 @@ class IMDBBase(Automation, RSS):
 
     interval = 1800
 
+    charts = {
+        'theater': {
+            'order': 1,
+            'name': 'IMDB - Movies in Theaters',
+            'url': 'http://www.imdb.com/movies-in-theaters/',
+        },
+        'boxoffice': {
+            'order': 2,
+            'name': 'IMDB - Box Office',
+            'url': 'http://www.imdb.com/boxoffice/',
+        },
+        'rentals': {
+            'order': 3,
+            'name': 'IMDB - Top DVD rentals',
+            'url': 'http://www.imdb.com/boxoffice/rentals',
+            'type': 'json',
+        },
+        'top250': {
+            'order': 4,
+            'name': 'IMDB - Top 250 Movies',
+            'url': 'http://www.imdb.com/chart/top',
+        },
+    }
+
     def getInfo(self, imdb_id):
         return fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
 
@@ -154,34 +178,10 @@ class IMDBAutomation(IMDBBase):
 
 class IMDBCharts(IMDBBase):
 
-    charts = {
-        'theater': {
-            'order': 1,
-            'name': 'IMDB - Movies in Theaters',
-            'url': 'http://www.imdb.com/movies-in-theaters/',
-        },
-        'boxoffice': {
-            'order': 2,
-            'name': 'IMDB - Box Office',
-            'url': 'http://www.imdb.com/boxoffice/',
-        },
-        'rentals': {
-            'order': 3,
-            'name': 'IMDB - Top DVD rentals',
-            'url': 'http://www.imdb.com/boxoffice/rentals',
-            'type': 'json',
-        },
-        'top250': {
-            'order': 4,
-            'name': 'IMDB - Top 250 Movies',
-            'url': 'http://www.imdb.com/chart/top',
-        },
-    }
-
     def getChartList(self):
         # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
         movie_lists = []
-        max_items = int(self.conf('max_items', section = 'charts', default=5))
+        max_items = 10
 
         for name in self.charts:
             chart = self.charts[name].copy()

@@ -45,7 +45,7 @@ var MoviesWanted = new Class({
 			$(self.list).inject(self.content);
 
 			// Check if search is in progress
-			self.startProgressInterval.delay(4000, self);
+			requestTimeout(self.startProgressInterval.bind(self), 4000);
 		}
 
 	},
@@ -66,13 +66,13 @@ var MoviesWanted = new Class({
 		var self = this;
 
 		var start_text = self.manual_search.get('text');
-		self.progress_interval = setInterval(function(){
+		self.progress_interval = requestInterval(function(){
 			if(self.search_progress && self.search_progress.running) return;
 			self.search_progress = Api.request('movie.searcher.progress', {
 				'onComplete': function(json){
 					self.search_in_progress = true;
 					if(!json.movie){
-						clearInterval(self.progress_interval);
+						clearRequestInterval(self.progress_interval);
 						self.search_in_progress = false;
 						self.manual_search.set('text', start_text);
 					}

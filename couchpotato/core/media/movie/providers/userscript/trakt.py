@@ -5,5 +5,7 @@ autoload = 'Trakt'
 
 class Trakt(UserscriptBase):
 
-    includes = ['http://trakt.tv/movie/*', 'http://*.trakt.tv/movie/*']
-    excludes = ['http://trakt.tv/movie/*/*', 'http://*.trakt.tv/movie/*/*']
+    version = 2
+
+    includes = ['*://trakt.tv/movies/*', '*://*.trakt.tv/movies/*']
+    excludes = ['*://trakt.tv/movies/*/*', '*://*.trakt.tv/movies/*/*']

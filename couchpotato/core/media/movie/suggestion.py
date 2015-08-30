@@ -23,6 +23,11 @@ class Suggestion(Plugin):
         addEvent('app.load', test)
 
     def suggestView(self, limit = 6, **kwargs):
+        if self.isDisabled():
+            return {
+                'success': True,
+                'movies': []
+            }
 
         movies = splitString(kwargs.get('movies', ''))
         ignored = splitString(kwargs.get('ignored', ''))
@@ -139,3 +144,22 @@ class Suggestion(Plugin):
         self.setCache('suggestion_cached', new_suggestions, timeout = 3024000)
 
         return new_suggestions
+
+config = [{
+    'name': 'suggestion',
+    'groups': [
+        {
+            'label': 'Suggestions',
+            'description': 'Displays suggestions on the home page',
+            'name': 'suggestions',
+            'tab': 'display',
+            'options': [
+                {
+                    'name': 'enabled',
+                    'default': True,
+                    'type': 'enabler',
+                },
+            ],
+        },
+    ],
+}]

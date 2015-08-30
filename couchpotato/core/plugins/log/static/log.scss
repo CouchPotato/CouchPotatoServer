@@ -12,12 +12,22 @@
 			padding: 5px 10px;
 			margin: 0;
 
+			@include media-tablet {
+				&.filter, &:nth-child(7),&:nth-child(8),&:nth-child(9),&:nth-child(10),&:nth-child(11),&:nth-child(12) {
+					display: none;
+				}
+
+				&:last-child {
+					display: inline-block;
+				}
+			}
+
 			&.select, &.clear {
 				cursor: pointer;
 			}
 
 			&:hover:not(.active):not(.filter) {
-				background: rgba(255, 255, 255, 0.1);
+				background: rgba(255,255,255,.1);
 			}
 
 			&.active {
@@ -32,12 +42,20 @@
 		font-style: italic;
 		opacity: .5;
 		margin-top: 3px;
+
+		@include media-tablet {
+			display: none;
+		}
 	}
 
 	.container {
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+
+		@include media-phablet {
+			padding: $padding $padding/2;
+		}
 
 		&.loading {
 			text-align: center;
@@ -52,37 +70,49 @@
 		.time {
 			clear: both;
 			font-size: .75em;
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			border-top: 1px solid rgba(255,255,255,.1);
 			overflow: hidden;
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 			display: flex;
 
+			@include media-phablet {
+				flex-flow: row wrap;
+			}
+
 			&.highlight {
-				background: $theme_off;
+				@include theme(background, off);
 			}
 
 			span {
 				padding: 5px 0 3px;
 				display: inline-block;
 				vertical-align: middle;
-				width: 90px;
+				width: 95px;
+			}
+
+			.message {
+				white-space: pre-wrap;
+				flex: 1 auto;
+
+				@include media-phablet {
+					flex: 1 auto;
+					margin-top: -$padding/4;
+					padding: 0;
+					display: block;
+					width: 100%;
+				}
 			}
 
 			::selection {
-				background-color: #000;
-				color: #FFF;
+				@include theme(background-color, background);
+				@include theme(color, text);
 			}
 		}
 
 		.type.type {
-			margin-left: 10px;
+			margin-left: $padding/3;
 			width: 40px;
-		}
-
-		.message {
-			white-space: pre-wrap;
-			flex: 1 auto;
 		}
 
 
@@ -120,8 +150,8 @@
 	.button {
 		margin: 10px 0;
 		padding: 10px;
-		color: $background_color;
-		background: $primary_color;
+		color: #FFF;
+		@include theme(background, primary);
 	}
 
 	.bug {
@@ -154,6 +184,6 @@
 	z-index: 10000;
 	position: absolute;
 	padding: 10px;
-	background: $primary_color;
-	color: #FFF;
+	@include theme(background, primary);
+	color: #FFF !important;
 }

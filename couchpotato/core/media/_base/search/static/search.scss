@@ -7,7 +7,7 @@
 	position: relative;
 
 	* {
-		transform: translateZ(0);
+		transform: rotateZ(360deg); // Mobile IE redraw fix
 	}
 
 	.icon-search {
@@ -26,10 +26,14 @@
 		position: absolute;
 		left: 44px;
 		bottom: 0;
-		background: $primary_color;
+		@include theme(background, primary);
 		border-radius: $border_radius 0 0 $border_radius;
 		display: none;
         box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
+
+		@include theme-dark {
+			box-shadow: 0 5px 15px 2px rgba(0,0,0,.4);
+		}
 
 		&:before {
 			transform: rotate(45deg);
@@ -38,7 +42,7 @@
 			position: absolute;
 			height: 10px;
 			width: 10px;
-			background: $primary_color;
+			@include theme(background, primary);
 			left: -6px;
 			bottom: 16px;
 			z-index: 1;
@@ -46,7 +50,7 @@
 	}
 
 	.input {
-		background: $background_color;
+		@include theme(background, background);
 		border-radius: $border_radius 0 0 $border_radius;
 		position: relative;
 		left: 4px;
@@ -68,18 +72,19 @@
 			}
 
 			&:focus {
-				background: rgba($theme_off, .2);
+				background: rgba(255,255,255, .2);
+
+				@include theme-dark {
+					background: rgba(0,0,0, .2);
+				}
 
 				&::-webkit-input-placeholder {
-					color: $text_color;
 					opacity: .7;
 				}
 				&::-moz-placeholder {
-					color: $text_color;
 					opacity: .7;
 				}
 				&:-ms-input-placeholder {
-					color: $text_color;
 					opacity: .7;
 				}
 			}
@@ -93,7 +98,11 @@
 		}
 
 		.input input {
-			background: rgba($theme_off, .4);
+			background: rgba(255,255,255,.3);
+
+			@include theme-dark {
+				background: rgba(0,0,0,.3);
+			}
 		}
 	}
 
@@ -126,7 +135,7 @@
 		position: relative;
 		left: 4px;
 		display: none;
-		background: $background_color;
+		@include theme(background, background);
 		border-radius: $border_radius 0 0 0;
 		overflow: hidden;
 
@@ -149,9 +158,13 @@
 					top: 0;
 					left: 30px;
 					right: 0;
-					background: rgba(0,0,0,.3);
 					display: flex;
 					align-items: center;
+					background: get-theme(off);
+
+					@include theme-dark {
+						background: get-theme-dark(off);
+					}
 
 					@include media-phablet {
 						left: 0;
@@ -213,7 +226,7 @@
 
 					.button {
 						display: block;
-						background: $primary_color;
+						@include theme(background, primary);
 						text-align: center;
 						margin: 0;
 					}
@@ -246,19 +259,24 @@
 					cursor: pointer;
 					border-top: 1px solid rgba(255,255,255, 0.08);
 					transition: all .4s cubic-bezier(0.9,0,0.1,1);
-					transform: translateX(0);
-					background: $background_color;
+					will-change: transform;
+					transform: translateX(0) rotateZ(360deg);
+					@include theme(background, background);
+
+					@include theme-dark {
+						border-color: rgba(255,255,255, 0.08);
+					}
 
 					@include media-phablet {
 						left: 0;
 					}
 
 					&:hover {
-						transform: translateX(2%);
+						transform: translateX(2%) rotateZ(360deg);
 					}
 
 					&.open {
-						transform: translateX(100%);
+						transform: translateX(100%) rotateZ(360deg);
 					}
 
 					.info {
@@ -290,7 +308,6 @@
 								opacity: .4;
 								padding: 0 5px;
 								width: auto;
-								display: none;
 							}
 
 							.in_wanted,
@@ -299,7 +316,7 @@
 								top: 15px;
 								left: 0;
 								font-size: 11px;
-								color: $primary_color;
+								@include theme(color, primary);
 							}
 
 							&.in_library_wanted {
@@ -354,7 +371,7 @@
 
 		.icon-search {
 			display: block;
-			color: #000;
+			@include theme(color, text);
 			right: $padding;
 			top: $padding;
 			width: $input_height;
@@ -411,8 +428,11 @@
 					box-shadow: 0;
 					font-size: 2em;
 					font-weight: 400;
+					padding-right: $input_height;
+					@include theme(background, background);
 
 					@include media-phablet {
+						padding-right: $input_height_mobile;
 						font-size: 1em;
 					}
 				}
@@ -424,8 +444,12 @@
 				top: $input_height;
 				left: 0;
 				right: 0;
-				border: 1px solid #b7b7b7;
+				border: 1px solid get-theme(off);
 				border-top: 0;
+
+				@include theme-dark {
+					border-color: get-theme-dark(off);
+				}
 
 				@include media-phablet {
 					top: $input_height_mobile;
@@ -499,5 +523,5 @@
 }
 
 .big_search {
-	background: $theme_off;
+	@include theme(background, off);
 }

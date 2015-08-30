@@ -13,7 +13,7 @@ Page.Movies = new Class({
 		self.parent(parent, options);
 
 		self.navigation = new BlockNavigation();
-		$(self.navigation).inject(self.content, 'top');
+		$(self.navigation).inject(self.el);
 
 	},
 

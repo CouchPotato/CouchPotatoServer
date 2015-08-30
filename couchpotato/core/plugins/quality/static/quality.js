@@ -221,9 +221,9 @@ var QualityBase = new Class({
 	changeSize: function(identifier, type, value){
 		var self = this;
 
-		if(self.size_timer[identifier + type]) clearTimeout(self.size_timer[identifier + type]);
+		if(self.size_timer[identifier + type]) clearRequestTimeout(self.size_timer[identifier + type]);
 
-		self.size_timer[identifier + type] = (function(){
+		self.size_timer[identifier + type] = requestTimeout(function(){
 			Api.request('quality.size.save', {
 				'data': {
 					'identifier': identifier,
@@ -231,7 +231,7 @@ var QualityBase = new Class({
 					'value': value
 				}
 			});
-		}).delay(300);
+		}, 300);
 
 	}
 

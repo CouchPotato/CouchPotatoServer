@@ -13,6 +13,7 @@ var MovieList = new Class({
 		force_view: false
 	},
 
+	available_views: ['thumb', 'list'],
 	movies: [],
 	movies_added: {},
 	total_movies: 0,
@@ -47,13 +48,9 @@ var MovieList = new Class({
 						(e).stopPropagation();
 						el.retrieve('klass').onMouseenter(e);
 					},
-					'mouseleave:relay(.movie)': function(e, el){
-						(e).stopPropagation();
-						el.retrieve('klass').onMouseleave(e);
-					},
 					'change:relay(.movie input)': function(e, el){
 						(e).stopPropagation();
-						el = el.getParent();
+						el = el.getParent('.movie');
 						var klass = el.retrieve('klass');
 						klass.fireEvent('select');
 						klass.select(klass.select_checkbox.get('checked'));
@@ -152,7 +149,7 @@ var MovieList = new Class({
 		if(!self.navigation_counter) return;
 
 		self.counter_count = count;
-		self.navigation_counter.set('text', (count || 0) + ' movies');
+		self.navigation_counter.set('text', count === 1 ? '1 movie' : (count || 0) + ' movies');
 
 		if (self.empty_message) {
 			self.empty_message.destroy();
@@ -530,6 +527,9 @@ var MovieList = new Class({
 	changeView: function(new_view){
 		var self = this;
 
+		if(self.available_views.indexOf(new_view) == -1)
+			new_view = 'thumb';
+
 		self.el
 			.removeClass(self.current_view+'_list')
 			.addClass(new_view+'_list');
@@ -546,8 +546,8 @@ var MovieList = new Class({
 	search: function(){
 		var self = this;
 
-		if(self.search_timer) clearTimeout(self.search_timer);
-		self.search_timer = (function(){
+		if(self.search_timer) clearRequestTimeout(self.search_timer);
+		self.search_timer = requestTimeout(function(){
 			var search_value = self.navigation_search_input.get('value');
 			if (search_value == self.last_search_value) return;
 
@@ -560,7 +560,7 @@ var MovieList = new Class({
 
 			self.last_search_value = search_value;
 
-		}).delay(250);
+		}, 250);
 
 	},
 
@@ -588,7 +588,7 @@ var MovieList = new Class({
 			createSpinner(self.loader_first);
 
 			var lfc = self.loader_first;
-			loader_timeout = setTimeout(function(){
+			loader_timeout = requestTimeout(function(){
 				lfc.addClass('show');
 			}, 10);
 
@@ -607,13 +607,13 @@ var MovieList = new Class({
 				if(reset)
 					self.movie_list.empty();
 
-				if(loader_timeout) clearTimeout(loader_timeout);
+				if(loader_timeout) clearRequestTimeout(loader_timeout);
 				if(self.loader_first){
 					var lf = self.loader_first;
 					self.loader_first = null;
 					lf.removeClass('show');
 
-					setTimeout(function(){
+					requestTimeout(function(){
 						lf.destroy();
 					}, 1000);
 					self.el.setStyle('min-height', null);

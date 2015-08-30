@@ -10,66 +10,69 @@
 .category {
 	margin-bottom: 20px;
 	position: relative;
-}
 
-	.category > .delete {
+	> .delete {
 		position: absolute;
-		padding: 16px;
+		padding: $padding/3 $padding;
 		right: 0;
 		cursor: pointer;
 		opacity: 0.6;
 		color: #fd5353;
-	}
-		.category > .delete:hover {
+		font-size: 1.5em;
+		z-index: 2;
+
+		&:hover {
 			opacity: 1;
 		}
+	}
 
-	.category .ctrlHolder:hover {
+	.ctrlHolder:hover {
 		background: none;
 	}
 
-	.category .formHint {
+	.formHint {
 		opacity: 0.1;
 	}
-	.category:hover .formHint {
+
+	&:hover .formHint {
 		opacity: 1;
 	}
+}
 
 #category_ordering {
 
-}
-
-	#category_ordering ul {
+	ul {
 		float: left;
 		margin: 0;
 		width: 275px;
 		padding: 0;
 	}
 
-		#category_ordering li {
-			cursor: grab;
-			border-bottom: 1px solid $theme_off;
-			padding: 5px;
-			list-style: none;
+	li {
+		cursor: grab;
+		border-bottom: 1px solid transparent;
+		@include theme(border-color, off);
+		padding: 5px;
+		list-style: none;
+
+		&:last-child { border: 0; }
+
+		.check {
+			margin: 2px 10px 0 0;
+			vertical-align: top;
 		}
-		#category_ordering li:last-child { border: 0; }
 
-			#category_ordering li .check {
-				margin: 2px 10px 0 0;
-				vertical-align: top;
-			}
+		> span {
+			display: inline-block;
+			height: 20px;
+			vertical-align: top;
+			line-height: 20px;
+		}
 
-			#category_ordering li > span {
-				display: inline-block;
-				height: 20px;
-				vertical-align: top;
-				line-height: 20px;
-			}
-
-			#category_ordering li .handle {
-				width: 20px;
-				float: right;
-			}
-
-	#category_ordering .formHint {
+		.handle {
+			width: 20px;
+			float: right;
+		}
 	}
+
+}

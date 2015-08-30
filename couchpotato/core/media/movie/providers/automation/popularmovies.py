@@ -18,7 +18,7 @@ class PopularMovies(Automation):
         retrieved_movies = self.getJsonData(self.url)
 
         if retrieved_movies:
-            for movie in retrieved_movies.get('movies'):
+            for movie in retrieved_movies:
                 imdb_id = movie.get('imdb_id')
                 info = fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
                 if self.isMinimalMovie(info):

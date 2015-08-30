@@ -24,7 +24,7 @@ var Profile = new Class({
 		var data = self.data;
 
 		self.el = new Element('div.profile').adopt(
-			self.delete_button = new Element('span.delete.icon2', {
+			self.delete_button = new Element('span.delete.icon-delete', {
 				'events': {
 					'click': self.del.bind(self)
 				}
@@ -96,8 +96,8 @@ var Profile = new Class({
 	save: function(delay){
 		var self = this;
 
-		if(self.save_timer) clearTimeout(self.save_timer);
-		self.save_timer = (function(){
+		if(self.save_timer) clearRequestTimeout(self.save_timer);
+		self.save_timer = requestTimeout(function(){
 
 			self.addType();
 
@@ -123,7 +123,7 @@ var Profile = new Class({
 				}
 			});
 
-		}).delay(delay, self);
+		}, delay);
 
 	},
 

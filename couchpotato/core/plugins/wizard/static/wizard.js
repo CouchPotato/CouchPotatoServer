@@ -102,10 +102,10 @@ Page.Wizard = new Class({
 			});
 		}
 		else
-			(function(){
+			requestTimeout(function(){
 				var sc = self.el.getElement('.wgroup_'+action);
 				self.scroll.start(0, sc.getCoordinates().top-80);
-			}).delay(1);
+			}, 1);
 	},
 
 	orderGroups: function(){

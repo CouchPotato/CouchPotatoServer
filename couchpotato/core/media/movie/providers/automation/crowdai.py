@@ -58,7 +58,8 @@ config = [{
             'list': 'automation_providers',
             'name': 'crowdai_automation',
             'label': 'CrowdAI',
-            'description': 'Imports from any newznab powered NZB providers RSS feed depending on the number of grabs per movie. Go to your newznab site and find the RSS section. Then copy the copy paste the link under "Movies > x264 feed" here.',
+            'description': ('Imports from any newznab powered NZB providers RSS feed depending on the number of grabs per movie.',
+                            'Go to your newznab site and find the RSS section. Then copy the copy paste the link under "Movies > x264 feed" here.'),
             'options': [
                 {
                     'name': 'automation_enabled',

@@ -10,8 +10,7 @@ var MovieDetails = new Class({
 
 		self.sections = {};
 
-		var category = parent.get('category'),
-			profile = parent.profile;
+		var category = parent.get('category');
 
 		self.el = new Element('div',{
 			'class': 'page active movie_details level_' + (options.level || 0)
@@ -37,9 +36,17 @@ var MovieDetails = new Class({
 			)
 		);
 
-		self.addSection('description', new Element('div', {
-			'text': parent.get('plot')
-		}));
+		var eta_date = parent.getETA('%b %Y') ;
+		self.addSection('description', new Element('div').adopt(
+			new Element('div', {
+				'text': parent.get('plot')
+			}),
+			new Element('div.meta', {
+				'html':
+					(eta_date ? ('<span>ETA:' + eta_date + '</span>') : '') +
+					'<span>' + (parent.get('genres') || []).join(', ') + '</span>'
+			})
+		));
 
 
 		// Title dropdown
@@ -95,25 +102,31 @@ var MovieDetails = new Class({
 
 		self.el.addClass('show');
 
-		if(!App.mobile_screen){
-			$(self.content).getElements('> .head, > .section').each(function(section, nr){
-				dynamics.css(section, {
-					opacity: 0,
-					translateY: 100
-				});
+		//if(!App.mobile_screen){
+		//	$(self.content).getElements('> .head, > .section').each(function(section, nr){
+		//		dynamics.css(section, {
+		//			opacity: 0,
+		//			translateY: 100
+		//		});
+		//
+		//		dynamics.animate(section, {
+		//			opacity: 1,
+		//			translateY: 0
+		//		}, {
+		//			type: dynamics.spring,
+		//			frequency: 200,
+		//			friction: 300,
+		//			duration: 1200,
+		//			delay: 500 + (nr * 100)
+		//		});
+		//	});
+		//}
 
-				dynamics.animate(section, {
-					opacity: 1,
-					translateY: 0
-				}, {
-					type: dynamics.spring,
-					frequency: 200,
-					friction: 300,
-					duration: 1200,
-					delay: 500 + (nr * 100)
-				});
-			});
-		}
+		self.outer_click = function(){
+			self.close();
+		};
+
+		App.addEvent('history.push', self.outer_click)
 
 	},
 
@@ -127,28 +140,30 @@ var MovieDetails = new Class({
 		self.overlay.addEventListener('transitionend', ended, false);
 
 		// animate out
+		//if(!App.mobile_screen){
+		//	$(self.content).getElements('> .head, > .section').reverse().each(function(section, nr){
+		//		dynamics.animate(section, {
+		//			opacity: 0
+		//		}, {
+		//			type: dynamics.spring,
+		//			frequency: 200,
+		//			friction: 300,
+		//			duration: 1200,
+		//			delay: (nr * 50)
+		//		});
+		//	});
+		//
+		//	dynamics.setTimeout(function(){
+		//		self.el.removeClass('show');
+		//	}, 200);
+		//}
+		//else {
+		//	self.el.removeClass('show');
+		//}
 
-		if(!App.mobile_screen){
-			$(self.content).getElements('> .head, > .section').reverse().each(function(section, nr){
-				dynamics.animate(section, {
-					opacity: 0,
-					translateY: 100
-				}, {
-					type: dynamics.spring,
-					frequency: 200,
-					friction: 300,
-					duration: 1200,
-					delay: (nr * 50)
-				});
-			});
+		self.el.removeClass('show');
 
-			dynamics.setTimeout(function(){
-				self.el.removeClass('show');
-			}, 200);
-		}
-		else {
-			self.el.removeClass('show');
-		}
+		App.removeEvent('history.push', self.outer_click)
 	}
 
 });

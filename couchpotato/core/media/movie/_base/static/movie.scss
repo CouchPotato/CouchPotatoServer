@@ -7,6 +7,10 @@ $mass_edit_height: 44px;
 	z-index: 21;
 	height: $header_height;
 
+	.scroll_content {
+		display: none;
+	}
+
 	@include media-phablet {
 		height: $header_width_mobile;
 	}
@@ -16,6 +20,7 @@ $mass_edit_height: 44px;
 .page.movies_manage {
 	top: $header_height;
 	padding: 0;
+	will-change: top;
 	transition: top 300ms $cubic;
 
 	@include media-phablet {
@@ -56,10 +61,15 @@ $mass_edit_height: 44px;
 		input[type=checkbox] {
 			display: inline-block;
 			position: absolute;
+			will-change: opacity;
 			transition: opacity 200ms;
 			opacity: 0;
 			z-index: 2;
 			cursor: pointer;
+
+			@include media-phablet {
+				display: none;
+			}
 
 			&:hover {
 				opacity: 1 !important;
@@ -80,16 +90,27 @@ $mass_edit_height: 44px;
 
 		span {
 			display: inline-block;
-			background: rgba(0,0,0,.25);
+			background: get-theme(off);
 			border: 1px solid transparent;
-			color: #FFF;
+			color: rgba(get-theme(text), .5);
 			border-radius: 1px;
 			padding: 1px 3px;
 
-			&.failed { background: #993619; }
-			&.available { color: #009902; border-color: #009902; background: #FFF }
-			&.snatched { background: #568f99; color: #FFF }
+			@include theme-dark {
+				color: rgba(get-theme-dark(text), .5);
+				background: get-theme-dark(off);
+			}
+
+			&.failed { background: #993619; color: #FFF; }
+			&.available { color: #009902; border-color: #009902; background: get-theme(background);}
+			&.snatched { background: #548399; color: #FFF }
 			&.downloaded, &.done { background: #009902; color: #FFF }
+
+			@include theme-dark {
+				&.available { border-color: transparent; background: get-theme-dark(off);}
+				&.snatched { background: #548399; }
+				&.downloaded, &.done { background: #009902; color: #FFF; }
+			}
 		}
 	}
 
@@ -115,12 +136,31 @@ $mass_edit_height: 44px;
 		display: block;
 		padding: $padding;
 
-		@include media-phablet {
+		@include media-tablet {
 			padding: $padding/2;
 		}
 
 		a {
-			color: $primary_color;
+			@include theme(color, primary);
+		}
+	}
+
+	.message {
+		padding: $padding 0;
+		text-align: center;
+
+		a {
+			@include theme(color, primary);
+		}
+	}
+
+	&.movies > h2 {
+		padding: 0 $padding;
+		line-height: $header_height;
+
+		@include media-phablet {
+			line-height: $header_width_mobile;
+			padding: 0 $padding/2;
 		}
 	}
 
@@ -130,13 +170,14 @@ $mass_edit_height: 44px;
 		right: $padding;
 		width: auto;
 		line-height: $header_height;
+		opacity: .7;
 
 		@include media-tablet {
 			display: none;
 		}
 
 		a {
-			color: $primary_color;
+			@include theme(color, primary);
 			display: inline;
 
 			&:hover {
@@ -146,19 +187,20 @@ $mass_edit_height: 44px;
 	}
 
 	> .loading {
-		background: #FFF;
+		@include theme(background, background);
 
 		.message {
-			color: #000;
+			@include theme(color, text);
 		}
 
 		.spinner {
-			background-color: #000;
+			@include theme(background-color, background);
 		}
 	}
 
-	.actions {
-		transform: rotateY(360deg);
+	.movie .actions {
+		will-change: transform, opacity;
+		transform: rotateZ(360deg);
 
 		@include media-phablet {
 			pointer-events: none;
@@ -196,7 +238,9 @@ $mass_edit_height: 44px;
 
 	.movie {
 		display: block;
-		border-bottom: 1px solid $theme_off;
+		border-bottom: 1px solid transparent;
+		@include theme(border-color, off);
+
 		position: relative;
 		cursor: pointer;
 
@@ -205,7 +249,11 @@ $mass_edit_height: 44px;
 		}
 
 		&:hover {
-			background: rgba(0,0,0,.1);
+			background: get-theme(off);
+
+			@include theme-dark {
+				background: get-theme-dark(off);
+			}
 		}
 
 		input[type=checkbox] {
@@ -225,7 +273,7 @@ $mass_edit_height: 44px;
 			flex-flow: row nowrap;
 			align-items: center;
 
-			@include media-phablet {
+			@include media-tablet {
 				display: block;
 				padding: $padding/2;
 			}
@@ -233,7 +281,7 @@ $mass_edit_height: 44px;
 			.title {
 				flex: 1 auto;
 
-				@include media-phablet {
+				@include media-tablet {
 					display: flex;
 					flex-flow: row nowrap;
 				}
@@ -244,7 +292,7 @@ $mass_edit_height: 44px;
 					text-overflow: ellipsis;
 					white-space: nowrap;
 
-					@include media-phablet {
+					@include media-tablet {
 						width: 100%;
 					}
 
@@ -272,7 +320,7 @@ $mass_edit_height: 44px;
 					font-size: .7em;
 					margin: 2px 0 0 2px;
 
-					@include media-phablet {
+					@include media-tablet {
 						margin: 2px 2px 0 0;
 					}
 				}
@@ -300,18 +348,19 @@ $mass_edit_height: 44px;
 			a {
 				height: 100%;
 				display: block;
-				background: $background_color;
+				@include theme(background, background);
+				@include theme(color, text);
 				padding: $padding / 2;
 				width: auto;
 				float: right;
-				color: $text_color;
+				@include theme(text, text);
 
 				&:before {
 					display: none;
 				}
 
 				&:hover {
-					color: $primary_color;
+					@include theme(color, primary);
 				}
 
 				.icon {
@@ -323,7 +372,7 @@ $mass_edit_height: 44px;
 		&:hover .actions {
 			display: block;
 
-			@include media-phablet {
+			@include media-tablet {
 				display: none;
 			}
 		}
@@ -333,12 +382,21 @@ $mass_edit_height: 44px;
 		&:hover, &.checked {
 			.info .title span {
 				margin-left: $padding;
+
+				@include media-tablet {
+					margin-left: 0;
+				}
 			}
 		}
 	}
 }
 
 .thumb_list {
+
+	$max-split: 20;
+	$split-jump: 225px;
+
+	padding: 0 $padding/4;
 
 	> div:last-child {
 		padding: 0 ($padding/2)+2px;
@@ -347,47 +405,36 @@ $mass_edit_height: 44px;
 		}
 	}
 
-	@include media-tablet {
-		padding: 0 $padding/4;
-	}
-
-	@include media-phablet {
-		padding: 0 $padding/6;
-	}
-
-	> div {
-		display: flex;
-		flex-flow: row wrap;
-		align-items: stretch;
-	}
-
 	.movie {
+		overflow: visible;
+		display: inline-block;
+		vertical-align: top;
 		margin-bottom: $padding;
 		position: relative;
 		cursor: pointer;
-		flex: 1 auto;
 		width: 150px;
-		max-width: 16.666666667%;
 		border: 0 solid transparent;
-		border-width: 0 $padding/2;
+		border-width: 0 $padding/3;
 
-		@include media-desktop-plus {
-			max-width: 20%;
-			border-width: 0 $padding/2.5;
+		.inner {
+			will-change: transform;
+			transform: rotateZ(360deg);
 		}
 
-		@include media-desktop {
-			max-width: 33.333%;
-			border-width: 0 $padding/3;
+		@while $max-split > 0 {
+			@media (min-width : $split-jump * ($max-split - 1)) and (max-width : $split-jump * $max-split) {
+				width: 100% / $max-split;
+			}
+			$max-split: $max-split - 1;
 		}
 
 		@include media-tablet {
-			max-width: 50%;
+			width: 33.333%;
 			border-width: 0 $padding/4;
 		}
 
 		@include media-phablet {
-			max-width: 50%;
+			width: 50%;
 			border-width: 0 $padding/5;
 		}
 
@@ -406,7 +453,8 @@ $mass_edit_height: 44px;
 
 		.poster {
 			position: absolute;
-			background: $theme_off center no-repeat;
+			background: center no-repeat;
+			@include theme(background-color, off);
 			background-size: cover;
 			overflow: hidden;
 			height: 100%;
@@ -415,7 +463,7 @@ $mass_edit_height: 44px;
 
 		.info {
 			clear: both;
-			font-size: .85em;
+			font-size: .9em;
 
 			.title {
 				display: flex;
@@ -444,6 +492,7 @@ $mass_edit_height: 44px;
 			.quality {
 				white-space: nowrap;
 				overflow: hidden;
+				font-size: .9em;
 
 				span {
 					font-size: .8em;
@@ -453,9 +502,16 @@ $mass_edit_height: 44px;
 		}
 
 		.actions {
-			background-image: linear-gradient(25deg, rgba($primary_color,0) 0%, rgba($primary_color,1) 80%);
-			transition: opacity 400ms;
+			background-image: linear-gradient(25deg, rgba(get-theme(primary),0) 0%, rgba(get-theme(primary),1) 80%);
+			@include theme-dark {
+				background-image: linear-gradient(25deg, rgba(get-theme-dark(primary),0) 0%, rgba(get-theme-dark(primary),1) 80%);
+			}
+
+			will-change: opacity, visibility;
+			transition: all 400ms;
+			transition-property: opacity, visibility;
 			opacity: 0;
+			visibility: hidden;
 			position: absolute;
 			top: 0;
 			right: 0;
@@ -465,10 +521,9 @@ $mass_edit_height: 44px;
 
 			.action {
 				position: relative;
-				display: block;
-				margin-bottom: 1px;
-				width: auto;
 				margin-right: $padding/2;
+				float: right;
+				clear: both;
 
 				&:first-child {
 					margin-top: $padding/2;
@@ -476,15 +531,18 @@ $mass_edit_height: 44px;
 
 				a {
 					transition: all 150ms $cubic;
-					display: inline-block;
+					will-change: color, background;
+					transition-property: color, background;
+					display: block;
 					width: auto;
 					padding: $padding / 3;
-					color: #FFF;
+					@include theme(color, background);
 					border-radius: $border_radius - 1px;
+					font-weight: 400;
 
 					&:hover {
-						background: #FFF;
-						color: $primary_color;
+						@include theme(background, background);
+						@include theme(color, primary);
 					}
 				}
 			}
@@ -492,15 +550,21 @@ $mass_edit_height: 44px;
 
 		&:hover .actions {
 			opacity: 1;
+			visibility: visible;
 
 			@include media-phablet {
 				display: none;
 			}
 		}
 
+		&.hover_start .actions {
+			pointer-events: none;
+		}
+
 		.mask {
 			bottom: 44px;
 			border-radius: $border_radius;
+			will-change: opacity;
 			transition: opacity 30ms;
 		}
 	}
@@ -508,7 +572,6 @@ $mass_edit_height: 44px;
 }
 
 .page.movie_details {
-
 	pointer-events: none;
 	$gab-width: $header_width/3;
 
@@ -525,8 +588,8 @@ $mass_edit_height: 44px;
 		background: rgba(0,0,0,.6);
 		border-radius: $border_radius 0 0 $border_radius;
 		opacity: 0;
-		transform: rotateY(360deg);
-		backface-visibility: hidden;
+		will-change: opacity;
+		transform: rotateZ(360deg);
 		transition: opacity 300ms ease 400ms;
 		z-index: 1;
 
@@ -537,6 +600,7 @@ $mass_edit_height: 44px;
 		@include media-phablet {
 			left: 0;
 			border-radius: 0;
+			transition: none;
 		}
 
 		.close {
@@ -548,7 +612,7 @@ $mass_edit_height: 44px;
 			width: 100%;
 			height: 100%;
 			opacity: 0;
-			backface-visibility: hidden;
+			will-change: opacity;
 			transition: opacity 300ms ease 200ms;
 
 			&:before {
@@ -569,11 +633,12 @@ $mass_edit_height: 44px;
 		bottom: 0;
 		right: 0;
 		left: $header_width + $gab-width;
-		background: $background_color;
+		@include theme(background, background);
 		border-radius: $border_radius 0 0 $border_radius;
 		overflow-y: auto;
-		transform: translateX(100%) rotateY(360deg);
-		transition: transform 350ms $cubic;
+		will-change: transform;
+		transform: translateX(100%) rotateZ(360deg);
+		transition: transform 450ms $cubic;
 
 		@include media-phablet {
 			left: $header_width_mobile;
@@ -582,27 +647,27 @@ $mass_edit_height: 44px;
 		> .head {
 			display: flex;
 			flex-flow: row wrap;
-			padding: 0 $padding;
+			padding: 0 $padding 0 $padding/2;
 			position: relative;
 			z-index: 2;
+			will-change: transform, opacity;
+			transform: rotateZ(360deg);
 
 			@include media-phablet {
 				padding: 0;
-				line-height: 1em;
+				line-height: $header_width_mobile;
 			}
 
 			h1 {
 				flex: 1 auto;
 				margin: 0;
 				font-size: 24px;
-				color: rgba(0,0,0,.5);
 				font-weight: 300;
 				max-width: 100%;
 
 				@include media-phablet {
 					min-width: 100%;
 					line-height: $header_width_mobile;
-					margin-top: $padding;
 
 					.more_menu {
 						width: 100%;
@@ -632,9 +697,14 @@ $mass_edit_height: 44px;
 
 				> a {
 					line-height: $header_height;
+					@include theme(color, primary);
+
+					&:hover {
+						@include theme(color, text);
+					}
 
 					@include media-phablet {
-						line-height: $header_width_mobile/2;
+						line-height: $header_width_mobile;
 					}
 				}
 
@@ -685,7 +755,7 @@ $mass_edit_height: 44px;
 						}
 
 						&:hover, &.icon-ok {
-							color: $primary_color;
+							@include theme(color, primary);
 						}
 					}
 				}
@@ -728,15 +798,15 @@ $mass_edit_height: 44px;
 				> a {
 					display: inline-block;
 					padding: 0 10px;
-					color: $primary_color;
+					@include theme(color, primary);
 					line-height: $header_height;
 
 					@include media-phablet {
-						line-height: $header_width_mobile/2;
+						line-height: $header_width_mobile;
 					}
 
 					&:hover {
-						color: #000;
+						@include theme(color, text);
 					}
 				}
 
@@ -746,6 +816,12 @@ $mass_edit_height: 44px;
 		.section {
 			padding: $padding;
 			border-top: 1px solid rgba(0,0,0,.1);
+			will-change: transform, opacity;
+			transform: rotateZ(360deg);
+
+			@include theme-dark {
+				border-color: rgba(255,255,255,.1);
+			}
 
 			@include media-phablet {
 				padding: $padding/2;
@@ -767,13 +843,30 @@ $mass_edit_height: 44px;
 		}
 
 		.scroll_content {
-			transition-delay: 200ms;
-			transform: translateX(0);
+			transition-delay: 50ms;
+			transform: translateX(0) rotateZ(360deg);
+		}
+	}
+
+	.section_description {
+		.meta {
+			text-align: right;
+			font-style: italic;
+			font-size: .90em;
+
+			span {
+				display: inline-block;
+				margin: $padding/2 $padding/2 0;
+
+				&:last-child {
+					margin-right: 0;
+				}
+			}
 		}
 	}
 
 	.section_add {
-		background: $theme_off;
+		@include theme(background, off);
 
 		.options > div {
 			display: flex;
@@ -808,7 +901,7 @@ $mass_edit_height: 44px;
 					margin: 0;
 
 					&:hover {
-						background: $primary_color;
+						@include theme(background, primary);
 					}
 				}
 
@@ -848,18 +941,11 @@ $mass_edit_height: 44px;
 
 			a {
 				display: inline;
+				@include theme(color, primary);
 
 				&:hover {
 					text-decoration: underline;
 				}
-			}
-
-			.orange {
-				color: #ffa500;
-			}
-
-			.green {
-				color: #008000;
 			}
 		}
 
@@ -869,7 +955,8 @@ $mass_edit_height: 44px;
 			}
 
 			&:not(.head):hover {
-				background: $theme_off;
+				@include theme(background, off);
+				@include theme(text, text);
 			}
 
 			span {
@@ -945,10 +1032,10 @@ $mass_edit_height: 44px;
 					vertical-align: top;
 					padding: $padding/3;
 					min-width: 26px;
-					color: $text_color;
+					@include theme(color, text);
 
 					&:hover {
-						color: $primary_color;
+						@include theme(color, primary);
 					}
 
 					@include media-phablet {
@@ -979,125 +1066,149 @@ $mass_edit_height: 44px;
 
 	}
 
-	.trailer_container {
-		$play-size: 110px;
+	.section_trailer.section_trailer {
+		$max_height: 450px;
+		$max_width: $max_height * (16/9);
 
-		background: #000;
-		position: relative;
-		padding-bottom: 56.25%;
-		height: 0;
+		padding: 0;
+		background: $menu_color;
+		max-height: $max_height;
 		overflow: hidden;
-		max-width: 100%;
-		cursor: pointer;
 
-		.background {
-			opacity: .3;
-			transition: all 300ms;
-			transform: scale(1.05) rotateY(360deg);
-			background: no-repeat center;
-			background-size: cover;
-			position: absolute;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			left: 0;
-			z-index: 1;
+		@include media-phablet {
+			max-height: $max_height;
 		}
 
-		.icon-play {
+		&.no_trailer {
+			display: none;
+		}
 
-			opacity: 0.9;
-			position: absolute;
-			z-index: 2;
-			text-align: center;
-			width: 100%;
-			top: 50%;
-			transform: translateY(-50%);
-			transition: all 300ms;
-			color: #FFF;
-			font-size: $play-size;
+		.trailer_container {
+			$play-size: 110px;
 
-			@include media-desktop {
-				font-size: $play-size/2;
-			}
+			max-height: $max_height;
+			position: relative;
+			overflow: hidden;
+			max-width: $max_width;
+			margin: 0 auto;
+			cursor: pointer;
 
 			@include media-phablet {
-				font-size: $play-size/3.5;
+				margin-bottom: $padding/2;
 			}
 
-			span {
-				transition: all 300ms;
+			.background {
+				opacity: 0;
+				background: no-repeat center;
+				background-size: cover;
+				position: relative;
+				z-index: 1;
+				max-height: $max_height;
+				padding-bottom: 56.25%;
+				will-change: opacity;
+				transition: opacity 1000ms;
+
+				&.visible {
+					opacity: .4;
+				}
+			}
+
+			.icon-play {
 				opacity: 0.9;
 				position: absolute;
-				font-size: 1em;
+				z-index: 2;
+				text-align: center;
+				width: 100%;
 				top: 50%;
-				left: 50%;
-				margin-left: $play-size/2;
-				transform: translateY(-54%);
+				transform: translateY(-50%);
+				will-change: opacity;
+				transition: all 300ms;
+				color: #FFF;
+				font-size: $play-size;
 
 				@include media-desktop {
-					margin-left: $play-size/4;
+					font-size: $play-size/2;
 				}
 
 				@include media-phablet {
-					margin-left: $play-size/7;
+					font-size: $play-size/3.5;
 				}
 
-				&:first-child {
-					margin-left: -($play-size/2);
-					transform: translate(-100%, -54%);
+				span {
+					transition: all 300ms;
+					opacity: 0.9;
+					position: absolute;
+					font-size: 1em;
+					top: 50%;
+					left: 50%;
+					margin-left: $play-size/2;
+					transform: translateY(-54%);
+					will-change: opacity;
 
 					@include media-desktop {
-						margin-left: -($play-size/4);
+						margin-left: $play-size/4;
 					}
 
 					@include media-phablet {
-						margin-left: -($play-size/7);
+						margin-left: $play-size/7;
+					}
+
+					&:first-child {
+						margin-left: -($play-size/2);
+						transform: translate(-100%, -54%);
+
+						@include media-desktop {
+							margin-left: -($play-size/4);
+						}
+
+						@include media-phablet {
+							margin-left: -($play-size/7);
+						}
 					}
 				}
 			}
-		}
 
-		&:hover {
-			color: $primary_color;
+			&:hover {
+				@include theme(color, primary);
 
-			.icon-play {
-				opacity: 1;
-
-				span {
+				.icon-play {
 					opacity: 1;
+
+					span {
+						opacity: 1;
+					}
 				}
 			}
-		}
 
-		iframe {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			border: 0;
+			iframe {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				border: 0;
+				top: 0;
+				left: 0;
+				max-height: $max_height;
+				z-index: 10;
+			}
 		}
 	}
+
 }
 
 
 .alph_nav {
 	position: relative;
 
-	@include media-phablet {
-		display: none;
-	}
-
 	.mass_edit_form {
 		display: flex;
-		background: $background_color;
+		@include theme(background, background);
 		position: fixed;
 		top: $header_height;
 		right: 0;
 		left: $header_width;
 		flex-flow: row nowrap;
 		align-items: center;
+		will-change: max-height;
 		transition: max-height 300ms $cubic;
 		max-height: 0;
 		overflow: hidden;
@@ -1114,6 +1225,10 @@ $mass_edit_height: 44px;
 		.select {
 			margin: 0 $padding/2 0 $padding;
 
+			@include media-phablet {
+				margin: 0 $padding/4 0 $padding/2;
+			}
+
 			input, .count {
 				margin-right: $padding/4;
 			}
@@ -1126,11 +1241,15 @@ $mass_edit_height: 44px;
 		.button {
 			padding: 0 $padding/2;
 			line-height: $header_height;
-			color: rgba(0, 0, 0, 0.5);
 		}
 
 		.counter, .more_menu, .actions {
 			float: left;
+
+			.wrapper {
+				transform-origin: 92% 0;
+				right: -7px;
+			}
 
 			> a {
 				display: inline-block;
@@ -1139,7 +1258,7 @@ $mass_edit_height: 44px;
 				text-align: center;
 
 				&:hover {
-					color: $primary_color;
+					@include theme(color, primary);
 				}
 			}
 		}
@@ -1147,16 +1266,19 @@ $mass_edit_height: 44px;
 		.counter {
 			line-height: $header_height;
 			padding: 0 $padding/2;
+
+			@include media-tablet {
+				display: none;
+			}
 		}
 
 		.actions {
-
 			a {
-				display: none;
+				display: inline-block;
 			}
 
 			.active {
-				display: inline-block;
+				display: none;
 			}
 
 		}
@@ -1164,6 +1286,15 @@ $mass_edit_height: 44px;
 		.filter {
 			.wrapper {
 				width: 320px;
+
+				@include media-phablet {
+					right: -70px;
+					transform-origin: 75% 0;
+
+					&:before {
+						right: 83px !important;
+					}
+				}
 			}
 
 			.button {
@@ -1185,9 +1316,14 @@ $mass_edit_height: 44px;
 				input {
 					width: 100%;
 					padding: $padding/2 $padding/2 $padding/2 $padding*1.5;
-					background: $background_color;
+					@include theme(background, background);
 					border: none;
-					border-bottom: 1px solid $theme_off;
+					border-bottom: 1px solid transparent;
+					@include theme(border-color, off);
+
+					@include media-phablet {
+						font-size: 1.2em;
+					}
 				}
 			}
 
@@ -1200,20 +1336,20 @@ $mass_edit_height: 44px;
 					height: 30px;
 					line-height: 30px;
 					text-align: center;
-					color: rgba(0,0,0,.2);
+					opacity: .2;
 					cursor: default;
 					border: 0;
 
 					&.active {
-						background: $theme_off;
+						@include theme(background, off);
 					}
 
 					&.available {
-						color: rgba(0,0,0,1);
+						opacity: 1;
 						cursor: pointer;
 
 						&:hover {
-							background: $theme_off;
+							@include theme(background, off);
 						}
 					}
 				}
@@ -1222,9 +1358,9 @@ $mass_edit_height: 44px;
 
 		.more_menu {
 
-			&.show .button {
-				color: rgba(0, 0, 0, 1);
-			}
+			//&.show .button {
+			//	color: rgba(0, 0, 0, 1);
+			//}
 
 			.wrapper {
 				top: $header_height - 10px;

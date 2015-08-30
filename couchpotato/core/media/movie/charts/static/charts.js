@@ -14,28 +14,8 @@ var Charts = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('div.charts').adopt(
-			self.el_no_charts_enabled = new Element('p.no_charts_enabled', {
-				'html': 'Hey, it looks like you have no charts enabled at the moment. If you\'d like some great movie suggestions you can go to <a href="' + App.createUrl('settings/display') + '">settings</a> and turn on some charts of your choice.'
-			}),
-			self.el_refresh_container = new Element('div.refresh').adopt(
-				self.el_refresh_link = new Element('a.refresh.icon2', {
-					'href': '#',
-					'events': {
-						'click': function(e) {
-							e.preventDefault();
-
-							self.el.getElements('.chart').destroy();
-							self.el_refreshing_text.show();
-							self.el_refresh_link.hide();
-
-							self.api_request = Api.request('charts.view', {
-								'data': { 'force_update': 1 },
-								'onComplete': self.fill.bind(self)
-							});
-						}
-					}
-				}),
+		self.el = new Element('div.charts').grab(
+			self.el_refresh_container = new Element('div.refresh').grab(
 				self.el_refreshing_text = new Element('span.refreshing', {
 					'text': 'Refreshing charts...'
 				})
@@ -43,8 +23,10 @@ var Charts = new Class({
 		);
 
 		self.show();
-		self.fireEvent.delay(0, self, 'created');
 
+		requestTimeout(function(){
+			self.fireEvent('created');
+		}, 0);
 	},
 
 	fill: function(json){
@@ -52,16 +34,8 @@ var Charts = new Class({
 		var self = this;
 
 		self.el_refreshing_text.hide();
-		self.el_refresh_link.show();
 
-		if(!json || json.count === 0){
-			self.el_no_charts_enabled.show();
-			self.el_refresh_link.show();
-			self.el_refreshing_text.hide();
-		}
-		else {
-			self.el_no_charts_enabled.hide();
-
+		if(json && json.count > 0){
 			json.charts.sort(function(a, b) {
 				return a.order - b.order;
 			});
@@ -102,7 +76,7 @@ var Charts = new Class({
 		self.el.show();
 
 		if(!self.shown_once){
-			setTimeout(function(){
+			requestTimeout(function(){
 				self.api_request = Api.request('charts.view', {
 					'onComplete': self.fill.bind(self)
 				});

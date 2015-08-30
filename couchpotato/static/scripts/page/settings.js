@@ -208,9 +208,12 @@ Page.Settings = new Class({
 			});
 		});
 
-		setTimeout(function(){
+		requestTimeout(function(){
+			self.el.grab(
+				self.navigation
+			);
+
 			self.content.adopt(
-				self.navigation,
 				self.tabs_container,
 				self.containers
 			);
@@ -291,7 +294,7 @@ Page.Settings = new Class({
 				'html': group.description[0]
 			});
 
-			createTooltip(group.description[1]).inject(hint, 'top');
+			createTooltip(group.description[1]).inject(hint);
 		}
 		else {
 			hint = new Element('span.hint', {
@@ -386,7 +389,7 @@ var OptionBase = new Class({
 					'html': self.options.description[0]
 				}).inject(self.el);
 
-				createTooltip(self.options.description[1]).inject(hint, 'top');
+				createTooltip(self.options.description[1]).inject(hint);
 			}
 			else {
 				new Element('p.formHint', {
@@ -405,8 +408,8 @@ var OptionBase = new Class({
 
 		if(self.getValue() != self.previous_value){
 			if(self.save_on_change){
-				if(self.changed_timer) clearTimeout(self.changed_timer);
-				self.changed_timer = self.save.delay(300, self);
+				if(self.changed_timer) clearRequestTimeout(self.changed_timer);
+				self.changed_timer = requestTimeout(self.save.bind(self), 300);
 			}
 			self.fireEvent('change');
 		}
@@ -414,13 +417,16 @@ var OptionBase = new Class({
 	},
 
 	save: function(){
-		var self = this;
+		var self = this,
+			value = self.getValue();
+
+		App.fireEvent('setting.save.'+self.section+'.'+self.name, value)
 
 		Api.request('settings.save', {
 			'data': {
 				'section': self.section,
 				'name': self.name,
-				'value': self.getValue()
+				'value': value
 			},
 			'useSpinner': true,
 			'spinnerOptions': {
@@ -439,9 +445,9 @@ var OptionBase = new Class({
 		self.previous_value = self.getValue();
 		self.el.addClass(sc);
 
-		(function(){
+		requestTimeout(function(){
 			self.el.removeClass(sc);
-		}).delay(3000, self);
+		}, 3000);
 	},
 
 	setName: function(name){
@@ -992,7 +998,7 @@ Option.Directories = new Class({
 			$(dir).addClass('is_empty');
 
 		// Add remove button
-		new Element('a.icon2.delete', {
+		new Element('a.icon-delete.delete', {
 			'events': {
 				'click': self.delItem.bind(self, dir)
 			}
@@ -1129,7 +1135,7 @@ Option.Combined = new Class({
 	addEmpty: function(){
 		var self = this;
 
-		if(self.add_empty_timeout) clearTimeout(self.add_empty_timeout);
+		if(self.add_empty_timeout) clearRequestTimeout(self.add_empty_timeout);
 
 		var has_empty = 0;
 		self.items.each(function(ctrl_holder){
@@ -1144,7 +1150,7 @@ Option.Combined = new Class({
 		});
 		if(has_empty > 0) return;
 
-		self.add_empty_timeout = setTimeout(function(){
+		self.add_empty_timeout = requestTimeout(function(){
 			self.createItem({'use': true});
 		}, 10);
 	},
@@ -1249,7 +1255,7 @@ var createTooltip = function(description){
 				}
 			}
 		}).adopt(
-			new Element('a.icon2.info'),
+			new Element('a.icon-info.info'),
 			new Element('div.tip', {
 				'html': description
 			})
