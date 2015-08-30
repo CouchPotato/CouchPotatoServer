@@ -674,12 +674,18 @@ $mass_edit_height: 44px;
 					}
 				}
 
-				.more_menu .icon-dropdown {
-					padding-right: $padding;
+				.more_menu {
+					a {
+						@include theme(color, text);
+					}
 
-					@include media-phablet {
-						&:before {
-							right: $padding/2;
+					.icon-dropdown {
+						padding-right: $padding;
+
+						@include media-phablet {
+							&:before {
+								right: $padding/2;
+							}
 						}
 					}
 				}
