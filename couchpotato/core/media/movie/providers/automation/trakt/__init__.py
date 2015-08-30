@@ -28,7 +28,8 @@ config = [{
                 {
                     'name': 'automation_oauth_refresh',
                     'label': 'Refresh Token',
-                    'description': 'Used to automatically refresh your oauth token every 3 months',
+                    'description': ('Used to automatically refresh your oauth token every 3 months',
+                                    'To get a refresh token, reconnect with trakt'),
                     'advanced': 1
                 },
             ],
