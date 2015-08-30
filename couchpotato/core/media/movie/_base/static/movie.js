@@ -57,7 +57,7 @@ var Movie = new Class({
 
 		App.getPageContainer().grab(self.details);
 
-		self.details.open.delay(10, self.details);
+		requestTimeout(self.details.open.bind(self.details), 20);
 	},
 
 	addEvents: function(){
@@ -70,7 +70,9 @@ var Movie = new Class({
 			if(self.data._id != notification.data._id) return;
 
 			self.busy(false);
-			self.update.delay(2000, self, notification);
+			requestTimeout(function(){
+				self.update(notification);
+			}, 2000);
 		};
 		App.on('movie.update', self.global_events['movie.update']);
 
@@ -137,10 +139,10 @@ var Movie = new Class({
 		var self = this;
 
 		if(!set_busy){
-			setTimeout(function(){
+			requestTimeout(function(){
 				if(self.spinner){
 					self.mask.fade('out');
-					setTimeout(function(){
+					requestTimeout(function(){
 						if(self.mask)
 							self.mask.destroy();
 						if(self.spinner)
@@ -172,7 +174,7 @@ var Movie = new Class({
 
 		self.actions = [];
 		self.data = notification.data;
-		self.el.empty();
+		self.inner.empty();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.category = CategoryList.getCategory(self.data.category_id) || {};
@@ -311,7 +313,7 @@ var Movie = new Class({
 
 		if(self.list.current_view == 'thumb'){
 			self.el.addClass('hover_start');
-			setTimeout(function(){
+			requestTimeout(function(){
 				self.el.removeClass('hover_start');
 			}, 300);
 

@@ -607,6 +607,14 @@
 		}
 	}
 
+	.renamer_to.renamer_to {
+		flex-flow: row wrap;
+
+		.ctrlHolder {
+			width: 100%;
+		}
+	}
+
 }
 
 .directory_list {

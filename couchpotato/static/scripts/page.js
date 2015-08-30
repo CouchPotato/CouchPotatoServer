@@ -29,7 +29,7 @@ var PageBase = new Class({
 
 		// Stop hover events while scrolling
 		App.addEvent('load', function(){
-			setTimeout(function(){
+			requestTimeout(function(){
 				if(!App.mobile_screen && !App.getOption('dev')){
 					self.content.addEvent('scroll', self.preventHover.bind(self));
 				}
@@ -165,10 +165,10 @@ var PageBase = new Class({
 	preventHover: function(){
 		var self = this;
 
-		if(self.hover_timer) clearTimeout(self.hover_timer);
+		if(self.hover_timer) clearRequestTimeout(self.hover_timer);
 		self.el.addClass('disable_hover');
 
-		self.hover_timer = setTimeout(function(){
+		self.hover_timer = requestTimeout(function(){
 			self.el.removeClass('disable_hover');
 		}, 200);
 	},

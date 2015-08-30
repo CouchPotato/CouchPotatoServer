@@ -23,8 +23,10 @@ var Charts = new Class({
 		);
 
 		self.show();
-		self.fireEvent.delay(0, self, 'created');
 
+		requestTimeout(function(){
+			self.fireEvent('created');
+		}, 0);
 	},
 
 	fill: function(json){
@@ -74,7 +76,7 @@ var Charts = new Class({
 		self.el.show();
 
 		if(!self.shown_once){
-			setTimeout(function(){
+			requestTimeout(function(){
 				self.api_request = Api.request('charts.view', {
 					'onComplete': self.fill.bind(self)
 				});

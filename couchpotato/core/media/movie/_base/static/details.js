@@ -102,25 +102,25 @@ var MovieDetails = new Class({
 
 		self.el.addClass('show');
 
-		if(!App.mobile_screen){
-			$(self.content).getElements('> .head, > .section').each(function(section, nr){
-				dynamics.css(section, {
-					opacity: 0,
-					translateY: 100
-				});
-
-				dynamics.animate(section, {
-					opacity: 1,
-					translateY: 0
-				}, {
-					type: dynamics.spring,
-					frequency: 200,
-					friction: 300,
-					duration: 1200,
-					delay: 500 + (nr * 100)
-				});
-			});
-		}
+		//if(!App.mobile_screen){
+		//	$(self.content).getElements('> .head, > .section').each(function(section, nr){
+		//		dynamics.css(section, {
+		//			opacity: 0,
+		//			translateY: 100
+		//		});
+		//
+		//		dynamics.animate(section, {
+		//			opacity: 1,
+		//			translateY: 0
+		//		}, {
+		//			type: dynamics.spring,
+		//			frequency: 200,
+		//			friction: 300,
+		//			duration: 1200,
+		//			delay: 500 + (nr * 100)
+		//		});
+		//	});
+		//}
 
 		self.outer_click = function(){
 			self.close();
@@ -140,28 +140,28 @@ var MovieDetails = new Class({
 		self.overlay.addEventListener('transitionend', ended, false);
 
 		// animate out
+		//if(!App.mobile_screen){
+		//	$(self.content).getElements('> .head, > .section').reverse().each(function(section, nr){
+		//		dynamics.animate(section, {
+		//			opacity: 0
+		//		}, {
+		//			type: dynamics.spring,
+		//			frequency: 200,
+		//			friction: 300,
+		//			duration: 1200,
+		//			delay: (nr * 50)
+		//		});
+		//	});
+		//
+		//	dynamics.setTimeout(function(){
+		//		self.el.removeClass('show');
+		//	}, 200);
+		//}
+		//else {
+		//	self.el.removeClass('show');
+		//}
 
-		if(!App.mobile_screen){
-			$(self.content).getElements('> .head, > .section').reverse().each(function(section, nr){
-				dynamics.animate(section, {
-					opacity: 0,
-					translateY: 100
-				}, {
-					type: dynamics.spring,
-					frequency: 200,
-					friction: 300,
-					duration: 1200,
-					delay: (nr * 50)
-				});
-			});
-
-			dynamics.setTimeout(function(){
-				self.el.removeClass('show');
-			}, 200);
-		}
-		else {
-			self.el.removeClass('show');
-		}
+		self.el.removeClass('show');
 
 		App.removeEvent('history.push', self.outer_click)
 	}

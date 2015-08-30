@@ -546,8 +546,8 @@ var MovieList = new Class({
 	search: function(){
 		var self = this;
 
-		if(self.search_timer) clearTimeout(self.search_timer);
-		self.search_timer = (function(){
+		if(self.search_timer) clearRequestTimeout(self.search_timer);
+		self.search_timer = requestTimeout(function(){
 			var search_value = self.navigation_search_input.get('value');
 			if (search_value == self.last_search_value) return;
 
@@ -560,7 +560,7 @@ var MovieList = new Class({
 
 			self.last_search_value = search_value;
 
-		}).delay(250);
+		}, 250);
 
 	},
 
@@ -588,7 +588,7 @@ var MovieList = new Class({
 			createSpinner(self.loader_first);
 
 			var lfc = self.loader_first;
-			loader_timeout = setTimeout(function(){
+			loader_timeout = requestTimeout(function(){
 				lfc.addClass('show');
 			}, 10);
 
@@ -607,13 +607,13 @@ var MovieList = new Class({
 				if(reset)
 					self.movie_list.empty();
 
-				if(loader_timeout) clearTimeout(loader_timeout);
+				if(loader_timeout) clearRequestTimeout(loader_timeout);
 				if(self.loader_first){
 					var lf = self.loader_first;
 					self.loader_first = null;
 					lf.removeClass('show');
 
-					setTimeout(function(){
+					requestTimeout(function(){
 						lf.destroy();
 					}, 1000);
 					self.el.setStyle('min-height', null);

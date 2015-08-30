@@ -31,7 +31,9 @@ var NotificationBase = new Class({
 		});
 
 		window.addEvent('load', function(){
-			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 100, self);
+			requestTimeout(function(){
+				self.startInterval($(window).getSize().x <= 480 ? 2000 : 100);
+			}, 0);
 		});
 
 	},
@@ -107,7 +109,7 @@ var NotificationBase = new Class({
 			}
 		}).send();
 
-		setInterval(function(){
+		requestInterval(function(){
 
 			if(self.request && self.request.isRunning()){
 				self.request.cancel();
@@ -135,7 +137,7 @@ var NotificationBase = new Class({
 				'last_id': self.last_id
 			},
 			'onFailure': function(){
-				self.startPoll.delay(2000, self);
+				requestTimeout(self.startPoll.bind(self), 2000);
 			}
 		}).send();
 
@@ -163,7 +165,7 @@ var NotificationBase = new Class({
 		}
 
 		// Restart poll
-		self.startPoll.delay(1500, self);
+		requestTimeout(self.startPoll.bind(self), 1500);
 	},
 
 	showMessage: function(message, sticky, data){
@@ -177,13 +179,13 @@ var NotificationBase = new Class({
 			'html': '<div class="inner">' + message + '</div>'
 		}).inject(self.message_container, 'top');
 
-		setTimeout(function(){
+		requestTimeout(function(){
 			new_message.addClass('show');
 		}, 10);
 
 		var hide_message = function(){
 			new_message.addClass('hide');
-			setTimeout(function(){
+			requestTimeout(function(){
 				new_message.destroy();
 			}, 1000);
 		};
@@ -200,7 +202,7 @@ var NotificationBase = new Class({
 				})
 			);
 		else
-			setTimeout(hide_message, 4000);
+			requestTimeout(hide_message, 4000);
 
 	},
 
@@ -246,9 +248,9 @@ var NotificationBase = new Class({
 									}).inject(button, 'after');
 								}
 
-								(function(){
+								requestTimeout(function(){
 									message.destroy();
-								}).delay(3000);
+								}, 3000);
 							}
 						});
 					}
