@@ -729,8 +729,8 @@ input[type=text], textarea {
 		transition: none;
 
 		&:hover {
-			background: #FFF;
-			@include theme(color, primary);
+			@include theme(background, primary);
+			color: #FFF;
 		}
 	}
 }

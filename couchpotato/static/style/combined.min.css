@@ -775,7 +775,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .more_menu .wrapper ul li:first-child{border-top:0}
 .more_menu .wrapper ul li a{display:block;color:#000;padding:5px 10px;font-size:1em;line-height:22px}
 .question,.table .item{display:-webkit-flex;display:-ms-flexbox}
-.dark .more_menu .wrapper ul li a,.question,.question a{color:#FFF}
+.dark .more_menu .wrapper ul li a{color:#FFF}
 .more_menu .wrapper ul li:first-child a{padding-top:10px}
 .more_menu .wrapper ul li:last-child a{padding-bottom:10px}
 .messages{position:fixed;right:0;bottom:0;width:320px;z-index:2000;overflow:hidden;font-size:14px;font-weight:700;padding:5px}
@@ -789,13 +789,13 @@ input[type=text],textarea{-webkit-appearance:none}
 .messages .message.show{max-height:100px;-webkit-transform:scale(1);transform:scale(1)}
 .messages .message.hide{max-height:0;padding:0 20px;margin:0;-webkit-transform:scale(0);transform:scale(0)}
 .messages .close{padding:10px 8px;color:#FFF}
-.question{position:fixed;z-index:20000;padding:20px;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center}
+.question{position:fixed;z-index:20000;color:#FFF;padding:20px;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center}
 .question .inner{width:100%;max-width:500px}
 .question h3{display:block;margin-bottom:20px;font-size:1.4em;font-weight:lighter}
 .question .hint{margin:-20px 0 20px}
-.question a{border-color:#FFF;transition:none}
-.question a:hover{background:#FFF;color:#ac0000}
-.dark .question a:hover{color:#0C9DF8}
+.question a{border-color:#FFF;color:#FFF;transition:none}
+.question a:hover{background:#ac0000;color:#FFF}
+.dark .question a:hover{background:#0C9DF8}
 .mask{background:rgba(0,0,0,.8);z-index:1000;text-align:center;bottom:0;left:0;opacity:0;transition:opacity 500ms}
 .mask .message,.mask .spinner{position:absolute;top:50%;left:50%}
 .mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px}
