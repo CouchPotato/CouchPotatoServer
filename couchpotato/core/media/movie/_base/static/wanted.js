@@ -4,7 +4,7 @@ var MoviesWanted = new Class({
 
 	order: 10,
 	name: 'wanted',
-	title: 'Gimmy gimmy gimmy!',
+	title: 'Gimme gimme gimme!',
 	folder_browser: null,
 
 	indexAction: function(){
