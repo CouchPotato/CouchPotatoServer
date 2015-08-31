@@ -1,11 +1,11 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer "3.0.0"
+#define MyAppVer "3.0.1"
 #define MyAppBit "win32"
 //#define MyAppBit "win-amd64"
 
 [Setup]
 AppName={#MyAppName}
-AppVersion=2
+AppVersion=3
 AppVerName={#MyAppName}
 DefaultDirName={userappdata}\{#MyAppName}\application
 DisableProgramGroupPage=yes
