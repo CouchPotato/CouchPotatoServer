@@ -468,6 +468,7 @@ $mass_edit_height: 44px;
 			.title {
 				display: flex;
 				padding: 3px 0;
+				font-weight: 400;
 
 				span {
 					flex: 1 auto;
@@ -502,9 +503,9 @@ $mass_edit_height: 44px;
 		}
 
 		.actions {
-			background-image: linear-gradient(25deg, rgba(get-theme(primary),0) 0%, rgba(get-theme(primary),1) 80%);
+			background-image: linear-gradient(25deg, rgba(get-theme(primary),.3) 0%, rgba(get-theme(primary),1) 80%);
 			@include theme-dark {
-				background-image: linear-gradient(25deg, rgba(get-theme-dark(primary),0) 0%, rgba(get-theme-dark(primary),1) 80%);
+				background-image: linear-gradient(25deg, rgba(get-theme-dark(primary),.3) 0%, rgba(get-theme-dark(primary),1) 80%);
 			}
 
 			will-change: opacity, visibility;
@@ -536,13 +537,17 @@ $mass_edit_height: 44px;
 					display: block;
 					width: auto;
 					padding: $padding / 3;
-					@include theme(color, background);
+					color: #FFF;
 					border-radius: $border_radius - 1px;
 					font-weight: 400;
 
 					&:hover {
 						@include theme(background, background);
 						@include theme(color, primary);
+
+						@include theme-dark {
+							color: #FFF;
+						}
 					}
 				}
 			}
@@ -899,7 +904,7 @@ $mass_edit_height: 44px;
 				width: 200px;
 
 				.button {
-					background: #FFF;
+					@include theme(background, background);
 					flex: 1 auto;
 					display: block;
 					text-align: center;
