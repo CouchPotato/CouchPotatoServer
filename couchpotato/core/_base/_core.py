@@ -295,7 +295,7 @@ config = [{
                 },
                 {
                     'name': 'dereferer',
-                    'default': 'http://www.dereferer.org/?',
+                    'default': 'http://www.nullrefer.com/?',
                     'description': 'Derefer links to external sites, keep empty for no dereferer. Example: http://www.dereferer.org/? or http://www.nullrefer.com/?.',
                 },
                 {
