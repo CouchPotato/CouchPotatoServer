@@ -547,6 +547,7 @@ input[type=text], textarea {
 
 	a {
 		display: inline-block;
+		float: left;
 
 		&:hover {
 			@include theme(background, off);

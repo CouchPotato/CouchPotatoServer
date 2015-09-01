@@ -310,6 +310,10 @@ $mass_edit_height: 44px;
 				font-size: .8em;
 				opacity: .5;
 				margin-right: 4px;
+
+				@include media-phablet {
+					display: none;
+				}
 			}
 
 			.quality {
@@ -1271,9 +1275,14 @@ $mass_edit_height: 44px;
 				width: 30px;
 				line-height: $header_height;
 				text-align: center;
+				float: left;
 
 				&:hover {
 					@include theme(background, off);
+				}
+
+				@include media-tablet {
+					line-height: $header_width_mobile;
 				}
 			}
 		}
@@ -1382,6 +1391,10 @@ $mass_edit_height: 44px;
 				padding-top: 4px;
 				border-radius: $border_radius $border_radius 0 0;
 				min-width: 140px;
+
+				@include media-phablet {
+					top: $header_width_mobile;
+				}
 
 				&:before {
 					top: 0;
