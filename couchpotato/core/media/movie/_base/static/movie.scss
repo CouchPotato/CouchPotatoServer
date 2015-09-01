@@ -107,7 +107,8 @@ $mass_edit_height: 44px;
 			&.downloaded, &.done { background: #009902; color: #FFF }
 
 			@include theme-dark {
-				&.available { border-color: transparent; background: get-theme-dark(off);}
+				background: none;
+				&.available { border-color: transparent; background: none;}
 				&.snatched { background: #548399; }
 				&.downloaded, &.done { background: #009902; color: #FFF; }
 			}

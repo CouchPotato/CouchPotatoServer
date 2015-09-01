@@ -129,12 +129,13 @@
 .with_navigation .movie.checked input[type=checkbox]{opacity:1}
 .movie .quality{font-weight:400}
 .movie .quality span{display:inline-block;background:#ebebeb;border:1px solid transparent;color:rgba(0,0,0,.5);border-radius:1px;padding:1px 3px}
-.dark .movie .quality span{color:rgba(255,255,255,.5);background:#3a3a3a}
+.dark .movie .quality span{color:rgba(255,255,255,.5)}
 .movie .quality span.failed{background:#993619;color:#FFF}
 .movie .quality span.available{color:#009902;border-color:#009902;background:#FFF}
 .movie .quality span.snatched{background:#548399;color:#FFF}
 .movie .quality span.done,.movie .quality span.downloaded{background:#009902;color:#FFF}
-.dark .movie .quality span.available{border-color:transparent;background:#3a3a3a}
+.dark .movie .quality span{background:0 0}
+.dark .movie .quality span.available{border-color:transparent;background:0 0}
 .dark .movie .quality span.snatched{background:#548399}
 .dark .movie .quality span.done,.dark .movie .quality span.downloaded{background:#009902;color:#FFF}
 .movie .rating .votes{opacity:.7;margin-left:4px}
