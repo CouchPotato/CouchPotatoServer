@@ -20,6 +20,10 @@
 		color: #FFF;
 		font-size: 20px;
 		transform: translateY(-50%);
+
+		&:hover {
+			@include theme(background, off);
+		}
 	}
 
 	.wrapper {

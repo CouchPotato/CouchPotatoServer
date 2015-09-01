@@ -350,7 +350,7 @@ $mass_edit_height: 44px;
 				height: 100%;
 				display: block;
 				@include theme(background, background);
-				@include theme(color, text);
+				@include theme(color, primary);
 				padding: $padding / 2;
 				width: auto;
 				float: right;
@@ -361,7 +361,8 @@ $mass_edit_height: 44px;
 				}
 
 				&:hover {
-					@include theme(color, primary);
+					@include theme(background, off);
+					@include theme(color, text);
 				}
 
 				.icon {
@@ -686,7 +687,7 @@ $mass_edit_height: 44px;
 					}
 
 					.icon-dropdown {
-						padding-right: $padding;
+						padding-right: $padding*1.5;
 
 						@include media-phablet {
 							&:before {
@@ -708,6 +709,7 @@ $mass_edit_height: 44px;
 				}
 
 				> a {
+					float: left;
 					line-height: $header_height;
 					@include theme(color, primary);
 
@@ -722,11 +724,11 @@ $mass_edit_height: 44px;
 
 				.icon-dropdown {
 					position: relative;
-					padding: 0 $padding/1.5 0 $padding/2;
+					padding: 0 $padding*1.25 0 $padding/2;
 
 					&:before {
 						position: absolute;
-						right: 0;
+						right: $padding/2;
 						top: -2px;
 						opacity: .2;
 					}
@@ -818,6 +820,7 @@ $mass_edit_height: 44px;
 					}
 
 					&:hover {
+						@include theme(background, off);
 						@include theme(color, text);
 					}
 				}
@@ -980,8 +983,8 @@ $mass_edit_height: 44px;
 
 				&:before {
 					display: none;
-					font-style: italic;
-					opacity: .6;
+					font-weight: bold;
+					opacity: .8;
 					margin-right: 3px;
 					width: 100%;
 					font-size: .9em;
@@ -1083,7 +1086,7 @@ $mass_edit_height: 44px;
 		$max_width: $max_height * (16/9);
 
 		padding: 0;
-		background: $menu_color;
+		@include theme(background, menu);
 		max-height: $max_height;
 		overflow: hidden;
 
@@ -1266,11 +1269,11 @@ $mass_edit_height: 44px;
 			> a {
 				display: inline-block;
 				width: 30px;
-				line-height: 80px;
+				line-height: $header_height;
 				text-align: center;
 
 				&:hover {
-					@include theme(color, primary);
+					@include theme(background, off);
 				}
 			}
 		}

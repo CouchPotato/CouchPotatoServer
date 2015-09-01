@@ -1,8 +1,8 @@
 $menu_color: #111;
 
-$vars: 			'primary', 'background', 	'off', 					'text';
-$theme_light: 	#ac0000, 	#FFF, 			darken(#FFF, 8), 		#000;
-$theme_dark: 	#0C9DF8, 	#2d2d2d, 		lighten(#2d2d2d, 5), 	#FFF;
+$vars: 			'primary', 'background', 	'off', 					'text', 'menu';
+$theme_light: 	#ac0000, 	#FFF, 			darken(#FFF, 8), 		#000,	#111;
+$theme_dark: 	#f85c22, 	#2d2d2d, 		lighten(#2d2d2d, 3), 	#FFF, 	#111;
 
 //$primary_color: nth($theme_light, 1);
 //$theme_off: nth($theme_light, 2);

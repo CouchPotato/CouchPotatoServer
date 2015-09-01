@@ -17,7 +17,7 @@ body, html {
 	height:  100%;
 	margin: 0;
 	padding: 0;
-	background: $menu_color;
+	@include theme(background, menu);
 	@include theme(color, text);
 	overflow: hidden;
 }
@@ -178,6 +178,10 @@ input[type=text], textarea {
 				display: block;
 				position: relative;
 
+				&:hover {
+					@include theme(background, off);
+				}
+
 				@include media-phablet {
 					line-height: $header_width_mobile - $padding;
 					height: $header_width_mobile;
@@ -214,10 +218,15 @@ input[type=text], textarea {
 
 	.donate {
 		position: absolute;
-		bottom: 44px + $padding/2;
+		bottom: 44px;
 		left: 0;
 		right: 0;
 		padding: $padding/2 $padding;
+		transition: background 200ms;
+
+		&:hover {
+			@include theme(background, off);
+		}
 
 		&:before {
 			display: none;
@@ -242,13 +251,9 @@ input[type=text], textarea {
 	.menu, .search_form, .notification_menu  {
 		position: absolute;
 		z-index: 21;
-		bottom: $padding / 3;
+		bottom: 0;
 		width: 44px;
 		height: 44px;
-
-		@include media-phablet {
-			bottom: 0;
-		}
 
 		.wrapper {
 			min-width: 170px;
@@ -291,6 +296,8 @@ input[type=text], textarea {
 			text-align: center;
 			font-size: 10px;
 			font-weight: lighter;
+			z-index: 2;
+			pointer-events: none;
 		}
 
 		.wrapper {
@@ -342,7 +349,7 @@ input[type=text], textarea {
 	}
 
 	.menu  {
-		left: $padding / 3;
+		left: 0;
 
 		@include media-phablet {
 			bottom: 88px;
@@ -357,7 +364,7 @@ input[type=text], textarea {
 	}
 
 	.search_form {
-		right: $padding / 3;
+		right: 0;
 
 		@include media-phablet {
 			right: auto;
@@ -492,6 +499,10 @@ input[type=text], textarea {
 					opacity: .5;
 					vertical-align: bottom;
 
+					&:hover {
+						opacity: 1;
+					}
+
 					@include media-phablet {
 						font-size: 18px;
 						line-height: $header_width_mobile;
@@ -536,6 +547,10 @@ input[type=text], textarea {
 
 	a {
 		display: inline-block;
+
+		&:hover {
+			@include theme(background, off);
+		}
 	}
 
 	.button {
@@ -603,7 +618,7 @@ input[type=text], textarea {
 				line-height: 22px;
 
 				&:hover {
-
+					@include theme(background, off);
 				}
 			}
 
