@@ -126,7 +126,7 @@ var MovieDetails = new Class({
 			self.close();
 		};
 
-		App.addEvent('history.push', self.outer_click)
+		App.addEvent('history.push', self.outer_click);
 
 	},
 
@@ -163,7 +163,7 @@ var MovieDetails = new Class({
 
 		self.el.removeClass('show');
 
-		App.removeEvent('history.push', self.outer_click)
+		App.removeEvent('history.push', self.outer_click);
 	}
 
 });
