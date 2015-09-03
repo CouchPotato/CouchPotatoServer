@@ -40,9 +40,7 @@ class WebHandler(BaseHandler):
             return
 
         try:
-            if route == 'robots.txt':
-                self.set_header('Content-Type', 'text/plain')
-            self.write(views[route]())
+            self.write(views[route](self))
         except:
             log.error("Failed doing web request '%s': %s", (route, traceback.format_exc()))
             self.write({'success': False, 'error': 'Failed returning results'})
@@ -57,20 +55,53 @@ def get_db():
 
 
 # Web view
-def index():
+def index(*args):
     return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
 addView('', index)
 
 
 # Web view
-def robots():
+def robots(handler):
+    handler.set_header('Content-Type', 'text/plain')
+
     return 'User-agent: * \n' \
            'Disallow: /'
 addView('robots.txt', robots)
 
 
+# Manifest
+def manifest(handler):
+    web_base = Env.get('web_base')
+    static_base = Env.get('static_path')
+
+    lines = [
+        'CACHE MANIFEST',
+        '',
+        'CACHE:',
+        web_base
+    ]
+
+    for url in fireEvent('clientscript.get_styles', single = True):
+        lines.append(web_base + url)
+    for url in fireEvent('clientscript.get_scripts', single = True):
+        lines.append(web_base + url)
+    lines.append(static_base + 'images/favicon.ico')
+
+
+    lines.extend(['',
+    '# Resources that require the user to be online.',
+    '',
+    'NETWORK: ',
+    '*'])
+
+    handler.set_header('Content-Type', 'text/cache-manifest')
+    return '\n'.join(lines)
+
+addView('couchpotato.appcache', manifest)
+
+
 # API docs
-def apiDocs():
+def apiDocs(*args):
     routes = list(api.keys())
 
     if api_docs.get(''):
@@ -83,7 +114,7 @@ addView('docs', apiDocs)
 
 
 # Database debug manager
-def databaseManage():
+def databaseManage(*args):
     return template_loader.load('database.html').generate(fireEvent = fireEvent, Env = Env)
 
 addView('database', databaseManage)
