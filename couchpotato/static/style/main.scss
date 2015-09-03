@@ -617,6 +617,7 @@ input[type=text], textarea {
 				padding: $padding/4 $padding/2;
 				font-size: 1em;
 				line-height: 22px;
+				width: 100%;
 
 				&:hover {
 					@include theme(background, off);
