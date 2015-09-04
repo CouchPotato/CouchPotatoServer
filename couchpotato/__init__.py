@@ -83,7 +83,7 @@ def manifest(handler):
         ''
     ]
 
-    if Env.get('dev'):
+    if not Env.get('dev'):
         # CSS
         for url in fireEvent('clientscript.get_styles', single = True):
             lines.append(web_base + url)
