@@ -9,8 +9,7 @@
 .search_form{display:inline-block;z-index:11;width:44px;position:relative}
 .search_form *{-webkit-transform:rotateZ(360deg);transform:rotateZ(360deg)}
 .search_form .icon-search{position:absolute;z-index:2;top:50%;left:0;height:100%;text-align:center;color:#FFF;font-size:20px;-webkit-transform:translateY(-50%);transform:translateY(-50%)}
-.search_form .icon-search:hover{background:#ebebeb}
-.dark .search_form .icon-search:hover{background:#353535}
+.dark .search_form .icon-search:hover,.search_form .icon-search:hover{background:#303030}
 .search_form .wrapper{position:absolute;left:44px;bottom:0;background:#ac0000;border-radius:3px 0 0 3px;display:none;box-shadow:0 0 15px 2px rgba(0,0,0,.15)}
 .dark .search_form .wrapper{background:#f85c22;box-shadow:0 5px 15px 2px rgba(0,0,0,.4)}
 .search_form .wrapper:before{-webkit-transform:rotate(45deg);transform:rotate(45deg);content:'';display:block;position:absolute;height:10px;width:10px;background:#ac0000;left:-6px;bottom:16px;z-index:1}
@@ -82,6 +81,7 @@
 .page.home .search_form .icon-search{display:block;color:#000;right:20px;top:20px;width:66px;height:66px;line-height:66px;left:auto;-webkit-transform:none;transform:none;font-size:2em;opacity:.5}
 .page.home .search_form .wrapper:before,.page.movies .scroll_content{display:none}
 .dark .page.home .search_form .icon-search{color:#FFF}
+.page.home .search_form .icon-search:hover{background:0 0}
 @media (max-width:480px){.page.home .search_form .icon-search{width:44px;height:44px;line-height:44px;right:10px;top:10px;font-size:1.5em}
 }
 .page.home .search_form .wrapper{border-radius:0;box-shadow:none;bottom:auto;top:20px;left:20px;right:20px;position:absolute;width:auto}
@@ -690,6 +690,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .header .ripple{background:#FFF}
 .header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px}
 .dark .header .navigation .logo{background:#f85c22}
+.dark .header .donate:hover,.dark .header .navigation ul li a:hover,.header .donate:hover,.header .navigation ul li a:hover{background:#303030}
 .header .navigation .logo span{position:absolute;display:block;height:100%;width:100%;text-align:center;left:0}
 .header .navigation .logo span:nth-child(even){-webkit-transform:translateX(100%);transform:translateX(100%)}
 @media (max-width:480px){.header .navigation .logo{font-size:28px;line-height:44px;height:44px}
@@ -699,8 +700,6 @@ input[type=text],textarea{-webkit-appearance:none}
 .header .navigation ul{padding:0;margin:0}
 .header .navigation ul li{display:block}
 .header .navigation ul li a{padding:10px 20px;display:block;position:relative}
-.header .navigation ul li a:hover{background:#ebebeb}
-.dark .header .navigation ul li a:hover{background:#353535}
 .header .navigation ul li a:before{position:absolute;width:100%;display:none;text-align:center;font-size:18px;text-indent:0}
 @media (max-width:480px){.header .navigation ul li{line-height:0}
 .header .navigation ul li a{line-height:24px;height:44px;padding:10px 0;text-align:center}
@@ -709,8 +708,6 @@ input[type=text],textarea{-webkit-appearance:none}
 }
 .header .navigation ul li a.icon-home:before{font-size:24px}
 .header .donate{position:absolute;bottom:44px;left:0;right:0;padding:10px 20px;transition:background 200ms}
-.header .donate:hover{background:#ebebeb}
-.dark .header .donate:hover{background:#353535}
 .header .donate:before{display:none;font-size:20px;text-align:center}
 @media (max-width:480px){.header .donate{bottom:132px;padding:10px 0}
 .header .donate span{display:none}
@@ -739,6 +736,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .header .search_form{right:auto;left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}
 }
 .header .more_menu .wrapper{bottom:0;left:44px;right:auto;padding-left:4px}
+.dark .header .more_menu a:hover,.header .more_menu a:hover{background:#303030}
 .corner_background{display:block;position:absolute;height:10px;width:10px;background:#ac0000;top:0;left:132px}
 .dark .corner_background{background:#f85c22}
 @media (max-width:480px){.corner_background{left:44px}

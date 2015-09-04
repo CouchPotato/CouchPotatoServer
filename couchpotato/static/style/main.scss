@@ -179,7 +179,7 @@ input[type=text], textarea {
 				position: relative;
 
 				&:hover {
-					@include theme(background, off);
+					@include theme(background, menu_off);
 				}
 
 				@include media-phablet {
@@ -225,7 +225,7 @@ input[type=text], textarea {
 		transition: background 200ms;
 
 		&:hover {
-			@include theme(background, off);
+			@include theme(background, menu_off);
 		}
 
 		&:before {
@@ -380,6 +380,12 @@ input[type=text], textarea {
 			left: 44px;
 			right: auto;
 			padding-left: 4px;
+		}
+
+		a {
+			&:hover {
+				@include theme(background, menu_off);
+			}
 		}
 
 	}
