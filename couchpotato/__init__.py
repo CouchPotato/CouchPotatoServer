@@ -83,7 +83,7 @@ def manifest(handler):
         ''
     ]
 
-    if not Env.get('dev'):
+    if Env.get('dev'):
         # CSS
         for url in fireEvent('clientscript.get_styles', single = True):
             lines.append(web_base + url)
@@ -100,7 +100,7 @@ def manifest(handler):
         for subfolder, dirs, files in os.walk(font_folder, topdown = False):
             for file in files:
                 if '.woff' in file:
-                    lines.append(static_base + file + ('?%s' % os.path.getmtime(os.path.join(font_folder, file))))
+                    lines.append(static_base + 'fonts/' + file + ('?%s' % os.path.getmtime(os.path.join(font_folder, file))))
     else:
         lines.append('# Not caching anything in dev mode')
 
