@@ -8,16 +8,16 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="msapplication-tap-highlight" content="no" />
 
+		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
+
 		{% for url in fireEvent('clientscript.get_styles', single = True) %}
 		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 		{% for url in fireEvent('clientscript.get_scripts', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
-		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
-		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
-
 		{% if Env.get('dev') %}
-		<script src="//localhost:35729/livereload.js?snipver=1"></script>
+		<script src="//localhost:35729/livereload.js?snipver=1" async></script>
 		{% end %}
 
 		<script type="text/javascript">

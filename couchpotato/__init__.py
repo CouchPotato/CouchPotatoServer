@@ -4,6 +4,7 @@ import traceback
 
 from couchpotato.api import api_docs, api_docs_missing, api
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import md5, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -77,20 +78,32 @@ def manifest(handler):
     lines = [
         'CACHE MANIFEST',
         '',
-        'CACHE:',
-        web_base
+        'CACHE:'
     ]
 
-    for url in fireEvent('clientscript.get_styles', single = True):
-        lines.append(web_base + url)
-    for url in fireEvent('clientscript.get_scripts', single = True):
-        lines.append(web_base + url)
-    lines.append(static_base + 'images/favicon.ico')
+    if not Env.get('dev'):
+        # CSS
+        for url in fireEvent('clientscript.get_styles', single = True):
+            lines.append(web_base + url)
 
+        # Scripts
+        for url in fireEvent('clientscript.get_scripts', single = True):
+            lines.append(web_base + url)
 
+        # Favicon
+        lines.append(static_base + 'images/favicon.ico')
+
+        # Fonts
+        font_folder = sp(os.path.join(Env.get('app_dir'), 'couchpotato', 'static', 'fonts'))
+        for subfolder, dirs, files in os.walk(font_folder, topdown = False):
+            for file in files:
+                if '.woff' in file:
+                    lines.append(static_base + file + ('?%s' % os.path.getmtime(os.path.join(font_folder, file))))
+    else:
+        lines.append('# Not caching anything in dev mode')
+
+    # End lines
     lines.extend(['',
-    '# Resources that require the user to be online.',
-    '',
     'NETWORK: ',
     '*'])
 
