@@ -77,8 +77,10 @@ def manifest(handler):
 
     lines = [
         'CACHE MANIFEST',
+        '# %s theme' % ('dark' if Env.setting('dark_theme') else 'light'),
         '',
-        'CACHE:'
+        'CACHE:',
+        ''
     ]
 
     if not Env.get('dev'):
