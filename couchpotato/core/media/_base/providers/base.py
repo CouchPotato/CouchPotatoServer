@@ -119,9 +119,9 @@ class YarrProvider(Provider):
     cat_ids = {}
     cat_backup_id = None
 
-    size_gb = ['gb', 'gib']
-    size_mb = ['mb', 'mib']
-    size_kb = ['kb', 'kib']
+    size_gb = ['gb', 'gib','go']
+    size_mb = ['mb', 'mib','mo']
+    size_kb = ['kb', 'kib','ko']
 
     last_login_check = None
 
