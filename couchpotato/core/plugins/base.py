@@ -108,7 +108,12 @@ class Plugin(object):
                 f = open(path, write_type)
                 f.write(content)
                 f.close()
-                os.chmod(path, Env.getPermission('file'))
+
+                try:
+                    os.chmod(path, Env.getPermission('file'))
+                except:
+                    log.error('Failed writing permission to file "%s": %s', (path, traceback.format_exc()))
+
             except:
                 log.error('Unable to write file "%s": %s', (path, traceback.format_exc()))
                 if os.path.isfile(path):
