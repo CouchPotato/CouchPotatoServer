@@ -801,7 +801,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .dark .messages .message .inner{background:#2d2d2d}
 .messages .message.sticky{background-color:#ac0000}
 .dark .messages .message.sticky{background-color:#f85c22}
-.messages .message.show{max-height:100px;-webkit-transform:scale(1);transform:scale(1)}
+.messages .message.show{max-height:130px;-webkit-transform:scale(1);transform:scale(1)}
 .messages .message.hide{max-height:0;padding:0 20px;margin:0;-webkit-transform:scale(0);transform:scale(0)}
 .messages .close{padding:10px 8px;color:#FFF}
 .question{position:fixed;z-index:20000;color:#FFF;padding:20px;display:flex;-webkit-align-items:center;-ms-flex-align:center;align-items:center;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center}
