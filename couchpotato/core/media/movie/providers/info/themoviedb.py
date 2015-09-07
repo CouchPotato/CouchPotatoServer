@@ -75,7 +75,7 @@ class TheMovieDb(MovieProvider):
 
         return results
 
-    def getInfo(self, identifier = None, extended = True):
+    def getInfo(self, identifier = None, extended = True, **kwargs):
 
         if not identifier:
             return {}
