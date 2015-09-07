@@ -37,6 +37,7 @@ Linux:
 * (Ubuntu / Debian) Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * (Fedora / CentOS) Install [GIT](http://git-scm.com/) with `yum install git`
 * Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
+* Install [PyOpenSSL](https://pypi.python.org/pypi/pyOpenSSL) with `pip install --upgrade pyopenssl` 
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
