@@ -61,7 +61,7 @@ class MediaBase(Plugin):
                 break
             counter += 1
 
-        if not def_title:
+        if not def_title and titles and len(titles) > 0:
             def_title = toUnicode(titles[0])
 
         return def_title or 'UNKNOWN'

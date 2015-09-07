@@ -95,8 +95,10 @@ class MovieBase(MovieTypeBase):
                 break
             counter += 1
 
-        if not def_title:
+        if not def_title and titles and len(titles) > 0:
             def_title = toUnicode(titles[0])
+        else:
+            def_title = 'UNKNOWN'
 
         # Default profile and category
         default_profile = {}
@@ -322,8 +324,10 @@ class MovieBase(MovieTypeBase):
                             break
                         counter += 1
 
-                if not def_title:
+                if not def_title and titles and len(titles) > 0:
                     def_title = toUnicode(titles[0])
+                else:
+                    def_title = 'UNKNOWN'
 
                 media['title'] = def_title
 
