@@ -2,6 +2,7 @@ Page.Log = new Class({
 
 	Extends: PageBase,
 
+	disable_pointer_onscroll: false,
 	order: 60,
 	name: 'log',
 	title: 'Show recent logs.',

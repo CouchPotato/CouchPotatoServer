@@ -128,6 +128,7 @@ input[type=text], textarea {
 			font-size: 38px;
 			line-height: $header_height;
 			height: $header_height;
+			visibility: hidden;
 
 			span {
 				position: absolute;
