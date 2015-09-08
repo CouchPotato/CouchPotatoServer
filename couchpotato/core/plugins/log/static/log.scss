@@ -52,6 +52,7 @@
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+		transform: rotateZ(360deg);
 
 		@include media-phablet {
 			padding: $padding $padding/2;
@@ -68,22 +69,17 @@
 		}
 
 		.time {
-			clear: both;
 			font-size: .75em;
 			border-top: 1px solid transparent;
 			@include theme(border-color, off);
-			overflow: hidden;
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
 			display: block;
 			cursor: pointer;
+			position: relative;
 
 			&:hover {
 				@include theme(background, off);
-			}
-
-			@include media-phablet {
-				flex-flow: row wrap;
 			}
 
 			&.highlight {
@@ -91,34 +87,35 @@
 			}
 
 			span {
-				float: left;
-				padding: 5px 0 3px;
 				display: inline-block;
-				vertical-align: middle;
-				width: 95px;
+				padding: 5px 0 3px;
+			}
+
+			.time_type {
+				position: absolute;
+				width: 130px;
+				top: 0;
+				left: 0;
+
+				@include media-tablet {
+					position: static;
+					width: auto;
+				}
 			}
 
 			.message {
-				clear: both;
-				white-space: pre-wrap;
+				//white-space: pre-wrap;
 				display: block;
-				width: auto;
-				margin: -29px 0 0 (95px + 40px + $padding/3);
+				margin: 0 0 0 130px;
 
-
-				@include media-phablet {
-					margin: (-$padding/4) 0 0 0;
+				@include media-tablet {
+					display: inline;
+					margin: 0 0 0 $padding/3;
 					padding: 0;
 				}
 			}
 
 		}
-
-		.type.type {
-			margin-left: $padding/3;
-			width: 40px;
-		}
-
 
 		.error { color: #FFA4A4; }
 		.debug span { opacity: .6; }
