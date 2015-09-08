@@ -372,6 +372,11 @@
 		@include theme(background, off);
 		@include theme(border-color, off);
 
+		@include theme-dark {
+			background: lighten(get-theme-dark(off), 10);
+			border-color: lighten(get-theme-dark(off), 10);
+		}
+
 		.toggle {
 			transform: translateX(0);
 		}

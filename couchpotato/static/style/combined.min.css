@@ -917,7 +917,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .page.settings .switch .toggle{background:#FFF;margin:1px;height:18px;width:18px;transition:-webkit-transform 250ms;transition:transform 250ms;-webkit-transform:translateX(30px);transform:translateX(30px);border-radius:20px}
 .dark .page.settings .switch .toggle{background:#2d2d2d}
 .page.settings fieldset.enabler.disabled .switch,.page.settings:not(.show_advanced) .advanced_toggle .switch{background:#ebebeb;border-color:#ebebeb}
-.dark .page.settings fieldset.enabler.disabled .switch,.dark .page.settings:not(.show_advanced) .advanced_toggle .switch{background:#353535;border-color:#353535}
+.dark .page.settings fieldset.enabler.disabled .switch,.dark .page.settings:not(.show_advanced) .advanced_toggle .switch{background:#4e4e4e;border-color:#4e4e4e}
 .page.settings fieldset.enabler.disabled .switch .toggle,.page.settings:not(.show_advanced) .advanced_toggle .switch .toggle{-webkit-transform:translateX(0);transform:translateX(0)}
 .page.settings fieldset.enabler.disabled .switch:hover,.page.settings:not(.show_advanced) .advanced_toggle .switch:hover{background:#b8b8b8;border-color:#b8b8b8}
 .dark .page.settings fieldset.enabler.disabled .switch:hover,.dark .page.settings:not(.show_advanced) .advanced_toggle .switch:hover{background:#020202;border-color:#020202}
