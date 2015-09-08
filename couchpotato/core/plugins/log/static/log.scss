@@ -70,11 +70,17 @@
 		.time {
 			clear: both;
 			font-size: .75em;
-			border-top: 1px solid rgba(255,255,255,.1);
+			border-top: 1px solid transparent;
+			@include theme(border-color, off);
 			overflow: hidden;
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
-			display: flex;
+			display: block;
+			cursor: pointer;
+
+			&:hover {
+				@include theme(background, off);
+			}
 
 			@include media-phablet {
 				flex-flow: row wrap;
@@ -85,6 +91,7 @@
 			}
 
 			span {
+				float: left;
 				padding: 5px 0 3px;
 				display: inline-block;
 				vertical-align: middle;
@@ -92,22 +99,19 @@
 			}
 
 			.message {
+				clear: both;
 				white-space: pre-wrap;
-				flex: 1 auto;
+				display: block;
+				width: auto;
+				margin: -29px 0 0 (95px + 40px + $padding/3);
+
 
 				@include media-phablet {
-					flex: 1 auto;
-					margin-top: -$padding/4;
+					margin: (-$padding/4) 0 0 0;
 					padding: 0;
-					display: block;
-					width: 100%;
 				}
 			}
 
-			::selection {
-				@include theme(background-color, background);
-				@include theme(color, text);
-			}
 		}
 
 		.type.type {

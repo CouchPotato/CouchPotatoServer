@@ -495,19 +495,17 @@
 }
 .page.log .container.loading{text-align:center;font-size:20px;padding:100px 50px}
 .page.log .container select{vertical-align:top}
-.page.log .container .time{clear:both;font-size:.75em;border-top:1px solid rgba(255,255,255,.1);overflow:hidden;padding:0 3px;font-family:Lucida Console,Monaco,Nimbus Mono L,monospace,serif;display:-webkit-flex;display:-ms-flexbox;display:flex}
-@media (max-width:480px){.page.log .container .time{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap}
-}
+.page.log .container .time{clear:both;font-size:.75em;border-top:1px solid transparent;border-color:#ebebeb;overflow:hidden;padding:0 3px;font-family:Lucida Console,Monaco,Nimbus Mono L,monospace,serif;display:block;cursor:pointer}
+.dark .page.log .container .time{border-color:#353535}
+.page.log .container .time:hover{background:#ebebeb}
+.dark .page.log .container .time:hover{background:#353535}
 .page.log .container .time.highlight{background:#ebebeb}
 .dark .page.log .container .time.highlight{background:#353535}
-.page.log .container .time span{padding:5px 0 3px;display:inline-block;vertical-align:middle;width:95px}
-.page.log .container .time .message{white-space:pre-wrap;-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto}
-@media (max-width:480px){.page.log .container .time .message{-webkit-flex:1 auto;-ms-flex:1 auto;flex:1 auto;margin-top:-5px;padding:0;display:block;width:100%}
+.page.log .container .time span{float:left;padding:5px 0 3px;display:inline-block;vertical-align:middle;width:95px}
+.page.log .container .time .message{clear:both;white-space:pre-wrap;display:block;width:auto;margin:-29px 0 0 141.67px}
+@media (max-width:480px){.page.log .container .time{-webkit-flex-flow:row wrap;-ms-flex-flow:row wrap;flex-flow:row wrap}
+.page.log .container .time .message{margin:-5px 0 0;padding:0}
 }
-.page.log .container .time ::-moz-selection{background-color:#FFF;color:#000}
-.page.log .container .time ::selection{background-color:#FFF;color:#000}
-.dark .page.log .container .time ::-moz-selection{background-color:#2d2d2d;color:#FFF}
-.dark .page.log .container .time ::selection{background-color:#2d2d2d;color:#FFF}
 .page.log .container .type.type{margin-left:6.67px;width:40px}
 .page.log .container .error{color:#FFA4A4}
 .page.log .container .debug span{opacity:.6}
