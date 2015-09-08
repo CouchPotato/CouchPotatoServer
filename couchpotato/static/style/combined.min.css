@@ -685,7 +685,7 @@ input[type=text],textarea{-webkit-appearance:none}
 }
 .header a{color:#FFF;letter-spacing:1px}
 .header .ripple{background:#FFF}
-.header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px;visibility:hidden}
+.header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px}
 .dark .header .navigation .logo{background:#f85c22}
 .dark .header .donate:hover,.dark .header .navigation ul li a:hover,.header .donate:hover,.header .navigation ul li a:hover{background:#303030}
 .header .navigation .logo span{position:absolute;display:block;height:100%;width:100%;text-align:center;left:0}
