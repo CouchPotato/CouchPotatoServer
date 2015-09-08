@@ -48,10 +48,10 @@ class MediaBase(Plugin):
 
         return notifyFront
 
-    def getDefaultTitle(self, info, ):
+    def getDefaultTitle(self, info, default_title = None):
 
         # Set default title
-        default_title = toUnicode(info.get('title'))
+        default_title = default_title if default_title else toUnicode(info.get('title'))
         titles = info.get('titles', [])
         counter = 0
         def_title = None
