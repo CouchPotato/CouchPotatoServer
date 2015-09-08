@@ -78,23 +78,25 @@ var AboutSettingTab = new Class({
 			'name': 'Help Support CouchPotato'
 		}).inject(self.content).adopt(
 			new Element('div.usenet').adopt(
-				new Element('span', {
-					'text': 'Help support CouchPotato and save some money for yourself by signing up for an account at'
-				}),
-				new Element('a', {
-					'href': 'https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f',
-					'target': '_blank',
-					'text': 'UsenetServer'
-				}),
-				new Element('span[text=or]'),
-				new Element('a', {
-					'href': 'http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
-					'target': '_blank',
-					'text': 'Newshosting'
-				}),
-				new Element('span', {
-					'text': '. For as low as $7.95 per month, you’ll get:'
-				}),
+				new Element('div.text').adopt(
+					new Element('span', {
+						'text': 'Help support CouchPotato and save some money for yourself by signing up for an account at'
+					}),
+					new Element('a', {
+						'href': 'https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f',
+						'target': '_blank',
+						'text': 'UsenetServer'
+					}),
+					new Element('span[text=or]'),
+					new Element('a', {
+						'href': 'http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
+						'target': '_blank',
+						'text': 'Newshosting'
+					}),
+					new Element('span', {
+						'text': '. For as low as $7.95 per month, you’ll get:'
+					})
+				),
 				new Element('ul').adopt(
 					new Element('li.icon-ok', {
 						'text': Math.ceil((today.getTime()-millennium.getTime())/(one_day))+" days retention"
@@ -104,9 +106,7 @@ var AboutSettingTab = new Class({
 				)
 			),
 			new Element('div.donate', {
-				'html':
-				'Or support me via:' +
-				'<iframe src="https://couchpota.to/donate.html" style="border:none; height: 200px;" scrolling="no"></iframe>'
+				'html': 'Or support me via: <iframe src="https://couchpota.to/donate.html" scrolling="no"></iframe>'
 			})
 		);
 

@@ -685,7 +685,7 @@ input[type=text],textarea{-webkit-appearance:none}
 }
 .header a{color:#FFF;letter-spacing:1px}
 .header .ripple{background:#FFF}
-.header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px}
+.header .navigation .logo{background:#ac0000;display:block;text-align:center;position:relative;overflow:hidden;font-family:Lobster,serif;color:#FFF;font-size:38px;line-height:80px;height:80px;visibility:hidden}
 .dark .header .navigation .logo{background:#f85c22}
 .dark .header .donate:hover,.dark .header .navigation ul li a:hover,.header .donate:hover,.header .navigation ul li a:hover{background:#303030}
 .header .navigation .logo span{position:absolute;display:block;height:100%;width:100%;text-align:center;left:0}
@@ -946,17 +946,28 @@ input[type=text],textarea{-webkit-appearance:none}
 .page.settings .disabled .combined_table,.page.settings .multi_directory.is_empty .delete{display:none}
 .page.settings .combined_table .ctrlHolder.is_empty .delete,.page.settings .combined_table .ctrlHolder.is_empty input[type=checkbox]{visibility:hidden}
 .page.settings .tab_about .usenet{padding:20px 20px 0;font-size:1.5em;line-height:1.3em}
+@media (max-width:480px){.page.settings .tab_about .usenet{padding:10px!important;font-size:1em;line-height:1.5em}
+}
 .page.settings .tab_about .usenet a{color:#ac0000;padding:0 5px}
 .dark .page.settings .tab_about .usenet a{color:#f85c22}
 .page.settings .tab_about .usenet ul{list-style:none;float:left;width:50%;margin:10px 0;padding:0}
+@media (max-width:480px){.page.settings .tab_about .usenet ul{float:none;width:auto;margin:0}
+}
 .page.settings .tab_about .usenet li{font-size:.8em}
 .page.settings .tab_about .usenet li:before{margin-right:10px}
-.page.settings .tab_about .donate{float:left;width:42%;text-align:center;font-size:17px;padding:0 0 0 4%;margin:20px 0 0;border-left:1px solid rgba(0,0,0,.2)}
+.page.settings .tab_about .donate{float:left;width:42%;text-align:center;font-size:17px;padding:0 0 0 4%;margin:20px 0 0;border-left:1px solid rgba(0,0,0,.2);height:150px}
+@media (max-width:480px){.page.settings .tab_about .donate{padding:0;float:none;width:auto;margin:0;border:none}
+}
 .dark .page.settings .tab_about .donate{border-color:rgba(255,255,255,.2)}
-.page.settings .tab_about .donate form{padding:10px 0 0}
+.page.settings .tab_about .donate iframe{border:none;width:100%;height:100%}
 .page.settings .tab_about .info{padding:20px;margin:0;overflow:hidden}
 .page.settings .tab_about .info dt{clear:both;float:left;width:17%;font-weight:700}
+@media (max-width:480px){.page.settings .tab_about .info{padding:10px}
+.page.settings .tab_about .info dt{float:none;width:auto}
+}
 .page.settings .tab_about .info dd{float:right;width:80%;padding:0;margin:0;font-style:italic}
+@media (max-width:480px){.page.settings .tab_about .info dd{float:none;width:auto;margin-bottom:10px}
+}
 .page.settings .tab_about .info dd.version{cursor:pointer}
 .page.settings .tab_about .group_actions>div{padding:20px;text-align:center}
 .page.settings .tab_about .group_actions a{margin:0 10px;font-size:20px}
