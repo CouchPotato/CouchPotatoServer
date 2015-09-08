@@ -97,7 +97,7 @@ class MovieBase(MovieTypeBase):
 
         if not def_title and titles and len(titles) > 0:
             def_title = toUnicode(titles[0])
-        else:
+        if not def_title:
             def_title = 'UNKNOWN'
 
         # Default profile and category
@@ -326,7 +326,7 @@ class MovieBase(MovieTypeBase):
 
                 if not def_title and titles and len(titles) > 0:
                     def_title = toUnicode(titles[0])
-                else:
+                if not def_title:
                     def_title = 'UNKNOWN'
 
                 media['title'] = def_title
