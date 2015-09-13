@@ -17,7 +17,7 @@ class Base(TorrentProvider):
         'test': 'https://iptorrents.eu/',
         'base_url': 'https://iptorrents.eu',
         'login': 'https://iptorrents.eu/',
-        'login_check': 'https://iptorrents.eu/inbox.php',
+        'login_check': 'https://iptorrents.eu/oldinbox.php',
         'search': 'https://iptorrents.eu/t?%s%%s&q=%s&qf=#torrents&p=%%d',
     }
 
