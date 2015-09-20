@@ -34,6 +34,9 @@ class Base(NZBProvider, RSS):
             'user': self.conf('username', default = ''),
             'api': self.conf('api_key', default = ''),
         })
+        
+        if len(self.conf('custom_tag')) > 0:
+            params = '%s&%s' % (params, self.conf('custom_tag'))
 
         nzbs = self.getJsonData(self.urls['search'] % params)
 
@@ -74,6 +77,13 @@ config = [{
                     'name': 'api_key',
                     'label': 'Api Key',
                     'default': '',
+                },
+                {
+                    'name': 'custom_tag',
+                    'advanced': True,
+                    'label': 'Custom tag',
+                    'default': '',
+                    'description': 'Add custom parameters, for example add catid=18 to get foreign (non-english) movies',
                 },
                 {
                     'name': 'extra_score',
