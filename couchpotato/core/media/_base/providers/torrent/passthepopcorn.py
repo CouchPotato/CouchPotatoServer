@@ -26,6 +26,7 @@ class Base(TorrentProvider):
         'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
+    login_errors = 0
     http_time_between_calls = 2
 
     def _search(self, media, quality, results):
@@ -177,9 +178,22 @@ class Base(TorrentProvider):
 
     def loginSuccess(self, output):
         try:
-            return json.loads(output).get('Result', '').lower() == 'ok'
+            if json.loads(output).get('Result', '').lower() == 'ok':
+                self.login_errors = 0
+                return True
         except:
-            return False
+            pass
+
+        self.login_errors += 1
+        if self.login_errors >= 3:
+            log.error('Disabling PTP provider after repeated failed logins. '
+                      'Please check your configuration. Re-enabling without '
+                      'solving the problem may cause an IP ban. response=%s',
+                      output)
+            self.conf('enabled', value=False)
+            self.login_errors = 0
+
+        return False
 
     loginCheckSuccess = loginSuccess
 

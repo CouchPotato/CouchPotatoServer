@@ -1,6 +1,7 @@
 from urlparse import urlparse
 import json
 import re
+from requests import HTTPError
 import time
 import traceback
 import xml.etree.ElementTree as XMLTree
@@ -124,6 +125,7 @@ class YarrProvider(Provider):
     size_kb = ['kb', 'kib']
 
     last_login_check = None
+    login_failures = 0
 
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
@@ -160,10 +162,21 @@ class YarrProvider(Provider):
 
             if self.loginSuccess(output):
                 self.last_login_check = now
+                self.login_failures = 0
                 return True
 
             error = 'unknown'
-        except:
+        except Exception as e:
+            if isinstance(e, HTTPError):
+                if e.response.status_code >= 400 and e.response.status_code < 500:
+                    self.login_failures += 1
+                    if self.login_failures >= 3:
+                        log.error("Failed %s login repeatedly, disabling provider. "
+                                  "Please check the configuration. Re-enabling the "
+                                  "provider without fixing the problem may result "
+                                  "in an IP ban, depending on the site.", self.getName())
+                        self.conf(self.enabled_option, False)
+                        self.login_failures = 0
             error = traceback.format_exc()
 
         self.last_login_check = None
