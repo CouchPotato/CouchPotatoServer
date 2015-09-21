@@ -193,7 +193,8 @@ config = [{
             'name': 'PassThePopcorn',
             'description': '<a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
             'wizard': True,
-            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAARklEQVQoz2NgIAP8BwMiGWRpIN1JNWn/t6T9f532+W8GkNt7vzz9UkfarZVpb68BuWlbnqW1nU7L2DMx7eCoBlpqGOppCQB83zIgIg+wWQAAAABJRU5ErkJggg==',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAARklEQVQoz2NgIAP8BwMiGWRpIN1JNWn/t6T9f5'
+                    '32+W8GkNt7vzz9UkfarZVpb68BuWlbnqW1nU7L2DMx7eCoBlpqGOppCQB83zIgIg+wWQAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',
@@ -255,14 +256,14 @@ config = [{
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',
                     'type': 'float',
-                    'default': 1,
+                    'default': 2,
                     'description': 'Will not be (re)moved until this seed ratio is met.',
                 },
                 {
                     'name': 'seed_time',
                     'label': 'Seed time',
                     'type': 'int',
-                    'default': 40,
+                    'default': 96,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
