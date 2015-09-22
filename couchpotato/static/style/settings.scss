@@ -304,6 +304,7 @@
 				right: 0;
 				border: 0;
 				padding: 0;
+				z-index: 10;
 
 				~ h2 {
 					margin-right: 66px + $padding;
@@ -411,6 +412,10 @@
 
 			&.disabled h2 {
 				padding: 0 $padding;
+
+				@include media-phablet {
+					padding: 0 $padding/2;
+				}
 			}
 		}
 
