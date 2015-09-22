@@ -33,7 +33,6 @@ var NotificationBase = new Class({
 				self.startInterval();
 			}, $(window).getSize().x <= 480 ? 2000 : 100);
 
-			self.showMessage('Dit is een bericht', true, {});
 		});
 	},
 
