@@ -691,7 +691,20 @@ input[type=text], textarea {
 		}
 
 		&.sticky {
-			@include theme(background-color, primary);
+			.inner {
+				@include theme(background-color, primary);
+			}
+
+			.icon-cancel {
+				position: absolute;
+				display: block;
+				height: 30px;
+				width: 30px;
+				line-height: 30px;
+				top: 0;
+				right: 0;
+				text-align: center;
+			}
 		}
 
 		&.show {
