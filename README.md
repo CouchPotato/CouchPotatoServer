@@ -85,4 +85,4 @@ You can now change css and javascript and it wil reload the page when needed.
 
 By default it will combine files used in the core folder. If you're adding a new .scss or .js file, you might need to add it and then restart the grunt process for it to combine it properly.
 
-Don't forget to enable development inside the CP settings. This disables some functions and also makes sure javascript rrors are pushed to console instead of the log.
+Don't forget to enable development inside the CP settings. This disables some functions and also makes sure javascript errors are pushed to console instead of the log.

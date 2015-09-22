@@ -26,6 +26,7 @@ class Base(TorrentProvider):
         'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
+    login_errors = 0
     http_time_between_calls = 2
 
     def _search(self, media, quality, results):
@@ -177,9 +178,22 @@ class Base(TorrentProvider):
 
     def loginSuccess(self, output):
         try:
-            return json.loads(output).get('Result', '').lower() == 'ok'
+            if json.loads(output).get('Result', '').lower() == 'ok':
+                self.login_errors = 0
+                return True
         except:
-            return False
+            pass
+
+        self.login_errors += 1
+        if self.login_errors >= 3:
+            log.error('Disabling PTP provider after repeated failed logins. '
+                      'Please check your configuration. Re-enabling without '
+                      'solving the problem may cause an IP ban. response=%s',
+                      output)
+            self.conf('enabled', value=False)
+            self.login_errors = 0
+
+        return False
 
     loginCheckSuccess = loginSuccess
 
@@ -193,7 +207,8 @@ config = [{
             'name': 'PassThePopcorn',
             'description': '<a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
             'wizard': True,
-            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAARklEQVQoz2NgIAP8BwMiGWRpIN1JNWn/t6T9f532+W8GkNt7vzz9UkfarZVpb68BuWlbnqW1nU7L2DMx7eCoBlpqGOppCQB83zIgIg+wWQAAAABJRU5ErkJggg==',
+            'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAARklEQVQoz2NgIAP8BwMiGWRpIN1JNWn/t6T9f5'
+                    '32+W8GkNt7vzz9UkfarZVpb68BuWlbnqW1nU7L2DMx7eCoBlpqGOppCQB83zIgIg+wWQAAAABJRU5ErkJggg==',
             'options': [
                 {
                     'name': 'enabled',
@@ -255,14 +270,14 @@ config = [{
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',
                     'type': 'float',
-                    'default': 1,
+                    'default': 2,
                     'description': 'Will not be (re)moved until this seed ratio is met.',
                 },
                 {
                     'name': 'seed_time',
                     'label': 'Seed time',
                     'type': 'int',
-                    'default': 40,
+                    'default': 96,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
