@@ -142,8 +142,10 @@ class Renamer(Plugin):
         no_process.extend([item['destination'] for item in cat_list])
 
         # Check to see if the no_process folders are inside the "from" folder.
-        if not os.path.isdir(base_folder) or not os.path.isdir(to_folder):
-            log.error('Both the "To" and "From" folder have to exist.')
+        if not os.path.isdir(base_folder):
+            log.error('"From" folder have to exist.')
+	if not os.path.isdir(to_folder):
+            log.error('"To" folder have to exist.')
             return
         else:
             for item in no_process:
