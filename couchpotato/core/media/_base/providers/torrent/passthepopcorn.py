@@ -57,7 +57,7 @@ class Base(TorrentProvider):
                 log.debug('Movie %s (%s) has %d torrents', (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
                 for torrent in ptpmovie['Torrents']:
                     torrent_id = tryInt(torrent['Id'])
-                    torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'].replace('-', ''), torrent['Codec'].replace('.', '')
+                    torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'].replace('-', ''), torrent['Codec'].replace('.', ''))
                     torrentscore = 0
 
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
