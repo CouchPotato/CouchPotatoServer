@@ -54,6 +54,8 @@ class Base(TorrentProvider):
         if data:
             try:
                 for result in data:
+                    if result['type_origin'] == 1:
+                        result['name'] += ' HQ'
                     results.append({
                         'id': result['id'],
                         'name': result['name'],
