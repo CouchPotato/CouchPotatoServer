@@ -18,9 +18,9 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'http://www.t411.io/',
-        'detail': 'http://www.t411.io/torrents/?id=%s',
-        'search': 'http://www.t411.io/torrents/search/?',
+        'test': 'http://www.t411.in/',
+        'detail': 'http://www.t411.in/torrents/?id=%s',
+        'search': 'http://www.t411.in/torrents/search/?',
     }
 
     http_time_between_calls = 1 #seconds
