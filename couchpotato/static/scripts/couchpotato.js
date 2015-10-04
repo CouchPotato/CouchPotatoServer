@@ -46,6 +46,20 @@
 		window.addEvent('resize', self.resize.bind(self));
 		self.resize();
 
+		//self.checkCache();
+
+	},
+
+	checkCache: function(){
+		window.addEventListener('load', function() {
+			window.applicationCache.addEventListener('updateready', function(e) {
+				if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
+					window.applicationCache.swapCache();
+					window.location.reload();
+				}
+			}, false);
+
+		}, false);
 	},
 
 	resize: function(){

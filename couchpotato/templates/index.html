@@ -2,22 +2,36 @@
 <!doctype html>
 <html class="{{ 'dark' if Env.setting('dark_theme') else '' }}">
 	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<title>CouchPotato</title>
+		<meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="msapplication-tap-highlight" content="no" />
 
-		{% for url in fireEvent('clientscript.get_styles', single = True) %}
-		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
+		{% set icon_path = Env.get('static_path') + 'images/icons/' %}
+		{% set themed_icon_path = icon_path + ('dark/' if Env.setting('dark_theme') else '') %}
+
+		<!-- IOS -->
+		<link rel="apple-touch-icon-precomposed" href="{{ themed_icon_path }}ios.png" />
+
+		<!-- Android -->
+		<link rel="icon" type="image/png" href="{{ themed_icon_path }}android.png" sizes="192x192">
+
+		<!-- Windows 8 -->
+		<meta name="msapplication-TileColor" content="{{ '#f85c22' if Env.setting('dark_theme') else '#ac0000' }}">
+		<meta name="msapplication-TileImage" content="{{ icon_path }}windows.png">
+		<meta name="msapplication-square70x70logo" content="{{ icon_path }}windows.png">
+		<meta name="msapplication-square150x150logo" content="{{ icon_path }}windows.png">
+		<meta name="msapplication-square310x310logo" content="{{ icon_path }}windows.png">
+
+		<link href="{{ icon_path }}favicon.ico" rel="icon" type="image/x-icon" />
+
 		{% for url in fireEvent('clientscript.get_scripts', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
-		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
-		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
-
 		{% if Env.get('dev') %}
-		<script src="//localhost:35729/livereload.js?snipver=1"></script>
+		<script src="//localhost:35729/livereload.js?snipver=1" async></script>
 		{% end %}
 
 		<script type="text/javascript">
@@ -81,7 +95,9 @@
 			{% end %}
 
 		</script>
-		<title>CouchPotato</title>
+
+		{% for url in fireEvent('clientscript.get_styles', single = True) %}
+		<link data-url="{{ url }}" rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 	</head>
 	<body></body>
 </html>

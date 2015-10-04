@@ -32,15 +32,17 @@ var MoviesWanted = new Class({
 			self.list = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
-				'actions': [MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
+				'actions': [MA.MarkAsDone, MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
 				'add_new': true,
 				'menu': [self.manual_search, self.scan_folder],
-				'on_empty_element': new Element('div.empty_wanted').adopt(
-					new Element('div.no_movies', {
-						'text': 'Seems like you don\'t have any movies yet.. Maybe add some via search or the extension.'
-					}),
-					App.createUserscriptButtons()
-				)
+				'on_empty_element': function(){
+					return new Element('div.empty_wanted').adopt(
+						new Element('div.no_movies', {
+							'text': 'Seems like you don\'t have any movies yet.. Maybe add some via search or the extension.'
+						}),
+						App.createUserscriptButtons()
+					);
+				}
 			});
 			$(self.list).inject(self.content);
 

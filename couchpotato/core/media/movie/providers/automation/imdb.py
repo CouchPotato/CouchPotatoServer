@@ -51,7 +51,7 @@ class IMDBBase(Automation, RSS):
     }
 
     def getInfo(self, imdb_id):
-        return fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
+        return fireEvent('movie.info', identifier = imdb_id, extended = False, adding = False, merge = True)
 
     def getFromURL(self, url):
         log.debug('Getting IMDBs from: %s', url)
@@ -203,7 +203,7 @@ class IMDBCharts(IMDBBase):
                 try:
                     for imdb_id in imdb_ids[0:max_items]:
 
-                        is_movie = fireEvent('movie.is_movie', identifier = imdb_id, single = True)
+                        is_movie = fireEvent('movie.is_movie', identifier = imdb_id, adding = False, single = True)
                         if not is_movie:
                             continue
 

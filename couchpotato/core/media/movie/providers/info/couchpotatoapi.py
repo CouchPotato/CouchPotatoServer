@@ -74,13 +74,13 @@ class CouchPotatoApi(MovieProvider):
         name_enc = base64.b64encode(ss(name))
         return self.getJsonData(self.urls['validate'] % name_enc, headers = self.getRequestHeaders())
 
-    def isMovie(self, identifier = None, adding = False):
+    def isMovie(self, identifier = None, adding = False, **kwargs):
 
         if not identifier:
             return
 
         url = self.urls['is_movie'] % identifier
-        url += '?adding=1' if adding else ''
+        url += '' if adding else '?ignore=1'
 
         data = self.getJsonData(url, headers = self.getRequestHeaders())
         if data:
@@ -88,12 +88,15 @@ class CouchPotatoApi(MovieProvider):
 
         return True
 
-    def getInfo(self, identifier = None, **kwargs):
+    def getInfo(self, identifier = None, adding = False, **kwargs):
 
         if not identifier:
             return
 
-        result = self.getJsonData(self.urls['info'] % identifier, headers = self.getRequestHeaders())
+        url = self.urls['info'] % identifier
+        url += '' if adding else '?ignore=1'
+
+        result = self.getJsonData(url, headers = self.getRequestHeaders())
         if result:
             return dict((k, v) for k, v in result.items() if v)
 

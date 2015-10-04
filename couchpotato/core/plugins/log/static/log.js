@@ -2,6 +2,7 @@ Page.Log = new Class({
 
 	Extends: PageBase,
 
+	disable_pointer_onscroll: false,
 	order: 60,
 	name: 'log',
 	title: 'Show recent logs.',
@@ -138,11 +139,8 @@ Page.Log = new Class({
 			elements.include(new Element('div', {
 				'class': 'time ' + log.type.toLowerCase()
 			}).adopt(
-				new Element('span', {
-					'text': log.time
-				}),
-				new Element('span.type', {
-					'text': log.type
+				new Element('span.time_type', {
+					'text': log.time + ' ' + log.type
 				}),
 				new Element('span.message', {
 					'text': log.message

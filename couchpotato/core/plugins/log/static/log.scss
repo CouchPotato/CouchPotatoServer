@@ -52,6 +52,7 @@
 		padding: $padding;
 		overflow: hidden;
 		line-height: 150%;
+		transform: rotateZ(360deg);
 
 		@include media-phablet {
 			padding: $padding $padding/2;
@@ -68,16 +69,17 @@
 		}
 
 		.time {
-			clear: both;
 			font-size: .75em;
-			border-top: 1px solid rgba(255,255,255,.1);
-			overflow: hidden;
+			border-top: 1px solid transparent;
+			@include theme(border-color, off);
 			padding: 0 3px;
 			font-family: Lucida Console, Monaco, Nimbus Mono L, monospace, serif;
-			display: flex;
+			display: block;
+			cursor: pointer;
+			position: relative;
 
-			@include media-phablet {
-				flex-flow: row wrap;
+			&:hover {
+				@include theme(background, off);
 			}
 
 			&.highlight {
@@ -85,36 +87,35 @@
 			}
 
 			span {
-				padding: 5px 0 3px;
 				display: inline-block;
-				vertical-align: middle;
-				width: 95px;
+				padding: 5px 0 3px;
 			}
 
-			.message {
-				white-space: pre-wrap;
-				flex: 1 auto;
+			.time_type {
+				position: absolute;
+				width: 130px;
+				top: 0;
+				left: 0;
 
-				@include media-phablet {
-					flex: 1 auto;
-					margin-top: -$padding/4;
-					padding: 0;
-					display: block;
-					width: 100%;
+				@include media-tablet {
+					position: static;
+					width: auto;
 				}
 			}
 
-			::selection {
-				@include theme(background-color, background);
-				@include theme(color, text);
+			.message {
+				//white-space: pre-wrap;
+				display: block;
+				margin: 0 0 0 130px;
+
+				@include media-tablet {
+					display: inline;
+					margin: 0 0 0 $padding/3;
+					padding: 0;
+				}
 			}
-		}
 
-		.type.type {
-			margin-left: $padding/3;
-			width: 40px;
 		}
-
 
 		.error { color: #FFA4A4; }
 		.debug span { opacity: .6; }

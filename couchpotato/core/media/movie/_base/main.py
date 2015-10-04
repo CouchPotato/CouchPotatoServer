@@ -85,18 +85,7 @@ class MovieBase(MovieTypeBase):
             force_readd = fra.lower() not in ['0', '-1'] if not isinstance(fra, bool) else fra
 
         # Set default title
-        default_title = toUnicode(info.get('title'))
-        titles = info.get('titles', [])
-        counter = 0
-        def_title = None
-        for title in titles:
-            if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
-                def_title = toUnicode(title)
-                break
-            counter += 1
-
-        if not def_title:
-            def_title = toUnicode(titles[0])
+        def_title = self.getDefaultTitle(info)
 
         # Default profile and category
         default_profile = {}
@@ -312,20 +301,8 @@ class MovieBase(MovieTypeBase):
             log.debug('Adding titles: %s', titles)
 
             # Define default title
-            if default_title:
-                def_title = None
-                if default_title:
-                    counter = 0
-                    for title in titles:
-                        if title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
-                            def_title = toUnicode(title)
-                            break
-                        counter += 1
-
-                if not def_title:
-                    def_title = toUnicode(titles[0])
-
-                media['title'] = def_title
+            if default_title or media.get('title') == 'UNKNOWN' or len(media.get('title', '')) == 0:
+                media['title'] = self.getDefaultTitle(info, default_title)
 
             # Files
             image_urls = info.get('images', [])

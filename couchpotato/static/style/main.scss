@@ -17,14 +17,9 @@ body, html {
 	height:  100%;
 	margin: 0;
 	padding: 0;
-	background: $menu_color;
+	@include theme(background, menu);
 	@include theme(color, text);
 	overflow: hidden;
-}
-
-body {
-	display: flex;
-	flex-flow: row nowrap;
 }
 
 a {
@@ -101,13 +96,12 @@ input[type=text], textarea {
 /* Header */
 .header {
 	width: $header_width;
-	min-width: $header_width;
 	position: relative;
 	z-index: 100;
+	height: 100%;
 
 	@include media-phablet {
 		width: $header_width_mobile;
-		min-width: $header_width_mobile;
 		z-index: 21;
 	}
 
@@ -178,6 +172,10 @@ input[type=text], textarea {
 				display: block;
 				position: relative;
 
+				&:hover {
+					@include theme(background, menu_off);
+				}
+
 				@include media-phablet {
 					line-height: $header_width_mobile - $padding;
 					height: $header_width_mobile;
@@ -214,10 +212,15 @@ input[type=text], textarea {
 
 	.donate {
 		position: absolute;
-		bottom: 44px + $padding/2;
+		bottom: 44px;
 		left: 0;
 		right: 0;
 		padding: $padding/2 $padding;
+		transition: background 200ms;
+
+		&:hover {
+			@include theme(background, menu_off);
+		}
 
 		&:before {
 			display: none;
@@ -242,13 +245,9 @@ input[type=text], textarea {
 	.menu, .search_form, .notification_menu  {
 		position: absolute;
 		z-index: 21;
-		bottom: $padding / 3;
+		bottom: 0;
 		width: 44px;
 		height: 44px;
-
-		@include media-phablet {
-			bottom: 0;
-		}
 
 		.wrapper {
 			min-width: 170px;
@@ -291,6 +290,8 @@ input[type=text], textarea {
 			text-align: center;
 			font-size: 10px;
 			font-weight: lighter;
+			z-index: 2;
+			pointer-events: none;
 		}
 
 		.wrapper {
@@ -342,7 +343,7 @@ input[type=text], textarea {
 	}
 
 	.menu  {
-		left: $padding / 3;
+		left: 0;
 
 		@include media-phablet {
 			bottom: 88px;
@@ -357,7 +358,7 @@ input[type=text], textarea {
 	}
 
 	.search_form {
-		right: $padding / 3;
+		right: 0;
 
 		@include media-phablet {
 			right: auto;
@@ -373,6 +374,12 @@ input[type=text], textarea {
 			left: 44px;
 			right: auto;
 			padding-left: 4px;
+		}
+
+		a {
+			&:hover {
+				@include theme(background, menu_off);
+			}
 		}
 
 	}
@@ -394,9 +401,15 @@ input[type=text], textarea {
 
 /* Content */
 .content {
-	position: relative;
+	position: absolute;
 	height: 100%;
-	flex: 1 auto;
+	top: 0;
+	left: $header_width;
+	right: 0;
+
+	@include media-phablet {
+		left: $header_width_mobile;
+	}
 
 	display: flex;
 	flex-flow: column nowrap;
@@ -492,6 +505,10 @@ input[type=text], textarea {
 					opacity: .5;
 					vertical-align: bottom;
 
+					&:hover {
+						opacity: 1;
+					}
+
 					@include media-phablet {
 						font-size: 18px;
 						line-height: $header_width_mobile;
@@ -536,6 +553,11 @@ input[type=text], textarea {
 
 	a {
 		display: inline-block;
+		float: left;
+
+		&:hover {
+			@include theme(background, off);
+		}
 	}
 
 	.button {
@@ -601,9 +623,10 @@ input[type=text], textarea {
 				padding: $padding/4 $padding/2;
 				font-size: 1em;
 				line-height: 22px;
+				width: 100%;
 
 				&:hover {
-
+					@include theme(background, off);
 				}
 			}
 
@@ -668,11 +691,24 @@ input[type=text], textarea {
 		}
 
 		&.sticky {
-			@include theme(background-color, primary);
+			.inner {
+				@include theme(background-color, primary);
+			}
+
+			.icon-cancel {
+				position: absolute;
+				display: block;
+				height: 30px;
+				width: 30px;
+				line-height: 30px;
+				top: 0;
+				right: 0;
+				text-align: center;
+			}
 		}
 
 		&.show {
-			max-height: 100px;
+			max-height: 130px;
 			transform: scale(1);
 		}
 

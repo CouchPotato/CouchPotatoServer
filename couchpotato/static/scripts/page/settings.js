@@ -420,7 +420,7 @@ var OptionBase = new Class({
 		var self = this,
 			value = self.getValue();
 
-		App.fireEvent('setting.save.'+self.section+'.'+self.name, value)
+		App.fireEvent('setting.save.'+self.section+'.'+self.name, value);
 
 		Api.request('settings.save', {
 			'data': {

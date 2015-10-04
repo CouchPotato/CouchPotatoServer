@@ -1,13 +1,6 @@
-$menu_color: #111;
-
-$vars: 			'primary', 'background', 	'off', 					'text';
-$theme_light: 	#ac0000, 	#FFF, 			darken(#FFF, 8), 		#000;
-$theme_dark: 	#0C9DF8, 	#2d2d2d, 		lighten(#2d2d2d, 5), 	#FFF;
-
-//$primary_color: nth($theme_light, 1);
-//$theme_off: nth($theme_light, 2);
-//$background_color:nth($theme_light, 3);
-//$text_color: nth($theme_light, 4);
+$vars: 			'primary', 'background', 	'off', 					'text', 'menu', 'menu_off';
+$theme_light: 	#ac0000, 	#FFF, 			darken(#FFF, 8), 		#000,	#111, 	lighten(#111, 12);
+$theme_dark: 	#f85c22, 	#2d2d2d, 		lighten(#2d2d2d, 3), 	#FFF, 	#111, 	lighten(#111, 12);
 
 $font_size: 14px;
 $header_height: 80px;

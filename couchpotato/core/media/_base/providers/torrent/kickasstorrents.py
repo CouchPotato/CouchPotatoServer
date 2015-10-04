@@ -69,7 +69,7 @@ class Base(TorrentMagnetProvider):
                                         new['name'] = link.text
                                         new['url'] = td.find('a', {'href': re.compile('magnet:*')})['href']
                                         new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
-                                        new['verified'] = True if td.find('a', 'iverify') else False
+                                        new['verified'] = True if td.find('i', {'class': re.compile('verify')}) else False
                                         new['score'] = 100 if new['verified'] else 0
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)

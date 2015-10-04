@@ -957,6 +957,7 @@ MA.MarkAsDone = new Class({
 
 	createButton: function(){
 		var self = this;
+		if(!self.movie.data.releases || self.movie.data.releases.length === 0) return;
 
 		return new Element('a.mark_as_done', {
 			'text': 'Mark as done',

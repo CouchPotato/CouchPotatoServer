@@ -9,7 +9,7 @@ import sys
 
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.variable import cleanHost, md5, isSubFolder
+from couchpotato.core.helpers.variable import cleanHost, md5, isSubFolder, compareVersions
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -80,8 +80,20 @@ class Core(Plugin):
         try: from lxml import etree
         except: log.error('LXML not available, please install for better/faster scraping support: `http://lxml.de/installation.html`')
 
-        try: import OpenSSL
-        except: log.error('OpenSSL not available, please install for better requests validation: `https://pyopenssl.readthedocs.org/en/latest/install.html`')
+        try:
+            import OpenSSL
+            v = OpenSSL.__version__
+            v_needed = '0.15'
+            if compareVersions(OpenSSL.__version__, v_needed) < 0:
+                log.error('OpenSSL installed but %s is needed while %s is installed. Run `pip install pyopenssl --upgrade`', (v_needed, v))
+
+            try:
+                import ssl
+                log.debug('OpenSSL detected: pyopenssl (%s) using OpenSSL (%s)', (v, ssl.OPENSSL_VERSION))
+            except:
+                pass
+        except:
+            log.error('OpenSSL not available, please install for better requests validation: `https://pyopenssl.readthedocs.org/en/latest/install.html`: %s', traceback.format_exc())
 
     def md5Password(self, value):
         return md5(value) if value else ''
@@ -295,7 +307,7 @@ config = [{
                 },
                 {
                     'name': 'dereferer',
-                    'default': 'http://www.dereferer.org/?',
+                    'default': 'http://www.nullrefer.com/?',
                     'description': 'Derefer links to external sites, keep empty for no dereferer. Example: http://www.dereferer.org/? or http://www.nullrefer.com/?.',
                 },
                 {

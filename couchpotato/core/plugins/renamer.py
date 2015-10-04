@@ -900,7 +900,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaces = [
             ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '), (' \\\\', '\\\\'), (' /', '/'),
-            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
+            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-[^\s])+', '-'),
         ]
 
         for r in replaces:

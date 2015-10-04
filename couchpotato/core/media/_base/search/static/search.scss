@@ -20,6 +20,10 @@
 		color: #FFF;
 		font-size: 20px;
 		transform: translateY(-50%);
+
+		&:hover {
+			@include theme(background, menu_off);
+		}
 	}
 
 	.wrapper {
@@ -381,6 +385,10 @@
 			transform: none;
 			font-size: 2em;
 			opacity: .5;
+
+			&:hover {
+				background: none;
+			}
 
 			@include media-phablet {
 				right: $padding/2;

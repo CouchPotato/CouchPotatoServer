@@ -657,12 +657,13 @@ var MovieList = new Class({
 			self.description.setStyle('display', [is_empty ? 'none' : '']);
 
 		if(is_empty && self.options.on_empty_element){
-			self.options.on_empty_element.inject(self.loader_first || self.title || self.movie_list, 'after');
+			var ee = typeOf(self.options.on_empty_element) == 'function' ? self.options.on_empty_element() : self.options.on_empty_element;
+			ee.inject(self.loader_first || self.title || self.movie_list, 'after');
 
 			if(self.navigation)
 				self.navigation.hide();
 
-			self.empty_element = self.options.on_empty_element;
+			self.empty_element = ee;
 		}
 		else if(self.empty_element){
 			self.empty_element.destroy();

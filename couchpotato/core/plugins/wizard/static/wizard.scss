@@ -23,7 +23,7 @@
 		padding: 10px 0;
 		display: block;
 		font-size: 30px;
-		margin: 80px 5px 0;
+		margin: $header_height 5px 0;
 		font-weight: 300;
 	}
 
@@ -52,7 +52,7 @@
 	.button.green {
 		padding: 20px;
 		font-size: 25px;
-		margin: 10px 0 80px;
+		margin: 10px 0 $header_height;
 		display: inline-block;
 	}
 

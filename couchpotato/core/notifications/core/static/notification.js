@@ -2,6 +2,7 @@ var NotificationBase = new Class({
 
 	Extends: BlockBase,
 	Implements: [Options, Events],
+	stopped: false,
 
 	initialize: function(options){
 		var self = this;
@@ -28,14 +29,11 @@ var NotificationBase = new Class({
 			$(App.block.notification).inject(App.getBlock('search'), 'after');
 			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
 
-		});
-
-		window.addEvent('load', function(){
 			requestTimeout(function(){
-				self.startInterval($(window).getSize().x <= 480 ? 2000 : 100);
-			}, 0);
-		});
+				self.startInterval();
+			}, $(window).getSize().x <= 480 ? 2000 : 100);
 
+		});
 	},
 
 	notify: function(result){
@@ -192,7 +190,7 @@ var NotificationBase = new Class({
 
 		if(sticky)
 			new_message.grab(
-				new Element('a.close.icon2', {
+				new Element('a.icon-cancel', {
 					'events': {
 						'click': function(){
 							self.markAsRead([data._id]);
