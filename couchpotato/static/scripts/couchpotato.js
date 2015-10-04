@@ -46,7 +46,7 @@
 		window.addEvent('resize', self.resize.bind(self));
 		self.resize();
 
-		self.checkCache();
+		//self.checkCache();
 
 	},
 
