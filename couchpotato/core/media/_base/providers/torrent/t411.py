@@ -49,7 +49,7 @@ class Base(TorrentProvider):
             subcat=455
         elif 'Documentaire' in moviegenre or 'Documentary' in moviegenre:
             subcat=634
-        else:    
+        else:
             subcat=631
         if moviequality in ['720p']:
             qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B17%5D%5B%5D=722&term%5B7%5D%5B%5D=15&term%5B7%5D%5B%5D=12&term%5B7%5D%5B%5D=1175"
@@ -63,7 +63,7 @@ class Base(TorrentProvider):
             qualpar="&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B17%5D%5B%5D=1160&term%5B17%5D%5B%5D=722&term%5B7%5D%5B%5D=8&term%5B7%5D%5B%5D=9&term%5B7%5D%5B%5D=10&term%5B7%5D%5B%5D=11&term%5B7%5D%5B%5D=18&term%5B7%5D%5B%5D=19"
         if quality['custom']['3d']==1:
             qualpar=qualpar+"&term%5B9%5D%5B%5D=24&term%5B9%5D%5B%5D=23"
-            
+
         for MovieTitle in MovieTitles:
             try:
                 TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
@@ -74,9 +74,9 @@ class Base(TorrentProvider):
                 results.append(urllib.urlencode( {'search': simplifyString(unicode(TitleStringReal,"latin-1")), 'cat' : 210, 'submit' : 'Recherche', 'subcat': subcat } ) + qualpar)
             except:
                 continue
-        
+
         return results
-    
+
     def _search(self, movie, quality, results):
 
         # Cookie login
@@ -90,46 +90,46 @@ class Base(TorrentProvider):
                 timetosleep= 10-(actualtime-lastsearch)
                 time.sleep(timetosleep)
             URL = self.urls['search']+searchString
-                
-            r = self.opener.open(URL)   
+
+            r = self.opener.open(URL)
             soup = BeautifulSoup( r, "html.parser" )
             if soup.find('table', attrs = {'class':'results'}):
                 resultdiv = soup.find('table', attrs = {'class':'results'}).find('tbody')
             else:
                 continue
             if resultdiv:
-                try:   
+                try:
                     for result in resultdiv.findAll('tr'):
                         try:
                             categorie = result.findAll('td')[0].findAll('a')[0]['href'][result.findAll('td')[0].findAll('a')[0]['href'].find('='):]
                             insert = 0
-                        
+
                             if categorie == '=631':
                                 insert = 1
                             if categorie == '=455':
                                 insert = 1
                             if categorie == '=634':
                                 insert = 1
-                         
+
                             if insert == 1 :
-                         
+
                                 new = {}
-        
+
                                 idt = result.findAll('td')[2].findAll('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
                                 name = result.findAll('td')[1].findAll('a')[0]['title']
                                 testname=namer_check.correctName(name,movie)
                                 if testname==0:
                                     continue
-                                url = ('http://www.t411.io/torrents/download/?id=%s' % idt)
-                                detail_url = ('http://www.t411.io/torrents/?id=%s' % idt)
+                                url = ('http://www.t411.in/torrents/download/?id=%s' % idt)
+                                detail_url = ('http://www.t411.in/torrents/?id=%s' % idt)
                                 leecher = result.findAll('td')[8].text
                                 size = result.findAll('td')[5].text
                                 age = result.findAll('td')[4].text
                                 seeder = result.findAll('td')[7].text
-        
+
                                 def extra_check(item):
                                     return True
-        
+
                                 new['id'] = idt
                                 new['name'] = name + ' french'
                                 new['url'] = url
@@ -140,12 +140,12 @@ class Base(TorrentProvider):
                                 new['leechers'] = tryInt(leecher)
                                 new['extra_check'] = extra_check
                                 new['download'] = self.download
-        
+
                                 results.append(new)
-    
+
                         except:
                             log.error('Failed parsing T411: %s', traceback.format_exc())
-    
+
                 except AttributeError:
                     log.debug('No search results found.')
             else:
@@ -185,7 +185,7 @@ class Base(TorrentProvider):
         ]
 
         try:
-            response = self.opener.open('http://www.t411.io/users/login/', self.getLoginParams())
+            response = self.opener.open('http://www.t411.in/users/login/', self.getLoginParams())
         except urllib2.URLError as e:
             log.error('Login to T411 failed: %s' % e)
             return False
@@ -205,14 +205,14 @@ class Base(TorrentProvider):
              'remember': '1',
              'url': '/'
         })
-        
-        
+
+
     def download(self, url = '', nzb_id = ''):
         if not self.last_login_check and not self.login():
             return
         try:
             request = urllib2.Request(url)
-    
+
             response = self.last_login_check.open(request)
             # unzip if needed
             if response.info().get('Content-Encoding') == 'gzip':
@@ -226,7 +226,7 @@ class Base(TorrentProvider):
             return data
         except:
             return 'try_next'
-        
+
 config = [{
     'name': 't411',
     'groups': [
@@ -234,7 +234,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 't411',
-            'description': 'See <a href="https://www.t411.io/">T411</a>',
+            'description': 'See <a href="https://www.t411.in/">T411</a>',
             'icon' : 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAA3NCSVQICAjb4U/gAAACdklEQVQokW2RX0hTcRTHz+/+cbvz3m1srbv8M6Ws6SbK1hRTkUoKIui5jIJ8sz9vQQTRQxDRexCkIGgmSC+B1YNWNCIrRQ3Z2PyTf5pb2/S2ud2/2723hyIt/b4cDud7+H4OB2CXrpOW+wYLYPju0R66DTABEAWYB7i6lwHtbEYAKi5crPE36Wa6QGKQyYylk1cePPwX4FqPquSSiZVHAN+Gh/JihpezUpGXinmxkBN5Lvjm5U4/1hzwS5JsJIkzkWnmZDtSZF2WQZZ0SSoIgiSJXq+37VjLNhLL7h/ofUzg0Dceutl1ejHOoa0fScUQW1rouXQWw3ANULXbt8cNJ7pudPrcd/pmLp8PBNpa344HDYTqYc2Ls58G+59sI/0uTgBTKj78OQIdTb6W5gKg+PpKaPprUoLB/mBHY/v/CacARru7ucaG6NCrj5vp2rpDWvmBDa83PzDwdJVOl5Zo8S+JQhoD7E/CGMBEKLyYTNWjLKNl6KkP5OsXbE1leGqdNFoBd3K034jbcJzYfqfPTpUZjOHkmkmS+SpzinXYlxdGM+4I5ezkoyHSUcIjHXHY3wWPqM9SOg2ataFMlvQ6YWs5FIvaKxxgmzEfrWYOazanXuAxAGBwGALoNcWePxtx8cKR4wGuBFZo05TI2gXViE3SaiyVn3bQRgU0DABuVdHn7na6iuSMAOk2X6WnrqLcMVlqTVQ5lHw2VaQURtNN+7YoD7L4cQCQKGo9GJsUEGC6bNPfzc1xpZAjWuH7+3u+xHy+BuFLLkYsx7la0yrCAeqdZg0h1kDQFkpVlSyvrG1krM5mNbtK/9wM0wddjF6UNywElpWVX6HUDxDMdBkmAAAAAElFTkSuQmCC',
             'wizard': True,
             'options': [
