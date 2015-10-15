@@ -54,12 +54,12 @@ class PlexServer(object):
                 req.add_header("X-Plex-Product", "Couchpotato Notifier")
                 req.add_header("X-Plex-Client-Identifier", "b3a6b24dcab2224bdb101fc6aa08ea5e2f3147d6")
                 req.add_header("X-Plex-Version", "1.0")
-                
+
                 try:
                     response = urllib2.urlopen(req)
                 except urllib2.URLError, e:
-                    log.info("Error fetching token from plex.tv")
-                
+                    log.info('Error fetching token from plex.tv: %s', traceback.format_exc())
+
                 try:
                     auth_tree = etree.parse(response)
                     token = auth_tree.findall(".//authentication-token")[0].text
@@ -74,7 +74,7 @@ class PlexServer(object):
                 path,
                 self.plex.conf('auth_token')
             ))
-        
+
         if data_type == 'xml':
             return etree.fromstring(data)
         else:
