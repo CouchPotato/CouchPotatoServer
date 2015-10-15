@@ -332,6 +332,7 @@ config = [{
                 {
                     'name': 'bookmarklet_host',
                     'description': 'Override default bookmarklet host. This can be useful in a reverse proxy environment. For example: "http://username:password@customHost:1020". Requires restart to take effect.',
+                    'advanced': True,
                 },
                 {
                     'name': 'debug',
