@@ -14,3 +14,14 @@ class TrailerProvider(Provider):
 
     def search(self, *args, **kwargs):
         pass
+
+        
+class VFTrailerProvider(Provider):
+
+    type = 'vftrailer'
+
+    def __init__(self):
+        addEvent('vftrailer.search', self.search)
+
+    def search(self, *args, **kwargs):
+        pass
