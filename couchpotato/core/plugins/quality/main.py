@@ -298,7 +298,7 @@ class QualityPlugin(Plugin):
                     # Don't score twice on same tag
                     scored_on.append(ss(alt).lower())
 
-        # Check extention
+        # Check extension
         for ext in quality.get('ext', []):
             if ext == extension:
                 log.debug('Found %s with .%s extension in %s', (quality['identifier'], ext, cur_file))

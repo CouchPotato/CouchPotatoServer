@@ -1284,7 +1284,7 @@ rename_options = {
     'pre': '<',
     'post': '>',
     'choices': {
-        'ext': 'Extention (mkv)',
+        'ext': 'Extension (mkv)',
         'namethe': 'Moviename, The',
         'thename': 'The Moviename',
         'year': 'Year (2011)',
@@ -1470,7 +1470,7 @@ config = [{
             'tab': 'renamer',
             'name': 'meta_renamer',
             'label': 'Advanced renaming',
-            'description': 'Meta data file renaming. Use &lt;filename&gt; to use the above "File naming" settings, without the file extention.',
+            'description': 'Meta data file renaming. Use &lt;filename&gt; to use the above "File naming" settings, without the file extension.',
             'advanced': True,
             'options': [
                 {
