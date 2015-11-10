@@ -726,7 +726,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for filename in tag_files:
 
             # Don't tag .ignore files or when renamer is set to cleanup
-            if os.path.splitext(filename)[1] == '.ignore' or not self.conf('cleanup'):
+            if os.path.splitext(filename)[1] == '.ignore' or self.conf('cleanup'):
                 continue
 
             tag_filename = '%s.%s.ignore' % (os.path.splitext(filename)[0], tag)
