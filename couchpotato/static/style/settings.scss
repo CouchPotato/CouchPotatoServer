@@ -71,7 +71,7 @@
 
 	form.containers {
 		margin: 0 $padding 0 0;
-		flex: 1 1 auto;
+		flex: 1;
 
 		@include media-phablet {
 			margin: 0 $padding/2 0 0;
