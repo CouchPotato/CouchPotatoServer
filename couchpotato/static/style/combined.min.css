@@ -854,7 +854,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .dark .page.settings .tabs li a{color:rgba(255,255,255,.5)}
 .page.settings .tabs li.active a{color:#000}
 .dark .page.settings .tabs li.active a{color:#FFF}
-.page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1 1 auto;-ms-flex:1 1 auto;flex:1 1 auto}
+.page.settings form.containers{margin:0 20px 0 0;-webkit-flex:1;-ms-flex:1;flex:1}
 @media (max-width:480px){.page.settings form.containers{margin:0 10px 0 0}
 }
 .page.settings fieldset h2 .group_label,.page.settings fieldset h2 .icon{margin-right:10px}

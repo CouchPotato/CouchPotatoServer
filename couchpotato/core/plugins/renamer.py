@@ -141,11 +141,16 @@ class Renamer(Plugin):
         cat_list = fireEvent('category.all', single = True) or []
         no_process.extend([item['destination'] for item in cat_list])
 
-        # Check to see if the no_process folders are inside the "from" folder.
-        if not os.path.isdir(base_folder) or not os.path.isdir(to_folder):
-            log.error('Both the "To" and "From" folder have to exist.')
+        # Don't continue if from-folder doesn't exist
+        if not os.path.isdir(base_folder):
+            log.error('The from folder "%s" doesn\'t exist. Please create it.', base_folder)
+            return
+        # Don't continue if to-folder doesn't exist
+        elif not os.path.isdir(to_folder):
+            log.error('The to folder "%s" doesn\'t exist. Please create it.', to_folder)
             return
         else:
+            # Check to see if the no_process folders are inside the "from" folder.
             for item in no_process:
                 if isSubFolder(item, base_folder):
                     log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder. "%s" in "%s"', (item, base_folder))
@@ -1279,7 +1284,7 @@ rename_options = {
     'pre': '<',
     'post': '>',
     'choices': {
-        'ext': 'Extention (mkv)',
+        'ext': 'Extension (mkv)',
         'namethe': 'Moviename, The',
         'thename': 'The Moviename',
         'year': 'Year (2011)',
@@ -1465,7 +1470,7 @@ config = [{
             'tab': 'renamer',
             'name': 'meta_renamer',
             'label': 'Advanced renaming',
-            'description': 'Meta data file renaming. Use &lt;filename&gt; to use the above "File naming" settings, without the file extention.',
+            'description': 'Meta data file renaming. Use &lt;filename&gt; to use the above "File naming" settings, without the file extension.',
             'advanced': True,
             'options': [
                 {
