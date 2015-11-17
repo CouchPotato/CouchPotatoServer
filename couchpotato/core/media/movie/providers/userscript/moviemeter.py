@@ -6,9 +6,9 @@ autoload = 'MovieMeter'
 
 class MovieMeter(UserscriptBase):
 
-    includes = ['http://*.moviemeter.nl/film/*', 'http://moviemeter.nl/film/*']
+    includes = ['*://*.moviemeter.nl/film/*', '*://moviemeter.nl/film/*']
 
-    version = 2
+    version = 3
 
     def getMovie(self, url):
 
