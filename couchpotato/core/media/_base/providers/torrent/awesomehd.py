@@ -59,7 +59,7 @@ class Base(TorrentProvider):
 
                     if encoding == 'x264' and self.conf('favor') in ['encode', 'both']:
                         torrentscore += 200
-                    else if re.search('Remux', encoding) and self.conf('favor') in ['remux', 'both']:
+                    elif re.search('Remux', encoding) and self.conf('favor') in ['remux', 'both']:
                         torrentscore += 200
 
                     name = re.sub(r'\W', '.', name)
