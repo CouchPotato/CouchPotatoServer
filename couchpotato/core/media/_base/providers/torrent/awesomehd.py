@@ -54,17 +54,12 @@ class Base(TorrentProvider):
 
                     torrent_desc = '%s.%s.%s.%s-%s' % (resolution, media, audioformat, encoding, releasegroup)
 
-                    if self.conf('prefer_internal'):
-                        if freeleech == '0.25':
-                            torrentscore += 150
-                        if freeleech == '0.50':
-                            torrentscore += 200
-                        if freeleech == '0.75':
-                            torrentscore += 250
+                    if self.conf('prefer_internal') and freeleech in ['0.25', '0.50']:
+                        torrentscore += 200
 
                     if encoding == 'x264' and self.conf('favor') in ['encode', 'both']:
                         torrentscore += 200
-                    if re.search('Remux', encoding) and self.conf('favor') in ['remux', 'both']:
+                    else if re.search('Remux', encoding) and self.conf('favor') in ['remux', 'both']:
                         torrentscore += 200
 
                     name = re.sub(r'\W', '.', name)
