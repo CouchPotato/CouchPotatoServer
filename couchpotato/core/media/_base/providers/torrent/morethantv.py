@@ -26,7 +26,7 @@ class Base(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        movieTitle = '%s %s' % (title, movie['info']['year'])
+        movieTitle = tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year']))
         url = self.urls['search'] % (self.getSceneOnly(), movieTitle)
         data = self.getHTMLData(url)
 
