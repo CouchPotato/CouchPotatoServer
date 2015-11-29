@@ -67,10 +67,7 @@ class Transmission(DownloaderBase):
         }
 
         if self.conf('directory'):
-            if os.path.isdir(self.conf('directory')):
-                params['download-dir'] = self.conf('directory').rstrip(os.path.sep)
-            else:
-                log.error('Download directory from Transmission settings: %s doesn\'t exist', self.conf('directory'))
+            params['download-dir'] = self.conf('directory').rstrip(os.path.sep)
 
         # Change parameters of torrent
         torrent_params = {}
