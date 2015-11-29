@@ -9,7 +9,7 @@ import string
 import sys
 import traceback
 
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss, sp, toUnicode
 from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
@@ -25,17 +25,17 @@ def fnEscape(pattern):
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateHardLinkW(six.text_type(dst), six.text_type(src), 0) == 0: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateHardLinkW(toUnicode(dst), toUnicode(src), 0) == 0: raise ctypes.WinError()
     else:
-        os.link(src, dst)
+        os.link(toUnicode(src), toUnicode(dst))
 
 
 def symlink(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateSymbolicLinkW(six.text_type(dst), six.text_type(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateSymbolicLinkW(toUnicode(dst), toUnicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
-        os.symlink(src, dst)
+        os.link(toUnicode(src), toUnicode(dst))
 
 
 def getUserDir():
