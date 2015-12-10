@@ -36,16 +36,20 @@ def toUnicode(original, *args):
                 return six.text_type(original, *args)
             except:
                 try:
-                    detected = detect(original)
-                    try:
-                        if detected.get('confidence') > 0.8:
-                            return original.decode(detected.get('encoding'))
-                    except:
-                        pass
-
-                    return ek(original, *args)
+                    from couchpotato.environment import Env
+                    return original.decode(Env.get("encoding"))
                 except:
-                    raise
+                    try:
+                        detected = detect(original)
+                        try:
+                            if detected.get('confidence') > 0.8:
+                                return original.decode(detected.get('encoding'))
+                        except:
+                            pass
+
+                        return ek(original, *args)
+                    except:
+                        raise
     except:
         log.error('Unable to decode value "%s..." : %s ', (repr(original)[:20], traceback.format_exc()))
         return 'ERROR DECODING STRING'
