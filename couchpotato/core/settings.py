@@ -77,7 +77,8 @@ class Settings(object):
         return self.p
 
     def sections(self):
-        return self.p.sections()
+        res = filter( self.isSectionReadable, self.p.sections())
+        return res
 
     def connectEvents(self):
         addEvent('settings.options', self.addOptions)
@@ -106,9 +107,16 @@ class Settings(object):
             self.save()
 
     def set(self, section, option, value):
+        if not self.isOptionWritable(section, option):
+            self.log.warning('set::option "%s.%s" isn\'t writable', (section, option))
+            return None
+
         return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = None, type = None):
+        #if not self.optionReadableCheckAndWarn(section, option):
+        #    return None
+
         try:
 
             try: type = self.types[section][option]
@@ -123,6 +131,10 @@ class Settings(object):
             return default
 
     def delete(self, option = '', section = 'core'):
+        #if not self.isOptionWritable(section, option):
+        #    self.log.warning('delete::option "%s.%s" isn\'t writable', (section, option))
+        #    return None
+
         self.p.remove_option(section, option)
         self.save()
 
@@ -130,33 +142,49 @@ class Settings(object):
         return self.getBool(section, option)
 
     def getBool(self, section, option):
+        #if not self.optionReadableCheckAndWarn(section, option):
+        #    return None
+
         try:
             return self.p.getboolean(section, option)
         except:
             return self.p.get(section, option) == 1
 
     def getInt(self, section, option):
+        #if not self.optionReadableCheckAndWarn(section, option):
+        #    return None
         try:
             return self.p.getint(section, option)
         except:
             return tryInt(self.p.get(section, option))
 
     def getFloat(self, section, option):
+        #if not self.optionReadableCheckAndWarn(section, option):
+        #    return None
         try:
             return self.p.getfloat(section, option)
         except:
             return tryFloat(self.p.get(section, option))
 
     def getUnicode(self, section, option):
+        #if not self.optionReadableCheckAndWarn(section, option):
+        #    return None
+
         value = self.p.get(section, option).decode('unicode_escape')
         return toUnicode(value).strip()
 
     def getValues(self):
         values = {}
         for section in self.sections():
+            if not self.isSectionReadable(section):
+                continue
+
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
+
+                if not self.isOptionReadable(section, option_name):
+                    continue
 
                 is_password = False
                 try: is_password = self.types[section][option_name] == 'password'
@@ -189,14 +217,52 @@ class Settings(object):
         self.types[section][option] = type
 
     def addOptions(self, section_name, options):
-
+        # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
             self.options[section_name] = options
         else:
             self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
-        return self.options
+        """Returns dict of UI-readable options
+
+        To check, whether the option is readable self.isOptionReadable() is used
+        """ 
+
+        res = {}
+
+        if isinstance(self.options, dict):
+            for section_key in self.options.keys():
+                section = self.options[section_key]
+                section_name = section.get('name') if 'name' in section else section_key
+                if self.isSectionReadable(section_name) and isinstance(section, dict):
+                    s = {}
+                    sg = []
+                    for section_field in section:
+                        if section_field.lower() != 'groups':
+                            s[section_field] = section[section_field]
+                        else:
+                            groups = section['groups']
+                            for group in groups:
+                                g = {}
+                                go = []
+                                for group_field in group:
+                                    if group_field.lower() != 'options':
+                                        g[group_field] = group[group_field]
+                                    else:
+                                        for option in group[group_field]:
+                                            option_name = option.get('name')
+                                            if self.isOptionReadable(section_name, option_name):
+                                                go.append(option)
+                                                option['writable'] = self.isOptionWritable(section_name, option_name)
+                                if len(go)>0:
+                                    g['options'] = go
+                                    sg.append(g)
+                    if len(sg)>0:
+                        s['groups'] = sg
+                        res[section_key] = s
+    
+        return res
 
     def view(self, **kwargs):
         return {
@@ -210,19 +276,44 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        # See if a value handler is attached, use that as value
-        new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
+        if not self.isOptionWritable(section, option):
+            self.log.warning('Option "%s.%s" isn\'t writable', (section, option))
+            return {
+                'success' : False,
+            }
+        else:
+            # See if a value handler is attached, use that as value
+            new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
-        self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
-        self.save()
+            self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
+            self.save()
 
-        # After save (for re-interval etc)
-        fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
-        fireEvent('setting.save.%s.*.after' % section, single = True)
+            # After save (for re-interval etc)
+            fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+            fireEvent('setting.save.%s.*.after' % section, single = True)
 
-        return {
-            'success': True,
-        }
+            return {
+                'success': True,
+            }
+
+        # unreachable code:
+        return None
+
+    def isSectionReadable(self, section):
+        # Dummy
+        return True
+
+    def isOptionReadable(self, section, option):
+        # Dummy
+        return True
+
+    def optionReadableCheckAndWarn(self, section, option):
+        return self.isOptionReadable(section, option)
+
+    def isOptionWritable(self, section, option):
+        # Dummy
+        return True
+
 
     def getProperty(self, identifier):
         from couchpotato import get_db
