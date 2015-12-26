@@ -110,12 +110,20 @@ class Settings(object):
         if not self.isOptionWritable(section, option):
             self.log.warning('set::option "%s.%s" isn\'t writable', (section, option))
             return None
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
 
         return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = None, type = None):
         #if not self.optionReadableCheckAndWarn(section, option):
         #    return None
+
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
 
         try:
 
@@ -134,6 +142,10 @@ class Settings(object):
         #if not self.isOptionWritable(section, option):
         #    self.log.warning('delete::option "%s.%s" isn\'t writable', (section, option))
         #    return None
+
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
 
         self.p.remove_option(section, option)
         self.save()
@@ -182,6 +194,10 @@ class Settings(object):
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
+
+                #skip meta options:
+                if self.isOptionMeta(section, option_name):
+                    continue
 
                 if not self.isOptionReadable(section, option_name):
                     continue
@@ -300,20 +316,51 @@ class Settings(object):
         return None
 
     def isSectionReadable(self, section):
-        # Dummy
+        meta = 'section_hidden' + self.optionMetaSuffix()
+        try:
+            return not self.p.getboolean(section, meta)
+        except: pass
+
+        # by default - every section is readable:
         return True
 
     def isOptionReadable(self, section, option):
-        # Dummy
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            meta_v = self.p.get(section, meta).lower()
+            return (meta_v == 'rw') or (meta_v == 'ro')
+
+        # by default - all is writable:
         return True
 
     def optionReadableCheckAndWarn(self, section, option):
-        return self.isOptionReadable(section, option)
-
+        x = self.isOptionReadable(section, option)
+        if not x:
+            self.log.warning('Option "%s.%s" isn\'t readable', (section, option))
+        return x
+            
     def isOptionWritable(self, section, option):
-        # Dummy
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            return self.p.get(section, meta).lower() == 'rw'
+
+        # by default - all is writable:
         return True
 
+    def optionMetaSuffix(self):
+        return '_internal_meta'
+
+    def isOptionMeta(self, section, option):
+        """ A helper method for detecting internal-meta options in the ini-file
+
+        For a meta options used following names:
+        * section_hidden_internal_meta = (True | False) - for section visibility
+        * <OPTION>_internal_meta = (ro|rw|hidden) - for section visibility
+
+        """
+
+        suffix = self.optionMetaSuffix()
+        return option.endswith(suffix)
 
     def getProperty(self, identifier):
         from couchpotato import get_db
