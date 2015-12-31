@@ -113,8 +113,6 @@ class FileBrowser(Plugin):
         is_root = path == '/'
 
         if self.soft_chroot.enabled:
-            # path could contain '/' on end, and could not contain..
-            # but in 'soft-chrooted' environment path could be included in chroot_dir only when it is root
             is_root = self.soft_chroot.is_root_abs(path)
 
             # fix paths:
