@@ -13,6 +13,15 @@ class SoftChroot:
             self.chdir = self.chdir.rstrip(os.path.sep) + os.path.sep
             self.enabled = True
 
+    def is_root_abs(self, abspath):
+        if not self.enabled:
+            raise Exception('chroot disabled')
+        if None == abspath:
+            return False
+            
+        path = abspath.rstrip(os.path.sep) + os.path.sep
+        return self.chdir == path
+
     def is_subdir(self, path):
         if not self.enabled:
             return True

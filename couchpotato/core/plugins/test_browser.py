@@ -6,6 +6,7 @@ from unittest import TestCase
 #from mock import MagicMock
 
 from couchpotato.core.plugins.browser import FileBrowser
+from couchpotato.core.softchroot import SoftChroot
 
 CHROOT_DIR = '/tmp/'
 
@@ -14,8 +15,7 @@ class FileBrowserChrootedTest(TestCase):
         self.b = FileBrowser()
 
         # TODO : remove scrutch:
-        self.b.soft_chroot = CHROOT_DIR
-        self.b.soft_chroot_enabled = True
+        self.b.soft_chroot = SoftChroot(CHROOT_DIR)
 
         # Logger
         logger = logging.getLogger()
@@ -27,34 +27,7 @@ class FileBrowserChrootedTest(TestCase):
         #logger.addHandler(hdlr)
 
     def test_soft_chroot_enabled(self):
-        self.assertTrue( self.b.soft_chroot_enabled)
-
-    def test_soft_chroot_is_subdir(self):
-        self.assertFalse( self.b.soft_chroot_is_subdir('') )
-        self.assertFalse( self.b.soft_chroot_is_subdir(None) )
-
-        self.assertTrue( self.b.soft_chroot_is_subdir(CHROOT_DIR) )
-        noslash = CHROOT_DIR[:-1]
-        self.assertTrue( self.b.soft_chroot_is_subdir(noslash) )
-
-        self.assertTrue( self.b.soft_chroot_is_subdir(CHROOT_DIR + 'come') )
-
-    def test_soft_chroot_add(self):
-        with self.assertRaises(ValueError):
-            self.b.soft_chroot_add('no_leading_slash')
-
-        self.assertEqual( self.b.soft_chroot_add(None), CHROOT_DIR )
-        self.assertEqual( self.b.soft_chroot_add(''), CHROOT_DIR )
-
-        self.assertEqual( self.b.soft_chroot_add('/asdf'), CHROOT_DIR + 'asdf' )
-
-    def test_soft_chroot_cut(self):
-        with self.assertRaises(ValueError): self.b.soft_chroot_cut(None)
-        with self.assertRaises(ValueError): self.b.soft_chroot_cut('')
-
-        self.assertEqual( self.b.soft_chroot_cut(CHROOT_DIR + 'asdf'), '/asdf' )
-        self.assertEqual( self.b.soft_chroot_cut(CHROOT_DIR), '/' )
-        self.assertEqual( self.b.soft_chroot_cut(CHROOT_DIR.rstrip(os.path.sep)), '/' )
+        self.assertTrue( self.b.soft_chroot.enabled)
 
     def test_view__chrooted_path_none(self):
         #def view(self, path = '/', show_hidden = True, **kwargs):

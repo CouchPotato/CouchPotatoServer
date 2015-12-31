@@ -26,6 +26,16 @@ class SoftChrootEnabledTest(TestCase):
 
         self.assertTrue( self.b.is_subdir(CHROOT_DIR + 'come') )
 
+    def test_is_root_abs(self):
+        self.assertFalse( self.b.is_root_abs('') )
+        self.assertFalse( self.b.is_root_abs(None) )
+
+        self.assertTrue( self.b.is_root_abs(CHROOT_DIR) )
+        noslash = CHROOT_DIR[:-1]
+        self.assertTrue( self.b.is_root_abs(noslash) )
+
+        self.assertFalse( self.b.is_root_abs(CHROOT_DIR + 'come') )
+
     def test_add(self):
         with self.assertRaises(ValueError):
             self.b.add('no_leading_slash')

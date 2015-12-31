@@ -7,7 +7,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-
+from couchpotato.core.softchroot import SoftChroot
 
 class Settings(object):
 
@@ -209,6 +209,12 @@ class Settings(object):
         section = kwargs.get('section')
         option = kwargs.get('name')
         value = kwargs.get('value')
+
+        if self.types[section][option] == 'directory':
+            # could be better way (#getsoftchroot)
+            soft_chroot_dir = self.get(option = 'soft_chroot', section = 'core', default = None )
+            soft_chroot = SoftChroot(soft_chroot_dir)
+            value = soft_chroot.add(str(value))
 
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
