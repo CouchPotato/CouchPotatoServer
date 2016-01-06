@@ -206,6 +206,9 @@ class ProfilePlugin(Plugin):
                 'label': '3D HD',
                 'qualities': ['1080p', '720p'],
                 '3d': [True, True]
+            }, {
+                'label': 'UHD 4K',
+                'qualities': ['720p', '1080p', '2160p']
             }]
 
             # Create default quality profile
