@@ -210,7 +210,7 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        if self.types[section][option] == 'directory':
+        if (section in self.types) and (option in self.types[section]) and (self.types[section][option] == 'directory'):
             # could be better way (#getsoftchroot)
             soft_chroot_dir = self.get(option = 'soft_chroot', section = 'core', default = None )
             soft_chroot = SoftChroot(soft_chroot_dir)
