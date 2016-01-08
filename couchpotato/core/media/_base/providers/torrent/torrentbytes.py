@@ -55,7 +55,7 @@ class Base(TorrentProvider):
                     link = cells[1].find('a', attrs = {'class': 'index'})
 
                     full_id = link['href'].replace('details.php?id=', '')
-                    torrent_id = full_id[:6]
+                    torrent_id = full_id[:7]
                     name = toUnicode(link.get('title', link.contents[0]).encode('ISO-8859-1')).strip()
 
                     results.append({
