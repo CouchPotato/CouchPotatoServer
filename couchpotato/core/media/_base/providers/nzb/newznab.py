@@ -71,9 +71,13 @@ class Base(NZBProvider, RSS):
             name = self.getTextElement(nzb, 'title')
             detail_url = self.getTextElement(nzb, 'guid')
             nzb_id = detail_url.split('/')[-1:].pop()
+            link = self.getTextElement(nzb, 'link')
 
             if '://' not in detail_url:
                 detail_url = (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id)
+
+            if not link:
+                link = ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host)
 
             if not name:
                 continue
@@ -106,7 +110,7 @@ class Base(NZBProvider, RSS):
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
+                'url': link,
                 'detail_url': detail_url,
                 'content': self.getTextElement(nzb, 'description'),
                 'description': description,
