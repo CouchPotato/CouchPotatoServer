@@ -807,7 +807,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and return True found
-        for tag_file in tag_files:
+        for tag_file in [tag_files] if isinstance(tag_files,str) else tag_files:
             ignore_file = fnmatch.filter(ignore_files, fnEscape('%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*')))
             if ignore_file:
                 return True
@@ -1228,6 +1228,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 log.error('Rar modify date enabled, but failed: %s', traceback.format_exc())
                         extr_files.append(extr_file_path)
                 del rar_handle
+                # Tag archive as extracted if no cleanup.  
+                if not cleanup and os.path.isfile(extr_file_path):
+                    self.tagRelease(release_download = {'folder': os.path.dirname(archive['file']), 'files': [archive['file']]}, tag = 'extracted')
             except Exception as e:
                 log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
                 continue
