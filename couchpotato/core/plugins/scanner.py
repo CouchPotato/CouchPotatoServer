@@ -74,6 +74,7 @@ class Scanner(Plugin):
     }
 
     resolutions = {
+		'2160p': {'resolution_width': 3840, 'resolution_height': 2160, 'aspect': 1.78},
         '1080p': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
         '1080i': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
         '720p': {'resolution_width': 1280, 'resolution_height': 720, 'aspect': 1.78},
@@ -569,7 +570,7 @@ class Scanner(Plugin):
             scan_result = []
             for p in paths:
                 if not group['is_dvd']:
-                    video = Video.from_path(sp(p))
+                    video = Video.from_path(toUnicode(sp(p)))
                     video_result = [(video, video.scan())]
                     scan_result.extend(video_result)
 

@@ -19,7 +19,7 @@ name_scores = [
     # Audio
     'dts:4', 'ac3:2',
     # Quality
-    '720p:10', '1080p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1', 'bd50:1', 'bd25:1',
+    '720p:10', '1080p:10', '2160p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1', 'bd50:1', 'bd25:1',
     # Language / Subs
     'german:-10', 'french:-10', 'spanish:-10', 'swesub:-20', 'danish:-10', 'dutch:-10',
     # Release groups

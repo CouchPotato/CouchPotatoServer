@@ -53,10 +53,14 @@ class Blackhole(DownloaderBase):
                     except:
                         log.error('Failed download torrent via magnet url: %s', traceback.format_exc())
 
-                    # If it's still empty, don't know what to do!
+                    # If it's still empty, either write the magnet link to a .magnet file, or error out.
                     if not filedata or len(filedata) < 50:
-                        log.error('No nzb/torrent available: %s', data.get('url'))
-                        return False
+                        if self.conf('magnet_file'):
+                            filedata = data.get('url') + '\n'
+                            data['protocol'] = 'magnet'
+                        else:
+                            log.error('No nzb/torrent available: %s', data.get('url'))
+                            return False
 
                 # Create filename with imdb id and other nice stuff
                 file_name = self.createFileName(data, filedata, media)
@@ -187,6 +191,13 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
+                {
+                    'name': 'magnet_file',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'If magnet file conversion fails, write down the magnet link in a .magnet file instead.',
                 },
             ],
         }
