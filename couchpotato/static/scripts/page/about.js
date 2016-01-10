@@ -28,7 +28,7 @@ var AboutSettingTab = new Class({
 		});
 
 		self.settings.default_action = 'about';
-		self.hideDirs = !! App.options && App.options.hide_about_dirs;
+		self.hide_dirs = !! App.options && App.options.hide_about_dirs;
 	},
 
 	createAbout: function(){
@@ -68,8 +68,8 @@ var AboutSettingTab = new Class({
 
 			)
 		);
-		if ( ! self.hideDirs)
-		{
+
+		if (!self.hide_dirs){
 			about_block.adopt(
 				new Element('dt[text=Directories]'),
 				new Element('dd', {'text': App.getOption('app_dir')}),
