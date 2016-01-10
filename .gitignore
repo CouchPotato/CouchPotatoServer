@@ -4,5 +4,9 @@
 /_source/
 .project
 .pydevproject
-node_modules
-.tmp
+/node_modules/
+/.tmp/
+/.sass-cache/
+.coverage
+coverage.xml
+nosetests.xml
