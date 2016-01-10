@@ -28,7 +28,7 @@ var AboutSettingTab = new Class({
 		});
 
 		self.settings.default_action = 'about';
-		self.hideDirs = !! App.options && App.options['hide_about_dirs'];
+		self.hideDirs = !! App.options && App.options.hide_about_dirs;
 	},
 
 	createAbout: function(){

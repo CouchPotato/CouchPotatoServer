@@ -366,7 +366,11 @@ var OptionBase = new Class({
 	 */
 	createBase: function(){
 		var self = this;
-		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name + (self.klass ? '.' + self.klass : ''));
+		self.el = new Element('div.ctrlHolder.' +
+			self.section + '_' + self.name +
+			(self.klass ? '.' + self.klass : '') +
+			(self.getReadonly() ? '.read_only' : '')
+		);
 	},
 
 	create: function(){
@@ -504,7 +508,7 @@ Option.String = new Class({
 				'value': self.getSettingValue(),
 				'placeholder': self.getPlaceholder(),
 				'readonly' : self.getReadonly(),
-				'disabled' : self.getReadonly(),
+				'disabled' : self.getReadonly()
 			})
 		);
 	},
@@ -526,7 +530,7 @@ Option.Dropdown = new Class({
 				self.input = new Element('select', {
 					'name': self.postName(),
 					'readonly' : self.getReadonly(),
-					'disabled' : self.getReadonly(),
+					'disabled' : self.getReadonly()
 				})
 			)
 		);
@@ -560,7 +564,7 @@ Option.Checkbox = new Class({
 				'checked': self.getSettingValue(),
 				'id': randomId,
 				'readonly' : self.getReadonly(),
-				'disabled' : self.getReadonly(),
+				'disabled' : self.getReadonly()
 			})
 		);
 
@@ -679,8 +683,8 @@ Option.Directory = new Class({
 					'type': 'text',
 					'name': self.postName(),
 					'value': self.getSettingValue(),
-					'readonly' : self.getReadonly(),
-					'disabled' : self.getReadonly(),
+					'readonly' : true,
+					'disabled' : true
 				})
 			);
 		} else {
