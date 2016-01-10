@@ -7,7 +7,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-
+from couchpotato.core.softchroot import SoftChroot
 
 class Settings(object):
 
@@ -77,7 +77,8 @@ class Settings(object):
         return self.p
 
     def sections(self):
-        return self.p.sections()
+        res = filter( self.isSectionReadable, self.p.sections())
+        return res
 
     def connectEvents(self):
         addEvent('settings.options', self.addOptions)
@@ -106,9 +107,21 @@ class Settings(object):
             self.save()
 
     def set(self, section, option, value):
+        if not self.isOptionWritable(section, option):
+            self.log.warning('set::option "%s.%s" isn\'t writable', (section, option))
+            return None
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
+
         return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = None, type = None):
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
         try:
 
             try: type = self.types[section][option]
@@ -123,6 +136,14 @@ class Settings(object):
             return default
 
     def delete(self, option = '', section = 'core'):
+        if not self.isOptionWritable(section, option):
+            self.log.warning('delete::option "%s.%s" isn\'t writable', (section, option))
+            return None
+
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
         self.p.remove_option(section, option)
         self.save()
 
@@ -153,10 +174,29 @@ class Settings(object):
 
     def getValues(self):
         values = {}
+
+        # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good...
+        #        ... but, they omit output of values of hidden and non-readable options
+        #        Currently, such behaviour could break the Web UI of CP...
+        #        So, currently this two blocks are commented (but they are required to
+        #        provide secure hidding of options.
         for section in self.sections():
+
+            # COMMENTED_SKIPPING
+            #if not self.isSectionReadable(section):
+            #    continue
+
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
+
+                #skip meta options:
+                if self.isOptionMeta(section, option_name):
+                    continue
+
+                # COMMENTED_SKIPPING
+                #if not self.isOptionReadable(section, option_name):
+                #    continue
 
                 is_password = False
                 try: is_password = self.types[section][option_name] == 'password'
@@ -189,14 +229,52 @@ class Settings(object):
         self.types[section][option] = type
 
     def addOptions(self, section_name, options):
-
+        # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
             self.options[section_name] = options
         else:
             self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
-        return self.options
+        """Returns dict of UI-readable options
+
+        To check, whether the option is readable self.isOptionReadable() is used
+        """
+
+        res = {}
+
+        if isinstance(self.options, dict):
+            for section_key in self.options.keys():
+                section = self.options[section_key]
+                section_name = section.get('name') if 'name' in section else section_key
+                if self.isSectionReadable(section_name) and isinstance(section, dict):
+                    s = {}
+                    sg = []
+                    for section_field in section:
+                        if section_field.lower() != 'groups':
+                            s[section_field] = section[section_field]
+                        else:
+                            groups = section['groups']
+                            for group in groups:
+                                g = {}
+                                go = []
+                                for group_field in group:
+                                    if group_field.lower() != 'options':
+                                        g[group_field] = group[group_field]
+                                    else:
+                                        for option in group[group_field]:
+                                            option_name = option.get('name')
+                                            if self.isOptionReadable(section_name, option_name):
+                                                go.append(option)
+                                                option['writable'] = self.isOptionWritable(section_name, option_name)
+                                if len(go)>0:
+                                    g['options'] = go
+                                    sg.append(g)
+                    if len(sg)>0:
+                        s['groups'] = sg
+                        res[section_key] = s
+
+        return res
 
     def view(self, **kwargs):
         return {
@@ -210,6 +288,11 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
+        if (section in self.types) and (option in self.types[section]) and (self.types[section][option] == 'directory'):
+            soft_chroot_dir = self.get('soft_chroot', default = None)
+            soft_chroot = SoftChroot(soft_chroot_dir)
+            value = soft_chroot.add(str(value))
+
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
@@ -221,8 +304,55 @@ class Settings(object):
         fireEvent('setting.save.%s.*.after' % section, single = True)
 
         return {
-            'success': True,
+            'success': True
         }
+
+    def isSectionReadable(self, section):
+        meta = 'section_hidden' + self.optionMetaSuffix()
+        try:
+            return not self.p.getboolean(section, meta)
+        except: pass
+
+        # by default - every section is readable:
+        return True
+
+    def isOptionReadable(self, section, option):
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            meta_v = self.p.get(section, meta).lower()
+            return (meta_v == 'rw') or (meta_v == 'ro')
+
+        # by default - all is writable:
+        return True
+
+    def optionReadableCheckAndWarn(self, section, option):
+        x = self.isOptionReadable(section, option)
+        if not x:
+            self.log.warning('Option "%s.%s" isn\'t readable', (section, option))
+        return x
+
+    def isOptionWritable(self, section, option):
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            return self.p.get(section, meta).lower() == 'rw'
+
+        # by default - all is writable:
+        return True
+
+    def optionMetaSuffix(self):
+        return '_internal_meta'
+
+    def isOptionMeta(self, section, option):
+        """ A helper method for detecting internal-meta options in the ini-file
+
+        For a meta options used following names:
+        * section_hidden_internal_meta = (True | False) - for section visibility
+        * <OPTION>_internal_meta = (ro|rw|hidden) - for section visibility
+
+        """
+
+        suffix = self.optionMetaSuffix()
+        return option.endswith(suffix)
 
     def getProperty(self, identifier):
         from couchpotato import get_db

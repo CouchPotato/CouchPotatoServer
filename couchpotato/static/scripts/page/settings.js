@@ -334,6 +334,7 @@ var OptionBase = new Class({
 	klass: '',
 	focused_class: 'focused',
 	save_on_change: true,
+	read_only: false,
 
 	initialize: function(section, name, value, options){
 		var self = this;
@@ -342,6 +343,7 @@ var OptionBase = new Class({
 		self.section = section;
 		self.name = name;
 		self.value = self.previous_value = value;
+		self.read_only = !(options && options.writable);
 
 		self.createBase();
 		self.create();
@@ -363,7 +365,11 @@ var OptionBase = new Class({
 	 */
 	createBase: function(){
 		var self = this;
-		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name + (self.klass ? '.' + self.klass : ''));
+		self.el = new Element('div.ctrlHolder.' +
+			self.section + '_' + self.name +
+			(self.klass ? '.' + self.klass : '') +
+			(self.read_only ? '.read_only' : '')
+		);
 	},
 
 	create: function(){
@@ -418,7 +424,13 @@ var OptionBase = new Class({
 
 	save: function(){
 		var self = this,
-			value = self.getValue();
+			value = self.getValue(),
+			ro = self.read_only;
+
+		if (ro) {
+			console.warn('Unable to save readonly-option ' + self.section + '.' + self.name);
+			return;
+		}
 
 		App.fireEvent('setting.save.'+self.section+'.'+self.name, value);
 
@@ -493,7 +505,9 @@ Option.String = new Class({
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue(),
-				'placeholder': self.getPlaceholder()
+				'placeholder': self.getPlaceholder(),
+				'readonly' : self.read_only,
+				'disabled' : self.read_only
 			})
 		);
 	},
@@ -513,7 +527,9 @@ Option.Dropdown = new Class({
 			self.createLabel(),
 			new Element('div.select_wrapper.icon-dropdown').grab(
 				self.input = new Element('select', {
-					'name': self.postName()
+					'name': self.postName(),
+					'readonly' : self.read_only,
+					'disabled' : self.read_only
 				})
 			)
 		);
@@ -545,7 +561,9 @@ Option.Checkbox = new Class({
 				'name': self.postName(),
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
-				'id': randomId
+				'id': randomId,
+				'readonly' : self.read_only,
+				'disabled' : self.read_only
 			})
 		);
 
@@ -570,7 +588,9 @@ Option.Password = new Class({
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue() ? '********' : '',
-				'placeholder': self.getPlaceholder()
+				'placeholder': self.getPlaceholder(),
+				'readonly' : self.read_only,
+				'disabled' : self.read_only
 			})
 		);
 
@@ -597,7 +617,9 @@ Option.Enabler = new Class({
 				self.input = new Element('input', {
 					'type': 'checkbox',
 					'checked': self.getSettingValue(),
-					'id': 'r-'+randomString()
+					'id': 'r-'+randomString(),
+					'readonly' : self.read_only,
+					'disabled' : self.read_only,
 				}),
 				new Element('div.toggle')
 			)
@@ -652,28 +674,43 @@ Option.Directory = new Class({
 
 	create: function(){
 		var self = this;
-
-		self.el.adopt(
-			self.createLabel(),
-			self.directory_inlay = new Element('span.directory', {
-				'events': {
-					'click': self.showBrowser.bind(self)
-				}
-			}).adopt(
+		if (self.read_only) {
+			// create disabled textbox:
+			self.el.adopt(
+				self.createLabel(),
 				self.input = new Element('input', {
+					'type': 'text',
+					'name': self.postName(),
 					'value': self.getSettingValue(),
-					'events': {
-						'change': self.filterDirectory.bind(self),
-						'keydown': function(e){
-							if(e.key == 'enter' || e.key == 'tab')
-								(e).stop();
-						},
-						'keyup': self.filterDirectory.bind(self),
-						'paste': self.filterDirectory.bind(self)
-					}
+					'readonly' : true,
+					'disabled' : true
 				})
-			)
-		);
+			);
+		} else {
+			self.el.adopt(
+				self.createLabel(),
+				self.directory_inlay = new Element('span.directory', {
+					'events': {
+						'click': self.showBrowser.bind(self)
+					}
+				}).adopt(
+					self.input = new Element('input', {
+						'value': self.getSettingValue(),
+						'readonly' : self.read_only,
+						'disabled' : self.read_only,
+						'events': {
+							'change': self.filterDirectory.bind(self),
+							'keydown': function(e){
+								if(e.key == 'enter' || e.key == 'tab')
+									(e).stop();
+							},
+							'keyup': self.filterDirectory.bind(self),
+							'paste': self.filterDirectory.bind(self)
+						}
+					})
+				)
+			);
+		}
 
 		self.cached = {};
 	},

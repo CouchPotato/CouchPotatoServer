@@ -10,7 +10,7 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp, ss, toUnicode
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
-
+from couchpotato.core.softchroot import SoftChroot
 
 log = CPLog(__name__)
 
@@ -33,6 +33,9 @@ autoload = 'FileBrowser'
 class FileBrowser(Plugin):
 
     def __init__(self):
+        soft_chroot_dir = self.conf('soft_chroot', section='core')
+        self.soft_chroot = SoftChroot(soft_chroot_dir)
+
         addApiView('directory.list', self.view, docs = {
             'desc': 'Return the directory list of a given directory',
             'params': {
@@ -78,11 +81,17 @@ class FileBrowser(Plugin):
         return driveletters
 
     def view(self, path = '/', show_hidden = True, **kwargs):
-
         home = getUserDir()
+        if self.soft_chroot.enabled:
+            if not self.soft_chroot.is_subdir(home):
+                home = self.soft_chroot.chdir
 
         if not path:
             path = home
+            if path.endswith(os.path.sep):
+                path = path.rstrip(os.path.sep)
+        elif self.soft_chroot.enabled:
+            path = self.soft_chroot.add(path)
 
         try:
             dirs = self.getDirectories(path = path, show_hidden = show_hidden)
@@ -90,17 +99,34 @@ class FileBrowser(Plugin):
             log.error('Failed getting directory "%s" : %s', (path, traceback.format_exc()))
             dirs = []
 
+        if self.soft_chroot.enabled:
+            dirs = map(self.soft_chroot.cut, dirs)
+
         parent = os.path.dirname(path.rstrip(os.path.sep))
         if parent == path.rstrip(os.path.sep):
             parent = '/'
         elif parent != '/' and parent[-2:] != ':\\':
             parent += os.path.sep
 
+        # TODO : check on windows:
+        is_root = path == '/'
+
+        if self.soft_chroot.enabled:
+            is_root = self.soft_chroot.is_root_abs(path)
+
+            # fix paths:
+            if self.soft_chroot.is_subdir(parent):
+                parent = self.soft_chroot.cut(parent)
+            else:
+                parent = os.path.sep
+
+            home = self.soft_chroot.cut(home)
+
         return {
-            'is_root': path == '/',
+            'is_root': is_root,
             'empty': len(dirs) == 0,
             'parent': parent,
-            'home': home + os.path.sep,
+            'home': home,
             'platform': os.name,
             'dirs': dirs,
         }

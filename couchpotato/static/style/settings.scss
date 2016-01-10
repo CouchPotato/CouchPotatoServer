@@ -275,6 +275,22 @@
 					margin-left: $padding / 2;
 				}
 			}
+
+			&.read_only {
+				opacity: .5;
+
+				label {
+					position: relative;
+				}
+
+				label:after {
+					left: 0;
+					bottom: -10px;
+					position: absolute;
+					content: '(read-only)';
+					font-size: .7em;
+				}
+			}
 		}
 
 		&.disabled {
