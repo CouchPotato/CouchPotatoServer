@@ -30,6 +30,7 @@ import os.path
 import time
 import re
 
+from dateutil.parser import parse
 from rar_exceptions import *
 
 
@@ -180,7 +181,7 @@ class RarFileImplementation(object):
                 data['size'] = int(fields[1])
                 attr = fields[0]
                 data['isdir'] = 'd' in attr.lower()
-                data['datetime'] = time.strptime(fields[2] + " " + fields[3], '%d-%m-%y %H:%M')
+                data['datetime'] = parse(fields[2] + " " + fields[3]).timetuple()
                 data['comment'] = None
                 yield data
                 i += 1
