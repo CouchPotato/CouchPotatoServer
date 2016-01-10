@@ -66,7 +66,7 @@ class QualityPlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 10)
-        addEvent('app.load', self.fill, priority = 120)
+        addEvent('app.load', self.fillBlank, priority = 120)
 
         addEvent('app.test', self.doTest)
 
@@ -148,7 +148,19 @@ class QualityPlugin(Plugin):
             'success': False
         }
 
-    def fill(self):
+    def fillBlank(self):
+        db = get_db()
+
+        try:
+            log.info('test')
+            existing = list(db.all('quality'))
+            if len(self.qualities) > len(existing):
+                log.error('Filling in new qualities')
+                self.fill(reorder = True)
+        except:
+            log.error('Failed filling quality database with new qualities: %s', traceback.format_exc())
+
+    def fill(self, reorder = False):
 
         try:
             db = get_db()
@@ -158,7 +170,7 @@ class QualityPlugin(Plugin):
 
                 existing = None
                 try:
-                    existing = db.get('quality', q.get('identifier'))
+                    existing = db.get('quality', q.get('identifier'), with_doc = reorder)
                 except RecordNotFound:
                     pass
 
@@ -181,6 +193,10 @@ class QualityPlugin(Plugin):
                         'finish': [True],
                         'wait_for': [0],
                     })
+                elif reorder:
+                    log.info2('Updating quality order')
+                    existing['doc']['order'] = order
+                    db.update(existing['doc'])
 
                 order += 1
 
