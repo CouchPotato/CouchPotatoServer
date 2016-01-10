@@ -152,7 +152,6 @@ class QualityPlugin(Plugin):
         db = get_db()
 
         try:
-            log.info('test')
             existing = list(db.all('quality'))
             if len(self.qualities) > len(existing):
                 log.error('Filling in new qualities')

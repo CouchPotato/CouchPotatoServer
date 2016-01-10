@@ -174,12 +174,12 @@ class Settings(object):
 
     def getValues(self):
         values = {}
-        
-        # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good... 
+
+        # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good...
         #        ... but, they omit output of values of hidden and non-readable options
-        #        Currently, such behaviour could break the Web UI of CP... 
+        #        Currently, such behaviour could break the Web UI of CP...
         #        So, currently this two blocks are commented (but they are required to
-        #        provide secure hidding of options. 
+        #        provide secure hidding of options.
         for section in self.sections():
 
             # COMMENTED_SKIPPING
@@ -239,7 +239,7 @@ class Settings(object):
         """Returns dict of UI-readable options
 
         To check, whether the option is readable self.isOptionReadable() is used
-        """ 
+        """
 
         res = {}
 
@@ -273,7 +273,7 @@ class Settings(object):
                     if len(sg)>0:
                         s['groups'] = sg
                         res[section_key] = s
-    
+
         return res
 
     def view(self, **kwargs):
@@ -289,27 +289,23 @@ class Settings(object):
         value = kwargs.get('value')
 
         if (section in self.types) and (option in self.types[section]) and (self.types[section][option] == 'directory'):
-            # could be better way (#getsoftchroot)
-            soft_chroot_dir = self.get(option = 'soft_chroot', section = 'core', default = None )
+            soft_chroot_dir = self.get('soft_chroot', default = None)
             soft_chroot = SoftChroot(soft_chroot_dir)
             value = soft_chroot.add(str(value))
 
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
-            self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
-            self.save()
+        self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
+        self.save()
 
-            # After save (for re-interval etc)
-            fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
-            fireEvent('setting.save.%s.*.after' % section, single = True)
+        # After save (for re-interval etc)
+        fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+        fireEvent('setting.save.%s.*.after' % section, single = True)
 
-            return {
-                'success': True,
-            }
-
-        # unreachable code:
-        return None
+        return {
+            'success': True
+        }
 
     def isSectionReadable(self, section):
         meta = 'section_hidden' + self.optionMetaSuffix()
@@ -334,7 +330,7 @@ class Settings(object):
         if not x:
             self.log.warning('Option "%s.%s" isn\'t readable', (section, option))
         return x
-            
+
     def isOptionWritable(self, section, option):
         meta = option + self.optionMetaSuffix()
         if self.p.has_option(section, meta):
