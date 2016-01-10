@@ -216,6 +216,19 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     log = CPLog(__name__)
     log.debug('Started with options %s', options)
 
+    # Check soft-chroot dir exists:
+    try:
+        soft_chroot = Env.setting('soft_chroot', section = 'core', default = None, type='unicode' )
+
+        if (None != soft_chroot):
+            soft_chroot = soft_chroot.strip()
+            if (len(soft_chroot)>0) and (not os.path.isdir(soft_chroot)):
+                log.error('SOFT-CHROOT is defined, but the folder doesn\'t exist')
+                return
+    except:
+        log.error('Unable to check whether SOFT-CHROOT is defined')
+        return
+
     # Check available space
     try:
         total_space, available_space = getFreeSpace(data_dir)
