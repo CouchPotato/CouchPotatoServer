@@ -71,7 +71,11 @@ class Base(NZBProvider, RSS):
             name = self.getTextElement(nzb, 'title')
             detail_url = self.getTextElement(nzb, 'guid')
             nzb_id = detail_url.split('/')[-1:].pop()
-            link = self.getTextElement(nzb, 'link')
+
+            try:
+                link = self.getElement(nzb, 'enclosure').attrib['url']
+            except:
+                link = self.getTextElement(nzb, 'link')
 
             if '://' not in detail_url:
                 detail_url = (cleanHost(host['host']) + self.urls['detail']) % tryUrlencode(nzb_id)
