@@ -7,7 +7,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-
+from couchpotato.core.softchroot import SoftChroot
 
 class Settings(object):
 
@@ -288,14 +288,14 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        if not self.isOptionWritable(section, option):
-            self.log.warning('Option "%s.%s" isn\'t writable', (section, option))
-            return {
-                'success' : False,
-            }
-        else:
-            # See if a value handler is attached, use that as value
-            new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
+        if (section in self.types) and (option in self.types[section]) and (self.types[section][option] == 'directory'):
+            # could be better way (#getsoftchroot)
+            soft_chroot_dir = self.get(option = 'soft_chroot', section = 'core', default = None )
+            soft_chroot = SoftChroot(soft_chroot_dir)
+            value = soft_chroot.add(str(value))
+
+        # See if a value handler is attached, use that as value
+        new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
             self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
             self.save()
