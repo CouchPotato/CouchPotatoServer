@@ -2,7 +2,8 @@ CouchPotato
 =====
 
 [![Join the chat at https://gitter.im/RuudBurger/CouchPotatoServer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RuudBurger/CouchPotatoServer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/maxkoryukov/CouchPotatoServer.svg?branch=feature%2Fci)](https://travis-ci.org/maxkoryukov/CouchPotatoServer)
+[![Build Status](https://travis-ci.org/maxkoryukov/CouchPotatoServer.svg?branch=feature%2Fci-success)](https://travis-ci.org/maxkoryukov/CouchPotatoServer)
+[![Coverage Status](https://coveralls.io/repos/maxkoryukov/CouchPotatoServer/badge.svg?branch=feature%2Fci-success&service=github)](https://coveralls.io/github/maxkoryukov/CouchPotatoServer?branch=feature%2Fci-success)
 
 CouchPotato (CP) is an automatic NZB and torrent downloader. You can keep a "movies I want"-list and it will search for NZBs/torrents of these movies every X hours.
 Once a movie is found, it will send it to SABnzbd or download the torrent to a specified directory.
