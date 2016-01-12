@@ -343,7 +343,7 @@ var OptionBase = new Class({
 		self.section = section;
 		self.name = name;
 		self.value = self.previous_value = value;
-		self.read_only = !(options && options.writable);
+		self.read_only = !(options && !options.readonly);
 
 		self.createBase();
 		self.create();
@@ -991,7 +991,6 @@ Option.Directories = new Class({
 	Extends: Option.String,
 
 	directories: [],
-	delimiter: '::',
 
 	afterInject: function(){
 		var self = this;
@@ -999,9 +998,11 @@ Option.Directories = new Class({
 		self.el.setStyle('display', 'none');
 
 		self.directories = [];
-		self.getValue().split(self.delimiter).each(function(value){
+		
+		self.getSettingValue().each(function(value){
 			self.addDirectory(value);
 		});
+
 		self.addDirectory();
 
 	},
@@ -1025,7 +1026,7 @@ Option.Directories = new Class({
 		else
 			$(dir).inject(dirs.getLast(), 'after');
 
-		// Replace some properties
+		// TODO : Replace some properties
 		dir.save = self.saveItems.bind(self);
 		$(dir).getElement('label').set('text', 'Movie Folder');
 		$(dir).getElement('.formHint').destroy();
@@ -1068,14 +1069,12 @@ Option.Directories = new Class({
 				$(dir).addClass('is_empty');
 		});
 
-		self.input.set('value', dirs.join(self.delimiter));
+		self.input.set('value', JSON.encode(dirs) );
 		self.input.fireEvent('change');
 
 		self.addDirectory();
 
 	}
-
-
 });
 
 Option.Choice = new Class({
