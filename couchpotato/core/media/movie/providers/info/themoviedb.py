@@ -47,6 +47,7 @@ class TheMovieDb(MovieProvider):
             raw = self.request('search/movie', {
                 'query': name_year.get('name', q),
                 'year': name_year.get('year'),
+                'language': 'de',
                 'search_type': 'ngram' if limit > 1 else 'phrase'
             }, return_key = 'results')
         except:
@@ -90,6 +91,7 @@ class TheMovieDb(MovieProvider):
 
         # Do request, append other items
         movie = self.request('movie/%s' % movie.get('id'), {
+            'language': 'de',
             'append_to_response': 'alternative_titles' + (',images,casts' if extended else '')
         })
         if not movie:
