@@ -67,7 +67,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'goodfilms_automation',
             'label': 'Goodfilms',
-            'description': 'import movies from your <a href="http://goodfil.ms">Goodfilms</a> queue',
+            'description': 'import movies from your <a href="http://goodfil.ms" target="_blank">Goodfilms</a> queue',
             'options': [
                 {
                     'name': 'automation_enabled',

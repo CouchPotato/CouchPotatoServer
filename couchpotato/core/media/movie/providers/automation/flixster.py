@@ -60,7 +60,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'flixster_automation',
             'label': 'Flixster',
-            'description': 'Import movies from any public <a href="http://www.flixster.com/">Flixster</a> watchlist',
+            'description': 'Import movies from any public <a href="http://www.flixster.com/" target="_blank">Flixster</a> watchlist',
             'options': [
                 {
                     'name': 'automation_enabled',
