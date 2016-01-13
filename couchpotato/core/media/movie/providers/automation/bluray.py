@@ -179,7 +179,7 @@ config = [{
             'list': 'charts_providers',
             'name': 'bluray_charts_display',
             'label': 'Blu-ray.com',
-            'description': 'Display <a href="http://www.blu-ray.com/movies/movies.php?show=newreleases">new releases</a> from Blu-ray.com',
+            'description': 'Display <a href="http://www.blu-ray.com/movies/movies.php?show=newreleases" target="_blank">new releases</a> from Blu-ray.com',
             'options': [
                 {
                     'name': 'chart_display_enabled',
