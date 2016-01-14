@@ -42,7 +42,7 @@ class SoftChroot:
             return self.chdir
 
         if not path.startswith(os.path.sep):
-            raise ValueError("path must starts with '/'")
+            raise ValueError("path must starts with '/' : %s" % path)
 
         return self.chdir[:-1] + path
 
@@ -57,7 +57,7 @@ class SoftChroot:
             return '/'
 
         if not path.startswith(self.chdir):
-            raise ValueError("path must starts with 'chdir'")
+            raise ValueError("path must starts with 'chdir': %s" % path)
 
         l = len(self.chdir)-1
 

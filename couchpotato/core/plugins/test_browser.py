@@ -1,12 +1,13 @@
 import sys
 import os
 import logging
-import unittest
-from unittest import TestCase
-#from mock import MagicMock
 
 from couchpotato.core.plugins.browser import FileBrowser
 from couchpotato.core.softchroot import SoftChroot
+
+import mock
+import unittest
+from unittest import TestCase
 
 CHROOT_DIR = '/tmp/'
 
