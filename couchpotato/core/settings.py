@@ -7,7 +7,6 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-from couchpotato.core.softchroot import SoftChroot
 
 class Settings(object):
 
@@ -58,7 +57,6 @@ class Settings(object):
         self.file = None
         self.p = None
         self.log = None
-        self.soft_chroot = None
         self.directories_delimiter = "::"
 
     def setFile(self, config_file):
@@ -95,6 +93,15 @@ class Settings(object):
         for option_name, option in options.items():
             self.setDefault(section_name, option_name, option.get('default', ''))
 
+            # Set UI-meta for option (hidden/ro/rw)
+            if option.get('ui-meta'):
+                value = option.get('ui-meta')
+                if value:
+                    value = value.lower()
+                    if value in ['hidden', 'rw', 'ro']:
+                        meta_option_name = option_name + self.optionMetaSuffix()
+                        self.setDefault(section_name, meta_option_name, value)
+
             # Migrate old settings from old location to the new location
             if option.get('migrate_from'):
                 if self.p.has_option(option.get('migrate_from'), option_name):
@@ -107,13 +114,6 @@ class Settings(object):
 
         if save:
             self.save()
-
-    def getSoftChroot(self):
-        if not self.soft_chroot:
-            soft_chroot_dir = self.get('soft_chroot', default = None)
-            self.soft_chroot = SoftChroot(soft_chroot_dir)
-
-        return self.soft_chroot
 
     def set(self, section, option, value):
         if not self.isOptionWritable(section, option):
@@ -185,7 +185,10 @@ class Settings(object):
         return toUnicode(value).strip()
 
     def getValues(self):
+        from couchpotato.environment import Env
+
         values = {}
+        soft_chroot = Env.get('softchroot')
 
         # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good...
         #        ... but, they omit output of values of hidden and non-readable options
@@ -216,15 +219,15 @@ class Settings(object):
                 if is_password and value:
                     value = len(value) * '*'
 
-                # chrotify directory before sending to UI:
+                # chrootify directory before sending to UI:
                 if (self.getType(section, option_name) == 'directory') and value:
-                    try: value = self.getSoftChroot().cut(str(value))
+                    try: value = soft_chroot.abs2chroot(value)
                     except: value = ""
-                # chrotify directories before sending to UI:
+                # chrootify directories before sending to UI:
                 if (self.getType(section, option_name) == 'directories'):
                     if (not value):
                         value = []
-                    try : value = map(lambda xx : self.getSoftChroot().cut(str(xx)), value)
+                    try : value = map(soft_chroot.abs2chroot, value)
                     except : value = [] 
 
                 values[section][option_name] = value
@@ -234,8 +237,6 @@ class Settings(object):
     def save(self):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
-
-        self.log.debug('Saved settings')
 
     def addSection(self, section):
         if not self.p.has_section(section):
@@ -323,17 +324,18 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        self.log.debug("value-> %s", (value));
+        from couchpotato.environment import Env
+        soft_chroot = Env.get('softchroot')
 
         if self.getType(section, option) == 'directory':
-            value = self.getSoftChroot().add(str(value))
+            value = soft_chroot.chroot2abs(value)
 
         if self.getType(section, option) == 'directories':
             import json
             value = json.loads(value)
             if not (value and isinstance(value, list)):
                 value = []
-            value = map(lambda xx : self.getSoftChroot().add(str(xx)), value)
+            value = map(soft_chroot.chroot2abs, value)
             value = self.directories_delimiter.join(value)
 
         # See if a value handler is attached, use that as value

@@ -10,10 +10,10 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp, ss, toUnicode
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.softchroot import SoftChroot
+
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
-
 
 if os.name == 'nt':
     import imp
@@ -29,13 +29,9 @@ if os.name == 'nt':
 
 autoload = 'FileBrowser'
 
-
 class FileBrowser(Plugin):
 
     def __init__(self):
-        soft_chroot_dir = self.conf('soft_chroot', section='core')
-        self.soft_chroot = SoftChroot(soft_chroot_dir)
-
         addApiView('directory.list', self.view, docs = {
             'desc': 'Return the directory list of a given directory',
             'params': {
@@ -81,17 +77,20 @@ class FileBrowser(Plugin):
         return driveletters
 
     def view(self, path = '/', show_hidden = True, **kwargs):
+
+        soft_chroot = Env.get('softchroot')
+        
         home = getUserDir()
-        if self.soft_chroot.enabled:
-            if not self.soft_chroot.is_subdir(home):
-                home = self.soft_chroot.chdir
+        if soft_chroot.enabled:
+            if not soft_chroot.is_subdir(home):
+                home = soft_chroot.get_chroot()
 
         if not path:
             path = home
             if path.endswith(os.path.sep):
                 path = path.rstrip(os.path.sep)
-        elif self.soft_chroot.enabled:
-            path = self.soft_chroot.add(path)
+        else:
+            path = soft_chroot.chroot2abs(path)
 
         try:
             dirs = self.getDirectories(path = path, show_hidden = show_hidden)
@@ -99,8 +98,8 @@ class FileBrowser(Plugin):
             log.error('Failed getting directory "%s" : %s', (path, traceback.format_exc()))
             dirs = []
 
-        if self.soft_chroot.enabled:
-            dirs = map(self.soft_chroot.cut, dirs)
+        if soft_chroot.enabled:
+            dirs = map(soft_chroot.abs2chroot, dirs)
 
         parent = os.path.dirname(path.rstrip(os.path.sep))
         if parent == path.rstrip(os.path.sep):
@@ -111,16 +110,16 @@ class FileBrowser(Plugin):
         # TODO : check on windows:
         is_root = path == '/'
 
-        if self.soft_chroot.enabled:
-            is_root = self.soft_chroot.is_root_abs(path)
+        if soft_chroot.enabled:
+            is_root = soft_chroot.is_root_abs(path)
 
             # fix paths:
-            if self.soft_chroot.is_subdir(parent):
-                parent = self.soft_chroot.cut(parent)
+            if soft_chroot.is_subdir(parent):
+                parent = soft_chroot.abs2chroot(parent)
             else:
                 parent = os.path.sep
 
-            home = self.soft_chroot.cut(home)
+            home = soft_chroot.abs2chroot(home)
 
         return {
             'is_root': is_root,

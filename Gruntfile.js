@@ -72,7 +72,7 @@ module.exports = function(grunt){
 			options: {
 				compass: true,
 				update: true,
-				//sourcemap: 'none'
+				sourcemap: 'none'
 			},
 			server: {
 				files: [{
@@ -201,7 +201,7 @@ module.exports = function(grunt){
 				config: './.nosetestsrc',
 				// 'rednose' is a colored output for nose test-runner. But we do not requre colors on travis-ci
 				rednose: config.colorful_tests_output,
-				externalNose: true
+				externalNose: true,
 			},
 
 			test: {
