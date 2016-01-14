@@ -1,0 +1,11 @@
+[run]
+source=
+	./couchpotato/
+omit =
+	./libs/*
+	./node_modules/*
+[report]
+omit =
+	*/python?.?/*
+	./libs/*
+	./node_modules/*

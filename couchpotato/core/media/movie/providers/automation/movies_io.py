@@ -49,7 +49,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'moviesio',
             'label': 'Movies.IO',
-            'description': 'Imports movies from <a href="http://movies.io">Movies.io</a> RSS watchlists',
+            'description': 'Imports movies from <a href="http://movies.io" target="_blank">Movies.io</a> RSS watchlists',
             'options': [
                 {
                     'name': 'automation_enabled',
