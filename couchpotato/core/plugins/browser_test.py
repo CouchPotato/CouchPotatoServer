@@ -5,7 +5,7 @@ import logging
 from couchpotato.core.plugins.browser import FileBrowser
 from couchpotato.core.softchroot import SoftChroot
 
-import mock
+#import mock
 import unittest
 from unittest import TestCase
 
