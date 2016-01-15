@@ -28,7 +28,8 @@ var AboutSettingTab = new Class({
 		});
 
 		self.settings.default_action = 'about';
-		self.hide_dirs = !! App.options && App.options.hide_about_dirs;
+		// WebUI Feature:
+		self.hide_dirs = !! App.options && App.options.webui_feature && App.options.webui_feature.hide_about_dirs;
 	},
 
 	createAbout: function(){
