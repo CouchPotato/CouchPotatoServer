@@ -51,6 +51,32 @@ class rTorrent(DownloaderBase):
         self.rt = None
         return True
 
+    def getAuth(self):
+        if not self.conf('username') or not self.conf('password'):
+            # Missing username or password parameter
+            return None
+
+        # Build authentication tuple
+        return (
+            self.conf('authentication'),
+            self.conf('username'),
+            self.conf('password')
+        )
+
+    def getVerifySsl(self):
+        # Ensure verification has been enabled
+        if not self.conf('ssl_verify'):
+            return False
+
+        # Use ca bundle if defined
+        ca_bundle = self.conf('ssl_ca_bundle')
+
+        if ca_bundle and os.path.exists(ca_bundle):
+            return ca_bundle
+
+        # Use default ssl verification
+        return True
+
     def connect(self, reconnect = False):
         # Already connected?
         if not reconnect and self.rt is not None:
@@ -68,10 +94,11 @@ class rTorrent(DownloaderBase):
         if parsed.scheme in ['http', 'https']:
             url += self.conf('rpc_url')
 
+        # Construct client
         self.rt = RTorrent(
-            url,
-            self.conf('username'),
-            self.conf('password')
+            url, self.getAuth(),
+            verify_server=True,
+            verify_ssl=self.getVerifySsl()
         )
 
         self.error_msg = ''
