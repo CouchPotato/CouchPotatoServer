@@ -97,13 +97,12 @@ class rTorrent(DownloaderBase):
         # Construct client
         self.rt = RTorrent(
             url, self.getAuth(),
-            verify_server=True,
             verify_ssl=self.getVerifySsl()
         )
 
         self.error_msg = ''
         try:
-            self.rt._verify_conn()
+            self.rt.connection.verify()
         except AssertionError as e:
             self.error_msg = e.message
             self.rt = None
