@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
-from ..cache import cachedmethod
 from ..exceptions import ServiceError
 from ..language import language_set
 from ..subtitles import get_subtitle_path, ResultSubtitle
@@ -37,7 +36,6 @@ class Subscenter(ServiceBase):
     videos = [Episode, Movie]
     require_video = False
 
-    @cachedmethod
     def _search_url_title(self, title, kind):
         """Search the URL title for the given `title`.
 
@@ -45,7 +43,6 @@ class Subscenter(ServiceBase):
         :param str kind: kind of the title, ``movie`` or ``series``.
         :return: the URL version of the title.
         :rtype: str or None
-
         """
         # make the search
         logger.info('Searching title name for %r', title)
