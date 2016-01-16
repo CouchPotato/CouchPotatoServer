@@ -101,6 +101,8 @@ class Settings(object):
                     if value in ['hidden', 'rw', 'ro']:
                         meta_option_name = option_name + self.optionMetaSuffix()
                         self.setDefault(section_name, meta_option_name, value)
+                    else:
+                        self.log.warning('Wrong value for option %s.%s : ui-meta can not be equal to "%s"', (section_name, option_name, value))
 
             # Migrate old settings from old location to the new location
             if option.get('migrate_from'):
