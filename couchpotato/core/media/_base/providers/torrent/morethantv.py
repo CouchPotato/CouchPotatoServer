@@ -42,7 +42,7 @@ class Base(TorrentProvider):
                 for result in entries:
 
                     link = result.find('a', attrs = {'dir': 'ltr'})
-                    url = result.find('a', attrs = {'title': 'Download'})
+                    url = result.find('span', attrs = {'title': 'Download'}).parent
                     tds = result.find_all('td')
                     size = tds[5].contents[0].strip('\n ')
 
