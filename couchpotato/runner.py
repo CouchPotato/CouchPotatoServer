@@ -23,7 +23,7 @@ import requests
 from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
-
+from couchpotato.core.softchroot import SoftChrootInitError
 
 def getOptions(args):
 
@@ -218,13 +218,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Check soft-chroot dir exists:
     try:
-        soft_chroot = Env.setting('soft_chroot', section = 'core', default = None, type='unicode' )
-
-        if (None != soft_chroot):
-            soft_chroot = soft_chroot.strip()
-            if (len(soft_chroot)>0) and (not os.path.isdir(soft_chroot)):
-                log.error('SOFT-CHROOT is defined, but the folder doesn\'t exist')
-                return
+        # Load Soft-Chroot
+        soft_chroot = Env.get('softchroot')
+        soft_chroot_dir = Env.setting('soft_chroot', section = 'core', default = None, type='unicode' )
+        soft_chroot.initialize(soft_chroot_dir)
+    except SoftChrootInitError as exc:
+        log.error(exc)
+        return
     except:
         log.error('Unable to check whether SOFT-CHROOT is defined')
         return

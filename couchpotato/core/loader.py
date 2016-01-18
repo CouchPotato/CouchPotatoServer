@@ -99,6 +99,11 @@ class Loader(object):
             path = os.path.join(dir_name, name)
             ext = os.path.splitext(path)[1]
             ext_length = len(ext)
+
+            # SKIP test files:
+            if path.endswith('_test.py'):
+                continue
+
             if name != 'static' and ((os.path.isdir(path) and os.path.isfile(os.path.join(path, '__init__.py')))
                                      or (os.path.isfile(path) and ext == '.py')):
                 name = name[:-ext_length] if ext_length > 0 else name

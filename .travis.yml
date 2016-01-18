@@ -14,6 +14,7 @@ cache:
   pip: true
   directories:
   - node_modules
+  - libs
 
 # command to install dependencies
 install:
@@ -24,6 +25,8 @@ install:
   # disabled, since we don't require colors for tests on travis
   - pip install --upgrade nose
   # - pip install rednose
+
+  - nosetests --plugins
 
 # command to run tests
 script:
