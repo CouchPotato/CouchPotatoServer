@@ -1008,14 +1008,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 break
 
                     if not found_release:
-                        log.info('%s not found in downloaders', nzbname)
-
                         #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
                         if rel.get('status') == 'missing':
                             if rel.get('last_edit') < int(time.time()) - 7 * 24 * 60 * 60:
+                                log.info('%s not found in downloaders after 7 days, setting status to ignored', nzbname)
                                 fireEvent('release.update_status', rel.get('_id'), status = 'ignored', single = True)
                         else:
                             # Set the release to missing
+                            log.info('%s not found in downloaders, setting status to missing', nzbname)
                             fireEvent('release.update_status', rel.get('_id'), status = 'missing', single = True)
 
                         # Continue with next release
@@ -1228,7 +1228,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 log.error('Rar modify date enabled, but failed: %s', traceback.format_exc())
                         extr_files.append(extr_file_path)
                 del rar_handle
-                # Tag archive as extracted if no cleanup.  
+                # Tag archive as extracted if no cleanup.
                 if not cleanup and os.path.isfile(extr_file_path):
                     self.tagRelease(release_download = {'folder': os.path.dirname(archive['file']), 'files': [archive['file']]}, tag = 'extracted')
             except Exception as e:
