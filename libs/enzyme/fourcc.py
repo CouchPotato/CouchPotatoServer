@@ -794,7 +794,7 @@ FOURCC = {
     'WVP2': 'WVP2 codec',
     'X263': 'Xirlink H.263',
     'X264': 'XiWave GNU GPL x264 MPEG-4 Codec',
-    'X265': 'H.265 HEVC'
+    'X265': 'H.265 HEVC',
     'XLV0': 'NetXL Video Decoder',
     'XMPG': 'Xing MPEG (I-Frame only)',
     'XVID': 'XviD MPEG-4',
