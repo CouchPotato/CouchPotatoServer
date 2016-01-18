@@ -123,6 +123,7 @@ FOURCCMap = {
     'V_SNOW': 'SNOW',
     'V_MPEG4/ISO/ASP': 'MP4V',
     'V_MPEG4/ISO/AVC': 'AVC1',
+    'V_MPEGH/ISO/HEVC': 'HEVC',
     'A_AC3': 0x2000,
     'A_MPEG/L3': 0x0055,
     'A_MPEG/L2': 0x0050,
