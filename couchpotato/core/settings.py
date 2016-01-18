@@ -7,7 +7,6 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-from couchpotato.core.softchroot import SoftChroot
 
 class Settings(object):
 
@@ -58,6 +57,7 @@ class Settings(object):
         self.file = None
         self.p = None
         self.log = None
+        self.directories_delimiter = "::"
 
     def setFile(self, config_file):
         self.file = config_file
@@ -93,6 +93,17 @@ class Settings(object):
         for option_name, option in options.items():
             self.setDefault(section_name, option_name, option.get('default', ''))
 
+            # Set UI-meta for option (hidden/ro/rw)
+            if option.get('ui-meta'):
+                value = option.get('ui-meta')
+                if value:
+                    value = value.lower()
+                    if value in ['hidden', 'rw', 'ro']:
+                        meta_option_name = option_name + self.optionMetaSuffix()
+                        self.setDefault(section_name, meta_option_name, value)
+                    else:
+                        self.log.warning('Wrong value for option %s.%s : ui-meta can not be equal to "%s"', (section_name, option_name, value))
+
             # Migrate old settings from old location to the new location
             if option.get('migrate_from'):
                 if self.p.has_option(option.get('migrate_from'), option_name):
@@ -114,7 +125,6 @@ class Settings(object):
             self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
             return None
 
-
         return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = None, type = None):
@@ -123,9 +133,7 @@ class Settings(object):
             return None
 
         try:
-
-            try: type = self.types[section][option]
-            except: type = 'unicode' if not type else type
+            type = self.getType(section, option)
 
             if hasattr(self, 'get%s' % type.capitalize()):
                 return getattr(self, 'get%s' % type.capitalize())(section, option)
@@ -168,12 +176,21 @@ class Settings(object):
         except:
             return tryFloat(self.p.get(section, option))
 
+    def getDirectories(self, section, option):
+        value = self.p.get(section, option)
+        if value:
+            return map(str.strip, str.split(value, self.directories_delimiter))
+        return []
+
     def getUnicode(self, section, option):
         value = self.p.get(section, option).decode('unicode_escape')
         return toUnicode(value).strip()
 
     def getValues(self):
+        from couchpotato.environment import Env
+
         values = {}
+        soft_chroot = Env.get('softchroot')
 
         # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good...
         #        ... but, they omit output of values of hidden and non-readable options
@@ -198,21 +215,30 @@ class Settings(object):
                 #if not self.isOptionReadable(section, option_name):
                 #    continue
 
-                is_password = False
-                try: is_password = self.types[section][option_name] == 'password'
-                except: pass
+                value = self.get(option_name, section)
 
-                values[section][option_name] = self.get(option_name, section)
-                if is_password and values[section][option_name]:
-                    values[section][option_name] = len(values[section][option_name]) * '*'
+                is_password = self.getType(section, option_name) == 'password'
+                if is_password and value:
+                    value = len(value) * '*'
+
+                # chrootify directory before sending to UI:
+                if (self.getType(section, option_name) == 'directory') and value:
+                    try: value = soft_chroot.abs2chroot(value)
+                    except: value = ""
+                # chrootify directories before sending to UI:
+                if (self.getType(section, option_name) == 'directories'):
+                    if (not value):
+                        value = []
+                    try : value = map(soft_chroot.abs2chroot, value)
+                    except : value = [] 
+
+                values[section][option_name] = value
 
         return values
 
     def save(self):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
-
-        self.log.debug('Saved settings')
 
     def addSection(self, section):
         if not self.p.has_section(section):
@@ -228,6 +254,12 @@ class Settings(object):
 
         self.types[section][option] = type
 
+    def getType(self, section, option):
+        type = None
+        try: type = self.types[section][option]
+        except: type = 'unicode' if not type else type
+        return type
+ 
     def addOptions(self, section_name, options):
         # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
@@ -243,36 +275,42 @@ class Settings(object):
 
         res = {}
 
-        if isinstance(self.options, dict):
-            for section_key in self.options.keys():
-                section = self.options[section_key]
-                section_name = section.get('name') if 'name' in section else section_key
-                if self.isSectionReadable(section_name) and isinstance(section, dict):
-                    s = {}
-                    sg = []
-                    for section_field in section:
-                        if section_field.lower() != 'groups':
-                            s[section_field] = section[section_field]
-                        else:
-                            groups = section['groups']
-                            for group in groups:
-                                g = {}
-                                go = []
-                                for group_field in group:
-                                    if group_field.lower() != 'options':
-                                        g[group_field] = group[group_field]
-                                    else:
-                                        for option in group[group_field]:
-                                            option_name = option.get('name')
-                                            if self.isOptionReadable(section_name, option_name):
-                                                go.append(option)
-                                                option['writable'] = self.isOptionWritable(section_name, option_name)
-                                if len(go)>0:
-                                    g['options'] = go
-                                    sg.append(g)
-                    if len(sg)>0:
-                        s['groups'] = sg
-                        res[section_key] = s
+        # it is required to filter invisible options for UI, but also we should
+        # preserve original tree for server's purposes.
+        # So, next loops do one thing: copy options to res and in the process
+        #   1. omit NON-READABLE (for UI) options,  and
+        #   2. put flags on READONLY options
+        for section_key in self.options.keys():
+            section_orig = self.options[section_key]
+            section_name = section_orig.get('name') if 'name' in section_orig else section_key
+            if self.isSectionReadable(section_name):
+                section_copy = {}
+                section_copy_groups = []
+                for section_field in section_orig:
+                    if section_field.lower() != 'groups':
+                        section_copy[section_field] = section_orig[section_field]
+                    else:
+                        for group_orig in section_orig['groups']:
+                            group_copy = {}
+                            group_copy_options = []
+                            for group_field in group_orig:
+                                if group_field.lower() != 'options':
+                                    group_copy[group_field] = group_orig[group_field]
+                                else:
+                                    for option in group_orig[group_field]:
+                                        option_name = option.get('name')
+                                        # You should keep in mind, that READONLY = !IS_WRITABLE
+                                        # and IS_READABLE is a different thing
+                                        if self.isOptionReadable(section_name, option_name):
+                                            group_copy_options.append(option)
+                                            if not self.isOptionWritable(section_name, option_name):
+                                                option['readonly'] = True
+                            if len(group_copy_options)>0:
+                                group_copy['options'] = group_copy_options
+                                section_copy_groups.append(group_copy)
+                if len(section_copy_groups)>0:
+                    section_copy['groups'] = section_copy_groups
+                    res[section_key] = section_copy
 
         return res
 
@@ -288,10 +326,19 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        if (section in self.types) and (option in self.types[section]) and (self.types[section][option] == 'directory'):
-            soft_chroot_dir = self.get('soft_chroot', default = None)
-            soft_chroot = SoftChroot(soft_chroot_dir)
-            value = soft_chroot.add(str(value))
+        from couchpotato.environment import Env
+        soft_chroot = Env.get('softchroot')
+
+        if self.getType(section, option) == 'directory':
+            value = soft_chroot.chroot2abs(value)
+
+        if self.getType(section, option) == 'directories':
+            import json
+            value = json.loads(value)
+            if not (value and isinstance(value, list)):
+                value = []
+            value = map(soft_chroot.chroot2abs, value)
+            value = self.directories_delimiter.join(value)
 
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
