@@ -326,33 +326,43 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
-        from couchpotato.environment import Env
-        soft_chroot = Env.get('softchroot')
+        if not self.isOptionWritable(section, option):
+            self.log.warning('Option "%s.%s" isn\'t writable', (section, option))
+            return {
+                'success' : False,
+            }
+        else:
+        	
+            from couchpotato.environment import Env
+            soft_chroot = Env.get('softchroot')
 
-        if self.getType(section, option) == 'directory':
-            value = soft_chroot.chroot2abs(value)
+            if self.getType(section, option) == 'directory':
+                value = soft_chroot.chroot2abs(value)
 
-        if self.getType(section, option) == 'directories':
-            import json
-            value = json.loads(value)
-            if not (value and isinstance(value, list)):
-                value = []
-            value = map(soft_chroot.chroot2abs, value)
-            value = self.directories_delimiter.join(value)
+            if self.getType(section, option) == 'directories':
+                import json
+                value = json.loads(value)
+                if not (value and isinstance(value, list)):
+                    value = []
+                value = map(soft_chroot.chroot2abs, value)
+                value = self.directories_delimiter.join(value)
 
-        # See if a value handler is attached, use that as value
-        new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
+            # See if a value handler is attached, use that as value
+            new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
-        self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
-        self.save()
+            self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
+            self.save()
 
-        # After save (for re-interval etc)
-        fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
-        fireEvent('setting.save.%s.*.after' % section, single = True)
+            # After save (for re-interval etc)
+            fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+            fireEvent('setting.save.%s.*.after' % section, single = True)
 
-        return {
-            'success': True
-        }
+            return {
+                'success': True
+            }
+
+        # unreachable code:
+        return None
 
     def isSectionReadable(self, section):
         meta = 'section_hidden' + self.optionMetaSuffix()
