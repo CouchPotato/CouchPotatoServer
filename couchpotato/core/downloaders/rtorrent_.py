@@ -51,6 +51,32 @@ class rTorrent(DownloaderBase):
         self.rt = None
         return True
 
+    def getAuth(self):
+        if not self.conf('username') or not self.conf('password'):
+            # Missing username or password parameter
+            return None
+
+        # Build authentication tuple
+        return (
+            self.conf('authentication'),
+            self.conf('username'),
+            self.conf('password')
+        )
+
+    def getVerifySsl(self):
+        # Ensure verification has been enabled
+        if not self.conf('ssl_verify'):
+            return False
+
+        # Use ca bundle if defined
+        ca_bundle = self.conf('ssl_ca_bundle')
+
+        if ca_bundle and os.path.exists(ca_bundle):
+            return ca_bundle
+
+        # Use default ssl verification
+        return True
+
     def connect(self, reconnect = False):
         # Already connected?
         if not reconnect and self.rt is not None:
@@ -68,15 +94,15 @@ class rTorrent(DownloaderBase):
         if parsed.scheme in ['http', 'https']:
             url += self.conf('rpc_url')
 
+        # Construct client
         self.rt = RTorrent(
-            url,
-            self.conf('username'),
-            self.conf('password')
+            url, self.getAuth(),
+            verify_ssl=self.getVerifySsl()
         )
 
         self.error_msg = ''
         try:
-            self.rt._verify_conn()
+            self.rt.connection.verify()
         except AssertionError as e:
             self.error_msg = e.message
             self.rt = None
@@ -290,52 +316,88 @@ config = [{
                     'radio_group': 'torrent',
                 },
                 {
-                    'name': 'host',
-                    'default': 'localhost:80',
-                    'description': 'RPC Communication URI. Usually <strong>scgi://localhost:5000</strong>, '
-                                   '<strong>httprpc://localhost/rutorrent</strong> or <strong>localhost:80</strong>'
-                },
-                {
                     'name': 'ssl',
+                    'label': 'SSL Enabled',
+                    'order': 1,
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
                 },
                 {
-                    'name': 'rpc_url',
+                    'name': 'ssl_verify',
+                    'label': 'SSL Verify',
+                    'order': 2,
+                    'default': 1,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Verify SSL certificate on https connections',
+                },
+                {
+                    'name': 'ssl_ca_bundle',
+                    'label': 'SSL CA Bundle',
+                    'order': 3,
                     'type': 'string',
+                    'advanced': True,
+                    'description': 'Path to a directory (or file) containing trusted certificate authorities',
+                },
+                {
+                    'name': 'host',
+                    'order': 4,
+                    'default': 'localhost:80',
+                    'description': 'RPC Communication URI. Usually <strong>scgi://localhost:5000</strong>, '
+                                   '<strong>httprpc://localhost/rutorrent</strong> or <strong>localhost:80</strong>',
+                },
+                {
+                    'name': 'rpc_url',
+                    'order': 5,
                     'default': 'RPC2',
+                    'type': 'string',
                     'advanced': True,
                     'description': 'Change if your RPC mount is at a different path.',
                 },
                 {
+                    'name': 'authentication',
+                    'order': 6,
+                    'default': 'basic',
+                    'type': 'dropdown',
+                    'advanced': True,
+                    'values': [('Basic', 'basic'), ('Digest', 'digest')],
+                    'description': 'Authentication method used for http(s) connections',
+                },
+                {
                     'name': 'username',
+                    'order': 7,
                 },
                 {
                     'name': 'password',
+                    'order': 8,
                     'type': 'password',
                 },
                 {
                     'name': 'label',
+                    'order': 9,
                     'description': 'Label to apply on added torrents.',
                 },
                 {
                     'name': 'directory',
+                    'order': 10,
                     'type': 'directory',
                     'description': 'Download to this directory. Keep empty for default rTorrent download directory.',
                 },
                 {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
+                    'order': 11,
                     'default': False,
-                    'advanced': True,
                     'type': 'bool',
+                    'advanced': True,
                     'description': 'Remove the torrent after it finishes seeding.',
                 },
                 {
                     'name': 'delete_files',
                     'label': 'Remove files',
+                    'order': 12,
                     'default': True,
                     'type': 'bool',
                     'advanced': True,
@@ -343,6 +405,7 @@ config = [{
                 },
                 {
                     'name': 'paused',
+                    'order': 13,
                     'type': 'bool',
                     'advanced': True,
                     'default': False,
@@ -350,6 +413,7 @@ config = [{
                 },
                 {
                     'name': 'manual',
+                    'order': 14,
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,

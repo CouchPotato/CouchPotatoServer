@@ -5,6 +5,7 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
+from couchpotato.core.softchroot import SoftChroot
 
 
 class Env(object):
@@ -19,6 +20,7 @@ class Env(object):
     _settings = Settings()
     _database = Database()
     _loader = Loader()
+    _softchroot = SoftChroot()
     _cache = None
     _options = None
     _args = None

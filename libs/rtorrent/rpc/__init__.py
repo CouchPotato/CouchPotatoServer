@@ -45,7 +45,7 @@ def get_varname(rpc_call):
 
 def _handle_unavailable_rpc_method(method, rt_obj):
     msg = "Method isn't available."
-    if rt_obj._get_client_version_tuple() < method.min_version:
+    if rt_obj.connection._get_client_version_tuple() < method.min_version:
         msg = "This method is only available in " \
             "RTorrent version v{0} or later".format(
             convert_version_tuple_to_str(method.min_version))
@@ -108,8 +108,8 @@ class Method:
             return(False)
 
     def is_available(self, rt_obj):
-        if rt_obj._get_client_version_tuple() < self.min_version or \
-                self.rpc_call not in rt_obj._get_rpc_methods():
+        if rt_obj.connection._get_client_version_tuple() < self.min_version or \
+                self.rpc_call not in rt_obj.connection._get_rpc_methods():
             return(False)
         else:
             return(True)

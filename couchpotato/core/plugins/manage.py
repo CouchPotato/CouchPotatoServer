@@ -251,8 +251,7 @@ class Manage(Plugin):
 
     def directories(self):
         try:
-            if self.conf('library', default = '').strip():
-                return splitString(self.conf('library', default = ''), '::')
+            return self.conf('library', default = [])
         except:
             pass
 

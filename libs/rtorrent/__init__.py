@@ -22,13 +22,11 @@ import os.path
 import time
 import xmlrpclib
 
+from rtorrent.connection import Connection
 from rtorrent.common import find_torrent, join_uri, \
     update_uri, is_valid_port, convert_version_tuple_to_str
 from rtorrent.lib.torrentparser import TorrentParser
-from rtorrent.lib.xmlrpc.http import HTTPServerProxy
-from rtorrent.lib.xmlrpc.scgi import SCGIServerProxy
 from rtorrent.rpc import Method
-from rtorrent.lib.xmlrpc.basic_auth import BasicAuthTransport
 from rtorrent.torrent import Torrent
 from rtorrent.group import Group
 import rtorrent.rpc  # @UnresolvedImport
@@ -38,119 +36,28 @@ __author__ = "Chris Lucas"
 __contact__ = "chris@chrisjlucas.com"
 __license__ = "MIT"
 
-MIN_RTORRENT_VERSION = (0, 8, 1)
-MIN_RTORRENT_VERSION_STR = convert_version_tuple_to_str(MIN_RTORRENT_VERSION)
-
 
 class RTorrent:
     """ Create a new rTorrent connection """
     rpc_prefix = None
 
-    def __init__(self, uri, username=None, password=None,
-                 verify=False, sp=None, sp_kwargs=None):
-        self.uri = self._transform_uri(uri)  # : From X{__init__(self, url)}
+    def __init__(self, uri, auth=None, verify_server=False, verify_ssl=True, sp=None, sp_kwargs=None):
 
-        self.username = username
-        self.password = password
-
-        self.scheme = urllib.splittype(self.uri)[0]
-
-        if sp:
-            self.sp = sp
-        elif self.scheme in ['http', 'https']:
-            self.sp = HTTPServerProxy
-        elif self.scheme == 'scgi':
-            self.sp = SCGIServerProxy
-        else:
-            raise NotImplementedError()
-
-        self.sp_kwargs = sp_kwargs or {}
-
+        self.connection = Connection(uri, auth, verify_ssl, sp, sp_kwargs)
         self.torrents = []  # : List of L{Torrent} instances
-        self._rpc_methods = []  # : List of rTorrent RPC methods
+
         self._torrent_cache = []
-        self._client_version_tuple = ()
 
-        if verify is True:
-            self._verify_conn()
+        # Verify connection is valid
+        if verify_server is True:
+            self.connection.verify()
 
-    def _transform_uri(self, uri):
-        scheme = urllib.splittype(uri)[0]
-
-        if scheme == 'httprpc' or scheme.startswith('httprpc+'):
-            # Try find HTTPRPC transport (token after '+' in 'httprpc+https'), otherwise assume HTTP
-            transport = scheme[scheme.index('+') + 1:] if '+' in scheme else 'http'
-
-            # Transform URI with new path and scheme
-            uri = join_uri(uri, 'plugins/httprpc/action.php', construct=False)
-            return update_uri(uri, scheme=transport)
-
-        return uri
+    @property
+    def client(self):
+        return self.connection.client
 
     def _get_conn(self):
-        """Get ServerProxy instance"""
-
-        if self.username and self.password:
-            if self.scheme == 'scgi':
-                raise NotImplementedError()
-
-            secure = self.scheme == 'https'
-
-            return self.sp(
-                self.uri,
-                transport=BasicAuthTransport(secure, self.username, self.password),
-                **self.sp_kwargs
-            )
-
-        return self.sp(self.uri, **self.sp_kwargs)
-
-    def _verify_conn(self):
-        # check for rpc methods that should be available
-        assert "system.client_version" in self._get_rpc_methods(), "Required RPC method not available."
-        assert "system.library_version" in self._get_rpc_methods(), "Required RPC method not available."
-
-        # minimum rTorrent version check
-        assert self._meets_version_requirement() is True,\
-            "Error: Minimum rTorrent version required is {0}".format(
-            MIN_RTORRENT_VERSION_STR)
-
-    def test_connection(self):
-        try:
-            self._verify_conn()
-        except:
-            return False
-        return True
-
-    def _meets_version_requirement(self):
-        return self._get_client_version_tuple() >= MIN_RTORRENT_VERSION
-
-    def _get_client_version_tuple(self):
-        conn = self._get_conn()
-
-        if not self._client_version_tuple:
-            if not hasattr(self, "client_version"):
-                setattr(self, "client_version",
-                        conn.system.client_version())
-
-            rtver = getattr(self, "client_version")
-            self._client_version_tuple = tuple([int(i) for i in
-                                                rtver.split(".")])
-
-        return self._client_version_tuple
-
-    def _update_rpc_methods(self):
-        self._rpc_methods = self._get_conn().system.listMethods()
-
-        return self._rpc_methods
-
-    def _get_rpc_methods(self):
-        """ Get list of raw RPC commands
-
-        @return: raw RPC commands
-        @rtype: list
-        """
-
-        return(self._rpc_methods or self._update_rpc_methods())
+        return self.client
 
     def get_torrents(self, view="main"):
         """Get list of all torrents in specified view
@@ -341,7 +248,7 @@ class RTorrent:
             assert view is not None, "view parameter required on non-persistent groups"
             p.group.insert('', name, view)
 
-        self._update_rpc_methods()
+        self.connection._update_rpc_methods()
 
     def get_group(self, name):
         assert name is not None, "group name required"
@@ -424,8 +331,8 @@ def _build_class_methods(class_obj):
 
 def __compare_rpc_methods(rt_new, rt_old):
     from pprint import pprint
-    rt_new_methods = set(rt_new._get_rpc_methods())
-    rt_old_methods = set(rt_old._get_rpc_methods())
+    rt_new_methods = set(rt_new.connection._get_rpc_methods())
+    rt_old_methods = set(rt_old.connection._get_rpc_methods())
     print("New Methods:")
     pprint(rt_new_methods - rt_old_methods)
     print("Methods not in new rTorrent:")
@@ -440,7 +347,7 @@ def __check_supported_methods(rt):
                              rtorrent.torrent.methods +
                              rtorrent.tracker.methods +
                              rtorrent.peer.methods])
-    all_methods = set(rt._get_rpc_methods())
+    all_methods = set(rt.connection._get_rpc_methods())
 
     print("Methods NOT in supported methods")
     pprint(all_methods - supported_methods)
