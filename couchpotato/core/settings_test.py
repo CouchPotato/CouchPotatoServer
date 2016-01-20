@@ -22,6 +22,11 @@ class DoNotUseMe:
 
         # props:
         s.log = Mock()
+
+        # subobjects
+        s.p = Mock()
+        s.p.getboolean = Mock(return_value=True)
+        s.p.has_option = Mock
        
 class SettingsSaveWritableNonWritable(TestCase):
     def setUp(self):
@@ -94,3 +99,52 @@ class SettingsSaveWritableNonWritable(TestCase):
         # lets check, that 'set'-method was not called:
         self.assertFalse(mock_set.called, 'Method `set` was called')
         mock_is_w.assert_called_with(section, option)
+
+
+
+class OptionMetaSuite(TestCase):
+    """ tests for ro rw hidden options """
+
+    def setUp(self):
+        self.s = Settings()
+        self.meta = self.s.optionMetaSuffix()
+        
+        # hide real config-parser:
+        self.s.p = Mock()
+
+    def test_no_meta_option(self):
+        s = self.s
+
+        section = 'core'
+        option = 'url'
+
+        option_meta = option + self.meta
+        # setup mock
+        s.p.getboolean = Mock(return_value=True)
+        
+        # there is no META-record for our option: 
+        s.p.has_option = Mock(side_effect=lambda s,o: not (s==section and o==option_meta) )
+
+        # by default all options are writable and readable
+        self.assertTrue ( s.isOptionWritable(section, option) )
+        self.assertTrue ( s.isOptionReadable(section, option) )
+
+    def test_non_writable(self):
+        s = self.s
+
+        section = 'core'
+        option = 'url'
+
+        def mock_get_meta_ro (s,o):
+            if (s==section and o==option_meta):
+                return 'ro'
+            return 11
+
+        option_meta = option + self.meta
+        # setup mock
+        s.p.has_option = Mock( return_value = True )
+        s.p.get = Mock( side_effect = mock_get_meta_ro)
+
+        # by default all options are writable and readable
+        self.assertFalse ( s.isOptionWritable(section, option) )
+        self.assertTrue ( s.isOptionReadable(section, option) )
