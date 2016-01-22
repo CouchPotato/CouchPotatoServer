@@ -119,7 +119,7 @@ class Subscenter(ServiceBase):
                             if subtitle_id in subtitles:
                                 logger.debug('Found additional release {0} for subtitle {1}'.format(
                                     release, subtitle_id))
-                                bisect.insort_left(subtitles[subtitle_id].releases, release)  # Deterministic order.
+                                bisect.insort_left(subtitles[subtitle_id].release, release)  # Deterministic order.
                                 subtitles[subtitle_id].downloaded += downloaded
                                 continue
                             # Otherwise create it.
