@@ -99,7 +99,7 @@ class Subscenter(ServiceBase):
         if response.status_code != 200:
             raise ServiceError('Request failed with status code {0}'.format(response.status_code))
         # Loop over results.
-        subtitles = {}
+        subtitles = dict()
         response_json = json.loads(response.content)
         for language_code, language_data in response_json.items():
             language_object = self.get_language(language_code)
@@ -110,7 +110,6 @@ class Subscenter(ServiceBase):
                             # Read the item.
                             subtitle_id = subtitle_item['id']
                             subtitle_key = subtitle_item['key']
-                            downloaded = subtitle_item['downloaded']
                             release = subtitle_item['subtitle_version']
                             subtitle_path = get_subtitle_path(filepath, language_object, self.config.multi)
                             download_link = self.server_url + 'subtitle/download/{0}/{1}/?v={2}&key={3}'.format(
@@ -120,7 +119,6 @@ class Subscenter(ServiceBase):
                                 logger.debug('Found additional release {0} for subtitle {1}'.format(
                                     release, subtitle_id))
                                 bisect.insort_left(subtitles[subtitle_id].release, release)  # Deterministic order.
-                                subtitles[subtitle_id].downloaded += downloaded
                                 continue
                             # Otherwise create it.
                             subtitle = ResultSubtitle(subtitle_path, language_object, self.__class__.__name__.lower(),
