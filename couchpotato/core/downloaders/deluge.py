@@ -156,7 +156,10 @@ class Deluge(DownloaderBase):
             # Deluge has no easy way to work out if a torrent is stalled or failing.
             #status = 'failed'
             status = 'busy'
-            if torrent['is_seed'] and tryFloat(torrent['ratio']) < tryFloat(torrent['stop_ratio']):
+            # If an user opts to seed a torrent forever (usually associated to private trackers usage), stop_ratio will be 0 or -1 (depending on Deluge version).
+            # In this scenario the status of the torrent would never change from BUSY to SEEDING.
+            # The last check takes care of this case.
+            if torrent['is_seed'] and ((tryFloat(torrent['ratio']) < tryFloat(torrent['stop_ratio'])) or (tryFloat(torrent['stop_ratio']) <= 0)):
                 # We have torrent['seeding_time'] to work out what the seeding time is, but we do not
                 # have access to the downloader seed_time, as with deluge we have no way to pass it
                 # when the torrent is added. So Deluge will only look at the ratio.

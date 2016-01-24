@@ -11,9 +11,9 @@ from couchpotato.core.helpers.encoding import sp, ss, toUnicode
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
 
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
-
 
 if os.name == 'nt':
     import imp
@@ -28,7 +28,6 @@ if os.name == 'nt':
         import win32file
 
 autoload = 'FileBrowser'
-
 
 class FileBrowser(Plugin):
 
@@ -79,10 +78,19 @@ class FileBrowser(Plugin):
 
     def view(self, path = '/', show_hidden = True, **kwargs):
 
+        soft_chroot = Env.get('softchroot')
+        
         home = getUserDir()
+        if soft_chroot.enabled:
+            if not soft_chroot.is_subdir(home):
+                home = soft_chroot.get_chroot()
 
         if not path:
             path = home
+            if path.endswith(os.path.sep):
+                path = path.rstrip(os.path.sep)
+        else:
+            path = soft_chroot.chroot2abs(path)
 
         try:
             dirs = self.getDirectories(path = path, show_hidden = show_hidden)
@@ -90,17 +98,34 @@ class FileBrowser(Plugin):
             log.error('Failed getting directory "%s" : %s', (path, traceback.format_exc()))
             dirs = []
 
+        if soft_chroot.enabled:
+            dirs = map(soft_chroot.abs2chroot, dirs)
+
         parent = os.path.dirname(path.rstrip(os.path.sep))
         if parent == path.rstrip(os.path.sep):
             parent = '/'
         elif parent != '/' and parent[-2:] != ':\\':
             parent += os.path.sep
 
+        # TODO : check on windows:
+        is_root = path == '/'
+
+        if soft_chroot.enabled:
+            is_root = soft_chroot.is_root_abs(path)
+
+            # fix paths:
+            if soft_chroot.is_subdir(parent):
+                parent = soft_chroot.abs2chroot(parent)
+            else:
+                parent = os.path.sep
+
+            home = soft_chroot.abs2chroot(home)
+
         return {
-            'is_root': path == '/',
+            'is_root': is_root,
             'empty': len(dirs) == 0,
             'parent': parent,
-            'home': home + os.path.sep,
+            'home': home,
             'platform': os.name,
             'dirs': dirs,
         }

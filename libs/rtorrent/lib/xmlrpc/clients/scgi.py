@@ -81,77 +81,10 @@
 # ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 # OF THIS SOFTWARE.
 
-import httplib
-import re
-import socket
 import urllib
 import xmlrpclib
-import errno
 
-
-class SCGITransport(xmlrpclib.Transport):
-    # Added request() from Python 2.7 xmlrpclib here to backport to Python 2.6
-    def request(self, host, handler, request_body, verbose=0):
-        #retry request once if cached connection has gone cold
-        for i in (0, 1):
-            try:
-                return self.single_request(host, handler, request_body, verbose)
-            except socket.error, e:
-                if i or e.errno not in (errno.ECONNRESET, errno.ECONNABORTED, errno.EPIPE):
-                    raise
-            except httplib.BadStatusLine: #close after we sent request
-                if i:
-                    raise
-
-    def single_request(self, host, handler, request_body, verbose=0):
-        # Add SCGI headers to the request.
-        headers = {'CONTENT_LENGTH': str(len(request_body)), 'SCGI': '1'}
-        header = '\x00'.join(('%s\x00%s' % item for item in headers.iteritems())) + '\x00'
-        header = '%d:%s' % (len(header), header)
-        request_body = '%s,%s' % (header, request_body)
-
-        sock = None
-
-        try:
-            if host:
-                host, port = urllib.splitport(host)
-                addrinfo = socket.getaddrinfo(host, int(port), socket.AF_INET,
-                                              socket.SOCK_STREAM)
-                sock = socket.socket(*addrinfo[0][:3])
-                sock.connect(addrinfo[0][4])
-            else:
-                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                sock.connect(handler)
-
-            self.verbose = verbose
-
-            sock.send(request_body)
-            return self.parse_response(sock.makefile())
-        finally:
-            if sock:
-                sock.close()
-
-    def parse_response(self, response):
-        p, u = self.getparser()
-
-        response_body = ''
-        while True:
-            data = response.read(1024)
-            if not data:
-                break
-            response_body += data
-
-        # Remove SCGI headers from the response.
-        response_header, response_body = re.split(r'\n\s*?\n', response_body,
-                                                  maxsplit=1)
-
-        if self.verbose:
-            print 'body:', repr(response_body)
-
-        p.feed(response_body)
-        p.close()
-
-        return u.close()
+from rtorrent.lib.xmlrpc.transports.scgi import SCGITransport
 
 
 class SCGIServerProxy(xmlrpclib.ServerProxy):

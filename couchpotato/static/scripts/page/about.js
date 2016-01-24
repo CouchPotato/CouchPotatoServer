@@ -28,7 +28,8 @@ var AboutSettingTab = new Class({
 		});
 
 		self.settings.default_action = 'about';
-
+		// WebUI Feature:
+		self.hide_dirs = !! App.options && App.options.webui_feature && App.options.webui_feature.hide_about_dirs;
 	},
 
 	createAbout: function(){
@@ -38,11 +39,13 @@ var AboutSettingTab = new Class({
 			today = new Date(),
 			one_day = 1000*60*60*24;
 
+
+		var about_block;
 		self.settings.createGroup({
 			'label': 'About This CouchPotato',
 			'name': 'variables'
 		}).inject(self.content).adopt(
-			new Element('dl.info').adopt(
+			(about_block = new Element('dl.info')).adopt(
 				new Element('dt[text=Version]'),
 				self.version_text = new Element('dd.version', {
 					'text': 'Getting version...',
@@ -58,18 +61,25 @@ var AboutSettingTab = new Class({
 						}
 					}
 				}),
+
 				new Element('dt[text=Updater]'),
 				self.updater_type = new Element('dd.updater'),
 				new Element('dt[text=ID]'),
-				new Element('dd', {'text': App.getOption('pid')}),
+				new Element('dd', {'text': App.getOption('pid')})
+
+			)
+		);
+
+		if (!self.hide_dirs){
+			about_block.adopt(
 				new Element('dt[text=Directories]'),
 				new Element('dd', {'text': App.getOption('app_dir')}),
 				new Element('dd', {'text': App.getOption('data_dir')}),
 				new Element('dt[text=Startup Args]'),
 				new Element('dd', {'html': App.getOption('args')}),
 				new Element('dd', {'html': App.getOption('options')})
-			)
-		);
+			);
+		}
 
 		if(!self.fillVersion(Updater.getInfo()))
 			Updater.addEvent('loaded', self.fillVersion.bind(self));

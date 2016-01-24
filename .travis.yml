@@ -1,0 +1,37 @@
+language: python
+sudo: false
+python:
+  # - "2.6"
+  - "2.7"
+  # - "3.2"
+  # - "3.3"
+  # - "3.4"
+  # - "3.5"
+  # - "3.5-dev" # 3.5 development branch
+  # - "nightly" # currently points to 3.6-dev
+
+cache:
+  pip: true
+  directories:
+  - node_modules
+  - libs
+
+# command to install dependencies
+install:
+  - npm install
+  - pip install --upgrade pip
+  - pip install coverage
+  - pip install coveralls
+  # disabled, since we don't require colors for tests on travis
+  - pip install --upgrade nose
+  # - pip install rednose
+
+  - nosetests --plugins
+
+# command to run tests
+script:
+  - grunt test
+  - grunt coverage
+
+after_success:
+  coveralls

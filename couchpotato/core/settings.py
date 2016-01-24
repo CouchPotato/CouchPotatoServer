@@ -8,7 +8,6 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 
-
 class Settings(object):
 
     options = {}
@@ -58,6 +57,7 @@ class Settings(object):
         self.file = None
         self.p = None
         self.log = None
+        self.directories_delimiter = "::"
 
     def setFile(self, config_file):
         self.file = config_file
@@ -77,7 +77,8 @@ class Settings(object):
         return self.p
 
     def sections(self):
-        return self.p.sections()
+        res = filter( self.isSectionReadable, self.p.sections())
+        return res
 
     def connectEvents(self):
         addEvent('settings.options', self.addOptions)
@@ -91,6 +92,17 @@ class Settings(object):
 
         for option_name, option in options.items():
             self.setDefault(section_name, option_name, option.get('default', ''))
+
+            # Set UI-meta for option (hidden/ro/rw)
+            if option.get('ui-meta'):
+                value = option.get('ui-meta')
+                if value:
+                    value = value.lower()
+                    if value in ['hidden', 'rw', 'ro']:
+                        meta_option_name = option_name + self.optionMetaSuffix()
+                        self.setDefault(section_name, meta_option_name, value)
+                    else:
+                        self.log.warning('Wrong value for option %s.%s : ui-meta can not be equal to "%s"', (section_name, option_name, value))
 
             # Migrate old settings from old location to the new location
             if option.get('migrate_from'):
@@ -106,13 +118,22 @@ class Settings(object):
             self.save()
 
     def set(self, section, option, value):
+        if not self.isOptionWritable(section, option):
+            self.log.warning('set::option "%s.%s" isn\'t writable', (section, option))
+            return None
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
         return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = None, type = None):
-        try:
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
 
-            try: type = self.types[section][option]
-            except: type = 'unicode' if not type else type
+        try:
+            type = self.getType(section, option)
 
             if hasattr(self, 'get%s' % type.capitalize()):
                 return getattr(self, 'get%s' % type.capitalize())(section, option)
@@ -123,6 +144,14 @@ class Settings(object):
             return default
 
     def delete(self, option = '', section = 'core'):
+        if not self.isOptionWritable(section, option):
+            self.log.warning('delete::option "%s.%s" isn\'t writable', (section, option))
+            return None
+
+        if self.isOptionMeta(section, option):
+            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            return None
+
         self.p.remove_option(section, option)
         self.save()
 
@@ -147,32 +176,69 @@ class Settings(object):
         except:
             return tryFloat(self.p.get(section, option))
 
+    def getDirectories(self, section, option):
+        value = self.p.get(section, option)
+        if value:
+            return map(str.strip, str.split(value, self.directories_delimiter))
+        return []
+
     def getUnicode(self, section, option):
         value = self.p.get(section, option).decode('unicode_escape')
         return toUnicode(value).strip()
 
     def getValues(self):
+        from couchpotato.environment import Env
+
         values = {}
+        soft_chroot = Env.get('softchroot')
+
+        # TODO : There is two commented "continue" blocks (# COMMENTED_SKIPPING). They both are good...
+        #        ... but, they omit output of values of hidden and non-readable options
+        #        Currently, such behaviour could break the Web UI of CP...
+        #        So, currently this two blocks are commented (but they are required to
+        #        provide secure hidding of options.
         for section in self.sections():
+
+            # COMMENTED_SKIPPING
+            #if not self.isSectionReadable(section):
+            #    continue
+
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
 
-                is_password = False
-                try: is_password = self.types[section][option_name] == 'password'
-                except: pass
+                #skip meta options:
+                if self.isOptionMeta(section, option_name):
+                    continue
 
-                values[section][option_name] = self.get(option_name, section)
-                if is_password and values[section][option_name]:
-                    values[section][option_name] = len(values[section][option_name]) * '*'
+                # COMMENTED_SKIPPING
+                #if not self.isOptionReadable(section, option_name):
+                #    continue
+
+                value = self.get(option_name, section)
+
+                is_password = self.getType(section, option_name) == 'password'
+                if is_password and value:
+                    value = len(value) * '*'
+
+                # chrootify directory before sending to UI:
+                if (self.getType(section, option_name) == 'directory') and value:
+                    try: value = soft_chroot.abs2chroot(value)
+                    except: value = ""
+                # chrootify directories before sending to UI:
+                if (self.getType(section, option_name) == 'directories'):
+                    if (not value):
+                        value = []
+                    try : value = map(soft_chroot.abs2chroot, value)
+                    except : value = [] 
+
+                values[section][option_name] = value
 
         return values
 
     def save(self):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
-
-        self.log.debug('Saved settings')
 
     def addSection(self, section):
         if not self.p.has_section(section):
@@ -188,15 +254,65 @@ class Settings(object):
 
         self.types[section][option] = type
 
+    def getType(self, section, option):
+        type = None
+        try: type = self.types[section][option]
+        except: type = 'unicode' if not type else type
+        return type
+ 
     def addOptions(self, section_name, options):
-
+        # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
             self.options[section_name] = options
         else:
             self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
-        return self.options
+        """Returns dict of UI-readable options
+
+        To check, whether the option is readable self.isOptionReadable() is used
+        """
+
+        res = {}
+
+        # it is required to filter invisible options for UI, but also we should
+        # preserve original tree for server's purposes.
+        # So, next loops do one thing: copy options to res and in the process
+        #   1. omit NON-READABLE (for UI) options,  and
+        #   2. put flags on READONLY options
+        for section_key in self.options.keys():
+            section_orig = self.options[section_key]
+            section_name = section_orig.get('name') if 'name' in section_orig else section_key
+            if self.isSectionReadable(section_name):
+                section_copy = {}
+                section_copy_groups = []
+                for section_field in section_orig:
+                    if section_field.lower() != 'groups':
+                        section_copy[section_field] = section_orig[section_field]
+                    else:
+                        for group_orig in section_orig['groups']:
+                            group_copy = {}
+                            group_copy_options = []
+                            for group_field in group_orig:
+                                if group_field.lower() != 'options':
+                                    group_copy[group_field] = group_orig[group_field]
+                                else:
+                                    for option in group_orig[group_field]:
+                                        option_name = option.get('name')
+                                        # You should keep in mind, that READONLY = !IS_WRITABLE
+                                        # and IS_READABLE is a different thing
+                                        if self.isOptionReadable(section_name, option_name):
+                                            group_copy_options.append(option)
+                                            if not self.isOptionWritable(section_name, option_name):
+                                                option['readonly'] = True
+                            if len(group_copy_options)>0:
+                                group_copy['options'] = group_copy_options
+                                section_copy_groups.append(group_copy)
+                if len(section_copy_groups)>0:
+                    section_copy['groups'] = section_copy_groups
+                    res[section_key] = section_copy
+
+        return res
 
     def view(self, **kwargs):
         return {
@@ -210,6 +326,26 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
+        if not self.isOptionWritable(section, option):
+            self.log.warning('Option "%s.%s" isn\'t writable', (section, option))
+            return {
+                'success' : False,
+            }
+        	
+        from couchpotato.environment import Env
+        soft_chroot = Env.get('softchroot')
+
+        if self.getType(section, option) == 'directory':
+            value = soft_chroot.chroot2abs(value)
+
+        if self.getType(section, option) == 'directories':
+            import json
+            value = json.loads(value)
+            if not (value and isinstance(value, list)):
+                value = []
+            value = map(soft_chroot.chroot2abs, value)
+            value = self.directories_delimiter.join(value)
+
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
@@ -221,8 +357,55 @@ class Settings(object):
         fireEvent('setting.save.%s.*.after' % section, single = True)
 
         return {
-            'success': True,
+            'success': True
         }
+
+    def isSectionReadable(self, section):
+        meta = 'section_hidden' + self.optionMetaSuffix()
+        try:
+            return not self.p.getboolean(section, meta)
+        except: pass
+
+        # by default - every section is readable:
+        return True
+
+    def isOptionReadable(self, section, option):
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            meta_v = self.p.get(section, meta).lower()
+            return (meta_v == 'rw') or (meta_v == 'ro')
+
+        # by default - all is writable:
+        return True
+
+    def optionReadableCheckAndWarn(self, section, option):
+        x = self.isOptionReadable(section, option)
+        if not x:
+            self.log.warning('Option "%s.%s" isn\'t readable', (section, option))
+        return x
+
+    def isOptionWritable(self, section, option):
+        meta = option + self.optionMetaSuffix()
+        if self.p.has_option(section, meta):
+            return self.p.get(section, meta).lower() == 'rw'
+
+        # by default - all is writable:
+        return True
+
+    def optionMetaSuffix(self):
+        return '_internal_meta'
+
+    def isOptionMeta(self, section, option):
+        """ A helper method for detecting internal-meta options in the ini-file
+
+        For a meta options used following names:
+        * section_hidden_internal_meta = (True | False) - for section visibility
+        * <OPTION>_internal_meta = (ro|rw|hidden) - for section visibility
+
+        """
+
+        suffix = self.optionMetaSuffix()
+        return option.endswith(suffix)
 
     def getProperty(self, identifier):
         from couchpotato import get_db

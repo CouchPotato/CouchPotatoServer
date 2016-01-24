@@ -85,7 +85,11 @@
 					'app_dir': {{ json_encode(Env.get('app_dir', unicode = True)) }},
 					'data_dir': {{ json_encode(Env.get('data_dir', unicode = True)) }},
 					'pid': {{ json_encode(Env.getPid()) }},
-					'userscript_version': {{ json_encode(fireEvent('userscript.get_version', single = True)) }}
+					'userscript_version': {{ json_encode(fireEvent('userscript.get_version', single = True)) }},
+					'webui_feature': {
+						'hide_about_dirs' : {{ json_encode( Env.setting('hide_about_dirs', default=False, section = 'webui_feature', type='bool') ) }},
+						'hide_menuitem_update' : {{ json_encode( Env.setting('hide_menuitem_update', default=False, section = 'webui_feature', type='bool') ) }},
+					}
 				});
 			})
 

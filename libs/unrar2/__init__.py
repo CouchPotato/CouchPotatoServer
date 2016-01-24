@@ -33,7 +33,7 @@ similar to the C interface provided by UnRAR. There is also a
 higher level interface which makes some common operations easier.
 """
 
-__version__ = '0.99.3'
+__version__ = '0.99.6'
 
 try:
     WindowsError
@@ -158,6 +158,12 @@ class RarFile(RarFileImplementation):
         Returns list of RarInfos for extracted files."""
         checker = condition2checker(condition)
         return RarFileImplementation.extract(self, checker, path, withSubpath, overwrite)
+
+    def get_volume(self):
+        """Determine which volume is it in a multi-volume archive. Returns None if it's not a
+        multi-volume archive, 0-based volume number otherwise."""
+        return RarFileImplementation.get_volume(self)
+
 
 def condition2checker(condition):
     """Converts different condition types to callback"""

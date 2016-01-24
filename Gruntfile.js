@@ -9,6 +9,8 @@ module.exports = function(grunt){
 	// Configurable paths
 	var config = {
 		python: grunt.file.exists('./_env/bin/python') ? './_env/bin/python' : 'python',
+		// colorful output on travis is not required, so disable it there, using travic'es env var :
+		colorful_tests_output: ! process.env.TRAVIS,
 		tmp: '.tmp',
 		base: 'couchpotato',
 		css_dest: 'couchpotato/static/style/combined.min.css',
@@ -176,6 +178,49 @@ module.exports = function(grunt){
 			}
 		},
 
+		// TEST TASKS ==============================================================
+		env: {
+			options: {
+			},
+
+			test:{
+				concat: {
+					PYTHONPATH: {
+						'value' : './libs',
+						'delimiter' : ':',
+					}
+				}
+			}
+		},
+
+		// for python tests
+		nose: {
+			options: {
+				verbosity: 2,
+				exe: true,
+				config: './.nosetestsrc',
+				// 'rednose' is a colored output for nose test-runner. But we do not requre colors on travis-ci
+				rednose: config.colorful_tests_output,
+				externalNose: true,
+			},
+
+			test: {
+			},
+
+			coverage: {
+				options:{
+					with_coverage: true,
+					cover_package: "couchpotato",
+					cover_branches: true,
+					cover_xml: true,
+					with_doctest: true,
+					with_xunit: true,
+					cover_tests: false,
+					cover_erase: true,
+				}
+			},
+		},
+
 		concurrent: {
 			options: {
 				logConcurrentOutput: true
@@ -184,6 +229,12 @@ module.exports = function(grunt){
 		}
 
 	});
+
+	// testing task
+	grunt.registerTask('test', ['env:test', 'nose:test']);
+
+	// currently, coverage does not generate local html report, but it is useful and possible
+	grunt.registerTask('coverage', ['env:test', 'nose:coverage']);
 
 	grunt.registerTask('default', [
 		'clean:server',
@@ -195,5 +246,4 @@ module.exports = function(grunt){
 		'uglify:plugins',
 		'concurrent'
 	]);
-
 };
