@@ -110,22 +110,22 @@ class RTorrent:
         if file_type == "url":
             # url strings can be input directly
             if start and verbose:
-                func_name = "load_start_verbose"
+                func_name = "load.start_verbose"
             elif start:
-                func_name = "load_start"
+                func_name = "load.start"
             elif verbose:
-                func_name = "load_verbose"
+                func_name = "load.verbose"
             else:
                 func_name = "load"
         elif file_type in ["file", "raw"]:
             if start and verbose:
-                func_name = "load_raw_start_verbose"
+                func_name = "load.raw_start_verbose"
             elif start:
-                func_name = "load_raw_start"
+                func_name = "load.raw_start"
             elif verbose:
-                func_name = "load_raw_verbose"
+                func_name = "load.raw_verbose"
             else:
-                func_name = "load_raw"
+                func_name = "load.raw"
 
         return(func_name)
 
