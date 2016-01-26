@@ -326,6 +326,12 @@ class Settings(object):
         option = kwargs.get('name')
         value = kwargs.get('value')
 
+        if not self.isOptionWritable(section, option):
+            self.log.warning('Option "%s.%s" isn\'t writable', (section, option))
+            return {
+                'success' : False,
+            }
+        	
         from couchpotato.environment import Env
         soft_chroot = Env.get('softchroot')
 

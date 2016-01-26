@@ -3,7 +3,6 @@ import os
 import logging
 import unittest
 from unittest import TestCase
-#from mock import MagicMock
 
 from couchpotato.core.softchroot import SoftChroot
 
