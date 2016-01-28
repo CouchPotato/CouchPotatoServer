@@ -37,14 +37,8 @@ class IMDBBase(Automation, RSS):
             'name': 'IMDB - Box Office',
             'url': 'http://www.imdb.com/boxoffice/',
         },
-        'rentals': {
-            'order': 3,
-            'name': 'IMDB - Top DVD rentals',
-            'url': 'http://www.imdb.com/boxoffice/rentals',
-            'type': 'json',
-        },
         'top250': {
-            'order': 4,
+            'order': 3,
             'name': 'IMDB - Top 250 Movies',
             'url': 'http://www.imdb.com/chart/top',
         },
@@ -270,13 +264,6 @@ config = [{
                     'default': True,
                 },
                 {
-                    'name': 'automation_charts_rentals',
-                    'type': 'bool',
-                    'label': 'DVD Rentals',
-                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals" target="_blank">rentals</a> chart',
-                    'default': True,
-                },
-                {
                     'name': 'automation_charts_top250',
                     'type': 'bool',
                     'label': 'TOP 250',
@@ -317,13 +304,6 @@ config = [{
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/" target="_blank">TOP 250</a> chart',
                     'default': False,
-                },
-                {
-                    'name': 'chart_display_rentals',
-                    'type': 'bool',
-                    'label': 'DVD Rentals',
-                    'description': 'Top DVD <a href="http://www.imdb.com/boxoffice/rentals" target="_blank">rentals</a> chart',
-                    'default': True,
                 },
                 {
                     'name': 'chart_display_boxoffice',
