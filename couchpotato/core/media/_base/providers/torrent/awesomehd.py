@@ -13,10 +13,10 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://awesome-hd.net/',
-        'detail': 'https://awesome-hd.net/torrents.php?torrentid=%s',
-        'search': 'https://awesome-hd.net/searchapi.php?action=imdbsearch&passkey=%s&imdb=%s&internal=%s',
-        'download': 'https://awesome-hd.net/torrents.php?action=download&id=%s&authkey=%s&torrent_pass=%s',
+        'test': 'https://awesome-hd.me/',
+        'detail': 'https://awesome-hd.me/torrents.php?torrentid=%s',
+        'search': 'https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=%s&imdb=%s&internal=%s',
+        'download': 'https://awesome-hd.me/torrents.php?action=download&id=%s&authkey=%s&torrent_pass=%s',
     }
     http_time_between_calls = 1
 
