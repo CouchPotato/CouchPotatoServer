@@ -171,7 +171,9 @@ class RTorrent:
         func_name = self._get_load_function("raw", start, verbose)
 
         # load torrent
-        getattr(p, func_name)(torrent)
+        # rtorrent > 0.9.6 requires first parameter @target
+        target = ""
+        getattr(p, func_name)(target, torrent)
 
         if verify_load:
             i = 0
@@ -233,7 +235,9 @@ class RTorrent:
         elif file_type == "url":
             finput = torrent
 
-        getattr(p, func_name)(finput)
+        # rtorrent > 0.9.6 requires first parameter @target
+        target = ""
+        getattr(p, func_name)(target, finput)
 
     def get_views(self):
         p = self._get_conn()
