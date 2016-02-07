@@ -35,7 +35,7 @@ def symlink(src, dst):
         import ctypes
         if ctypes.windll.kernel32.CreateSymbolicLinkW(toUnicode(dst), toUnicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
-        os.link(toUnicode(src), toUnicode(dst))
+        os.symlink(toUnicode(src), toUnicode(dst))
 
 
 def getUserDir():
