@@ -133,7 +133,7 @@ class Settings(object):
             return None
 
         try:
-            type = self.getType(section, option)
+            type = self.getType(section, option) if not type else type
 
             if hasattr(self, 'get%s' % type.capitalize()):
                 return getattr(self, 'get%s' % type.capitalize())(section, option)
@@ -230,7 +230,7 @@ class Settings(object):
                     if (not value):
                         value = []
                     try : value = map(soft_chroot.abs2chroot, value)
-                    except : value = [] 
+                    except : value = []
 
                 values[section][option_name] = value
 
@@ -259,7 +259,7 @@ class Settings(object):
         try: type = self.types[section][option]
         except: type = 'unicode' if not type else type
         return type
- 
+
     def addOptions(self, section_name, options):
         # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
@@ -331,7 +331,7 @@ class Settings(object):
             return {
                 'success' : False,
             }
-        	
+
         from couchpotato.environment import Env
         soft_chroot = Env.get('softchroot')
 
