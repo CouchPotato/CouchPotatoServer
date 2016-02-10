@@ -6,7 +6,7 @@
 
 ## Contributing
 Thank you for your interest in contributing to CouchPotato. There are several ways to help out, even if you've never worked on an open source project before.
-If you've found a bug or want to request a feature, you can report it by [posting an issue](https://github.com/RuudBurger/CouchPotatoServer/issues/new) - be sure to read the [guidelines](#issues) first!
+If you've found a bug or want to request a feature, you can report it by [posting an issue](https://github.com/CouchPotato/CouchPotatoServer/issues/new) - be sure to read the [guidelines](#issues) first!
 If you want to contribute your own work, please read the [guidelines](#pull-requests) for submitting a pull request.
 Lastly, for anything related to CouchPotato, feel free to stop by the [forum](http://couchpota.to/forum/) or the [#couchpotato](http://webchat.freenode.net/?channels=couchpotato) IRC channel at irc.freenode.net.
 
@@ -26,7 +26,7 @@ Before you submit an issue, please go through the following checklist:
  * Give a short step by step of how to reproduce the error.
  * What hardware / OS are you using and what are its limitations? For example: NAS can be slow and maybe have a different version of python installed than when you use CP on OS X or Windows.
  * Your issue might be marked with the "can't reproduce" tag. Don't ask why your issue was closed if it says so in the tag.
- * If you're running on a NAS (QNAP, Austor, Synology etc.) with pre-made packages, make sure these are set up to use our source repository (RuudBurger/CouchPotatoServer) and nothing else!
+ * If you're running on a NAS (QNAP, Austor, Synology etc.) with pre-made packages, make sure these are set up to use our source repository (CouchPotato/CouchPotatoServer) and nothing else!
  * Do not "bump" issues with "Any updates on this" or whatever. Yes I've seen it, you don't have to remind me of it. There will be an update when the code is done or I need information. If you feel the need to do so, you'd better have more info on the issue.
 
 The more relevant information you provide, the more likely that your issue will be resolved.
