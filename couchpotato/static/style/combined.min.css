@@ -54,7 +54,7 @@
 .search_form .results_container .results .media_result .options .add a{color:#FFF}
 .search_form .results_container .results .media_result .options .button{display:block;background:#ac0000;text-align:center;margin:0}
 .dark .search_form .results_container .results .media_result .options .button{background:#f85c22}
-.search_form .results_container .results .media_result .options .message{font-size:20px;color:#FFF}
+.search_form .results_container .results .media_result .options .message{font-size:20px;color:#fff}
 .search_form .results_container .results .media_result .thumbnail{width:30px;min-height:100%;display:block;margin:0;vertical-align:top}
 .search_form .results_container .results .media_result .data{position:absolute;height:100%;top:0;left:30px;right:0;cursor:pointer;border-top:1px solid rgba(255,255,255,.08);transition:all .4s cubic-bezier(.9,0,.1,1);will-change:transform;-webkit-transform:translateX(0) rotateZ(360deg);transform:translateX(0) rotateZ(360deg);background:#FFF}
 .dark .search_form .results_container .results .media_result .data{background:#2d2d2d;border-color:rgba(255,255,255,.08)}
@@ -95,14 +95,16 @@
 .page.home .search_form .wrapper .input input{padding-right:44px;font-size:1em}
 .page.home .search_form .wrapper .results_container{top:44px;min-height:44px}
 }
-@media (min-width:480px){.page.home .search_form .wrapper .results_container .results .media_result .data,.page.home .search_form .wrapper .results_container .results .media_result .options{left:40px}
-.page.home .search_form .wrapper .results_container .results{max-height:400px}
+@media (min-width:480px){.page.home .search_form .wrapper .results_container .results{max-height:400px}
 .page.home .search_form .wrapper .results_container .results .media_result{height:66px}
 .page.home .search_form .wrapper .results_container .results .media_result .thumbnail{width:40px}
+.page.home .search_form .wrapper .results_container .results .media_result .options{left:40px}
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{margin-right:5px;width:320px}
 }
 @media (min-width:480px) and (max-width:480px){.page.home .search_form .wrapper .results_container .results .media_result{height:44px}
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{width:140px;margin-right:2px}
+}
+@media (min-width:480px){.page.home .search_form .wrapper .results_container .results .media_result .data{left:40px}
 }
 @media (max-width:480px){.page.home .search_form .wrapper .results_container .results .media_result{height:44px}
 .page.home .search_form .wrapper .results_container .results .media_result .options .title{width:140px;margin-right:2px}
@@ -809,7 +811,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .mask .message,.mask .spinner{position:absolute;top:50%;left:50%}
 .mask .message{color:#FFF;text-align:center;width:320px;margin:-49px 0 0 -160px;font-size:16px}
 .mask .message h1{font-size:1.5em}
-.mask .spinner{width:22px;height:22px;display:block;background:#FFF;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1) infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1) infinite normal;-webkit-transform:scale(0);transform:scale(0)}
+.mask .spinner{width:22px;height:22px;display:block;background:#fff;margin-top:-11px;margin-left:-11px;outline:transparent solid 1px;-webkit-animation:rotating 2.5s cubic-bezier(.9,0,.1,1) infinite normal;animation:rotating 2.5s cubic-bezier(.9,0,.1,1) infinite normal;-webkit-transform:scale(0);transform:scale(0)}
 .mask.with_message .spinner{margin-top:-88px}
 .mask.show{pointer-events:auto;opacity:1}
 .mask.show .spinner{-webkit-transform:scale(1);transform:scale(1)}
@@ -933,7 +935,7 @@ input[type=text],textarea{-webkit-appearance:none}
 .page.settings .option_list h2 .hint{font-weight:300}
 .page.settings .combined_table{margin-top:20px}
 .page.settings .combined_table .head{margin:0 10px 0 46px;font-size:.8em}
-.page.settings .combined_table .head abbr{display:inline-block;font-weight:700;border-bottom:1px dotted #FFF;line-height:140%;cursor:help;margin-right:10px;text-align:center}
+.page.settings .combined_table .head abbr{display:inline-block;font-weight:700;border-bottom:1px dotted #fff;line-height:140%;cursor:help;margin-right:10px;text-align:center}
 .page.settings .combined_table .head abbr:first-child{display:none}
 .page.settings .combined_table input{min-width:0!important;display:inline-block;margin-right:10px}
 .page.settings .combined_table .automation_ids,.page.settings .combined_table .automation_urls,.page.settings .combined_table .host{width:200px}
