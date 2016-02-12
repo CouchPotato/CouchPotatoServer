@@ -38,7 +38,7 @@ class Synology(DownloaderBase):
         if not data: data = {}
 
         response = False
-        log.error('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
+        log.info('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
 
         # Load host from config and split out port.
         host = cleanHost(self.conf('host'), protocol = False).split(':')
