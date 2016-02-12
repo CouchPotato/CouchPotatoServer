@@ -499,16 +499,23 @@ Option.String = new Class({
 	create: function(){
 		var self = this;
 
-		self.el.adopt(
-			self.createLabel(),
+		if(self.read_only){
+			self.input = new Element('span', {
+				'text': self.getSettingValue()
+			});
+		}
+		else {
 			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue(),
-				'placeholder': self.getPlaceholder(),
-				'readonly' : self.read_only,
-				'disabled' : self.read_only
-			})
+				'placeholder': self.getPlaceholder()
+			});
+		}
+
+		self.el.adopt(
+			self.createLabel(),
+			self.input
 		);
 	},
 
@@ -998,7 +1005,7 @@ Option.Directories = new Class({
 		self.el.setStyle('display', 'none');
 
 		self.directories = [];
-		
+
 		self.getSettingValue().each(function(value){
 			self.addDirectory(value);
 		});
