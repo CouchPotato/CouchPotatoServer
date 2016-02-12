@@ -28,10 +28,10 @@ class Synology(DownloaderBase):
             Used for creating the filename when possible
         :param filedata: downloaded torrent/nzb filedata
             The file gets downloaded in the searcher and send to this function
-            This is done to have failed checking before using the downloader, so the downloader
+            This is done to have fail checking before using the downloader, so the downloader
             doesn't need to worry about that
         :return: boolean
-            One faile returns false, but the downloaded should log his own errors
+            One fail returns false, but the downloader should log his own errors
         """
 
         if not media: media = {}
@@ -124,7 +124,7 @@ class SynologyRPC(object):
                 self.sid = response['data']['sid']
                 log.debug('sid=%s', self.sid)
             else:
-                log.error('Couldn\'t login to Synology, %s', response)
+                log.error('Couldn\'t log into Synology, %s', response)
             return response['success']
         else:
             log.error('User or password missing, not using authentication.')
