@@ -173,7 +173,22 @@ class SynologyRPC(object):
                 log.info('Login success, adding torrent URI')
                 args['uri'] = url
                 response = self._req(self.download_url, args = args)
-                log.info('Response: %s', response)
+                if response['success']:
+                    log.info('Response: %s', response)
+                else:
+                    log.error('Response: %s', response)
+                    synoerrortype = {
+                        400 : 'File upload failed',
+                        401 : 'Max number of tasks reached',
+                        402 : 'Destination denied',
+                        403 : 'Destination does not exist',
+                        404 : 'Invalid task id',
+                        405 : 'Invalid task action',
+                        406 : 'No default destination',
+                        407 : 'Set destination failed',
+                        408 : 'File does not exist'
+                    }
+                    log.error('DownloadStation returned the following error : %s', synoerrortype[response['error']['code']])
                 result = response['success']
             elif filename and filedata:
                 log.info('Login success, adding torrent')
