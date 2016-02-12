@@ -1,5 +1,6 @@
 from __future__ import with_statement
 import ConfigParser
+import traceback
 from hashlib import md5
 
 from CodernityDB.hash_index import HashIndex
@@ -415,8 +416,11 @@ class Settings(object):
         try:
             propert = db.get('property', identifier, with_doc = True)
             prop = propert['doc']['value']
+        except ValueError:
+            propert = db.get('property', identifier)
+            fireEvent('database.delete_corrupted', propert.get('_id'))
         except:
-            pass  # self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
+            self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
 
         return prop
 

@@ -155,7 +155,7 @@ class Updater(Plugin):
 
 class BaseUpdater(Plugin):
 
-    repo_user = 'RuudBurger'
+    repo_user = 'CouchPotato'
     repo_name = 'CouchPotatoServer'
     branch = version.BRANCH
 
@@ -188,8 +188,18 @@ class BaseUpdater(Plugin):
 
 class GitUpdater(BaseUpdater):
 
+    old_repo = 'RuudBurger/CouchPotatoServer'
+    new_repo = 'CouchPotato/CouchPotatoServer'
+
     def __init__(self, git_command):
         self.repo = LocalRepository(Env.get('app_dir'), command = git_command)
+
+        remote_name = 'origin'
+        remote = self.repo.getRemoteByName(remote_name)
+        if self.old_repo in remote.url:
+            log.info('Changing repo to new github organization: %s -> %s', (self.old_repo, self.new_repo))
+            new_url = remote.url.replace(self.old_repo, self.new_repo)
+            self.repo._executeGitCommandAssertSuccess("remote set-url %s %s" % (remote_name, new_url))
 
     def doUpdate(self):
 

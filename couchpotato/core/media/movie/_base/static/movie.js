@@ -194,7 +194,7 @@ var Movie = new Class({
 
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
-			rating = self.data.info.rating.imdb;
+			rating = Array.prototype.slice.call(self.data.info.rating.imdb);
 
 			stars = [];
 

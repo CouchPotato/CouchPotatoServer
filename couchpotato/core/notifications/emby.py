@@ -41,7 +41,7 @@ class Emby(Notification):
 
         host = cleanHost(host)
         url = '%semby/Notifications/Admin' % (host)
-        values = {'Name': 'CouchPotato', 'Description': message, 'ImageUrl': 'https://raw.githubusercontent.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/notify.couch.small.png'}
+        values = {'Name': 'CouchPotato', 'Description': message, 'ImageUrl': 'https://raw.githubusercontent.com/CouchPotato/CouchPotatoServer/master/couchpotato/static/images/notify.couch.small.png'}
         data = json.dumps(values)
 
         try:
