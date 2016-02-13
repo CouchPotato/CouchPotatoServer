@@ -1,5 +1,6 @@
 from __future__ import with_statement
 import ConfigParser
+import traceback
 from hashlib import md5
 
 from CodernityDB.hash_index import HashIndex
@@ -133,7 +134,7 @@ class Settings(object):
             return None
 
         try:
-            type = self.getType(section, option)
+            type = self.getType(section, option) if not type else type
 
             if hasattr(self, 'get%s' % type.capitalize()):
                 return getattr(self, 'get%s' % type.capitalize())(section, option)
@@ -230,7 +231,7 @@ class Settings(object):
                     if (not value):
                         value = []
                     try : value = map(soft_chroot.abs2chroot, value)
-                    except : value = [] 
+                    except : value = []
 
                 values[section][option_name] = value
 
@@ -259,7 +260,7 @@ class Settings(object):
         try: type = self.types[section][option]
         except: type = 'unicode' if not type else type
         return type
- 
+
     def addOptions(self, section_name, options):
         # no additional actions (related to ro-rw options) are required here
         if not self.options.get(section_name):
@@ -331,7 +332,7 @@ class Settings(object):
             return {
                 'success' : False,
             }
-        	
+
         from couchpotato.environment import Env
         soft_chroot = Env.get('softchroot')
 
@@ -415,8 +416,11 @@ class Settings(object):
         try:
             propert = db.get('property', identifier, with_doc = True)
             prop = propert['doc']['value']
+        except ValueError:
+            propert = db.get('property', identifier)
+            fireEvent('database.delete_corrupted', propert.get('_id'))
         except:
-            pass  # self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
+            self.log.debug('Property "%s" doesn\'t exist: %s', (identifier, traceback.format_exc(0)))
 
         return prop
 

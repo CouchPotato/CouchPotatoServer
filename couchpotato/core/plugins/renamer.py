@@ -1363,7 +1363,7 @@ config = [{
                     'name': 'replace_doubles',
                     'type': 'bool',
                     'label': 'Clean Name',
-                    'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/RuudBurger/CouchPotatoServer/issues/2782">#2782</a>).'),
+                    'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/CouchPotato/CouchPotatoServer/issues/2782">#2782</a>).'),
                     'default': True
                 },
                 {

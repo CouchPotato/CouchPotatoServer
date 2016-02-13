@@ -30,11 +30,8 @@ class qBittorrent(DownloaderBase):
         url = cleanHost(self.conf('host'), protocol = True, ssl = False)
 
         if self.conf('username') and self.conf('password'):
-            self.qb = QBittorrentClient(
-                url,
-                username = self.conf('username'),
-                password = self.conf('password')
-            )
+            self.qb = QBittorrentClient(url)
+            self.qb.login(username=self.conf('username'),password=self.conf('password'))
         else:
             self.qb = QBittorrentClient(url)
 
@@ -45,10 +42,7 @@ class qBittorrent(DownloaderBase):
         :return: bool
         """
 
-        if self.connect():
-            return True
-
-        return False
+        return self.qb._is_authenticated
 
     def download(self, data = None, media = None, filedata = None):
         """ Send a torrent/nzb file to the downloader
@@ -95,7 +89,7 @@ class qBittorrent(DownloaderBase):
 
         # Send request to qBittorrent
         try:
-            self.qb.add_file(filedata)
+            self.qb.download_from_file(filedata, label=self.conf('label'))
 
             return self.downloadReturnId(torrent_hash)
         except Exception as e:
@@ -127,14 +121,13 @@ class qBittorrent(DownloaderBase):
             return []
 
         try:
-            torrents = self.qb.get_torrents()
+            torrents = self.qb.torrents(label=self.conf('label'))
 
             release_downloads = ReleaseDownloadList(self)
 
             for torrent in torrents:
                 if torrent.hash in ids:
-                    torrent.update_general() # get extra info
-                    torrent_filelist = torrent.get_files()
+                    torrent_filelist = self.qb.get_torrent_files(torrent.hash)
 
                     torrent_files = []
                     torrent_dir = os.path.join(torrent.save_path, torrent.name)
@@ -179,8 +172,8 @@ class qBittorrent(DownloaderBase):
             return False
 
         if pause:
-            return torrent.pause()
-        return torrent.resume()
+            return self.qb.pause(release_download['id'])
+        return self.qb.resume(release_download['id'])
 
     def removeFailed(self, release_download):
         log.info('%s failed downloading, deleting...', release_download['name'])
@@ -193,15 +186,15 @@ class qBittorrent(DownloaderBase):
         if not self.connect():
             return False
 
-        torrent = self.qb.find_torrent(release_download['id'])
+        torrent = self.qb.get_torrent(release_download['id'])
 
         if torrent is None:
             return False
 
         if delete_files:
-            torrent.delete() # deletes torrent with data
+            self.qb.delete_permanently(release_download['id']) # deletes torrent with data
         else:
-            torrent.remove() # just removes the torrent, doesn't delete data
+            self.qb.delete(release_download['id']) # just removes the torrent, doesn't delete data
 
         return True
 
@@ -234,6 +227,11 @@ config = [{
                 {
                     'name': 'password',
                     'type': 'password',
+                },
+                {
+                    'name': 'label',
+                    'label': 'Torrent Label',
+                    'default': 'couchpotato',
                 },
                 {
                     'name': 'remove_complete',
