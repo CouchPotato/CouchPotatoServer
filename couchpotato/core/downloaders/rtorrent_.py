@@ -156,9 +156,13 @@ class rTorrent(DownloaderBase):
 
         # Try download magnet torrents
         if data.get('protocol') == 'torrent_magnet':
-            # Send magnet URL to rTorrent
-            self.rt.load_torrent_simple(data.get('url'), 'url', start=True)
-            return True
+            magnet_url = data.get('url')
+            # Pull out the ID of the torrent
+            urn_btih_position = magnet_url.index('urn:btih:')
+            torrent_hash = magnet_url[urn_btih_position + 9:urn_btih_position+49]
+            # Send magnet URL directly to rTorrent
+            self.rt.load_torrent_simple(magnet_url, 'url', start=True)
+            return torrent_hash
 
         info = bdecode(filedata)["info"]
         torrent_hash = sha1(bencode(info)).hexdigest().upper()
