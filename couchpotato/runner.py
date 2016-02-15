@@ -24,6 +24,8 @@ from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 from couchpotato.core.softchroot import SoftChrootInitError
+from socket import error as SocketError
+import errno
 
 def getOptions(args):
 
@@ -340,10 +342,11 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
-    try_restart = True
-    restart_tries = 5
+    run_tries = 5
+    assert run_tries > 0
 
-    while try_restart:
+    while run_tries > 0:
+        run_tries -= 1
         try:
             server.listen(config['port'], config['host'])
 
@@ -352,27 +355,36 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                 except: log.info2('Tried to bind to IPV6 but failed')
 
             loop.start()
+
+            # on shutting down without exception
             server.close_all_connections()
             server.stop()
             loop.close(all_fds = True)
-        except Exception as e:
-            log.error('Failed starting: %s', traceback.format_exc())
-            try:
-                nr, msg = e
-                if nr == 48:
-                    log.info('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds', (config.get('port'), restart_tries))
-                    time.sleep(1)
-                    restart_tries -= 1
 
-                    if restart_tries > 0:
-                        continue
-                    else:
-                        return
-            except ValueError:
+        except SocketError as e:
+            
+            # here we will handle just two errors :
+            #     errno.EADDRINUSE = 98 - address in use
+            #     errno.ELNRNG = 48 - port in use (strange, but I took it from old code)
+            # TODO : check, that value 48 still actual
+            if e.errno in [ errno.EADDRINUSE, errno.ELNRNG ]:
+                if run_tries > 0:
+                    log.warning('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds',
+                            (config.get('port'), run_tries))
+                    time.sleep(2)
+                    continue
+
+                # not ugly error message
+                log.error('Failed starting: Port (%s) needed for CouchPotato is already in use',
+                        (config['port']))
+                # we will not raise this exception again, because no additional actions are required:
                 return
-            except:
-                pass
 
+            log.error('Failed starting: %s', traceback.format_exc())
             raise
 
-        try_restart = False
+        except Exception as e:
+            log.error('Failed starting: %s', traceback.format_exc())
+            raise
+    
+    pass # while run_tries>0
