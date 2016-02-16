@@ -68,7 +68,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'HDAccess',
             'wizard': True,
-            'description': '<a href="https://hdaccess.net">HDAccess</a>',
+            'description': '<a href="https://hdaccess.net" target="_blank">HDAccess</a>',
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAADuUlEQVQ4yz3T209bdQAH8O/vnNNzWno5FIpAKZdSLi23gWMDtumWuSXOyzJj9M1kyIOPS1xiYuKe9GUPezZZnGIiMTqTxS1bdIuYkG2MWKBAKYVszOgKFkrbA+259HfO+fli/PwPHzI+Pg5CCEAI2VcUlEsl1tHdU7P5bGOkWChEaaUCwvHpmkD93POn6bwgCMQGAMYYYwyCruuQnE7SPzjIstvb8l+bm5fXkokJSmlQEkUQAIpSRH5vd0tyum7I/sA1Z5VH2ctmiGWZjHw4McE1NAZtQ9fD25kXt1VN7es7dNjuGRjiJFeVpWo6slsZPhF/Ys/PPeIs2056ff7zIOS5rpU5/viJEwwEnu3Mi18dojjw0aWP6amz57h9RSE/35zinq2nuGjvIQwOj7K2SKeZWkk0auXSSZ+/ZopSy+CbW1pQKpWu6Jr2/qVPPqWRjm6HWi6Tm999g3RyGbndLCqGgVBrO3F7fHykK0YX47NNtGLYlBq/c+H2iD+3k704dHQUDcFmQVXLyP6zhfTqCl45fQYjx17FemoJunoAk1bQFGoVhkdPwNC0ix2dMT+3llodM02rKdo7gN3dHAEhuH/vNgDg3Pl3cPaNt2GZJpYX5lBbFwClBukfGobL5WrayW6NccVCISY4HIQxYts2Q3J5CXOPHuLlo6NoCoXQ2hbG0JFRpJYWcVDIQ5ZlyL5qW5b9hNlWjKsYBgzDgKppMCoGHty7A0orOHbyNNweL+obGnDm9TdhWSYS8Vn4a2shOZ0QJRGSKIHjeGGtWNhjqqpyG+k04k8eozPai9ZwByavf4kfpyZxZGwMfYOHsbwQx34hB5dL4syKweRq/xpXHwzNapqWSSYWMDszzYqFPEaOn4KiKJiZfoCZ6d8Am+GtC++iXCpjaf4P9vefT8HzfKarp3eWRKMxCILwuWXSz977YIK2RTodDoGH1+OG1+tDlbsKkuiAJEngeWBjNUUnv7rucIiOLyzTvMKJTgnVtbVXLctK3L31g+NAUajL5bEptaDpOnTdgGkzVHl9drms0ju3fnJIkphoaQtfbQiFwAcCAY5wnCE5Xff3i8XX4o9nGksH+8zl9hAGZlWMCivkc9z0L3fZ999+LTCGZKi55YJTFHfye3sc6e/vB88LpK6+iWlqSS4WcpcNXZtwOp3B6mo/REmCSSkEgd+qq3vpRkt75Fp9Y1BZWZwnhq4zEovF/u/MATAti4U7umvyu9kR27aikihC9vvTnV2xufVUMu/2uIksy/9tZvgX49fLmAMx3bsAAAAASUVORK5CYII=',
             'options': [
                 {
@@ -85,7 +85,7 @@ config = [{
                     'name': 'apikey',
                     'default': '',
                     'label': 'API Key',
-                    'description': 'Enter your site api key. This can be find on <a href="https://hdaccess.net/usercp.php?action=security">Profile Security</a>',
+                    'description': 'Enter your site api key. This can be found on <a href="https://hdaccess.net/usercp.php?action=security" target="_blank">Profile Security</a>',
                 },
                 {
                     'name': 'seed_ratio',

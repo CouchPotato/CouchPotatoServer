@@ -12,8 +12,8 @@ config = [{
             'tab': 'downloaders',
             'list': 'download_providers',
             'name': 'putio',
-            'label': 'put.io',
-            'description': 'This will start a torrent download on <a href="http://put.io">Put.io</a>.',
+            'label': 'Put.io',
+            'description': 'This will start a torrent download on <a href="https://put.io/" target="_blank">Put.io</a>.',
             'wizard': True,
             'options': [
                 {

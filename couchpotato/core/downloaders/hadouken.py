@@ -531,7 +531,7 @@ config = [{
             'list': 'download_providers',
             'name': 'hadouken',
             'label': 'Hadouken',
-            'description': 'Use <a href="http://www.hdkn.net">Hadouken</a> (>= v4.5.6) to download torrents.',
+            'description': 'Use <a href="http://www.hdkn.net" target="_blank">Hadouken</a> (>= v4.5.6) to download torrents.',
             'wizard': True,
             'options': [
                 {
