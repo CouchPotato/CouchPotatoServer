@@ -20,7 +20,6 @@ class Homey(Notification):
         if not data: data = {}
 
         url = self.conf('url')
-        # secret = self.conf('secret')
 
         if not url:
             log.error('Please provide the URL')
@@ -33,8 +32,7 @@ class Homey(Notification):
         }
 
         try:
-            data = self.urlopen(url, data = post_data, show_error = False)
-            print data
+            self.urlopen(url, data = post_data, show_error = False)
             return True
         except:
             log.error('Webhook notification failed: %s', traceback.format_exc())
