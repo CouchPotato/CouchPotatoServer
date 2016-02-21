@@ -23,6 +23,7 @@ import requests
 from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
+from tornado.netutil import bind_unix_socket
 from couchpotato.core.softchroot import SoftChrootInitError
 
 def getOptions(args):
@@ -345,11 +346,14 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     while try_restart:
         try:
-            server.listen(config['port'], config['host'])
+            if config['host'].startswith('unix:'):
+                server.add_socket(bind_unix_socket(config['host'][5:]))
+            else:
+                server.listen(config['port'], config['host'])
 
-            if Env.setting('ipv6', default = False):
-                try: server.listen(config['port'], config['host6'])
-                except: log.info2('Tried to bind to IPV6 but failed')
+                if Env.setting('ipv6', default = False):
+                    try: server.listen(config['port'], config['host6'])
+                    except: log.info2('Tried to bind to IPV6 but failed')
 
             loop.start()
             server.close_all_connections()
