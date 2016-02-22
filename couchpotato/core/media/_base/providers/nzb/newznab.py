@@ -231,7 +231,7 @@ config = [{
             'name': 'newznab',
             'order': 10,
             'description': 'Enable <a href="http://newznab.com/" target="_blank">NewzNab</a> such as <a href="https://nzb.su" target="_blank">NZB.su</a>, \
-                <a href="https://nzbs.org" target="_blank">NZBs.org</a>, <a href="http://dognzb.cr/" target="_blank">DOGnzb.cr</a>, \
+                <a href="https://nzbs.org" target="_blank">NZBs.org</a>, <a href="http://dognzb.cr/login" target="_blank">DOGnzb.cr</a>, \
                 <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a>, <a href="https://nzbgeek.info/" target="_blank">NZBGeek</a>, \
                 <a href="https://www.nzbfinder.ws" target="_blank">NZBFinder</a>, <a href="https://www.usenet-crawler.com" target="_blank">Usenet-Crawler</a>',
             'wizard': True,

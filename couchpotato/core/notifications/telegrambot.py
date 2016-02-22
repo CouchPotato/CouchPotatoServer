@@ -51,12 +51,12 @@ config = [{
                 },
                 {
                     'name': 'bot_token',
-                    'description': 'Your bot token. Contact <a href="http://telegram.me/BotFather">@BotFather</a> on Telegram to get one.'
+                    'description': 'Your bot token. Contact <a href="http://telegram.me/BotFather" target="_blank">@BotFather</a> on Telegram to get one.'
                 },
                 {
                     'name': 'receiver_user_id',
                     'label': 'Recieving User/Group ID',
-                    'description': 'Receiving user/group - notifications will be sent to this user or group. Contact <a href="http://telegram.me/myidbot">@myidbot</a> on Telegram to get an ID.'
+                    'description': 'Receiving user/group - notifications will be sent to this user or group. Contact <a href="http://telegram.me/myidbot" target="_blank">@myidbot</a> on Telegram to get an ID.'
                 },
                 {
                     'name': 'on_snatch',

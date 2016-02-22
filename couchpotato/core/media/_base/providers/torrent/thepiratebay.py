@@ -164,7 +164,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'ThePirateBay',
-            'description': 'The world\'s largest bittorrent tracker. <a href="http://fucktimkuik.org/">ThePirateBay</a>',
+            'description': 'The world\'s largest bittorrent tracker. <a href="https://thepiratebay.se/" target="_blank">ThePirateBay</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAA3UlEQVQY02P4DwT/YADIZvj//7qnozMYODmtAAusZoCDELDAegYGViZhAWZmRoYoqIDupfhNN1M3dTBEggXWMZg9jZRXV77YxhAOFpjDwMAPMoCXmcHsF1SAQZ6bQY2VgUEbKHClcAYzg3mINEO8jSCD478/DPsZmvqWblu1bOmStes3Pp0ezVDF4Gif0Hfx9///74/ObRZ2YNiZ47C8XIRBxFJR0jbSSUud4f9zAQWn8NTuziAt2zy5xIMM/z8LFX0E+fD/x0MRDCeA1v7Z++Y/FDzyvAtyBxIA+h8A8ZKLeT+lJroAAAAASUVORK5CYII=',
             'options': [

@@ -304,7 +304,7 @@ config = [{
                     'name': 'api_key',
                     'default': uuid4().hex,
                     'ui-meta' : 'ro',
-                    'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
+                    'description': 'Let 3rd party app do stuff. <a href="../../docs/" target="_self">Docs</a>',
                 },
                 {
                     'name': 'dereferer',
@@ -315,11 +315,11 @@ config = [{
                     'name': 'use_proxy',
                     'default': 0,
                     'type': 'bool',
-                    'description': 'Route outbound connections via proxy. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. ',
+                    'description': 'Route outbound connections via proxy. Currently, only <a href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers" target=_"blank">HTTP(S) proxies</a> are supported. ',
                 },
                 {
                     'name': 'proxy_server',
-                    'description': 'Override system default proxy server. Currently, only <a target=_"blank" href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers">HTTP(S) proxies</a> are supported. Ex. <i>\"127.0.0.1:8080\"</i>. Keep empty to use system default proxy server.',
+                    'description': 'Override system default proxy server. Currently, only <a href="https://en.wikipedia.org/wiki/Proxy_server#Web_proxy_servers" target=_"blank">HTTP(S) proxies</a> are supported. Ex. <i>\"127.0.0.1:8080\"</i>. Keep empty to use system default proxy server.',
                 },
                 {
                     'name': 'proxy_username',
@@ -361,7 +361,7 @@ config = [{
                     'name': 'permission_folder',
                     'default': '0755',
                     'label': 'Folder CHMOD',
-                    'description': 'Can be either decimal (493) or octal (leading zero: 0755). <a target="_blank" href="http://permissions-calculator.org/">Calculate the correct value</a>',
+                    'description': 'Can be either decimal (493) or octal (leading zero: 0755). <a href="http://permissions-calculator.org/" target="_blank">Calculate the correct value</a>',
                 },
                 {
                     'name': 'permission_file',

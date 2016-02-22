@@ -206,8 +206,8 @@ config = [{
             'tab': 'downloaders',
             'list': 'download_providers',
             'name': 'qbittorrent',
-            'label': 'qbittorrent',
-            'description': '',
+            'label': 'qBittorrent',
+            'description': 'Use <a href="http://www.qbittorrent.org/" target="_blank">qBittorrent</a> to download torrents.',
             'wizard': True,
             'options': [
                 {

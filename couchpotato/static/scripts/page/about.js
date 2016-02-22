@@ -105,7 +105,7 @@ var AboutSettingTab = new Class({
 					}),
 					new Element('span[text=or]'),
 					new Element('a', {
-						'href': 'http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
+						'href': 'https://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
 						'target': '_blank',
 						'text': 'Newshosting'
 					}),
