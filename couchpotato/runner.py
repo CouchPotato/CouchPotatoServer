@@ -25,8 +25,6 @@ from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
 from tornado.netutil import bind_unix_socket
 from couchpotato.core.softchroot import SoftChrootInitError
-from socket import error as SocketError
-import errno
 
 def getOptions(args):
 
@@ -343,11 +341,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     server = HTTPServer(application, no_keep_alive = True, ssl_options = ssl_options)
 
-    run_tries = 5
-    assert run_tries > 0
+    try_restart = True
+    restart_tries = 5
 
-    while run_tries > 0:
-        run_tries -= 1
+    while try_restart:
         try:
             if config['host'].startswith('unix:'):
                 server.add_socket(bind_unix_socket(config['host'][5:]))
@@ -359,29 +356,27 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                     except: log.info2('Tried to bind to IPV6 but failed')
 
             loop.start()
-
-            # on shutting down without exception
             server.close_all_connections()
             server.stop()
             loop.close(all_fds = True)
-
-        except SocketError as e:
-            if e.errno in [ errno.EADDRINUSE ]:
-                if run_tries > 0:
-                    log.warning('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds',
-                            (config.get('port'), run_tries))
-                    time.sleep(2)
-                    continue
-
-                # not ugly error message
-                log.error('Failed starting: Port (%s) needed for CouchPotato is already in use',
-                        (config['port']))
-                # we will not raise this exception again, because no additional actions are required:
-                return
-
-            log.error('Failed starting: %s', traceback.format_exc())
-            raise
-
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
+            try:
+                nr, msg = e
+                if nr == 48:
+                    log.info('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds', (config.get('port'), restart_tries))
+                    time.sleep(1)
+                    restart_tries -= 1
+
+                    if restart_tries > 0:
+                        continue
+                    else:
+                        return
+            except ValueError:
+                return
+            except:
+                pass
+
             raise
+
+        try_restart = False
