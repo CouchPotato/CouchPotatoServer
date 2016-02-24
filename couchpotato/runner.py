@@ -366,12 +366,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             loop.close(all_fds = True)
 
         except SocketError as e:
-            
-            # here we will handle just two errors :
-            #     errno.EADDRINUSE = 98 - address in use
-            #     errno.ELNRNG = 48 - port in use (strange, but I took it from old code)
-            # TODO : check, that value 48 still actual
-            if e.errno in [ errno.EADDRINUSE, errno.ELNRNG ]:
+            if e.errno in [ errno.EADDRINUSE ]:
                 if run_tries > 0:
                     log.warning('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds',
                             (config.get('port'), run_tries))
@@ -390,5 +385,3 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             raise
-    
-    pass # while run_tries>0
