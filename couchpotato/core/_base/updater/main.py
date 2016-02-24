@@ -72,7 +72,7 @@ class Updater(Plugin):
 
         fireEvent('schedule.remove', 'updater.check', single = True)
         if self.isEnabled():
-            fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
+            fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 24)
             self.autoUpdate()  # Check after enabling
 
     def autoUpdate(self):
