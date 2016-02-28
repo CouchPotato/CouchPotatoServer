@@ -15,6 +15,7 @@ class UserscriptBase(Provider):
     type = 'userscript'
 
     version = 1
+    http_time_between_calls = 0
 
     includes = []
     excludes = []
