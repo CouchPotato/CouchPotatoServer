@@ -23,8 +23,9 @@ import requests
 from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
-from tornado.netutil import bind_unix_socket
 from couchpotato.core.softchroot import SoftChrootInitError
+try: from tornado.netutil import bind_unix_socket
+except: pass
 
 def getOptions(args):
 
