@@ -12,7 +12,7 @@ import re
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import removePyc
+from couchpotato.core.helpers.variable import removePyc, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -29,6 +29,7 @@ class Updater(Plugin):
 
     available_notified = False
     _lock = RLock()
+    last_check = 'updater.last_check'
 
     def __init__(self):
 
@@ -76,7 +77,20 @@ class Updater(Plugin):
             self.autoUpdate()  # Check after enabling
 
     def autoUpdate(self):
-        if self.isEnabled() and self.check() and self.conf('automatic') and not self.updater.update_failed:
+        do_check = True
+
+        try:
+            last_check = tryInt(Env.prop(self.last_check, default = 0))
+            now = tryInt(time.time())
+            do_check = last_check < now - 43200
+
+            if do_check:
+                Env.prop(self.last_check, value = now)
+        except:
+            log.error('Failed checking last time to update: %s', traceback.format_exc())
+
+        if do_check and self.isEnabled() and self.check() and self.conf('automatic') and not self.updater.update_failed:
+
             if self.updater.doUpdate():
 
                 # Notify before restarting
