@@ -81,7 +81,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'AlphaRatio',
-            'description': '<a href="http://alpharatio.cc/">AlphaRatio</a>',
+            'description': '<a href="http://alpharatio.cc/" target="_blank">AlphaRatio</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACX0lEQVQ4jbWTX0hTURzHv+fu3umdV9GtOZ3pcllGBomJ9RCmkiWIEJUQET2EMqF86aFeegqLHgoio1ICScoieugPiBlFFmpROUjNIub+NKeba2rqvdvuPKeXDIcsgugHB378fj8+X37fcw5hjOFfgvtTc8o7mdveHWv0+YJ5iWb45SQWi2kc7olCnteoHCGUMqbpejBkO99rPDlW5rjV3FjZkmXU+3SiKK8EkOUVxj2+9bZOe8ebhZxSRTCIQmAES1oLQADKp4EIc8gRFr3t+/SNe0oLelatYM0zO56dqS3fmh4eXkoxIrWvAwXegLta8bymYyak9lyGR7d57eHHtOt7aNaQ0AORU8OEqlg0HURTnXi96cCaK0AYEW0l+MAoQoIp48PHke0JAYwyBkYhameUQ3vz7lTt3NRdKH0ajxgqQMJzAMdBkRVdYgAAEA71G2Z6MnOyvSmSJB/bFblN5DHEsosghf3zZduK+1fdQhyEcKitr+r0B2dMAyPOcmd02oxiC2jUjJaSwbPZpoLJhAA1Ci3hGURRlO0Of8nN9/MNUUXSkrQsFQ4meNORG6/G2O/jGXdZ044OKzg3z3r77TUre81tL1pxirLMWnsoMB00LtfjPLh67/OJH3xRMgiHb96JOCVbxbobRONBQNqScffJ6JE4E2VZFvv6BirbXpkboGcA4eGaDOV73G4LAFBKSWRhNsmqfnHCosG159Lxt++GdgC/XuLD3sH60/fdFxjJBNMDAAVZ8CNfVJxPLzbs/uqa2Lj/0stHkWSDFlwS4FIhRKei3a3VNeS//sa/iZ/B6hMIr7Fq4QAAAABJRU5ErkJggg==',
             'options': [
