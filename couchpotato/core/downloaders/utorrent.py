@@ -78,20 +78,6 @@ class uTorrent(DownloaderBase):
         if not settings:
             return False
 
-        #Fix settings in case they are not set for CPS compatibility
-        new_settings = {}
-        if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
-            new_settings['seed_prio_limitul'] = 0
-            new_settings['seed_prio_limitul_flag'] = True
-            log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
-
-        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
-            new_settings['bt.read_only_on_complete'] = False
-            log.info('Updated uTorrent settings to not set the files to read only after completing.')
-
-        if new_settings:
-            self.utorrent_api.set_settings(new_settings)
-
         torrent_params = {}
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
