@@ -67,7 +67,8 @@ class Transmission(DownloaderBase):
         }
 
         if self.conf('directory'):
-            if os.path.isdir(self.conf('directory')):
+            host = cleanHost(self.conf('host')).rstrip('/').rsplit(':', 1)
+            if os.path.isdir(self.conf('directory')) or not (host[0] == '127.0.0.1' or host[0] == 'localhost'):
                 params['download-dir'] = self.conf('directory').rstrip(os.path.sep)
             else:
                 log.error('Download directory from Transmission settings: %s doesn\'t exist', self.conf('directory'))
