@@ -1,4 +1,6 @@
+import random
 import traceback
+from base64 import b64decode as bd
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss, tryUrlencode
@@ -21,6 +23,9 @@ class TheMovieDb(MovieProvider):
         },
     }
 
+    ak = ['ZjdmNTE3NzU4NzdlMGJiNjcwMzUyMDk1MmIzYzc4NDA=', 'ZTIyNGZlNGYzZmVjNWY3YjU1NzA2NDFmN2NkM2RmM2E=',
+          'YTNkYzExMWU2NjEwNWY2Mzg3ZTk5MzkzODEzYWU0ZDU=', 'ZjZiZDY4N2ZmYTYzY2QyODJiNmZmMmM2ODc3ZjI2Njk=']
+
     def __init__(self):
         addEvent('info.search', self.search, priority = 3)
         addEvent('movie.search', self.search, priority = 3)
@@ -29,6 +34,11 @@ class TheMovieDb(MovieProvider):
         addEvent('app.load', self.config)
 
     def config(self):
+
+        # Reset invalid key
+        if self.conf('api_key') == '9b939aee0aaafc12a65bf448e4af9543':
+            self.conf('api_key', '')
+
         configuration = self.request('configuration')
         if configuration:
             self.configuration = configuration
@@ -197,7 +207,7 @@ class TheMovieDb(MovieProvider):
         params = tryUrlencode(params)
 
         try:
-            url = 'https://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.conf('api_key'), '&%s' % params if params else '')
+            url = 'https://api.themoviedb.org/3/%s?api_key=%s%s' % (call, self.getApiKey(), '&%s' % params if params else '')
             data = self.getJsonData(url, show_error = False)
         except:
             log.debug('Movie not found: %s, %s', (call, params))
@@ -209,10 +219,14 @@ class TheMovieDb(MovieProvider):
         return data
 
     def isDisabled(self):
-        if self.conf('api_key') == '':
+        if self.getApiKey() == '':
             log.error('No API key provided.')
             return True
         return False
+
+    def getApiKey(self):
+        key = self.conf('api_key')
+        return bd(random.choice(self.ak)) if key == '' else key
 
 
 config = [{
@@ -227,7 +241,7 @@ config = [{
             'options': [
                 {
                     'name': 'api_key',
-                    'default': '9b939aee0aaafc12a65bf448e4af9543',
+                    'default': '',
                     'label': 'Api Key',
                 },
             ],
