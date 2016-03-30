@@ -103,7 +103,8 @@ var MoviesWanted = new Class({
 				var folder = self.folder_browser.getValue();
 				Api.request('renamer.scan', {
 					'data': {
-						'base_folder': folder
+						'base_folder': folder,
+						'add_chroot': true
 					}
 				});
 			};
