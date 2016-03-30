@@ -10,3 +10,8 @@
 .coverage
 coverage.xml
 nosetests.xml
+.couchpotato
+.gitconfig
+.viminfo
+.bash_history
+.ssh
