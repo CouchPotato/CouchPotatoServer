@@ -41,6 +41,7 @@ class Renamer(Plugin):
                 'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
                 'downloader': {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
+                'add_chroot': {'desc': 'Optional: if \'true\' all folders are considered as relative to current soft_chroot'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
         })
@@ -90,6 +91,12 @@ class Renamer(Plugin):
         # Backwards compatibility, to be removed after a few versions :)
         if not media_folder:
             media_folder = sp(kwargs.get('movie_folder'))
+
+	if kwargs.get('add_chroot'):
+            soft_chroot = Env.get('softchroot')
+            if base_folder is not None: base_folder = soft_chroot.chroot2abs(base_folder)
+            if media_folder is not None: media_folder = soft_chroot.chroot2abs(media_folder)
+            if to_folder is not None: to_folder = soft_chroot.chroot2abs(to_folder)
 
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
