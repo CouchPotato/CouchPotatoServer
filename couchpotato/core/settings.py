@@ -6,7 +6,7 @@ from hashlib import md5
 from CodernityDB.hash_index import HashIndex
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 
 class Settings(object):
@@ -178,7 +178,7 @@ class Settings(object):
             return tryFloat(self.p.get(section, option))
 
     def getDirectories(self, section, option):
-        value = self.p.get(section, option)
+        value = ss(self.p.get(section, option).decode('unicode_escape'))
         if value:
             return map(str.strip, str.split(value, self.directories_delimiter))
         return []
