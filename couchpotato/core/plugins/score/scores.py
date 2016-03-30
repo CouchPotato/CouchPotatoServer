@@ -61,7 +61,7 @@ def nameScore(name, year, preferred_words):
 
 def nameRatioScore(nzb_name, movie_name):
     try:
-        nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
+        nzb_words = re.split('\W+', str(fireEvent('scanner.create_file_identifier', nzb_name, single = True)))
         movie_words = re.split('\W+', simplifyString(movie_name))
 
         left_over = set(nzb_words) - set(movie_words)
