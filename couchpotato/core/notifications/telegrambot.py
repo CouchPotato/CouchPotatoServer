@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import requests
@@ -19,8 +19,15 @@ class TelegramBot(Notification):
         token = self.conf('bot_token')
         usr_id = self.conf('receiver_user_id')
 
+        # Add IMDB url to message:
+        if data:
+            imdb_id = getIdentifier(data)
+            if imdb_id:
+                url = 'http://www.imdb.com/title/{0}/'.format(imdb_id)
+                message = '{0}\n{1}'.format(message, url)
+
         # Cosntruct message
-        payload = {'chat_id': usr_id, 'text': message}
+        payload = {'chat_id': usr_id, 'text': message, 'parse_mode': 'Markdown'}
 
         # Send message user Telegram's Bot API
         response = requests.post(self.TELEGRAM_API % (token, "sendMessage"), data=payload)
