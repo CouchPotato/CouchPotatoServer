@@ -20,6 +20,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Login failed!'
     only_tables_tags = SoupStrainer('table')
 
     torrent_name_cell = 1

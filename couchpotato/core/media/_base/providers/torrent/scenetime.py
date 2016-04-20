@@ -29,6 +29,7 @@ class Base(TorrentProvider):
     ]
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect'
     cat_backup_id = None
 
     def _searchOnTitle(self, title, movie, quality, results):
@@ -47,7 +48,7 @@ class Base(TorrentProvider):
                     return
 
                 entries = result_table.find_all('tr')
-                
+
                 for result in entries[1:]:
                     cells = result.find_all('td')
                     link = result.find('a', attrs = {'class': 'index'})
@@ -57,9 +58,9 @@ class Base(TorrentProvider):
                     name_row = cells[1].contents[0]
                     name = name_row.getText()
                     seeders_row = cells[6].contents[0]
-                    seeders = seeders_row.getText()		     
-                    
-                    
+                    seeders = seeders_row.getText()
+
+
                     results.append({
                         'id': torrent_id,
                         'name': name,
@@ -67,7 +68,7 @@ class Base(TorrentProvider):
                         'detail_url': self.urls['detail'] % torrent_id,
                         'size': size,
                         'seeders': seeders,
-                    })		    
+                    })
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))

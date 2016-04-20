@@ -20,6 +20,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Invalid authentication credentials'
 
     def _post_query(self, **params):
 
@@ -37,6 +38,9 @@ class Base(TorrentProvider):
 
             if result:
                 if result['status'] != 0:
+                    if self.login_fail_msg in result['message']: # Check for login failure
+                        self.disableAccount()
+                        return
                     log.error('Error searching hdbits: %s' % result['message'])
                 else:
                     return result['data']
