@@ -22,6 +22,7 @@ class Base(TorrentProvider):
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect.'
 
     def _search(self, media, quality, results):
 

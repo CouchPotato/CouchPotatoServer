@@ -22,6 +22,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Invalid username and password combination'
     cat_backup_id = None
 
     def buildUrl(self, title, media, quality):

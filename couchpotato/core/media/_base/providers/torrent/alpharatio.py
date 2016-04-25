@@ -22,6 +22,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = '</span> attempts remaining.'
 
     def _search(self, media, quality, results):
 

@@ -22,6 +22,8 @@ class Base(TorrentProvider):
         'login_check': 'https://www.ilovetorrents.me'
     }
 
+    login_fail_msg = 'Login failed!'
+
     cat_ids = [
         (['80'], ['720p', '1080p']),
         (['41'], ['brrip']),

@@ -32,6 +32,7 @@ class Base(TorrentProvider):
     ]
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect'
     cat_backup_id = None
 
     def _searchOnTitle(self, title, movie, quality, results):

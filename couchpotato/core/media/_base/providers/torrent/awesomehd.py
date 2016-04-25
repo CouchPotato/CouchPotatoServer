@@ -19,12 +19,17 @@ class Base(TorrentProvider):
         'download': 'https://awesome-hd.me/torrents.php?action=download&id=%s&authkey=%s&torrent_pass=%s',
     }
     http_time_between_calls = 1
+    login_fail_msg = 'Please check that you provided a valid API Key, username, and action.'
 
     def _search(self, movie, quality, results):
 
         data = self.getHTMLData(self.urls['search'] % (self.conf('passkey'), getIdentifier(movie), self.conf('only_internal')))
 
         if data:
+            if self.login_fail_msg in data:
+                self.disableAccount()
+                return
+
             try:
                 soup = BeautifulSoup(data)
 
