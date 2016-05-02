@@ -62,7 +62,7 @@ class XBMC(Notification):
                     if result.get('result') and result['result'] == 'OK':
                         successful += 1
                     elif result.get('error'):
-                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                        log.error('Kodi error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
@@ -73,7 +73,7 @@ class XBMC(Notification):
 
         success = False
 
-        # XBMC JSON-RPC version request
+        # Kodi JSON-RPC version request
         response = self.request(host, [
             ('JSONRPC.Version', None, {})
         ])
@@ -100,15 +100,15 @@ class XBMC(Notification):
                         break
 
             elif result.get('result') and type(result['result']['version']).__name__ == 'dict':
-                # XBMC JSON-RPC v6 returns an array object containing
+                # Kodi JSON-RPC v6 returns an array object containing
                 # major, minor and patch number
                 xbmc_rpc_version = str(result['result']['version']['major'])
                 xbmc_rpc_version += '.' + str(result['result']['version']['minor'])
                 xbmc_rpc_version += '.' + str(result['result']['version']['patch'])
 
-                log.debug('Kodie JSON-RPC Version: %s', xbmc_rpc_version)
+                log.debug('Kodi JSON-RPC Version: %s', xbmc_rpc_version)
 
-                # ok, XBMC version is supported
+                # ok, Kodi version is supported
                 self.use_json_notifications[host] = True
 
                 # send the text message
@@ -122,7 +122,7 @@ class XBMC(Notification):
                         log.error('Kodi error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
                         break
 
-            # error getting version info (we do have contact with XBMC though)
+            # error getting version info (we do have contact with Kodi though)
             elif result.get('error'):
                 log.error('Kodi error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
