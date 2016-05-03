@@ -60,10 +60,10 @@ var AboutSettingTab = new Class({
 		);
 
 		if (!self.hide_about_update){
-			self.version_text.addEvents({		
+			self.version_text.addEvents({
 				'click': App.checkForUpdate.bind(App, function(json){
 					self.fillVersion(json.info);
-				}),			
+				}),
 				'mouseenter': function(){
 					this.set('text', 'Check for updates');
 				},
@@ -120,10 +120,7 @@ var AboutSettingTab = new Class({
 					new Element('li.icon-ok[text=No speed or download limits]'),
 					new Element('li.icon-ok[text=Free SSL Encrypted connections]')
 				)
-			),
-			new Element('div.donate', {
-				'html': 'Or support me via: <iframe src="https://couchpota.to/donate.html" scrolling="no"></iframe>'
-			})
+			)
 		);
 
 	},
