@@ -76,7 +76,6 @@ class Base(TorrentProvider):
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
-                    torrentdesc += ' (%s)' % quality_id
                     torrent_name = torrent['ReleaseName'] + ' - %s' % torrentdesc
 
                     def extra_check(item):
