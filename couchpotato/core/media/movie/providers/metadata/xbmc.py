@@ -232,8 +232,8 @@ config = [{
             'tab': 'renamer',
             'subtab': 'metadata',
             'name': 'xbmc_metadata',
-            'label': 'XBMC',
-            'description': 'Enable metadata XBMC can understand',
+            'label': 'Kodi',
+            'description': 'Enable metadata Kodi can understand',
             'options': [
                 {
                     'name': 'meta_enabled',
