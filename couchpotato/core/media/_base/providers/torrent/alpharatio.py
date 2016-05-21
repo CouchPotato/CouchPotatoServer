@@ -43,14 +43,13 @@ class Base(TorrentProvider):
                     link = result.find('a', attrs = {'dir': 'ltr'})
                     url = result.find('a', attrs = {'title': 'Download'})
                     tds = result.find_all('td')
-                    size = tds[5].contents[0].strip('\n ')
 
                     results.append({
                         'id': link['href'].replace('torrents.php?id=', '').split('&')[0],
                         'name': link.contents[0],
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
-                        'size': self.parseSize(size),
+                        'size': self.parseSize(tds[len(tds)-4].string),
                         'seeders': tryInt(tds[len(tds)-2].string),
                         'leechers': tryInt(tds[len(tds)-1].string),
                     })
