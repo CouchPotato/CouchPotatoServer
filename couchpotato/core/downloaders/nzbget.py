@@ -122,7 +122,7 @@ class NZBGet(DownloaderBase):
         rpc = self.getRPC()
 
         try:
-            if rpc.writelog('INFO', 'CouchPotato connected to check status'):
+            if rpc.writelog('DETAIL', 'CouchPotato connected to check status'):
                 log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
