@@ -29,7 +29,7 @@ class Updater(Plugin):
 
     available_notified = False
     _lock = RLock()
-    last_check = 'updater.last_check'
+    last_check = 'updater.last_checked'
 
     def __init__(self):
 
