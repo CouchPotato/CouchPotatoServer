@@ -4,15 +4,18 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import getImdb, md5
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.media._base.providers.base import Provider
 
 
 log = CPLog(__name__)
 
 
-class UserscriptBase(Plugin):
+class UserscriptBase(Provider):
+
+    type = 'userscript'
 
     version = 1
+    http_time_between_calls = 0
 
     includes = []
     excludes = []

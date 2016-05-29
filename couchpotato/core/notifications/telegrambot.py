@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import requests
@@ -19,8 +19,15 @@ class TelegramBot(Notification):
         token = self.conf('bot_token')
         usr_id = self.conf('receiver_user_id')
 
+        # Add IMDB url to message:
+        if data:
+            imdb_id = getIdentifier(data)
+            if imdb_id:
+                url = 'http://www.imdb.com/title/{0}/'.format(imdb_id)
+                message = '{0}\n{1}'.format(message, url)
+
         # Cosntruct message
-        payload = {'chat_id': usr_id, 'text': message}
+        payload = {'chat_id': usr_id, 'text': message, 'parse_mode': 'Markdown'}
 
         # Send message user Telegram's Bot API
         response = requests.post(self.TELEGRAM_API % (token, "sendMessage"), data=payload)
@@ -51,12 +58,12 @@ config = [{
                 },
                 {
                     'name': 'bot_token',
-                    'description': 'Your bot token. Contact <a href="http://telegram.me/BotFather">@BotFather</a> on Telegram to get one.'
+                    'description': 'Your bot token. Contact <a href="http://telegram.me/BotFather" target="_blank">@BotFather</a> on Telegram to get one.'
                 },
                 {
                     'name': 'receiver_user_id',
                     'label': 'Recieving User/Group ID',
-                    'description': 'Receiving user/group - notifications will be sent to this user or group. Contact <a href="http://telegram.me/myidbot">@myidbot</a> on Telegram to get an ID.'
+                    'description': 'Receiving user/group - notifications will be sent to this user or group. Contact <a href="http://telegram.me/myidbot" target="_blank">@myidbot</a> on Telegram to get an ID.'
                 },
                 {
                     'name': 'on_snatch',

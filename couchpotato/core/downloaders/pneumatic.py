@@ -104,7 +104,7 @@ config = [{
             'list': 'download_providers',
             'name': 'pneumatic',
             'label': 'Pneumatic',
-            'description': 'Use <a href="http://forum.xbmc.org/showthread.php?tid=97657" target="_blank">Pneumatic</a> to download .strm files.',
+            'description': 'Use <a href="http://forum.kodi.tv/showthread.php?tid=97657" target="_blank">Pneumatic</a> to download .strm files.',
             'options': [
                 {
                     'name': 'enabled',

@@ -29,7 +29,8 @@ var AboutSettingTab = new Class({
 
 		self.settings.default_action = 'about';
 		// WebUI Feature:
-		self.hide_dirs = !! App.options && App.options.webui_feature && App.options.webui_feature.hide_about_dirs;
+		self.hide_about_dirs = !! App.options && App.options.webui_feature && App.options.webui_feature.hide_about_dirs;
+		self.hide_about_update = !! App.options && App.options.webui_feature && App.options.webui_feature.hide_about_update;
 	},
 
 	createAbout: function(){
@@ -48,29 +49,34 @@ var AboutSettingTab = new Class({
 			(about_block = new Element('dl.info')).adopt(
 				new Element('dt[text=Version]'),
 				self.version_text = new Element('dd.version', {
-					'text': 'Getting version...',
-					'events': {
-						'click': App.checkForUpdate.bind(App, function(json){
-							self.fillVersion(json.info);
-						}),
-						'mouseenter': function(){
-							this.set('text', 'Check for updates');
-						},
-						'mouseleave': function(){
-							self.fillVersion(Updater.getInfo());
-						}
-					}
+					'text': 'Getting version...'
 				}),
 
 				new Element('dt[text=Updater]'),
 				self.updater_type = new Element('dd.updater'),
 				new Element('dt[text=ID]'),
 				new Element('dd', {'text': App.getOption('pid')})
-
 			)
 		);
 
-		if (!self.hide_dirs){
+		if (!self.hide_about_update){
+			self.version_text.addEvents({		
+				'click': App.checkForUpdate.bind(App, function(json){
+					self.fillVersion(json.info);
+				}),			
+				'mouseenter': function(){
+					this.set('text', 'Check for updates');
+				},
+				'mouseleave': function(){
+					self.fillVersion(Updater.getInfo());
+				}
+			});
+		} else {
+			// override cursor style from CSS
+			self.version_text.setProperty('style', 'cursor: auto');
+		}
+
+		if (!self.hide_about_dirs){
 			about_block.adopt(
 				new Element('dt[text=Directories]'),
 				new Element('dd', {'text': App.getOption('app_dir')}),
@@ -99,7 +105,7 @@ var AboutSettingTab = new Class({
 					}),
 					new Element('span[text=or]'),
 					new Element('a', {
-						'href': 'http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
+						'href': 'https://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
 						'target': '_blank',
 						'text': 'Newshosting'
 					}),

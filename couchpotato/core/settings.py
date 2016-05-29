@@ -130,14 +130,15 @@ class Settings(object):
 
     def get(self, option = '', section = 'core', default = None, type = None):
         if self.isOptionMeta(section, option):
-            self.log.warning('set::option "%s.%s" cancelled, since it is a META option', (section, option))
+            self.log.warning('get::option "%s.%s" cancelled, since it is a META option', (section, option))
             return None
 
+        tp = type
         try:
-            type = self.getType(section, option) if not type else type
+            tp = self.getType(section, option) if not tp else tp
 
-            if hasattr(self, 'get%s' % type.capitalize()):
-                return getattr(self, 'get%s' % type.capitalize())(section, option)
+            if hasattr(self, 'get%s' % tp.capitalize()):
+                return getattr(self, 'get%s' % tp.capitalize())(section, option)
             else:
                 return self.getUnicode(section, option)
 
@@ -179,6 +180,7 @@ class Settings(object):
 
     def getDirectories(self, section, option):
         value = self.p.get(section, option)
+
         if value:
             return map(str.strip, str.split(value, self.directories_delimiter))
         return []
@@ -256,10 +258,10 @@ class Settings(object):
         self.types[section][option] = type
 
     def getType(self, section, option):
-        type = None
-        try: type = self.types[section][option]
-        except: type = 'unicode' if not type else type
-        return type
+        tp = None
+        try: tp = self.types[section][option]
+        except: tp = 'unicode' if not tp else tp
+        return tp
 
     def addOptions(self, section_name, options):
         # no additional actions (related to ro-rw options) are required here

@@ -53,7 +53,7 @@ config = [{
                 },
                 {
                     'name': 'url',
-                    'description': 'The URL to send notification data to when '
+                    'description': 'The URL to send notification data to when something happens'
                 },
                 {
                     'name': 'on_snatch',

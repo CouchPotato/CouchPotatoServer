@@ -1,5 +1,8 @@
 language: python
+
+# with enabled SUDO the build goes slower
 sudo: false
+
 python:
   # - "2.6"
   - "2.7"
@@ -15,18 +18,13 @@ cache:
   directories:
   - node_modules
   - libs
+  - lib
 
 # command to install dependencies
 install:
-  - npm install
   - pip install --upgrade pip
-  - pip install coverage
-  - pip install coveralls
-  # disabled, since we don't require colors for tests on travis
-  - pip install --upgrade nose
-  # - pip install rednose
-
-  - nosetests --plugins
+  - npm install
+  - pip install -r requirements-dev.txt -t ./libs
 
 # command to run tests
 script:

@@ -306,7 +306,7 @@ config = [{
             'list': 'download_providers',
             'name': 'rtorrent',
             'label': 'rTorrent',
-            'description': '',
+            'description': 'Use <a href="https://rakshasa.github.io/rtorrent/" target="_blank">rTorrent</a> to download torrents.',
             'wizard': True,
             'options': [
                 {

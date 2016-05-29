@@ -390,11 +390,11 @@ class Release(Plugin):
                 continue
 
             if rel['score'] < quality_custom.get('minimum_score'):
-                log.info('Ignored, score "%s" to low, need at least "%s": %s', (rel['score'], quality_custom.get('minimum_score'), rel['name']))
+                log.info('Ignored, score "%s" too low, need at least "%s": %s', (rel['score'], quality_custom.get('minimum_score'), rel['name']))
                 continue
 
             if rel['size'] <= 50:
-                log.info('Ignored, size "%sMB" to low: %s', (rel['size'], rel['name']))
+                log.info('Ignored, size "%sMB" too low: %s', (rel['size'], rel['name']))
                 continue
 
             if 'seeders' in rel and rel.get('seeders') < minimum_seeders:

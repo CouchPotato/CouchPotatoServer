@@ -22,6 +22,7 @@ class Base(TorrentProvider):
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect.'
 
     def _search(self, media, quality, results):
 
@@ -93,7 +94,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'BiT-HDTV',
-            'description': '<a href="https://bit-hdtv.com">BiT-HDTV</a>',
+            'description': '<a href="https://bit-hdtv.com" target="_blank">BiT-HDTV</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABMklEQVR4AZ3Qu0ojcQCF8W9MJcQbJNgEEQUbQVIqWgnaWfkIvoCgggixEAmIhRtY2GV3w7KwU61B0EYIxmiw0YCik84ipaCuc0nmP5dcjIUgOjqDvxf4OAdf9mnMLcUJyPyGSCP+YRdC+Kp8iagJKhuS+InYRhTGgDbeV2uEMand4ZRxizjXHQEimxhraAnUr73BNqQxMiNeV2SwcjTLEVtb4Zl10mXutvOWm2otw5Sxz6TGTbdd6ncuYvVLXAXrvM+ruyBpy1S3JLGDfUQ1O6jn5vTsrJXvqSt4UNfj6vxTRPxBHER5QeSirhLGk/5rWN+ffB1XZuxjnDy1q87m7TS+xOGA+Iv4gfkbaw+nOMXHDHnITGEk0VfRFnn4Po4vNYm6RGukmggR0L08+l+e4HMeASo/i6AJUjLgAAAAAElFTkSuQmCC',
             'options': [

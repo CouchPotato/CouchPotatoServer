@@ -84,8 +84,15 @@ class XBMC(MovieMetaData):
         except:
             pass
 
+        # mpaa
+        try:
+            mpaa = SubElement(nfoxml, 'mpaa')
+            mpaa.text = toUnicode('Rated %s' % movie_info.get('mpaa'))
+        except:
+            pass
+
         # Other values
-        types = ['year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
+        types = ['year', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
         for type in types:
 
             if ':' in type:
@@ -225,8 +232,8 @@ config = [{
             'tab': 'renamer',
             'subtab': 'metadata',
             'name': 'xbmc_metadata',
-            'label': 'XBMC',
-            'description': 'Enable metadata XBMC can understand',
+            'label': 'Kodi',
+            'description': 'Enable metadata Kodi can understand',
             'options': [
                 {
                     'name': 'meta_enabled',

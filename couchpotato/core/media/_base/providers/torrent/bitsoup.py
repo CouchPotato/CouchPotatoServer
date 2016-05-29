@@ -20,6 +20,7 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Login failed!'
     only_tables_tags = SoupStrainer('table')
 
     torrent_name_cell = 1
@@ -91,7 +92,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'Bitsoup',
-            'description': '<a href="https://bitsoup.me">Bitsoup</a>',
+            'description': '<a href="https://bitsoup.me" target="_blank">Bitsoup</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAB8ElEQVR4AbWSS2sTURiGz3euk0mswaE37HhNhIrajQheFgF3rgR/lAt/gOBCXNZlo6AbqfUWRVCxi04wqUnTRibpJLaJzdzOOZ6WUumyC5/VHOb9eN/FA91uFx0FjI4IPfgiGLTWH73tn348GKmN7ijD0d2b41fO5qJEaX24AWNIUrVQCTTJ3Llx6vbV6Vtzk7Gi9+ebi996guFDDYAQAVj4FExP5qdOZB49W62t/zH3hECcwsPnbWeMXz6Xi2K1f0ApeK3hMCHHbP5gvvoriBgFAAQJEAxhjJ4u+YWTNsVI6b1JgtPWZkoIefKy4fcii2OTw2BABs7wj3bYDlLL4rvjGWOdTser1j5Xf7c3Q/MbHQYApxItvnm31mhQQ71eX2vUB76/vsWB2hg0QuogrMwLIG8P3InM2/eVGXeDViqVwWB79vRU2lgJYmdHcgXCTAXQFJTN5HguvDCR2Hxsxe8EvT54nlcul5vNpqDIEgwRQanAhAAABgRIyiQcjpIkkTOuWyqVoN/vSylX67XXH74uV1vHRUyxxFqbLBCSmBpiXSq6xcL5QrGYzWZ3XQIAwdlOJB+/aL764ucdmncYs0WsCI7kvTnn+qyDMEnTVCn1Tz5KsBFg6fvWcmsUAcnYNC/g2hnromvvqbHvxv+39S+MX+bWkFXwAgAAAABJRU5ErkJggg==',
             'options': [

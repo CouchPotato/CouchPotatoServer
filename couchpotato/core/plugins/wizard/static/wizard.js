@@ -47,7 +47,7 @@ Page.Wizard = new Class({
 			'title': 'Finishing Up',
 			'description': 'Are you done? Did you fill in everything as much as possible?' +
 				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' +
-				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f">Usenet Server</a> or <a href="http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df">Newshosting</a>.</div>',
+				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f" target="_blank">Usenet Server</a> or <a href="https://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df" target="_blank">Newshosting</a>.</div>',
 			'content': new Element('div').grab(
 				new Element('a.button.green', {
 					'styles': {

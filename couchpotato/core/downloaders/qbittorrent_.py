@@ -1,5 +1,6 @@
 from base64 import b16encode, b32decode
 from hashlib import sha1
+from datetime import timedelta
 import os
 
 from bencode import bencode, bdecode
@@ -23,12 +24,12 @@ class qBittorrent(DownloaderBase):
     def __init__(self):
         super(qBittorrent, self).__init__()
 
-    def connect(self):
-        if self.qb is not None:
+    def connect(self, reconnect = False):
+        if not reconnect and self.qb is not None:
             return self.qb
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = False)
-
+        
         if self.conf('username') and self.conf('password'):
             self.qb = QBittorrentClient(url)
             self.qb.login(username=self.conf('username'),password=self.conf('password'))
@@ -41,7 +42,9 @@ class qBittorrent(DownloaderBase):
         """ Check if connection works
         :return: bool
         """
-
+        
+        self.connect(True)
+        
         return self.qb._is_authenticated
 
     def download(self, data = None, media = None, filedata = None):
@@ -98,10 +101,10 @@ class qBittorrent(DownloaderBase):
 
     def getTorrentStatus(self, torrent):
 
-        if torrent.state in ('uploading', 'queuedUP', 'stalledUP'):
+        if torrent['state'] in ('uploading', 'queuedUP', 'stalledUP'):
             return 'seeding'
 
-        if torrent.progress == 1:
+        if torrent['progress'] == 1:
             return 'completed'
 
         return 'busy'
@@ -121,39 +124,39 @@ class qBittorrent(DownloaderBase):
             return []
 
         try:
-            torrents = self.qb.torrents(label=self.conf('label'))
+            torrents = self.qb.torrents(status='all', label=self.conf('label'))
 
             release_downloads = ReleaseDownloadList(self)
 
             for torrent in torrents:
-                if torrent.hash in ids:
-                    torrent_filelist = self.qb.get_torrent_files(torrent.hash)
+                if torrent['hash'] in ids:
+                    torrent_filelist = self.qb.get_torrent_files(torrent['hash'])
 
                     torrent_files = []
-                    torrent_dir = os.path.join(torrent.save_path, torrent.name)
+                    torrent_dir = os.path.join(torrent['save_path'], torrent['name'])
 
                     if os.path.isdir(torrent_dir):
-                        torrent.save_path = torrent_dir
+                        torrent['save_path'] = torrent_dir
 
                     if len(torrent_filelist) > 1 and os.path.isdir(torrent_dir): # multi file torrent, path.isdir check makes sure we're not in the root download folder
-                        for root, _, files in os.walk(torrent.save_path):
+                        for root, _, files in os.walk(torrent['save_path']):
                             for f in files:
                                 torrent_files.append(sp(os.path.join(root, f)))
 
                     else: # multi or single file placed directly in torrent.save_path
                         for f in torrent_filelist:
-                            file_path = os.path.join(torrent.save_path, f.name)
+                            file_path = os.path.join(torrent['save_path'], f['name'])
                             if os.path.isfile(file_path):
                                 torrent_files.append(sp(file_path))
 
                     release_downloads.append({
-                        'id': torrent.hash,
-                        'name': torrent.name,
+                        'id': torrent['hash'],
+                        'name': torrent['name'],
                         'status': self.getTorrentStatus(torrent),
-                        'seed_ratio': torrent.ratio,
-                        'original_status': torrent.state,
-                        'timeleft': torrent.progress * 100 if torrent.progress else -1, # percentage
-                        'folder': sp(torrent.save_path),
+                        'seed_ratio': torrent['ratio'],
+                        'original_status': torrent['state'],
+                        'timeleft': str(timedelta(seconds = torrent['eta'])),
+                        'folder': sp(torrent['save_path']),
                         'files': torrent_files
                     })
 
@@ -206,8 +209,8 @@ config = [{
             'tab': 'downloaders',
             'list': 'download_providers',
             'name': 'qbittorrent',
-            'label': 'qbittorrent',
-            'description': '',
+            'label': 'qBittorrent',
+            'description': 'Use <a href="http://www.qbittorrent.org/" target="_blank">qBittorrent</a> to download torrents.',
             'wizard': True,
             'options': [
                 {

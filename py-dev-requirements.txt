@@ -1,5 +1,0 @@
-nose
-rednose
-nose-htmloutput
-coverage
-coveralls

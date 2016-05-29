@@ -58,7 +58,7 @@ class Base(TorrentProvider):
                 log.debug('Movie %s (%s) has %d torrents', (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
                 for torrent in ptpmovie['Torrents']:
                     torrent_id = tryInt(torrent['Id'])
-                    torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
+                    torrentdesc = ''
                     torrentscore = 0
 
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
@@ -76,8 +76,7 @@ class Base(TorrentProvider):
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
-                    torrentdesc += ' (%s)' % quality_id
-                    torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (movie_title, ptpmovie['Year'], torrentdesc))
+                    torrent_name = torrent['ReleaseName'] + ' - %s' % torrentdesc
 
                     def extra_check(item):
                         return self.torrentMeetsQualitySpec(item, quality_id)
