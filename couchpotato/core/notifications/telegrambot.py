@@ -3,6 +3,10 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import requests
 import six
+#Fix ascii codec encode errors
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 log = CPLog(__name__)
 
