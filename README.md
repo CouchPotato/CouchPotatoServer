@@ -48,7 +48,6 @@ Linux:
 * (Ubuntu / Debian with upstart) Change the paths inside the default file `sudo nano /etc/default/couchpotato`
 * (Ubuntu / Debian with upstart) Make it executable `sudo chmod +x /etc/init.d/couchpotato`
 * (Ubuntu / Debian with upstart) Add it to defaults `sudo update-rc.d couchpotato defaults`
-* (Linux with systemd) Edit CouchPotatoServer/CouchPotato.py replace #!/usr/bin/env python with #!/usr/bin/python2 
 * (Linux with systemd)To run on boot copy the systemd config `sudo cp CouchPotatoServer/init/couchpotato.service /etc/systemd/system/couchpotato.service`
 * (Linux with systemd) Update the systemd config file with your user and path to CouchPotato.py
 * (Linux with systemd) Enable it at boot with `sudo systemctl enable couchpotato`
