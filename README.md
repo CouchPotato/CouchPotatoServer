@@ -42,7 +42,7 @@ Linux:
 * 'cd' to the folder of your choosing.
 * Install [PyOpenSSL](https://pypi.python.org/pypi/pyOpenSSL) with `pip install --upgrade pyopenssl`
 * Run `git clone https://github.com/CouchPotato/CouchPotatoServer.git`
-* Then do `python CouchPotatoServer/CouchPotato.py` to start
+* Then do `python2 CouchPotatoServer/CouchPotato.py` to start
 * (Ubuntu / Debian with upstart) To run on boot copy the init script `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
 * (Ubuntu / Debian with upstart) Copy the default paths file `sudo cp CouchPotatoServer/init/ubuntu.default /etc/default/couchpotato`
 * (Ubuntu / Debian with upstart) Change the paths inside the default file `sudo nano /etc/default/couchpotato`
