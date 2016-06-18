@@ -67,7 +67,7 @@ class Transmission(DownloaderBase):
         }
 
         if self.conf('directory'):
-            if os.path.isdir(self.conf('directory')):
+            if  self.conf('remote_host', default = False) or os.path.isdir(self.conf('directory')):
                 params['download-dir'] = self.conf('directory').rstrip(os.path.sep)
             else:
                 log.error('Download directory from Transmission settings: %s doesn\'t exist', self.conf('directory'))
@@ -325,6 +325,13 @@ config = [{
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Download to this directory. Keep empty for default Transmission download directory.',
+                },
+                {
+                    'name': 'remote_host',
+                    'type': 'bool',
+                    'advanced': True,
+                    'default' : False,
+                    'description': 'Transmission is hosted on a remote machine',
                 },
                 {
                     'name': 'remove_complete',
