@@ -142,7 +142,7 @@ class QBittorrentClient(object):
         Returns a list of torrents matching the supplied filters.
 
         :param status: Current status of the torrents.
-        :param label: Fetch all torrents with the supplied label.
+        :param category: Fetch all torrents with the supplied label.
         :param sort: Sort torrents by.
         :param reverse: Enable reverse sorting.
         :param limit: Limit the number of torrents returned.
@@ -158,7 +158,7 @@ class QBittorrentClient(object):
 
         params = {
             'filter': status,
-            'label': label,
+            'category': label,
             'sort': sort,
             'reverse': reverse,
             'limit': limit,
@@ -282,7 +282,7 @@ class QBittorrentClient(object):
 
         :param link: URL Link or list of.
         :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s).
+        :param category: Label of the torrent(s).
 
         :return: Empty JSON data.
         """
@@ -293,7 +293,7 @@ class QBittorrentClient(object):
         if save_path:
             data.update({'savepath': save_path})
         if label:
-            data.update({'label': label})
+            data.update({'category': label})
 
         return self._post('command/download', data=data)
 
@@ -304,7 +304,7 @@ class QBittorrentClient(object):
 
         :param file_buffer: Single file() buffer or list of.
         :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s).
+        :param category: Label of the torrent(s).
 
         :return: Empty JSON data.
         """
@@ -321,7 +321,7 @@ class QBittorrentClient(object):
         if save_path:
             data.update({'savepath': save_path})
         if label:
-            data.update({'label': label})
+            data.update({'category': label})
         return self._post('command/upload', data=data, files=torrent_files)
 
     def add_trackers(self, infohash, trackers):
