@@ -142,7 +142,8 @@ class QBittorrentClient(object):
         Returns a list of torrents matching the supplied filters.
 
         :param status: Current status of the torrents.
-        :param label: Fetch all torrents with the supplied label.
+        :param label: Fetch all torrents with the supplied label. qbittorrent < 3.3.5
+        :param category: Fetch all torrents with the supplied label. qbittorrent >= 3.3.5
         :param sort: Sort torrents by.
         :param reverse: Enable reverse sorting.
         :param limit: Limit the number of torrents returned.
@@ -155,16 +156,27 @@ class QBittorrentClient(object):
                        'paused', 'active', 'inactive']
         if status not in STATUS_LIST:
             raise ValueError("Invalid status.")
-
-        params = {
-            'filter': status,
-            'label': label,
-            'sort': sort,
-            'reverse': reverse,
-            'limit': limit,
-            'offset': offset
-        }
-
+        
+        if self.api_version < 10:
+            params = {
+                'filter': status,
+                'label': label,
+                'sort': sort,
+                'reverse': reverse,
+                'limit': limit,
+                'offset': offset
+            }
+            
+        elif self.api_version >= 10:
+            params = {
+                'filter': status,
+                'category': label,
+                'sort': sort,
+                'reverse': reverse,
+                'limit': limit,
+                'offset': offset
+            }
+        
         return self._get('query/torrents', params=params)
 
     def get_torrent(self, infohash):
@@ -282,7 +294,8 @@ class QBittorrentClient(object):
 
         :param link: URL Link or list of.
         :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s).
+        :param label: Label of the torrent(s). qbittorrent < 3.3.5
+        :param category: Label of the torrent(s). qbittorrent >= 3.3.5
 
         :return: Empty JSON data.
         """
@@ -292,8 +305,12 @@ class QBittorrentClient(object):
 
         if save_path:
             data.update({'savepath': save_path})
-        if label:
+        if self.api_version < 10 and label:
             data.update({'label': label})
+            
+        elif self.api_version >= 10 and label:
+            data.update({'category': label})
+        
 
         return self._post('command/download', data=data)
 
@@ -304,7 +321,8 @@ class QBittorrentClient(object):
 
         :param file_buffer: Single file() buffer or list of.
         :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s).
+        :param label: Label of the torrent(s). qbittorrent < 3.3.5
+        :param category: Label of the torrent(s). qbittorrent >= 3.3.5
 
         :return: Empty JSON data.
         """
@@ -320,8 +338,12 @@ class QBittorrentClient(object):
 
         if save_path:
             data.update({'savepath': save_path})
-        if label:
+        if self.api_version < 10 and label:
             data.update({'label': label})
+            
+        elif self.api_version >= 10 and label:
+            data.update({'category': label})
+            
         return self._post('command/upload', data=data, files=torrent_files)
 
     def add_trackers(self, infohash, trackers):
