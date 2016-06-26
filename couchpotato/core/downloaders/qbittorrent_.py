@@ -24,9 +24,9 @@ class qBittorrent(DownloaderBase):
     def __init__(self):
         super(qBittorrent, self).__init__()
 
-    def connect(self, reconnect = False):
-        if not reconnect and self.qb is not None:
-            return self.qb
+    def connect(self):
+        if self.qb is not None:
+            self.qb.logout
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = False)
         
@@ -43,7 +43,7 @@ class qBittorrent(DownloaderBase):
         :return: bool
         """
         
-        self.connect(True)
+        self.connect()
         
         return self.qb._is_authenticated
 
