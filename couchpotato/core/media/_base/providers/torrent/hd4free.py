@@ -24,9 +24,9 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
         data = self.getJsonData(self.urls['search'] % (self.conf('apikey'), self.conf('username'), getIdentifier(movie), self.conf('internal_only')))
-
         if data:
-            if self.login_fail_msg in data['error']: # Check for login failure
+            
+            if 'error' in data and self.login_fail_msg in data['error']: # Check for login failure
                 self.disableAccount()
                 return
 
