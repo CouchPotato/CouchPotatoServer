@@ -31,7 +31,7 @@ class Base(TorrentProvider):
                 if self.login_fail_msg in data['error']: # Check for login failure
                     self.disableAccount()
                 else:
-                    log.warn('%s return an error (possible rate limit): %s', (self.getName(), data['error']))
+                    log.error('%s returned an error (possible rate limit): %s', (self.getName(), data['error']))
                 return
 
             try:
