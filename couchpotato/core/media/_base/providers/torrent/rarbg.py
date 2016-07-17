@@ -174,9 +174,9 @@ config = [{
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'Rarbg',
+            'name': 'RARBG',
             'wizard': True,
-            'description': '<a href="https://rarbg.to/torrents.php">RARBG</a>',
+            'description': '<a href="https://rarbg.to/torrents.php" target="_blank">RARBG</a>',
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB+UlEQVQ4jYXTP2hcRxDH8c8JJZjbYNy8V7gIr0qhg5AiFnETX'
                     '+PmVAtSmKDaUhUiFyGxjXFlp0hhHy5cqFd9lSGcU55cBU6EEMIj5dsmMewSjNGmOJ3852wysMyww37n94OdXimlh49xDR/hxGr'
                     '8hZ/xx0qnlHK5lPKk/H/8U0r5oZTyQSmltzzr+AKfT+ed8UFLeHNAH1UVbA2r88NBfQcX8O2yv74sUqKNWT+T01sy2+zpUbS/w'

@@ -78,7 +78,7 @@ config = [{
             'tab': 'searcher',
             'list': 'nzb_providers',
             'name': 'NZBClub',
-            'description': 'Free provider, less accurate. See <a href="https://www.nzbclub.com/">NZBClub</a>',
+            'description': 'Free provider, less accurate. See <a href="https://www.nzbclub.com/" target="_blank">NZBClub</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACEUlEQVQ4y3VSMWgUQRR9/8/s7OzeJSdnTsVGghLEYBNQjBpQiRBFhIB2EcHG1kbs0murhZAmVocExEZQ0c7CxkLINYcJJpoYj9wZcnu72fF21uJSXMzuhyne58/j/fcf4b+KokgBIOSU53lxP5b9oNVqDT36dH+5UjoiKvIwPFEEgWBshGZ3E7/NOupL9fMjx0e+ZhKsrq+c/FPZKJi0w4FsQXMBDEJsd7BNW9h2tuyP9vfTALIJkMIu1hYRtINM+dpzcWc0sbkreK4fUEogyraAmKGF3+7vcT/wtR9QwkCabSAzQQuvk0uglAo5YaQ5DASGYjfMXcHVOqKu6NmR7iehlKAdHWUqWPv1c3i+9uwVdRlEBGaGEAJCCrDo9ShhvF6qPq8tL57bp+DbRn2sHtUuCY9YphLMu5921VhrwYJ5tbt0tt6sjQP4vEfB2Ikz7/ytwbeR6ljHkXCUA6UcOLtPOg4MYhtH8ZcLw5er+xQMDAwEURRNl96X596Y6oxFwsw9fmtTOAr2Ik19nL365FZpsLSdnQPPM8aYewc+lDcX4rkHqbQMAGTJXulOLzycmr1bKBTi3DOGYagajcahiaOT89fbM0/dxEsUu3aidfPljWO3HzebzYNBELi5Z5RSJlrrHd/3w8lT114MrVTWOn875fHRiYVisRhorWMpZXdvNnLKGCOstb0AMlulVJI19w/+nceU4D0aCwAAAABJRU5ErkJggg==',
             'options': [

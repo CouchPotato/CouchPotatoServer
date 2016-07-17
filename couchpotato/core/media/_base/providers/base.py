@@ -127,6 +127,8 @@ class YarrProvider(Provider):
     last_login_check = None
     login_failures = 0
 
+    login_fail_msg = None
+
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
@@ -171,15 +173,15 @@ class YarrProvider(Provider):
                 if e.response.status_code >= 400 and e.response.status_code < 500:
                     self.login_failures += 1
                     if self.login_failures >= 3:
-                        log.error("Failed %s login repeatedly, disabling provider. "
-                                  "Please check the configuration. Re-enabling the "
-                                  "provider without fixing the problem may result "
-                                  "in an IP ban, depending on the site.", self.getName())
-                        self.conf(self.enabled_option, False)
-                        self.login_failures = 0
+                        self.disableAccount()
             error = traceback.format_exc()
 
         self.last_login_check = None
+
+        if self.login_fail_msg and self.login_fail_msg in output:
+            error = "Login credentials rejected."
+            self.disableAccount()
+
         log.error('Failed to login %s: %s', (self.getName(), error))
         return False
 
@@ -287,6 +289,14 @@ class YarrProvider(Provider):
             return [self.cat_backup_id]
 
         return []
+
+    def disableAccount(self):
+        log.error("Failed %s login, disabling provider. "
+                  "Please check the configuration. Re-enabling the "
+                  "provider without fixing the problem may result "
+                  "in an IP ban, depending on the site.", self.getName())
+        self.conf(self.enabled_option, False)
+        self.login_failures = 0
 
 
 class ResultList(list):

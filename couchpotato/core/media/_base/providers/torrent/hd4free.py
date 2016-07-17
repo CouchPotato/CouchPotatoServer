@@ -20,11 +20,16 @@ class Base(TorrentProvider):
     }
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Your apikey is not valid! Go to HD4Free and reset your apikey.'
 
     def _search(self, movie, quality, results):
         data = self.getJsonData(self.urls['search'] % (self.conf('apikey'), self.conf('username'), getIdentifier(movie), self.conf('internal_only')))
 
         if data:
+            if self.login_fail_msg in data['error']: # Check for login failure
+                self.disableAccount()
+                return
+
             try:
                 #for result in data[]:
                 for key, result in data.iteritems():
@@ -69,7 +74,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'HD4Free',
             'wizard': True,
-            'description': '<a href="https://hd4free.xyz">HD4Free</a>',
+            'description': '<a href="https://hd4free.xyz" target="_blank">HD4Free</a>',
 			'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABX1BMVEUF6nsH33cJ03EJ1XIJ1nMKzXIKz28Lym4MxGsMxWsMx2wNvmgNv2kNwGkNwWwOuGgOuWYOuWcOumcOu2cOvmgPtWQPtmUPt2UPt2YQr2IQsGIQsGMQsmMQs2QRqmARq2ARrmERrmISpV4SpmASp14SqF8ToFsToFwToVwTo10TpV0UnFoUn1sVllcVmFgWkFUWklYXjVQXjlMXkFUYh1EYilIYi1MZhlEafk0af04agE4agU4beEobeUsbe0wcdUkeaUQebUYfZEMfZ0QgX0AgYEAgYUEhWj4iVz0iWD0jTzkkSzcmQTMmQzQnPTInPjInPzIoNy8oOC8oODAoOTAoOjApMi0pNC4pNS4qLCoqLSsqLisqMCwrJygrKCgrKCkrKSkrKikrKiorKyosIyYsIycsJCcsJScsJigtHyUuGCIuGiMuGyMuHCMuHCQvEyAvFSEvFiEvFyE0ABU0ABY5lYz4AAAA3ElEQVR4AWNIQAMMiYmJCYkIkMCQnpKWkZ4KBGlARlpaLEOor194kI+Pj6+PT0CET0AYg46Alr22NDeHkBinnq6SkitDrolDgYtaapajdpGppoFfGkMhv2GxE0uuPwNfsk6mhHMOQ54isxmbUJKCtWx+tIZQcDpDtqSol7qIMqsRu3dIhJxxFkOBoF2JG5O7lSqjh5S/tkkWQ5SBTbqnfkymv2WGLa95YCSDhZiMvKIwj4GJCpesuDivK0N6VFRUYlRyfHJUchQQJDMkxsfHJcTHAxEIxMVj+BZDAACjwkqhYgsTAAAAAABJRU5ErkJggg==',
             'options': [
                 {
@@ -86,7 +91,7 @@ config = [{
                     'name': 'apikey',
                     'default': '',
                     'label': 'API Key',
-                    'description': 'Enter your site api key. This can be find on <a href="https://hd4free.xyz/usercp.php?action=security">Profile Security</a>',
+                    'description': 'Enter your site api key. This can be found on <a href="https://hd4free.xyz/usercp.php?action=security" target="_blank">Profile Security</a>',
                 },
                 {
                     'name': 'seed_ratio',

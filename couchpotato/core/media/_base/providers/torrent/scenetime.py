@@ -29,6 +29,7 @@ class Base(TorrentProvider):
     ]
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect'
     cat_backup_id = None
 
     def _searchOnTitle(self, title, movie, quality, results):
@@ -47,7 +48,7 @@ class Base(TorrentProvider):
                     return
 
                 entries = result_table.find_all('tr')
-                
+
                 for result in entries[1:]:
                     cells = result.find_all('td')
                     link = result.find('a', attrs = {'class': 'index'})
@@ -57,9 +58,9 @@ class Base(TorrentProvider):
                     name_row = cells[1].contents[0]
                     name = name_row.getText()
                     seeders_row = cells[6].contents[0]
-                    seeders = seeders_row.getText()		     
-                    
-                    
+                    seeders = seeders_row.getText()
+
+
                     results.append({
                         'id': torrent_id,
                         'name': name,
@@ -67,7 +68,7 @@ class Base(TorrentProvider):
                         'detail_url': self.urls['detail'] % torrent_id,
                         'size': size,
                         'seeders': seeders,
-                    })		    
+                    })
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
@@ -92,7 +93,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'SceneTime',
-            'description': '<a href="https://www.scenetime.com">SceneTime</a>',
+            'description': '<a href="https://www.scenetime.com" target="_blank">SceneTime</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuNWWFMmUAAAIwSURBVDhPZZFbSBRRGMePs7Mzjma7+9AWWxpeYrXLkrcIfUwIpIeK3tO1hWhfltKwhyJMFIqgCz2EpdHWRun2oGG02O2hlYyypY21CygrlbhRIYHizO6/mdk5szPtB785hzm//zeXj7Q89q4I4QaQBx6ZHQY84Efq4Rrbg4rxVmx61AJ2pFY/twzvhP1hU4ZwIQ8K7mw1wdzdhrrxQ7g8E0Q09R6flubw+mcM7tHWPJcwt91ghuTQUDWYW8rejbrRA3i1OA0xLYGWJO8bxw6q50YIc70CRoQbNbj2MQgpkwsrpTYI7ze5CoS5UgYjpTd3YWphWg1l1CuwLC4jufQNtaG9JleBWM67YKR6oBlzf+bVoPIOUiaNwVgIzcF9sF3aknMvZFfCnnNCp9eJqqsNSKQ+qw2USssNzrzoh9Dnynmaq6yEPe2AkfX9lXjy5akWz9ZkcgqVFz0mj0KsJ0tgROh2oCfSJ3/3ihaHPA0Rh+/7UNhtN7kKhAsI+J+a3u2If49r8WxFZiawtsuR5xLumBUU3s/B2bkOm0+V4V3yrTwFOgcg8SMBe8CmuxTC+SygFB3l8TzxDLOpWYiSqEWzFf0ahc2/RncphPcSUIqPWPFhPqZFcrUqraLzXkA+Z3WXQvh2eaNR3MHmNVB+YPjNMMqPb9Q9I6YGRR0WTMQj6hOV+f/++wuDLwfg7iqH4GVMQQrh28w3Nvgd2H22Hk09jag6UYoSH4/C9gKTo9NG8A8MPUM4DJp74gAAAABJRU5ErkJggg==',
             'options': [

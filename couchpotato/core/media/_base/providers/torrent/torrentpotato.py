@@ -132,7 +132,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'TorrentPotato',
             'order': 10,
-            'description': 'CouchPotato torrent provider. Checkout <a href="https://github.com/RuudBurger/CouchPotatoServer/wiki/CouchPotato-Torrent-Provider">the wiki page about this provider</a> for more info.',
+            'description': 'CouchPotato torrent provider. Checkout <a href="https://github.com/CouchPotato/CouchPotatoServer/wiki/CouchPotato-Torrent-Provider" target="_blank">the wiki page about this provider</a> for more info.',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABSElEQVR4AZ2Nz0oCURTGv8t1YMpqUxt9ARFxoQ/gQtppgvUKcu/sxB5iBJkogspaBC6iVUplEC6kv+oiiKDNhAtt16roP0HQgdsMLgaxfvy4nHP4Pi48qE2g4v91JOqT1CH/UnA7w7icUlLawyEdj+ZI/7h6YluWbRiddHonHh9M70aj7VTKzuXuikUMci/EO/ACnAI15599oAk8AR/AgxBQNCzreD7bmpl+FOIVuAHqQDUcJo+AK+CZFKLt95/MpSmMt0TiW9POxse6UvYZ6zB2wFgjFiNpOGesR0rZ0PVPXf8KhUCl22CwClz4eN8weoZBb9c0bdPsOWvHx/cYu9Y0CoNoZTJrwAbn5DrnZc6XOV+igVbnsgo0IxEomlJuA1vUIYGyq3PZBChwmExCUSmVZgMBDIUCK4UCFIv5vHIhm/XUDeAf/ADbcpd5+aXSWQAAAABJRU5ErkJggg==',
             'options': [

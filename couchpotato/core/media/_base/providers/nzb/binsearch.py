@@ -98,7 +98,7 @@ config = [{
             'tab': 'searcher',
             'list': 'nzb_providers',
             'name': 'binsearch',
-            'description': 'Free provider, less accurate. See <a href="https://www.binsearch.info/">BinSearch</a>',
+            'description': 'Free provider, less accurate. See <a href="https://www.binsearch.info/" target="_blank">BinSearch</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAATklEQVQY02NwQAMMWAXOnz+PKvD//3/CAvM//z+fgiwAAs+RBab4PP//vwbFjPlAffgEChzOo2r5fBuIfRAC5w8D+QUofkkp8MHjOWQAAM3Sbogztg2wAAAAAElFTkSuQmCC',
             'options': [

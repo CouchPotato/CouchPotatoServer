@@ -32,6 +32,7 @@ class Base(TorrentProvider):
     ]
 
     http_time_between_calls = 1  # Seconds
+    login_fail_msg = 'Username or password incorrect'
     cat_backup_id = None
 
     def _searchOnTitle(self, title, movie, quality, results):
@@ -91,7 +92,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'TorrentBytes',
-            'description': '<a href="http://torrentbytes.net">TorrentBytes</a>',
+            'description': '<a href="http://torrentbytes.net" target="_blank">TorrentBytes</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAeFBMVEUAAAAAAEQAA1QAEmEAKnQALHYAMoEAOokAQpIASYsASZgAS5UATZwATosATpgAVJ0AWZwAYZ4AZKAAaZ8Ab7IAcbMAfccAgcQAgcsAhM4AiscAjMkAmt0AoOIApecAp/EAqvQAs+kAt+wA3P8A4f8A//8VAAAfDbiaAl08AAAAjUlEQVQYGQXBO04DQRAFwHqz7Z8sECIl5f73ISRD5GBs7UxTlWfg9vYXnvJRQJqOL88D6BAwJtMMumHUVCl60aa6H93IrIv0b+157f1lpk+fm87lMWrZH0vncKbXdRUQrRmrh9C6Iwkq6rg4PXZcyXmbizzeV/g+rDra0rGve8jPKLSOJNi2AQAwAGjwD7ApPkEHdtPQAAAAAElFTkSuQmCC',
             'options': [

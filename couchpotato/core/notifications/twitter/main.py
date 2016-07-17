@@ -15,8 +15,8 @@ log = CPLog(__name__)
 
 class Twitter(Notification):
 
-    consumer_key = '3POVsO3KW90LKZXyzPOjQ'
-    consumer_secret = 'Qprb94hx9ucXvD4Wvg2Ctsk4PDK7CcQAKgCELXoyIjE'
+    consumer_key = 'xcVNnQ7VjAB7DyuKXREkyLHy5'
+    consumer_secret = 'iYeY4i5haITAsHToDJgv1VlLE2H1xnYuXKzZof7OKCOIIPGCLT'
 
     request_token = None
 

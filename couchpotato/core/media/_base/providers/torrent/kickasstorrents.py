@@ -127,7 +127,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'KickAssTorrents',
-            'description': '<a href="https://kat.ph/">KickAssTorrents</a>',
+            'description': '<a href="https://kat.ph/" target="_blank">KickAssTorrents</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACD0lEQVR42pXK20uTcRjA8d/fsJsuap0orBuFlm3hir3JJvQOVmuwllN20Lb2isI2nVHKjBqrCWYaNnNuBrkSWxglhDVJOkBdSWUOq5FgoiOrMdRJ2xPPxW+8OUf1ge/FcyCUSVe2qedK5U/OxNTTXRNXEQ52Glb4O6dNEfK1auJkvRY7+/zxnQbA/D596laXcY3OWOiaIX2393SGznUmxkUo/YkDgqHemuzobQ7+NV+reo5Q1mqp68GABdY3+/EloO+JeN4tEqiFU8f3CwhyWo9E7wfMgI0ELTDx0AvjIxcgvZoC9P7NMN7yMmrFeoKa68rfDfmrARsNN0Ihr55cx59ctZWSiwS5bLKpwW4dYJH+M/B6/CYszE0BFZ+egG+Ln+HRoBN/cpl1pV6COIMkOnBVA/w+fXgGKJVM4LxhumMleoL06hJ3wKcCfl+/TAKKx17gnFePRwkqxR4BQSpFkbCrrQJueI7mWpyfATQ9OQY43+uv/+PutBycJ3y2qn2x7jY50GJvnwLKZjOwspyE5I8F4N+1yr1uwqcs3ym63Hwo29EiAyzUWQVr6WVAS4lZCPutQG/2GtES2YiW3d3XflYKtL72kzAcdEDHeSa3czeIMyyz/TApRKvcFfE0isHbJMnrHCf6xTLb1ORvWNlWo91cvHrJUQo0o6ZoRi7dIiT/g2WEDi27Iyov21xMCvgNfXvtwIACfHwAAAAASUVORK5CYII=',
             'options': [

@@ -43,7 +43,7 @@ class Notification(Provider):
         return notify
 
     def getNotificationImage(self, size = 'small'):
-        return 'https://raw.github.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/notify.couch.%s.png' % size
+        return 'https://raw.github.com/CouchPotato/CouchPotatoServer/master/couchpotato/static/images/notify.couch.%s.png' % size
 
     def _notify(self, *args, **kwargs):
         if self.isEnabled():
