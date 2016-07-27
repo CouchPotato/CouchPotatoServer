@@ -26,6 +26,7 @@ class DownloaderBase(Provider):
 
     torrent_sources = [
         'https://torcache.net/torrent/%s.torrent',
+        'http://itorrents.org/torrent/%s.torrent'
     ]
 
     torrent_trackers = [
