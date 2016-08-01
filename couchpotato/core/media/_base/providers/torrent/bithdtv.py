@@ -17,6 +17,7 @@ class Base(TorrentProvider):
         'login': 'https://www.bit-hdtv.com/takelogin.php',
         'login_check': 'https://www.bit-hdtv.com/messages.php',
         'detail': 'https://www.bit-hdtv.com/details.php?id=%s',
+        'download': 'https://www.bit-hdtv.com/download.php?id=%s',
         'search': 'https://www.bit-hdtv.com/torrents.php?',
     }
 
@@ -50,12 +51,12 @@ class Base(TorrentProvider):
 
                     cells = result.find_all('td')
                     link = cells[2].find('a')
-                    torrent_id = link['href'].replace('/details.php?id=', '')
+                    torrent_id = link['href'].replace('https://www.bit-hdtv.com/details.php?id=', '')
 
                     results.append({
                         'id': torrent_id,
                         'name': link.contents[0].get_text(),
-                        'url': cells[0].find('a')['href'],
+                        'url': self.urls['download'] % torrent_id,
                         'detail_url': self.urls['detail'] % torrent_id,
                         'size': self.parseSize(cells[6].get_text()),
                         'seeders': tryInt(cells[8].string),
