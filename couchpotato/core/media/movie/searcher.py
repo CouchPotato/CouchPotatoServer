@@ -170,7 +170,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'minimum_score': profile.get('minimum_score', 1),
             }
 
-            could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
+            #added to resolve https://github.com/CouchPotato/CouchPotatoServer/issues/6081
+            if q_identifier:
+                could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
+
             if not always_search and could_not_be_released:
                 too_early_to_search.append(q_identifier)
 
@@ -196,7 +199,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 fireEvent('media.restatus', movie['_id'], single = True)
                 break
 
-            quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+            #added to resolve https://github.com/CouchPotato/CouchPotatoServer/issues/6081
+            if q_identifier:
+                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+
             log.info('Search for %s in %s%s', (default_title, quality['label'], ' ignoring ETA' if always_search or ignore_eta else ''))
 
             # Extend quality with profile customs
