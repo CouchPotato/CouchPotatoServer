@@ -102,9 +102,9 @@ class Base(TorrentMagnetProvider):
 
                         if link and download:
                             if self.conf('trusted_only'):
-                                if result.find('img', alt = re.compile('Trusted')) is None or \
-                                                result.find('img', alt = re.compile('VIP')) is None or \
-                                                result.find('img', alt = re.compile('Helpers')) is None or \
+                                if result.find('img', alt = re.compile('Trusted')) is None and \
+                                                result.find('img', alt = re.compile('VIP')) is None and \
+                                                result.find('img', alt = re.compile('Helpers')) is None and \
                                                 result.find('img', alt = re.compile('Moderator')) is None:
                                     log.info('Skipped torrent %s, untrusted.' % link.string)
                                     continue
