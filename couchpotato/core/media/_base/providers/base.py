@@ -73,7 +73,7 @@ class Provider(Plugin):
     def getJsonData(self, url, decode_from = None, **kwargs):
 
         cache_key = md5(url)
-        data = self.getCache(cache_key, url, **kwargs)
+        data = self.getCache(cache_key, url, **kwargs)		
 
         if data:
             try:
@@ -167,7 +167,7 @@ class YarrProvider(Provider):
                 self.login_failures = 0
                 return True
 
-            error = 'unknown'
+            error = 'unknowntest'
         except Exception as e:
             if isinstance(e, HTTPError):
                 if e.response.status_code >= 400 and e.response.status_code < 500:
@@ -201,6 +201,9 @@ class YarrProvider(Provider):
 
     def getLoginParams(self):
         return {}
+
+    def getCookies(self):
+	return {}
 
     def download(self, url = '', nzb_id = ''):
         try:
