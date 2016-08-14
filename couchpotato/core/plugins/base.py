@@ -155,7 +155,8 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, stream = False):
-        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+
+	url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
@@ -170,6 +171,10 @@ class Plugin(object):
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
+
+        if self.getName() is "TorrentDay":
+		cookies = self.getCookies()
+		headers['Cookie'] = cookies
 
         use_proxy = Env.setting('use_proxy')
         proxy_url = None
