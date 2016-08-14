@@ -54,7 +54,7 @@ class Email(Notification):
             # Check too see if an login attempt should be attempted
             if len(smtp_user) > 0:
                 log.debug("Logging on to SMTP server using username \'%s\'%s", (smtp_user, " and a password" if len(smtp_pass) > 0 else ""))
-                mailserver.login(smtp_user, smtp_pass)
+                mailserver.login(smtp_user.encode('utf-8'), smtp_pass.encode('utf-8'))
 
             # Send the e-mail
             log.debug("Sending the email")

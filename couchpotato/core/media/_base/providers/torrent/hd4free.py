@@ -1,3 +1,4 @@
+
 import re
 import json
 import traceback
@@ -26,8 +27,11 @@ class Base(TorrentProvider):
         data = self.getJsonData(self.urls['search'] % (self.conf('apikey'), self.conf('username'), getIdentifier(movie), self.conf('internal_only')))
 
         if data:
-            if self.login_fail_msg in data['error']: # Check for login failure
-                self.disableAccount()
+            if 'error' in data:
+                if self.login_fail_msg in data['error']: # Check for login failure
+                    self.disableAccount()
+                else:
+                    log.error('%s returned an error (possible rate limit): %s', (self.getName(), data['error']))
                 return
 
             try:

@@ -124,6 +124,7 @@ class Plugin(object):
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
+                os.chmod(path, Env.getPermission('folder'))
             return True
         except Exception as e:
             log.error('Unable to create folder "%s": %s', (path, e))

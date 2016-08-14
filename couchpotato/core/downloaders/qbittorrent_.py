@@ -24,28 +24,25 @@ class qBittorrent(DownloaderBase):
     def __init__(self):
         super(qBittorrent, self).__init__()
 
-    def connect(self, reconnect = False):
-        if not reconnect and self.qb is not None:
-            return self.qb
+    def connect(self):
+        if self.qb is not None:
+            self.qb.logout()
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = False)
-        
+
         if self.conf('username') and self.conf('password'):
             self.qb = QBittorrentClient(url)
-            self.qb.login(username=self.conf('username'),password=self.conf('password'))
+            self.qb.login(username=self.conf('username'), password=self.conf('password'))
         else:
             self.qb = QBittorrentClient(url)
 
-        return self.qb
+        return self.qb._is_authenticated
 
     def test(self):
         """ Check if connection works
         :return: bool
         """
-        
-        self.connect(True)
-        
-        return self.qb._is_authenticated
+        return self.connect()
 
     def download(self, data = None, media = None, filedata = None):
         """ Send a torrent/nzb file to the downloader
