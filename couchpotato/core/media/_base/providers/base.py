@@ -167,7 +167,7 @@ class YarrProvider(Provider):
                 self.login_failures = 0
                 return True
 
-            error = 'unknowntest'
+            error = 'unknown'
         except Exception as e:
             if isinstance(e, HTTPError):
                 if e.response.status_code >= 400 and e.response.status_code < 500:

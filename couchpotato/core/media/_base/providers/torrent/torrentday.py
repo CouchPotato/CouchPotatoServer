@@ -19,6 +19,14 @@ class Base(TorrentProvider):
 
     http_time_between_calls = 1  # Seconds
 
+    def loginDownload(self, url = '', nzb_id = ''):
+        try:
+            if not self.login():
+                log.error('Failed downloading from %s', self.getName())
+            return self.urlopen(url, headers=self.getRequestHeaders())
+        except:
+            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+
     def _searchOnTitle(self, title, media, quality, results):
 
         query = '"%s" %s' % (title, media['info']['year'])
@@ -31,7 +39,7 @@ class Base(TorrentProvider):
             'search': query,
         }
 
-        data = self.getJsonData(self.urls['search'], data = data)
+        data = self.getJsonData(self.urls['search'], data = data, headers = self.getRequestHeaders())
         try: torrents = data.get('Fs', [])[0].get('Cn', {}).get('torrents', [])
         except: return
 
@@ -48,6 +56,11 @@ class Base(TorrentProvider):
 
     def getCookies(self):
 	return self.conf('cookiesetting')
+
+    def getRequestHeaders(self):
+        return {
+            'Cookie': self.getCookies()
+        }
 
     def getLoginParams(self):
         return {
