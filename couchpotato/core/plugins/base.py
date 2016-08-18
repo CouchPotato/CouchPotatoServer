@@ -155,8 +155,7 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, stream = False):
-
-	url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
+        url = quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not data: data = {}
