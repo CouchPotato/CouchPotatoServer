@@ -1,11 +1,11 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.torrentz import Base
+from couchpotato.core.media._base.providers.torrent.torrentz2 import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
 
 log = CPLog(__name__)
 
-autoload = 'Torrentz'
+autoload = 'Torrentz2'
 
 
 class Torrentz(MovieProvider, Base):
