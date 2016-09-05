@@ -1,0 +1,18 @@
+# TODO
+Check Object Constructor
+Complete list prototype
+Fix function bind...
+Fix regexp compile ???
+Check prototypes:
+   String: replace, split
+fix recursion error in special case in to_dict and to_list
+
+Array constructor
+
+
+escape, URL... etc
+
+Check primitive.to_object()
+var obj = new Number(0); var x = new Array(obj); x
+
+Smarter import...
