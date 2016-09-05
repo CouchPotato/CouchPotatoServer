@@ -20,6 +20,7 @@ from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDataDir, tryInt, getFreeSpace
 import requests
+import cfscrape
 from requests.packages.urllib3 import disable_warnings
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
@@ -154,7 +155,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not os.path.exists(python_cache):
         os.mkdir(python_cache)
 
-    session = requests.Session()
+    session = cfscrape.create_scraper()
     session.max_redirects = 5
 
     # Register environment settings
