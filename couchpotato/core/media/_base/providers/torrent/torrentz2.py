@@ -15,24 +15,18 @@ log = CPLog(__name__)
 class Base(TorrentMagnetProvider, RSS):
 
     urls = {
-         'detail': 'https://torrentz.eu/%s',
-         'search': 'https://torrentz.eu/feed?q=%s',
-         'verified_search': 'https://torrentz.eu/feed_verified?q=%s'
+         'detail': 'https://torrentz2.eu/%s',
+         'search': 'https://torrentz2.eu/feed?f=%s'
     }
 
     http_time_between_calls = 0
 
     def _searchOnTitle(self, title, media, quality, results):
 
-        search_url = self.urls['verified_search'] if self.conf('verified_only') else self.urls['search']
+        search_url = self.urls['search']
 
         # Create search parameters
         search_params = self.buildUrl(title, media, quality)
-
-        smin = quality.get('size_min')
-        smax = quality.get('size_max')
-        if smin and smax:
-            search_params += ' size %sm - %sm' % (smin, smax)
 
         min_seeds = tryInt(self.conf('minimal_seeds'))
         if min_seeds:
@@ -72,13 +66,13 @@ class Base(TorrentMagnetProvider, RSS):
 
 
 config = [{
-    'name': 'torrentz',
+    'name': 'torrentz2',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'Torrentz',
-            'description': 'Torrentz is a free, fast and powerful meta-search engine. <a href="https://torrentz.eu/" target="_blank">Torrentz</a>',
+            'name': 'Torrentz2',
+            'description': 'Torrentz2 a clone of the now defunct Torrentz, a free, fast, and powerful meta-search engine. <a href="https://torrentz2.eu/" target="_blank">Torrentz2</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVQ4y2NgAALjtJn/ycEMlGiGG0IVAxiwAKzOxaKGARcgxgC8YNSAwWoAzuRMjgsIugqfAUR5CZcBRIcHsWEAADSA96Ig020yAAAAAElFTkSuQmCC',
             'options': [
@@ -86,13 +80,6 @@ config = [{
                     'name': 'enabled',
                     'type': 'enabler',
                     'default': True
-                },
-                {
-                    'name': 'verified_only',
-                    'type': 'bool',
-                    'default': True,
-                    'advanced': True,
-                    'description': 'Only search verified releases',
                 },
                 {
                     'name': 'minimal_seeds',
