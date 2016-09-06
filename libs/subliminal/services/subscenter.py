@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class Subscenter(ServiceBase):
-    server = 'http://subscenter.cinemast.com/he/'
+    server = 'http://www.subscenter.co/he/'
     api_based = False
     languages = language_set(['he'])
     videos = [Episode, Movie]
@@ -88,10 +88,10 @@ class Subscenter(ServiceBase):
         # Set the correct parameters depending on the kind.
         if series and season and episode:
             url_series = self._search_url_title(series, 'series')
-            url = self.server + 'cinemast/data/series/sb/{}/{}/{}/'.format(url_series, season, episode)
+            url = self.server + 'cst/data/series/sb/{}/{}/{}/'.format(url_series, season, episode)
         elif title:
             url_title = self._search_url_title(title, 'movie')
-            url = self.server + 'cinemast/data/movie/sb/{}/'.format(url_title)
+            url = self.server + 'cst/data/movie/sb/{}/'.format(url_title)
         else:
             raise ServiceError('One or more parameters are missing')
         logger.debug('Searching subtitles for title {0}, season {1}, episode {2}'.format(title, season, episode))

@@ -101,6 +101,13 @@ class Base(TorrentMagnetProvider):
                             continue
 
                         if link and download:
+                            if self.conf('trusted_only'):
+                                if result.find('img', alt = re.compile('Trusted')) is None and \
+                                                result.find('img', alt = re.compile('VIP')) is None and \
+                                                result.find('img', alt = re.compile('Helpers')) is None and \
+                                                result.find('img', alt = re.compile('Moderator')) is None:
+                                    log.info('Skipped torrent %s, untrusted.' % link.string)
+                                    continue
 
                             def extra_score(item):
                                 trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) is not None]
@@ -200,6 +207,14 @@ config = [{
                     'type': 'int',
                     'default': 0,
                     'description': 'Starting score for each release found via this provider.',
+                },
+                {
+                    'name': 'trusted_only',
+                    'advanced': True,
+                    'label': 'Trusted/VIP Only',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Only download releases marked as Trusted or VIP'
                 }
             ],
         }
