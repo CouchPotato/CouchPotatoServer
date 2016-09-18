@@ -371,29 +371,29 @@ class TorrentItemv5(TorrentItem):
         self.obj = obj
 
     def info_hash(self):
-        return self.obj['infoHash']
+        return self.obj[0]
 
     def save_path(self):
-        return self.obj['savePath']
+        return self.obj[26]
 
     def name(self):
-        return self.obj['name']
+        return self.obj[2]
 
     def state(self):
-        return self.obj['state']
+        return self.obj[1]
 
     def get_status(self):
-        if self.obj['isSeeding'] and self.obj['isFinished'] and self.obj['isPaused']:
+        if self.obj[1] == 32:
             return 'completed'
 
-        if self.obj['isSeeding']:
+        if self.obj[1] == 1:
             return 'seeding'
 
         return 'busy'
 
     def get_seed_ratio(self):
-        up   = self.obj['uploadedBytesTotal']
-        down = self.obj['downloadedBytesTotal']
+        up   = self.obj[6]
+        down = self.obj[5]
 
         if up > 0 and down > 0:
             return up / down
@@ -402,28 +402,29 @@ class TorrentItemv5(TorrentItem):
 
 
 class HadoukenAPIv5(HadoukenAPI):
+
     def add_file(self, data, params):
-        return self.rpc.invoke('session.addTorrentFile', [b64encode(data), params])
+        return self.rpc.invoke('webui.addTorrent', ['file', b64encode(data), params])
 
     def add_magnet_link(self, link, params):
-        return self.rpc.invoke('session.addTorrentUri', [link, params])
+        return self.rpc.invoke('webui.addTorrent', ['url', link, params])
 
     def get_by_hash_list(self, infoHashList):
-        torrents = self.rpc.invoke('session.getTorrents')
+        torrents = self.rpc.invoke('webui.list', None)
         result = []
 
-        for torrent in torrents.values():
-            if torrent['infoHash'] in infoHashList:
+        for torrent in torrents['torrents']:
+            if torrent[0] in infoHashList:
                 result.append(TorrentItemv5(torrent))
 
         return result
 
     def get_files_by_hash(self, infoHash):
-        files = self.rpc.invoke('torrent.getFiles', [infoHash])
+        files = self.rpc.invoke('webui.getFiles', [infoHash])
         result = []
 
-        for file in files:
-            result.append(file['path'])
+        for file in files['files'][1]:
+            result.append(file[0])
 
         return result
 
@@ -437,12 +438,15 @@ class HadoukenAPIv5(HadoukenAPI):
 
     def pause(self, infoHash, pause):
         if pause:
-            return self.rpc.invoke('torrent.pause', [infoHash])
+            return self.rpc.invoke('webui.perform', ['pause', infoHash])
 
-        return self.rpc.invoke('torrent.resume', [infoHash])
+        return self.rpc.invoke('webui.perform', ['resume', infoHash])
 
-    def remove(self, infoHash, remove_data = False):
-        return self.rpc.invoke('session.removeTorrent', [infoHash, remove_data])
+    def remove(self, infoHash, remove_data=False):
+        if remove_data:
+            return self.rpc.invoke('webui.perform', ['removedata', infoHash])
+
+        return self.rpc.invoke('webui.perform', ['remove', infoHash])
 
 
 class TorrentItemv4(TorrentItem):
