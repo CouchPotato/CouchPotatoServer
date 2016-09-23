@@ -27,14 +27,12 @@ class Base(TorrentProvider):
     login_errors = 0
     http_time_between_calls = 2
 
-    def _search(self, media, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
-        movie_title = getTitle(media)
-        media_year = media['info']['year']
         quality_id = quality['identifier']
         
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
-            'searchstr': getTitle(media),
+            'searchstr': title,
             'year': media['info']['year']
         })
 
@@ -76,7 +74,7 @@ class Base(TorrentProvider):
                         torrentdesc += self.htmlToASCII(' %s' % torrent['remasterTitle'])
 
                     torrentdesc += ' (%s)' % quality_id
-                    torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (movie_title, uhdmovie['groupYear'], torrentdesc))
+                    torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (title, uhdmovie['groupYear'], torrentdesc))
 
                     def extra_check(item):
                         return self.torrentMeetsQualitySpec(item, quality_id)
