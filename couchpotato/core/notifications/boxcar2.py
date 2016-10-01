@@ -6,6 +6,8 @@ log = CPLog(__name__)
 
 autoload = 'Boxcar2'
 
+LOGO_URL = 'https://raw.githubusercontent.com/CouchPotato/CouchPotatoServer/master/couchpotato/static/images/notify.couch.small.png'
+
 
 class Boxcar2(Notification):
 
@@ -27,6 +29,8 @@ class Boxcar2(Notification):
                 'user_credentials': self.conf('token'),
                 'notification[title]': toUnicode('%s - %s' % (self.default_title, message)),
                 'notification[long_message]': toUnicode(long_message),
+                'notification[icon_url]': LOGO_URL,
+                'notification[source_name]': 'CouchPotato',
             }
 
             self.urlopen(self.url, data = data)
