@@ -28,8 +28,8 @@ class TheMovieDb(MovieProvider):
     ak = ['ZjdmNTE3NzU4NzdlMGJiNjcwMzUyMDk1MmIzYzc4NDA=', 'ZTIyNGZlNGYzZmVjNWY3YjU1NzA2NDFmN2NkM2RmM2E=',
           'YTNkYzExMWU2NjEwNWY2Mzg3ZTk5MzkzODEzYWU0ZDU=', 'ZjZiZDY4N2ZmYTYzY2QyODJiNmZmMmM2ODc3ZjI2Njk=']
 
-    languages = [ 'en' ]
     default_language = 'en'
+    languages = [ default_language ]
 
     def __init__(self):
         addEvent('info.search', self.search, priority = 3)
@@ -47,14 +47,11 @@ class TheMovieDb(MovieProvider):
         languages = self.getLanguages()
 
         # languages should never be empty, the first language is the default language used for all the description details
-        self.default_language = languages[0]
+        self.default_language = languages.pop(0)
 
         # en is always downloaded and it is the fallback
         if 'en' in languages:
             languages.remove('en')
-
-        # default language has a special management
-        languages.remove(self.default_language)
 
         self.languages = languages
 
