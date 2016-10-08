@@ -71,7 +71,7 @@ class Renamer(Plugin):
 
         fireEvent('schedule.remove', 'renamer.check_snatched_forced')
         if self.isEnabled() and self.conf('force_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'), single = True)
+            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, minutes = self.conf('force_every'), single = True)
 
         return True
 
@@ -1410,10 +1410,10 @@ config = [{
                     'advanced': True,
                     'name': 'force_every',
                     'label': 'Force every',
-                    'default': 2,
+                    'default': 720,
                     'type': 'int',
-                    'unit': 'hour(s)',
-                    'description': 'Forces the renamer to scan every X hours',
+                    'unit': 'min(s)',
+                    'description': 'Forces the renamer to scan every X minutes',
                 },
                 {
                     'advanced': True,
