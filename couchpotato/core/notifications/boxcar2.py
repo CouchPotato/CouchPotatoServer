@@ -10,6 +10,7 @@ autoload = 'Boxcar2'
 class Boxcar2(Notification):
 
     url = 'https://new.boxcar.io/api/notifications'
+    LOGO_URL = 'https://raw.githubusercontent.com/CouchPotato/CouchPotatoServer/master/couchpotato/static/images/notify.couch.small.png'
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
@@ -27,6 +28,8 @@ class Boxcar2(Notification):
                 'user_credentials': self.conf('token'),
                 'notification[title]': toUnicode('%s - %s' % (self.default_title, message)),
                 'notification[long_message]': toUnicode(long_message),
+                'notification[icon_url]': self.LOGO_URL,
+                'notification[source_name]': 'CouchPotato',
             }
 
             self.urlopen(self.url, data = data)
