@@ -54,6 +54,7 @@ class Base(TorrentMagnetProvider):
         'https://arrr.xyz',
         'https://www.cleantpbproxy.com',
         'http://tpb.dashitz.com',
+        'https://thepiratebay.org',
     ]
 
     def __init__(self):
