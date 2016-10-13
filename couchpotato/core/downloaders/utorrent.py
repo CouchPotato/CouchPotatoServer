@@ -235,7 +235,8 @@ class uTorrent(DownloaderBase):
     def removeReadOnly(self, files):
         #Removes all read-on ly flags in a for all files
         for filepath in files:
-            if os.path.isfile(filepath):
+            #On *nix, check that we are allowed to chmod
+            if os.path.isfile(filepath) and (os.name == 'nt' or (os.stat(filepath).st_uid == os.getuid() or os.getuid() == 0)):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
                 os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
