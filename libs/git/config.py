@@ -39,5 +39,8 @@ class GitConfiguration(object):
     def getParameter(self, path):
         return self.getDict().get(path, None)
     def getDict(self):
-        return dict(line.strip().split("=", 1)
-                    for line in self.repo._getOutputAssertSuccess("config -l").splitlines())
+        return dict(
+            line.strip().split('\n', 1)
+            for line in self.repo._getOutputAssertSuccess("config --null --list").split('\x00')
+            if line
+        )
