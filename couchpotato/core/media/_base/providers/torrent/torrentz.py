@@ -15,9 +15,9 @@ log = CPLog(__name__)
 class Base(TorrentMagnetProvider, RSS):
 
     urls = {
-         'detail': 'https://torrentz.eu/%s',
-         'search': 'https://torrentz.eu/feed?q=%s',
-         'verified_search': 'https://torrentz.eu/feed_verified?q=%s'
+         'detail': 'https://torrentz2.eu/%s',
+         'search': 'https://torrentz2.eu/feed?q=%s',
+         'verified_search': 'https://torrentz2.eu/feed_verified?q=%s'
     }
 
     http_time_between_calls = 0
@@ -78,7 +78,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'Torrentz',
-            'description': 'Torrentz is a free, fast and powerful meta-search engine. <a href="https://torrentz.eu/" target="_blank">Torrentz</a>',
+            'description': 'Torrentz is a free, fast and powerful meta-search engine. <a href="https://torrentz2.eu/" target="_blank">Torrentz</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVQ4y2NgAALjtJn/ycEMlGiGG0IVAxiwAKzOxaKGARcgxgC8YNSAwWoAzuRMjgsIugqfAUR5CZcBRIcHsWEAADSA96Ig020yAAAAAElFTkSuQmCC',
             'options': [
