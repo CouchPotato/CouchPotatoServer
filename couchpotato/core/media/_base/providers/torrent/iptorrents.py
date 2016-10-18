@@ -18,7 +18,7 @@ class Base(TorrentProvider):
         'base_url': 'https://iptorrents.eu',
         'login': 'https://iptorrents.eu/',
         'login_check': 'https://iptorrents.eu/oldinbox.php',
-        'search': 'https://iptorrents.eu/t?%s%%s&q=%s&qf=#torrents&p=%%d',
+        'search': 'https://iptorrents.eu/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -36,7 +36,9 @@ class Base(TorrentProvider):
             log.warning('Unable to find category ids for identifier "%s"', quality.get('identifier'))
             return None
 
-        return self.urls['search'] % ("&".join(("l%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
+        query = query.replace('"', '')
+
+        return self.urls['search'] % ("&".join(("%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
 
@@ -61,7 +63,7 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find('table', attrs = {'id': 'torrents'})
+                    result_table = html.find('table', attrs={'id': 'torrents'})
 
                     if not result_table or 'nothing found!' in data.lower():
                         return
