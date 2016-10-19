@@ -109,7 +109,9 @@ class peerflix(DownloaderBase):
 
         peerflix_args = [self.conf('path'), torrent_handle, "-p " + self.conf('port'), "--" + self.conf('player')]
         if self.conf('movie_directory'):
-            peerflix_args.append("--path '" + self.conf('movie_directory') + "'")
+            peerflix_args.append("--path")
+            #  Todo: Maybe backslashes need to be replaced with forward slashes in directory path on Windows
+            peerflix_args.append(self.conf('movie_directory'))
         if not self.conf('float_on_top'):
             peerflix_args.append('--not-on-top')
         if not self.conf('quit_peerflix_on_player_exit'):
@@ -123,7 +125,7 @@ class peerflix(DownloaderBase):
         peerflix_args = [x.encode('utf-8') for x in peerflix_args]
         log.info('Peerflix args: "%s"', (peerflix_args))
 
-        peerflix_proc = Popen(peerflix_args, stderr=PIPE)
+        peerflix_proc = Popen(peerflix_args) # , stderr=PIPE
         log.info('Peerflix PID: "%s"', (peerflix_proc.pid))
         log.info('Movie available for streaming at http://localhost:%s. This address can be opened in your video player.', (self.conf('port')))
         #log.error('Peerflix: %s', peerflix_proc.stderr)
