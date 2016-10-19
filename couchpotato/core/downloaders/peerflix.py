@@ -237,6 +237,13 @@ config = [{
                     'advanced': True,
                     'description': 'Options passed along to video player. E.g. --fullscreen --subtitles=/home/subtitle.srt',
                 },
+                {
+                    'name': 'manual',
+                    'default': True,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
             ],
         }
     ],
