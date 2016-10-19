@@ -9,7 +9,7 @@ from bencode import bencode, bdecode
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost
-from couchpotato.core.helpers.variable import getDownloadDir
+from couchpotato.core.helpers.variable import getDownloadDir, getUserDir
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from subprocess import Popen, PIPE
@@ -110,7 +110,11 @@ class peerflix(DownloaderBase):
         peerflix_args = [self.conf('path'), torrent_handle, "-p " + self.conf('port'), "--" + self.conf('player')]
         if self.conf('movie_directory'):
             peerflix_args.append("--path")
-            #  Todo: Maybe backslashes need to be replaced with forward slashes in directory path on Windows
+            """
+            Depending upon how paths are formatted (using backslashes), this may not work on Windows. If so, try this:
+            path = path.encode('string-escape')
+            path = path.replace("\\", "/")
+            """
             peerflix_args.append(self.conf('movie_directory'))
         if not self.conf('float_on_top'):
             peerflix_args.append('--not-on-top')
@@ -190,8 +194,8 @@ config = [{
                 },
                 {
                     'name': 'path',
-                    'default': '/usr/bin/peerflix',
-                    'description': "Path to Peerflix executable. If Peerflix is installed globally then usually it's /usr/bin/peerflix for Linux and XXX for Windows",
+                    'default': getUserDir() + "/AppData/Roaming/npm/peerflix.cmd",
+                    'description': "Path to Peerflix executable. If Peerflix is installed globally then usually it's /usr/bin/peerflix for Linux and C:/Users/<username>/AppData/Roaming/npm/peerflix.cmd for Windows",
                 },
                 {
                     'name': 'torrent_directory',
@@ -202,7 +206,7 @@ config = [{
                 {
                     'name': 'movie_directory',
                     'type': 'directory',
-                    'description': 'NOT WORKING. Download movies this directory. Keep empty for default Peerflix download directory, which usually is /tmp/torrent-stream/ for Linux and XXX for Windows',
+                    'description': 'Download movies this directory. Keep empty for default Peerflix download directory, which usually is /tmp/torrent-stream/ for Linux and XXX for C:/Users/<username>/AppData/Local/Temp/torrent-stream',
                 },
                 {
                     'name': 'float_on_top',
