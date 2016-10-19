@@ -174,6 +174,7 @@ config = [{
             'name': 'peerflix',
             'label': 'peerflix',
             'description': 'peerflix',
+            'description': 'Use <a href="https://github.com/mafintosh/peerflix" target="_blank">Peerflix</a> to <strong>stream</strong> torrents.',
             'wizard': True,
             'options': [
                 {
