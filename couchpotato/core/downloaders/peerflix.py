@@ -29,25 +29,39 @@ class peerflix(DownloaderBase):
         super(peerflix, self).__init__()
 
     def connect(self):
-        return True
+        return self.test()
 
     def test(self):
-        """ Test and see if the directory is writable
+        """ Test and see if the torrent and movie directories is writable
         :return: boolean
         """
+        writable = False
 
-        directory = self.conf('directory')
-        if directory and os.path.isdir(directory):
+        movie_directory = self.conf('movie_directory')
+        if movie_directory and os.path.isdir(movie_directory):
 
-            test_file = sp(os.path.join(directory, 'couchpotato_test.txt'))
+            test_file = sp(os.path.join(movie_directory, 'couchpotato_test.txt'))
 
             # Check if folder is writable
             self.createFile(test_file, 'This is a test file')
             if os.path.isfile(test_file):
                 os.remove(test_file)
-                return True
+                writable = True
 
-        return False
+        torrent_directory = self.conf('torrent_directory')
+        if writable and torrent_directory and os.path.isdir(torrent_directory):
+
+            test_file = sp(os.path.join(torrent_directory, 'couchpotato_test.txt'))
+
+            # Check if folder is writable
+            self.createFile(test_file, 'This is a test file')
+            if os.path.isfile(test_file):
+                os.remove(test_file)
+                writable = True
+            else:
+                writable = False
+
+        return writable
 
     def download(self, data = None, media = None, filedata = None):
         """ Send a torrent/nzb file to the downloader
@@ -81,6 +95,8 @@ class peerflix(DownloaderBase):
 
         if data.get('protocol')  == 'torrent':
             info = bdecode(filedata)["info"]
+            if not self.verifyTorrentCompatability(info):
+                return False
             torrent_hash = sha1(bencode(info)).hexdigest()
 
             # Convert base 32 to hex
@@ -138,6 +154,7 @@ class peerflix(DownloaderBase):
 
 
     def getTorrentStatus(self, torrent):
+        log.info("Peerflix torrent status query")
         return 'busy'
 
     def getAllDownloadStatus(self, ids):
@@ -163,6 +180,45 @@ class peerflix(DownloaderBase):
         log.info('Requesting peerflix to remove the torrent %s%s.',
                   (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         return True
+
+    def verifyTorrentCompatability(self, info):
+        """Take torrent info and verify that it contains a valid movie file that is not RAR'd
+
+        :param info: bdecoded torrent info
+        :return: boolean
+        True if compatible, e.g. a unpacked movie file, false if movie is packed in RARs
+
+        """
+        # There is a key length or a key files, but not both or neither. If length is present then the download
+        # represents a single file, otherwise it represents a set of files which go in a directory structure.
+        if info['length']:
+            log.info('Single file')
+            #  Can assume a single file means that it's not packed
+            return True
+        elif info['files']:
+
+            #  Find the largest file
+            largest_len = 0
+            largest_name = ''
+            for fiile in info['file']:
+                if fiile['length'] > largest_len:
+                    largest_len = fiile['length']
+                    largest_name = fiile['path']
+            #  Check that the file is neither a RAR nor a sample
+            if "sample" in largest_name.lower():
+                log.info('Multiple files, biggest is sample: %s', largest_name)
+                return False
+            if largest_name.lower()[-3:] == "rar":
+                log.info('Multiple files, biggest is rar: %s', largest_name)
+                return False
+            if largest_name[-2:].isdigit():
+                log.info('Multiple files, biggest is rXX: %s', largest_name)
+                return False
+            return True
+        else:
+            log.info("Peerflix unrecognized torrent structure: %s", info)
+            return True
+
 
 
 config = [{
@@ -215,6 +271,7 @@ config = [{
                     'advanced': True,
                     'type': 'bool',
                     'default': False,
+                    'description': 'Float video window on top of others',
                 },
                 {
                     'name': 'quit_peerflix_on_player_exit',

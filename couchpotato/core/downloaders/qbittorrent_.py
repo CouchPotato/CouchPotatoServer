@@ -57,7 +57,7 @@ class qBittorrent(DownloaderBase):
             This is done to have failed checking before using the downloader, so the downloader
             doesn't need to worry about that
         :return: boolean
-            One faile returns false, but the downloaded should log his own errors
+            One fail returns false, but the downloader should log his own errors
         """
 
         if not media: media = {}
