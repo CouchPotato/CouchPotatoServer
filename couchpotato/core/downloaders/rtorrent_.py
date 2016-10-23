@@ -3,6 +3,7 @@ from datetime import timedelta
 from hashlib import sha1
 from urlparse import urlparse
 import os
+import re
 
 from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.event import addEvent
@@ -146,6 +147,7 @@ class rTorrent(DownloaderBase):
         if not self.connect():
             return False
 
+        torrent_hash = 0
         torrent_params = {}
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
@@ -156,29 +158,42 @@ class rTorrent(DownloaderBase):
 
         # Try download magnet torrents
         if data.get('protocol') == 'torrent_magnet':
-            filedata = self.magnetToTorrent(data.get('url'))
+            # Send magnet to rTorrent
+            torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
+            # Send request to rTorrent
+            try:
+                torrent = self.rt.load_magnet(data.get('url'), torrent_hash)
 
-            if filedata is False:
+                if not torrent:
+                    log.error('Unable to find the torrent, did it fail to load?')
+                    return False
+
+            except Exception as err:
+                log.error('Failed to send magnet to rTorrent: %s', err)
                 return False
 
-            data['protocol'] = 'torrent'
+        if data.get('protocol') == 'torrent':
+            info = bdecode(filedata)["info"]
+            torrent_hash = sha1(bencode(info)).hexdigest().upper()
 
-        info = bdecode(filedata)["info"]
-        torrent_hash = sha1(bencode(info)).hexdigest().upper()
+            # Convert base 32 to hex
+            if len(torrent_hash) == 32:
+                torrent_hash = b16encode(b32decode(torrent_hash))
 
-        # Convert base 32 to hex
-        if len(torrent_hash) == 32:
-            torrent_hash = b16encode(b32decode(torrent_hash))
+            # Send request to rTorrent
+            try:
+                # Send torrent to rTorrent
+                torrent = self.rt.load_torrent(filedata, verify_retries=10)
 
-        # Send request to rTorrent
+                if not torrent:
+                    log.error('Unable to find the torrent, did it fail to load?')
+                    return False
+
+            except Exception as err:
+                log.error('Failed to send torrent to rTorrent: %s', err)
+                return False
+
         try:
-            # Send torrent to rTorrent
-            torrent = self.rt.load_torrent(filedata, verify_retries=10)
-
-            if not torrent:
-                log.error('Unable to find the torrent, did it fail to load?')
-                return False
-
             # Set label
             if self.conf('label'):
                 torrent.set_custom(1, self.conf('label'))
@@ -191,9 +206,11 @@ class rTorrent(DownloaderBase):
                 torrent.start()
 
             return self.downloadReturnId(torrent_hash)
+
         except Exception as err:
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
+
 
     def getTorrentStatus(self, torrent):
         if not torrent.complete:
