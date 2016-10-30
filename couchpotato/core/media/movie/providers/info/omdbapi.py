@@ -40,7 +40,7 @@ class OMDBAPI(MovieProvider):
 
         cache_key = 'omdbapi.cache.%s' % q
         url = self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')})
-        cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
+        cached = self.getCache(cache_key, url, timeout = 7, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
             result = self.parseMovie(cached)
