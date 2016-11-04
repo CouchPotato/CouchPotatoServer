@@ -190,7 +190,9 @@ var Movie = new Class({
 
 		self.el.addClass('status_'+self.get('status'));
 
-		var eta_date = self.getETA();
+		var eta_date = self.getETA("%b %d, %Y");
+		var dvd_date = self.getDVDRelease("%b %d, %Y");
+		var theater_date = self.getTheaterRelease("%b %d, %Y");
 
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
@@ -245,8 +247,16 @@ var Movie = new Class({
 						'text': self.data.info.year || 'n/a'
 					})
 				),
+				//theater_date ? new Element('div.theaterdate', {
+				//	'text': "Theatrical Release: " +theater_date,
+				//	'title': 'TheaterDate'
+				//}) : null,
+				//dvd_date ? new Element('div.dvddate', {
+				//	'text': "DVD Release: "+dvd_date,
+				//	'title': 'DVDDate'
+				//}) : null,
 				eta_date ? new Element('div.eta', {
-					'text': eta_date,
+					'text': "  ETA: "+eta_date,
 					'title': 'ETA'
 				}) : null,
 				self.quality = new Element('div.quality'),
@@ -411,6 +421,38 @@ var Movie = new Class({
 		return self.get('imdb');
 	},
 
+	getDVDRelease: function(format){
+		var self = this,
+		d=null,
+		d_date = '';
+		if (self.data.info.release_date)
+			[self.data.info.release_date.dvd].each(function(timestamp){
+				if (timestamp > 0)
+			               d = timestamp;
+			});
+		if (d){
+                        d_date = new Date (d*1000);
+		        d_date = d_date.format(format);
+		}
+		return d_date;
+	},
+
+	getTheaterRelease: function(format){
+		var self = this,
+		d=null,
+		d_date = '';
+		if (self.data.info.release_date)
+			[self.data.info.release_date.theater].each(function(timestamp){
+				if (timestamp > 0)
+			               d = timestamp;
+		});
+		if (d){
+                        d_date = new Date (d*1000);
+		        d_date = d_date.format(format);
+		}
+		return d_date;
+	},
+
 	getETA: function(format){
 		var self = this,
 			d = new Date(),
@@ -430,11 +472,12 @@ var Movie = new Class({
 				eta_date = null;
 			}
 			else {
-				eta_date = format ? eta_date.format(format) : (eta_date.format('%b') + (d.getFullYear() != eta_date.getFullYear() ? ' ' + eta_date.getFullYear() : ''));
+			        eta_date = format ? eta_date.format(format) : (eta_date.format('%b %d'));
 			}
 		}
-
-		return (now+8035200 > eta) ? eta_date : '';
+                return eta_date;
+		//removing below line since this only returns if movie's ETA is within the next 93 days - we want to always return, then decide when to display it
+		//return (now+8035200 > eta) ? eta_date : '';
 	},
 
 	get: function(attr){
