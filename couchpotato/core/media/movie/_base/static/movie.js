@@ -193,6 +193,7 @@ var Movie = new Class({
 		var eta_date = self.getETA("%b %d, %Y");
 		var dvd_date = self.getDVDRelease("%b %d, %Y");
 		var theater_date = self.getTheaterRelease("%b %d, %Y");
+                var eta_type = eta_date == theater_date ? "Theatrical Release: " : "ETA ";
 
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
@@ -256,7 +257,7 @@ var Movie = new Class({
 				//	'title': 'DVDDate'
 				//}) : null,
 				eta_date ? new Element('div.eta', {
-					'text': "  ETA: "+eta_date,
+					'text': eta_type+eta_date,
 					'title': 'ETA'
 				}) : null,
 				self.quality = new Element('div.quality'),
