@@ -467,16 +467,19 @@ $mass_edit_height: 44px;
 		}
 
 		.info {
+			display :flex;
+			flex-direction : column;
 			clear: both;
 			font-size: .9em;
 
 			.title {
+				order : 1;
 				display: flex;
 				padding: 3px 0;
 				font-weight: 400;
 
 				span {
-					flex: 1 auto;
+					//flex: 1 auto;
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
@@ -490,11 +493,19 @@ $mass_edit_height: 44px;
 			}
 
 			.eta {
+				order : 3;
+				font-size: .9em;
 				opacity: .5;
 				float: right;
 				margin-left: 4px;
+				span {
+					flex: 1 auto;
+					white-space: nowrap;
+					overflow: hidden;
+				}
 			}
 			.quality {
+				order: 2;
 				white-space: nowrap;
 				overflow: hidden;
 				font-size: .9em;
