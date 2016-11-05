@@ -193,7 +193,17 @@ var Movie = new Class({
 		var eta_date = self.getETA("%b %d, %Y");
 		var dvd_date = self.getDVDRelease("%b %d, %Y");
 		var theater_date = self.getTheaterRelease("%b %d, %Y");
-                var eta_type = eta_date == theater_date ? "Theatrical Release: " : "ETA ";
+		var eta_type = "ETA: "
+		if (eta_date)
+                        eta_type = eta_date == dvd_date ? "DVD ETA: " : "Theatrical ETA ";
+                else if (dvd_date){
+			eta_type = "DVD released: ";
+			eta_date = dvd_date;
+		}
+		else if (theater_date){
+			eta_type = "Theatrically released: ";
+			eta_date = theater_date;
+		}
 
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
