@@ -184,8 +184,8 @@
 .list_list .movie .info .title span{width:100%}
 }
 .list_list .movie .info .title .year{display:inline-block;margin:0 10px;opacity:.5}
-.list_list .movie .info .dvddate,.list_list .movie .info .eta,.list_list .movie .info .theaterdate{font-size:.8em;margin-right:4px;opacity:.5}
-@media (max-width:480px){.list_list .movie .info .dvddate,.list_list .movie .info .eta,.list_list .movie .info .theaterdate{display:none}
+.list_list .movie .info .eta{font-size:.8em;opacity:.5;margin-right:4px}
+@media (max-width:480px){.list_list .movie .info .eta{display:none}
 }
 .list_list .movie .info .quality{clear:both;overflow:hidden}
 .list_list .movie .info .quality span{float:left;font-size:.7em;margin:2px 0 0 2px}
@@ -260,7 +260,7 @@
 .thumb_list .movie .info .title{display:-ms-flexbox;display:flex;padding:3px 0;font-weight:400}
 .thumb_list .movie .info .title span{-ms-flex:1 auto;flex:1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thumb_list .movie .info .title .year{display:inline-block;margin-left:5px;opacity:.5}
-.thumb_list .movie .info .dvddate,.thumb_list .movie .info .eta,.thumb_list .movie .info .theaterdate{opacity:.5;float:right;margin-left:4px}
+.thumb_list .movie .info .eta{opacity:.5;float:right;margin-left:4px}
 .thumb_list .movie .info .quality{white-space:nowrap;overflow:hidden;font-size:.9em}
 .thumb_list .movie .info .quality span{font-size:.8em;margin-right:2px}
 .thumb_list .movie .actions{background-image:linear-gradient(25deg,rgba(172,0,0,.3) 0,#ac0000 80%);will-change:opacity,visibility;transition:all .4s;transition-property:opacity,visibility;opacity:0;visibility:hidden;position:absolute;top:0;right:0;bottom:0;left:0;text-align:right}

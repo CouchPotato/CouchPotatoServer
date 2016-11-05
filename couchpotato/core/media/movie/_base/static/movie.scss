@@ -315,24 +315,6 @@ $mass_edit_height: 44px;
 					display: none;
 				}
 			}
-			.dvddate {
-				font-size: .8em;
-				opacity: .5;
-				margin-right: 4px;
-
-				@include media-phablet {
-					 display: none;
-				 }
-			 }
-			 .theaterdate {
-				 font-size: .8em;
-				 opacity: .5;
-				 margin-right: 4px;
-
-				 @include media-phablet {
-					 display: none;
-				 }
-			 }
 			.quality {
 				clear: both;
 				overflow: hidden;
@@ -511,16 +493,6 @@ $mass_edit_height: 44px;
 				opacity: .5;
 				float: right;
 				margin-left: 4px;
-			}
-			.dvddate {
-				opacity: .5;
-				float: right;
-				margin-left:4px;
-			}
-			.theaterdate {
-				opacity: .5;
-				float:right;
-				margin-left:4px;
 			}
 			.quality {
 				white-space: nowrap;
