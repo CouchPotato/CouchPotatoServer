@@ -169,7 +169,7 @@ Page.Home = new Class({
 			'identifier': 'late',
 			'limit': 50,
 			'title': 'Missed',
-			'description': 'DVD releases in next 3 months, Theatrical release more than 12 weeks ago. Try another quality profile? <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
+			'description': 'DVD release > 3 months ago, Theatrical release > 12 weeks ago. Try another quality profile? <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
 			'filter': {
 				'late': true
 			},
