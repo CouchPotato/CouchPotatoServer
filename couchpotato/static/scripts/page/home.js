@@ -56,7 +56,7 @@ Page.Home = new Class({
 			'view': 'list',
 			'actions': [MA.MarkAsDone, MA.IMDB, MA.Release, MA.Trailer, MA.Refresh, MA.Readd, MA.Delete, MA.Category, MA.Profile],
 			'title': 'Snatched & Available',
-			'description': 'These movies have been snatched or have finished downloading',
+			'description': 'Releases available to snatch, have been snatched and/or finished downloading',
 			'on_empty_element': new Element('div').adopt(
 				new Element('h2', {'text': 'Snatched & Available'}),
 				new Element('span.no_movies', {
@@ -105,7 +105,7 @@ Page.Home = new Class({
 			'identifier': 'soon',
 			'limit': 12,
 			'title': 'Available soon',
-			'description': 'Should be available soon as they will be released on DVD/Blu-ray in the coming weeks.',
+			'description': 'DVD/Blu-ray release date: past 3 months or next 4 weeks',
 			'filter': {
 				'random': true
 			},
@@ -168,8 +168,8 @@ Page.Home = new Class({
 			'navigation': false,
 			'identifier': 'late',
 			'limit': 50,
-			'title': 'Still not available',
-			'description': 'Try another quality profile or maybe add more providers in <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
+			'title': 'Missed',
+			'description': 'DVD releases in next 3 months, Theatrical release more than 12 weeks ago. Try another quality profile? <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
 			'filter': {
 				'late': true
 			},
