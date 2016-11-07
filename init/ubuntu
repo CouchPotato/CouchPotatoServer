@@ -61,7 +61,7 @@ start_cp() {
 	# (but refuse to touch any pre-existing ones)
 	for D in "$(dirname "$CP_PIDFILE")" "$CP_DATA"; do
 		[ ! -d "$D" ] && {
-			install --directory --owner="$CP_USER" --group=root --mode=0700 "$D" || exit 1;
+			install --directory --owner="$CP_USER" --group=root --mode=0750 "$D" || exit 1;
 		}
 	done
 
