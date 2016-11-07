@@ -12,7 +12,7 @@ log = CPLog(__name__)
 class Base(NZBProvider, RSS):
 
     urls = {
-        'search': 'https://api.omgwtfnzbs.org/json/?%s',
+        'search': 'https://api.omgwtfnzbs.me/json/?%s',
     }
 
     http_time_between_calls = 1   # Seconds
@@ -61,7 +61,7 @@ config = [{
             'tab': 'searcher',
             'list': 'nzb_providers',
             'name': 'OMGWTFNZBs',
-            'description': 'See <a href="https://omgwtfnzbs.org/" target="_blank">OMGWTFNZBs</a>',
+            'description': 'See <a href="https://omgwtfnzbs.me/" target="_blank">OMGWTFNZBs</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAIAAADAAbR1AAADbElEQVR4AZ2UW0ybZRiAy/OvdHaLYvB0YTRIFi7GkM44zRLmIfNixkWdiRMyYoxRE8/TC7MYvXCGEBmr3mxLwVMwY0wYA7e6Wso4lB6h/U9taSlMGIfBXLYlJMyo0S///2dJI5lxN8/F2/f9nu9737e/jYmXr6KTbN9BGG9HE/NotQ76UWziNzrXFiETk/5ARUNH+7+0kW7fSgTl0VKGOLZzidOkmuuIo7q2oTArNLPIzhdIkqXkerFOm2CaD/5bcKrjIL2c3fkhPxOq93Kcb91v46fV9TQKF4TgV/TbUsQtzfCaK6jMOd5DJrguSIIhexmqqVxN0FXbRR8/ND/LYTTj6J7nl2gnL47OkDW4KJhnQHCa6JpKVNJGA3OC58nwBJoZ//ebbIyKpBxjrr0o1q1FMRkrKXZnHWF85VvxMrJxibwhGyd0f5bLnKzqJs1k0Sfo+EU8hdAUvkbcwKEgs2D0OiV4jmmD1zb+Tp6er0JMMvDxPo5xev9zTBF683NS+N56n1YiB95B5crr93KRuKhKI0tb0Kw2mgLLqTjLEWO8424i9IvURaYeOckwf3+/yCC9e3bQQ/MuD+Monk0k+XFXMUfx7z5EEP+XlXi5tLlMxH8zLppw7idJrugcus30kC86gc7UrQqjLIukM8zWHOACeU+TiMxXN6ExVOkgz4lvPEzice1GIVhxhG4CrZvpl6TH55giKWqXGLy9hZh5aUtgDSew/msSyCKpl+DDNfxJc8NBIsxUxUnz14O/oONu+IIIvso9TLBQ1SY5rUhuSzUhAqJ2mRXBLDOCeUtgUZXsaObT8BffhUJPqWgiV+3zKKzYH0ClvTRLhD77HIqVkyh5jThnivehoG+qJctIRSPn6bxvO4FCgTl9c1DmbpjLajbQFE8aW5SU3rg+zOPGUjTUF9NFpLEbH2c/KmGYlY69/GQJVtGMSUcEp9eCbB1nctbxHTLRdTUkGDf+B02uGWRG3OvpJ/zSMwzif+oxVBID3cQKBavLCiPmB2PM2UuSCUPgrX4VDb97AwEG67bh4+KTOlncvu3M31BwA5rLHbCfEjwkNDky9e/SSbSxnD46Pg0RJtpXRvhmBSZHpRjWtKwFybjuQeXaKxto4WjLZZZvVmC17pZLJFkwxm5++PS2Mrwc7nyIMYZe/IzoP5d6QgEybqTXAAAAAElFTkSuQmCC',
             'options': [
