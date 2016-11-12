@@ -1,6 +1,7 @@
 import base64
 import time
 import json
+import requests
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
@@ -103,6 +104,7 @@ class CouchPotatoApi(MovieProvider):
 
         return {}
 
+
     def getReleaseDate(self, identifier = None):
         if identifier is None: return {}
 
@@ -110,7 +112,8 @@ class CouchPotatoApi(MovieProvider):
 
         #This grabs release date info from omdbapi/rottentomatoes
         temp2 = self.getJsonData("http://www.omdbapi.com/?i=%s&tomatoes=true&plot=short&r=json" % identifier)
-        #log.debug(temp2)
+        title = temp2['Title']
+        #log.debug(title)
         ddate=0 #throw away what couchpotatoai is returning since it is garbage at this time
         tdate=0
         dvd_date= temp2['DVD']
@@ -129,6 +132,25 @@ class CouchPotatoApi(MovieProvider):
                 tdate = 0
         dates['dvd']=ddate    
         dates['theater']=tdate
+        dates['netflix']=0
+
+        url = 'https://www.allflicks.net/wp-content/themes/responsive/processing/processing_ca.php?draw=9&columns[0][data]=box_art&columns[0][name]=&columns[0][searchable]=true&columns[0][orderable]=false&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=title&columns[1][name]=&columns[1][searchable]=true&columns[1][orderable]=true&columns[1][search][value]=&columns[1][search][regex]=false&columns[2][data]=year&columns[2][name]=&columns[2][searchable]=true&columns[2][orderable]=true&columns[2][search][value]=&columns[2][search][regex]=false&columns[3][data]=genre&columns[3][name]=&columns[3][searchable]=true&columns[3][orderable]=true&columns[3][search][value]=&columns[3][search][regex]=false&columns[4][data]=rating&columns[4][name]=&columns[4][searchable]=true&columns[4][orderable]=true&columns[4][search][value]=&columns[4][search][regex]=false&columns[5][data]=available&columns[5][name]=&columns[5][searchable]=true&columns[5][orderable]=true&columns[5][search][value]=&columns[5][search][regex]=false&columns[6][data]=director&columns[6][name]=&columns[6][searchable]=true&columns[6][orderable]=true&columns[6][search][value]=&columns[6][search][regex]=false&columns[7][data]=cast&columns[7][name]=&columns[7][searchable]=true&columns[7][orderable]=true&columns[7][search][value]=&columns[7][search][regex]=false&order[0][column]=5&order[0][dir]=desc&start=0&length=25&search[value]=%s&search[regex]=false&movies=true&shows=false&documentaries=true&rating=netflix&min=1900&max=2016&_=1478945015662'
+        with requests.Session() as session:
+            session.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0"}
+            session.get("http://www.allflicks.net/canada/")
+            response = session.get(url % title,headers={"Accept" : "application/json, text/javascript, */*; q=0.01", 
+                                         "X-Requested-With": "XMLHttpRequest", 
+                                         "Referer": "http://www.allflicks.net/canada/", 
+                                         "Host": "www.allflicks.net"})
+            #log.debug("JSON returned from ALLFLICKS")
+
+            j1= response.json()
+            #log.debug(j1)
+            #log.debug("END OF JSON")
+            recordsFiltered = j1['recordsFiltered']
+            dates['netflix']=recordsFiltered
+
+        
         """
         #This grabs release date info for US from themoviedb - one must replace xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx with their themoviedb api key
         #note - if more than one release date of a particular type is found, the last one found will be used

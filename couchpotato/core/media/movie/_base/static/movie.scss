@@ -305,6 +305,11 @@ $mass_edit_height: 44px;
 					opacity: .5;
 				}
 			}
+			.netflix {
+				display: inline-block;
+				margin: 0 10px;
+				opacity: .5;
+			}
 
 			.eta {
 				font-size: .8em;
@@ -491,9 +496,16 @@ $mass_edit_height: 44px;
 					opacity: .5;
 				}
 			}
+			.netflix {
+				order : 3;
+				font-size: .9em;
+				opcaity: .5;
+				float: right;
+				margin-left: 4px;
+			}
 
 			.eta {
-				order : 3;
+				order : 4;
 				font-size: .9em;
 				opacity: .5;
 				float: right;

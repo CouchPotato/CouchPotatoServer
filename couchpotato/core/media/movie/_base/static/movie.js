@@ -190,6 +190,7 @@ var Movie = new Class({
 
 		self.el.addClass('status_'+self.get('status'));
 
+		var netflix = self.getNetflix("%b %d %Y");
 		var eta_date = self.getETA("%b %d, %Y");
 		var dvd_date = self.getDVDRelease("%b %d, %Y");
 		var theater_date = self.getTheaterRelease("%b %d, %Y");
@@ -258,6 +259,9 @@ var Movie = new Class({
 						'text': self.data.info.year || 'n/a'
 					})
 				),
+				netflix ? new Element('div.netflix', {
+					'text' : 'Likely on Netflix'
+				}) : null,
 				//theater_date ? new Element('div.theaterdate', {
 				//	'text': "Theatrical Release: " +theater_date,
 				//	'title': 'TheaterDate'
@@ -460,6 +464,21 @@ var Movie = new Class({
 		if (d){
                         d_date = new Date (d*1000);
 		        d_date = d_date.format(format);
+		}
+		return d_date;
+	},
+
+	getNetflix: function(format){
+		var self = this,
+			d=null,
+			d_date='';
+		if (self.data.info.release_date)
+			[self.data.info.release_date.netflix].each(function(timestamp){
+				if (timestamp > 0)
+					d = timestamp;
+			});
+		if (d) {
+			d_date ='Netflix';
 		}
 		return d_date;
 	},
