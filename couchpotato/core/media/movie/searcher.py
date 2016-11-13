@@ -181,14 +181,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             #define some options here
             #How should Netflix status effect searching/downloading
             #default: ignore netflix info and search/download regularly
-            netflixSearchEnabled = 1 
-            netflixDownloadEnabled = 1 #these options should be loaded from the configuration menu
+            netflixSearchEnabled = 0 
+            netflixDownloadEnabled = 0 #these options should be loaded from the configuration menu
             #default behavior is both are enabled i.e. netflix info is only displayed but has no effect
             #the below code assumes that netflixSearchEnabled and netflixDownloadEnabled
             #   are loaded from the config file
             netflixDownloadEnabled = netflixDownloadEnabled and netflixSearchEnabled #dont download if no search
 
-            movieOnNetflix = release_dates.get('netflix') >0
+            if release_dates:
+                movieOnNetflix = release_dates.get('netflix')
+            else:
+                movieOnNetflix = 0
             log.debug('Checking if the movie is available on Netflix')
             if (movieOnNetflix):
                 log.debug('The movie is available on Netflix')
