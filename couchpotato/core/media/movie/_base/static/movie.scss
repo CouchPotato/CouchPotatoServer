@@ -311,6 +311,9 @@ $mass_edit_height: 44px;
 				opacity: .5;
 				color: #FFF;
 				font-weight:800;
+				//@include media-phablet {
+				//	display:none;
+				//}
 				
 			}
 
@@ -319,9 +322,9 @@ $mass_edit_height: 44px;
 				opacity: .5;
 				margin-right: 4px;
 
-				@include media-phablet {
-					display: none;
-				}
+				//@include media-phablet {
+				//	display: none;
+				//}
 			}
 			.quality {
 				clear: both;
