@@ -143,7 +143,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         outside_eta_results = 0
         netflix_results = 0
         always_search = self.conf('always_search')
+        #How should the fact that a movie is available on netflix effect searching for and downloading releases?
         netflixSearchEnabled = not self.conf('disable_netflix_search')
+        netflixDownloadEnabled = not self.conf('disable_netflix_download')
         ignore_eta = manual
         total_result_count = 0
 
@@ -179,14 +181,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 if not ignore_eta:
                     continue
 
-            #define some options here
-            #How should Netflix status effect searching/downloading
-            #default: ignore netflix info and search/download regularly
-            #netflixSearchEnabled = 1 #this has now been handled via the configuration option
-            netflixDownloadEnabled = 1 #these options should be loaded from the configuration menu
-            #default behavior is both are enabled i.e. netflix info is only displayed but has no effect
-            #the below code assumes that netflixSearchEnabled and netflixDownloadEnabled
-            #   are loaded from the config file
             netflixDownloadEnabled = netflixDownloadEnabled and netflixSearchEnabled #dont download if no search
 
             if release_dates:
@@ -272,7 +266,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.tag', movie['_id'], 'recent', update_edited = True, single = True)
 
         if not netflixDownloadEnabled and netflix_results > 0:
-            log.info('Found %s releases for "%s" for movie on Netflix. Select and downloadvia the dashboard.' % (netflix_results, default_title))
+            message = 'Found %s releases for "%s" for movie on Netflix. Select and download via the dashboard.' % (netflix_results, default_title)
+            log.info(message)
+
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
@@ -463,12 +459,20 @@ config = [{
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
                 },
+                {
+                    'name': 'disable_netflix_download',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'label': 'No Auto Download if On Netflix',
+                    'description': 'Movies believed to currently be available on Netflix will not be automatically downloaded. Searching will still happen but releases will have to manually be downloaded from the dashboard',
+                },
                 {   'name': 'disable_netflix_search',
                     'default': False,
                     'migrate_from': 'searcher',
                     'type': 'bool',
                     'label': "Skip if on Netflix",
-                    'description': 'Skip searching movies believed to currently be available on Netflix. Downloading of these movies will not be possible. If you simply want to disable automated downloads of these movies use the option in the downloader to simply disable automatically downloading movies known to be on netflix',
+                    'description': 'Skip searching movies believed to currently be available on Netflix. Downloading of these movies will not be possible. If you simply want to disable automated downloads of these movies (i.e. manual downloads will still be possible) use the option: No Auto Download if On Netflix'
                 },
                 {
                     'name': 'run_on_launch',
