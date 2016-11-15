@@ -189,6 +189,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.el.addClass('status_'+self.get('status'));
+ 
 
 		var netflix = self.getNetflix("%b %d %Y");
 		var eta_date = self.getETA("%b %d, %Y");
@@ -205,7 +206,14 @@ var Movie = new Class({
 			eta_type = "Theatrically released: ";
 			eta_date = theater_date;
 		}
-
+		displayDateInfo = 1 //should correspond to option dontDisplayDateInfo from the general settings
+		if (!displayDateInfo){
+		        eta_date =null;
+		}
+		displayNetflixStatus = 1 //should correspond to dontDisplayNetflixStatus from the general settings
+                if (!displayNetflixStatus){
+			netflix = null;
+		}
 		var rating, stars;
 		if(['suggested','chart'].indexOf(self.data.status) > -1 && self.data.info && self.data.info.rating && self.data.info.rating.imdb){
 			rating = Array.prototype.slice.call(self.data.info.rating.imdb);
