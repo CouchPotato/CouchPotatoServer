@@ -11,10 +11,12 @@ class IPTorrents(MovieProvider, Base):
 
     cat_ids = [
         ([87], ['3d']),
-        ([48], ['720p', '1080p', 'bd50']),
-        ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
-        ([7, 48, 20], ['dvdrip', 'brrip']),
-        ([6], ['dvdr']),
+        ([48], ['720p', '1080p']),
+        ([89], ['bd50']),
+        ([96], ['cam', 'ts', 'tc', 'r5', 'scr']),
+		([48, 20, 90], ['brrip']),
+        ([7, 77], ['dvdrip']),
+        ([6], ['dvdr'])
     ]
 
     def buildUrl(self, title, media, quality):
