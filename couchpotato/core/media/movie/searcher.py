@@ -143,6 +143,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         outside_eta_results = 0
         netflix_results = 0
         always_search = self.conf('always_search')
+        netflixSearchEnabled = not self.conf('disable_netflix_search')
         ignore_eta = manual
         total_result_count = 0
 
@@ -181,7 +182,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             #define some options here
             #How should Netflix status effect searching/downloading
             #default: ignore netflix info and search/download regularly
-            netflixSearchEnabled = 1 
+            #netflixSearchEnabled = 1 #this has now been handled via the configuration option
             netflixDownloadEnabled = 1 #these options should be loaded from the configuration menu
             #default behavior is both are enabled i.e. netflix info is only displayed but has no effect
             #the below code assumes that netflixSearchEnabled and netflixDownloadEnabled
@@ -461,6 +462,13 @@ config = [{
                     'type': 'bool',
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
+                },
+                {   'name': 'disable_netflix_search',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'label': "Skip if on Netflix",
+                    'description': 'Skip searching movies believed to currently be available on Netflix. Downloading of these movies will not be possible. If you simply want to disable automated downloads of these movies use the option in the downloader to simply disable automatically downloading movies known to be on netflix',
                 },
                 {
                     'name': 'run_on_launch',
