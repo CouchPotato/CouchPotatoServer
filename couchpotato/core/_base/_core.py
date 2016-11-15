@@ -292,18 +292,6 @@ config = [{
                     'description': 'For people with sensitive skin',
                     'wizard': True,
                 },
-                {
-                    'name': 'dontDisplayDateInfo',
-                    'default': False,
-                    'type': 'bool',
-                    'description': 'Dont display ETA/Release Dates in lists',
-                },
-                {
-                    'name': 'dontDisplayNetflixStatus',
-                    'default': False,
-                    'type': 'bool',
-                    'description': 'Do not display Netflix status in lists',
-                },
             ],
         },
         {

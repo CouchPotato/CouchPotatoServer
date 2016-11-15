@@ -206,11 +206,11 @@ var Movie = new Class({
 			eta_type = "Theatrically released: ";
 			eta_date = theater_date;
 		}
-		displayDateInfo = 1 //should correspond to option dontDisplayDateInfo from the general settings
+		displayDateInfo = 1 //need some tickbox to toggle this?
 		if (!displayDateInfo){
 		        eta_date =null;
 		}
-		displayNetflixStatus = 1 //should correspond to dontDisplayNetflixStatus from the general settings
+		displayNetflixStatus = 1 //need some tickbox to toggle this?
                 if (!displayNetflixStatus){
 			netflix = null;
 		}
