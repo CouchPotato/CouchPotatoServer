@@ -194,6 +194,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     log.debug('Searching of movies available on netflix is disabled, skipping')
                     continue
                 log.debug('Searching of movies available on netflix is enabled, proceeding')
+            else:
+                log.debug('The movie is not available on Netfix')
 
             has_better_quality = 0
 
@@ -242,7 +244,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
             if movieOnNetflix and results_count > 0:
-                log.debug('Found %s release for "%s", but movie is on netflix.', (results_count, default_title))
+                log.debug('Found %s release for "%s", movie is on netflix.', (results_count, default_title))
 
             # Try find a valid result and download it
             if (force_download or not could_not_be_released or always_search) and (not movieOnNetflix or (movieOnNetflix and netflixDownloadEnabled)) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):

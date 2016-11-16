@@ -166,12 +166,16 @@ class CouchPotatoApi(MovieProvider):
                                              "Host": "www.allflicks.net"})
             
             #log.debug("JSON returned from ALLFLICKS")
-
             j1= response.json()
             #log.debug(j1)
             #log.debug("END OF JSON")
             recordsFiltered = j1['recordsFiltered']
-            dates['netflix']=recordsFiltered
+            dates['netflix']=0
+            if (recordsFiltered> 0):
+                 results = j1['data']
+                 for result in results:
+                     if result['title'] == title:
+                         dates['netflix']=1
 
         
         """
