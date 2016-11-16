@@ -152,19 +152,24 @@ class CouchPotatoApi(MovieProvider):
         # the movie will not be reported as being on netflix when in fact it is.
         length=100
         start=0
+
+        #since netflix doesnt always have the same title as IMDB
+        #we could potentially use a user-specified title when querying allFlicks
+        #the option still needs to be implemented 
+        titleForNetflix = title
         numFound = 1 #this just forces at least one execution of the following loop
         while start < numFound and not year > now_year:
             with requests.Session() as session:
                 session.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0"}
                 if countryCode=='ca':
                     session.get("http://www.allflicks.net/canada/")
-                    response = session.get(url % (countryCode,str(start),str(length),title,str(now_year)),headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
+                    response = session.get(url % (countryCode,str(start),str(length),titleForNetflix,str(now_year)),headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
                                                   "X-Requested-With": "XMLHttpRequest",
                                                   "Referer": "http://www.allflicks.net/canada/",
                                                   "Host": "www.allflicks.net"})
                 else:
                     session.get("http://www.allflicks.net/") 
-                    response = session.get(url % (countryCode,str(start),str(length),title,str(now_year)),headers={"Accept" : "application/json, text/javascript, */*; q=0.01", 
+                    response = session.get(url % (countryCode,str(start),str(length),titleForNetflix,str(now_year)),headers={"Accept" : "application/json, text/javascript, */*; q=0.01", 
                                                  "X-Requested-With": "XMLHttpRequest", 
                                                  "Referer": "http://www.allflicks.net/", 
                                                  "Host": "www.allflicks.net"})
@@ -175,7 +180,7 @@ class CouchPotatoApi(MovieProvider):
             if start == 0: log.debug('----->Movie %s returned %s results from Allflicks' % (title,numFound))
             results = j1['data']
             for result in results:
-                if result['title'].upper() == title.upper():   #this needs to be case insensitive
+                if result['title'].upper() == titleForNetflix.upper():   #this needs to be case insensitive
                     if int(result['year']) <= year+1 and int(result['year']) >= year-1:
                         log.debug('---> Movie %s (%s) matched with %s (%s)from Allflicks' % (title,str(year),result['title'], result['year']))
                         p='%d %b %Y'
