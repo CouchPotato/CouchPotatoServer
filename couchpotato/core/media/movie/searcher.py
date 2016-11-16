@@ -82,7 +82,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             'total': total,
             'to_go': total,
         }
-
+        always_refresh = self.conf('always_refresh')
+        if always_refresh:
+            for media_id in medias:
+                fireEvent('movie.update', media_id)
         try:
             search_protocols = fireEvent('searcher.protocols', single = True)
 
@@ -448,6 +451,14 @@ config = [{
                     'type': 'bool',
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
+                },
+                {   'name': 'always_refresh',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'type': 'bool',
+                    'label': 'refresh before full search',
+                    'description': 'Refresh all media info (ETA, netflix status etc.) prior to starting a Search for all Wanted items - this is useful if you want to make use of netflix information. Having this option enabled ensures a global search will have up to date and accurate netflix information',
                 },
                 {
                     'name': 'disable_netflix_download',
