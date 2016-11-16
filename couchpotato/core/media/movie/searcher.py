@@ -147,7 +147,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         netflix_results = 0
         always_search = self.conf('always_search')
         #How should the fact that a movie is available on netflix effect searching for and downloading releases?
-        netflixDownloadEnabled = not self.conf('disable_netflix_download')
+        netflixSearchEnabled = not self.conf('disable_netflix_search')
+        netflixDownloadEnabled = netflixSearchEnabled and not self.conf('disable_netflix_download') #no dl if no search
         ignore_eta = manual
         total_result_count = 0
 
@@ -182,6 +183,15 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 # Skip release, if ETA isn't ignored
                 if not ignore_eta:
                     continue
+
+            if release_dates: movieOnNetflix = release_dates.get('netflix')
+            if release_dates and release_dates.get('netflix'):
+                movieOnNetflix = 1
+            else:
+                movieOnNetflix = 0
+
+            if (movieOnNetflix and not netflixSearchEnabled):
+                continue
 
             if release_dates and release_dates.get('netflix'):
                 movieOnNetflix = 1
@@ -459,6 +469,14 @@ config = [{
                     'type': 'bool',
                     'label': 'refresh before full search',
                     'description': 'Refresh all media info (ETA, netflix status etc.) prior to starting a Search for all Wanted items - this is useful if you want to make use of netflix information. Having this option enabled ensures a global search will have up to date and accurate netflix information',
+                },
+                {
+                    'name': 'disable_netflix_search',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'label': 'Skip if on Netflix',
+                    'description': 'Skip searching movies believed to currently be available on netflix. Downloading of these movies will not be possible - the always refresh option above guarantees accurate netflix info - if the option above is not enabled movies may be skipped during global searches if CPs netflix info for that movie is out of date.',
                 },
                 {
                     'name': 'disable_netflix_download',
