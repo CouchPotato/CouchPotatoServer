@@ -176,10 +176,11 @@ class CouchPotatoApi(MovieProvider):
             results = j1['data']
             for result in results:
                 if result['title'].upper() == title.upper():   #this needs to be case insensitive
-                    log.debug('---> Movie %s matched with %s from Allflicks' % (title,result['title']))
-                    p='%d %b %Y'
-                    ndate=int(time.mktime(time.strptime(result['available'],p)))
-                    dates['netflix']=ndate
+                    if int(result['year']) <= year+1 and int(result['year']) >= year-1:
+                        log.debug('---> Movie %s (%s) matched with %s (%s)from Allflicks' % (title,str(year),result['title'], result['year']))
+                        p='%d %b %Y'
+                        ndate=int(time.mktime(time.strptime(result['available'],p)))
+                        dates['netflix']=ndate
             start=start+length
         
         """
