@@ -170,12 +170,14 @@ class CouchPotatoApi(MovieProvider):
             #log.debug(j1)
             #log.debug("END OF JSON")
             recordsFiltered = j1['recordsFiltered']
-            dates['netflix']=0
             if (recordsFiltered> 0):
                  results = j1['data']
                  for result in results:
                      if result['title'] == title:
-                         dates['netflix']=1
+                         p='%d %b %Y'
+                         ndate=int(time.mktime(time.strptime(result['available'],p)))
+                         dates['netflix']=ndate
+                       
 
         
         """

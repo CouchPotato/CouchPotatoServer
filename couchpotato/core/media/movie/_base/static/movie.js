@@ -268,7 +268,8 @@ var Movie = new Class({
 					})
 				),
 				netflix ? new Element('div.netflix', {
-					'text' : 'Likely on Netflix'
+					'text' : 'Likely on Netflix (since '+netflix+')',
+					'title':'Netflix'
 				}) : null,
 				//theater_date ? new Element('div.theaterdate', {
 				//	'text': "Theatrical Release: " +theater_date,
@@ -486,7 +487,8 @@ var Movie = new Class({
 					d = timestamp;
 			});
 		if (d) {
-			d_date ='Netflix';
+			d_date = new Date (d*1000);
+			d_date = d_date.format(format);
 		}
 		return d_date;
 	},

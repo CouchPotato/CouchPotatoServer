@@ -144,7 +144,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         netflix_results = 0
         always_search = self.conf('always_search')
         #How should the fact that a movie is available on netflix effect searching for and downloading releases?
-        netflixSearchEnabled = not self.conf('disable_netflix_search')
         netflixDownloadEnabled = not self.conf('disable_netflix_download')
         ignore_eta = manual
         total_result_count = 0
@@ -181,21 +180,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 if not ignore_eta:
                     continue
 
-            netflixDownloadEnabled = netflixDownloadEnabled and netflixSearchEnabled #dont download if no search
-
-            if release_dates:
-                movieOnNetflix = release_dates.get('netflix')
+            if release_dates and release_dates.get('netflix'):
+                movieOnNetflix = 1
             else:
                 movieOnNetflix = 0
-            log.debug('Checking if the movie is available on Netflix')
-            if (movieOnNetflix):
-                log.debug('The movie is available on Netflix')
-                if not netflixSearchEnabled:
-                    log.debug('Searching of movies available on netflix is disabled, skipping')
-                    continue
-                log.debug('Searching of movies available on netflix is enabled, proceeding')
-            else:
-                log.debug('The movie is not available on Netfix')
 
             has_better_quality = 0
 
@@ -366,7 +354,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         now_month = date.today().month
 
         #for movies currently available on netflix
-        if (dates and dates.get('netflix') > 0):
+        if (dates and not dates.get('netflix', 0) ==0):
             return True
         
         if (year is None or year < now_year - 1 or (year <= now_year - 1 and now_month > 4)) and (not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0)):
@@ -468,13 +456,6 @@ config = [{
                     'type': 'bool',
                     'label': 'No Auto Download if On Netflix',
                     'description': 'Movies believed to currently be available on Netflix will not be automatically downloaded. Searching will still happen but releases will have to manually be downloaded from the dashboard',
-                },
-                {   'name': 'disable_netflix_search',
-                    'default': False,
-                    'migrate_from': 'searcher',
-                    'type': 'bool',
-                    'label': "Skip if on Netflix",
-                    'description': 'Skip searching movies believed to currently be available on Netflix. Downloading of these movies will not be possible. If you simply want to disable automated downloads of these movies (i.e. manual downloads will still be possible) use the option: No Auto Download if On Netflix'
                 },
                 {
                     'name': 'run_on_launch',
