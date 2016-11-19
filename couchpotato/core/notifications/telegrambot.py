@@ -26,7 +26,7 @@ class TelegramBot(Notification):
                 url = 'http://www.imdb.com/title/{0}/'.format(imdb_id)
                 message = '{0}\n{1}'.format(message, url)
 
-        # Cosntruct message
+        # Construct message
         payload = {'chat_id': usr_id, 'text': message, 'parse_mode': 'Markdown'}
 
         # Send message user Telegram's Bot API
