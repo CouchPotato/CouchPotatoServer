@@ -82,10 +82,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             'total': total,
             'to_go': total,
         }
-        always_refresh = self.conf('always_refresh')
-        if always_refresh:
-            for media_id in medias:
-                fireEvent('movie.update', media_id)
+        #always_refresh = self.conf('always_refresh')
+        #if always_refresh:
+        #    for media_id in medias:
+        #        fireEvent('movie.update', media_id)
         try:
             search_protocols = fireEvent('searcher.protocols', single = True)
 
@@ -133,6 +133,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.delete', movie['_id'], single = True)
             return
 
+        always_refresh=self.conf('always_refresh')
+        if always_refresh:
+            log.debug("-------------------irefreshg--------------------------------")
+            fireEvent('movie.update',movie['_id'])
         # Update media status and check if it is still not done (due to the stop searching after feature
         if fireEvent('media.restatus', movie['_id'], single = True) == 'done':
             log.debug('No better quality found, marking movie %s as done.', default_title)
@@ -146,9 +150,20 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         outside_eta_results = 0
         netflix_results = 0
         always_search = self.conf('always_search')
+        #always_refresh = self.conf('always_refresh')
+        #if always_refresh:
+        #    fireEvent('movie.update',movie['_id'])
         #How should the fact that a movie is available on netflix effect searching for and downloading releases?
         netflixSearchEnabled = not self.conf('disable_netflix_search')
         netflixDownloadEnabled = netflixSearchEnabled and not self.conf('disable_netflix_download') #no dl if no search
+        if release_dates and release_dates.get('netflix'):
+            movieOnNetflix = 1
+            if not netflixSearchEnabled:
+                return
+        else: 
+            movieOnNetflix = 0
+        
+
         ignore_eta = manual
         total_result_count = 0
 
@@ -184,7 +199,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 if not ignore_eta:
                     continue
 
-            if release_dates: movieOnNetflix = release_dates.get('netflix')
+            """if release_dates: movieOnNetflix = release_dates.get('netflix')
             if release_dates and release_dates.get('netflix'):
                 movieOnNetflix = 1
             else:
@@ -197,7 +212,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 movieOnNetflix = 1
             else:
                 movieOnNetflix = 0
-
+            """
             has_better_quality = 0
 
             # See if better quality is available
