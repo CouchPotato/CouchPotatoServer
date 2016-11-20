@@ -161,6 +161,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         ret = False
 
         for index, q_identifier in enumerate(profile.get('qualities', [])):
+            if q_identifier == '':
+                continue # Ignore qualities that are undefined
+            
             quality_custom = {
                 'index': index,
                 'quality': q_identifier,
