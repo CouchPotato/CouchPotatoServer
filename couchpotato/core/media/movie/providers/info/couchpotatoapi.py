@@ -223,9 +223,15 @@ class CouchPotatoApi(MovieProvider):
         	 
         if dvd_rel !='' and year > 1972:
             ddate=int(time.mktime(time.strptime(dvd_rel[:10],p)))
-        if tdate < ddate: #dont write the data unless its good and makes sense
-            dates['theater']=tdate
-            dates['dvd']=ddate	
+
+        if (ddate !=0):    
+            if ddate < tdate:
+                ddate = 0 #if the dvd release date occurs before the theater release date, assume the data is wrong
+                tdate = 0
+        dates['dvd']=ddate    
+        dates['theater']=tdate
+        dates['netflix']=0
+
 
         if (dates['theater'] or dates['dvd']):
             log.debug('Found ETA using THEMOVIEDB for %s: %s', (identifier, dates))
