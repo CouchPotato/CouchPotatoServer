@@ -230,7 +230,6 @@ class CouchPotatoApi(MovieProvider):
                 tdate = 0
         dates['dvd']=ddate    
         dates['theater']=tdate
-        dates['netflix']=0
 
 
         if (dates['theater'] or dates['dvd']):
