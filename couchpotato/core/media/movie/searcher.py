@@ -482,8 +482,8 @@ config = [{
                     'migrate_from': 'searcher',
                     'type': 'bool',
                     'type': 'bool',
-                    'label': 'refresh before full search',
-                    'description': 'Refresh all media info (ETA, netflix status etc.) prior to starting a Search for all Wanted items - this is useful if you want to make use of netflix information. Having this option enabled ensures a global search will have up to date and accurate netflix information',
+                    'label': 'refresh before search',
+                    'description': 'Refresh all media info (ETA, netflix status etc.) prior to starting a Search. This is useful if you want to make use of netflix information. Having this option enabled ensures a search will have up to date and accurate netflix information',
                 },
                 {
                     'name': 'disable_netflix_search',
@@ -491,7 +491,7 @@ config = [{
                     'migrate_from': 'searcher',
                     'type': 'bool',
                     'label': 'Skip if on Netflix',
-                    'description': 'Skip searching movies believed to currently be available on netflix. Downloading of these movies will not be possible - the always refresh option above guarantees accurate netflix info - if the option above is not enabled movies may be skipped during global searches if CPs netflix info for that movie is out of date.',
+                    'description': 'Skip searching movies believed to currently be available on netflix. Downloading of these movies will not be possible - the always refresh option above guarantees accurate netflix info - if the option above is not enabled movies may be skipped during a search if CPs netflix info for that movie is out of date.',
                 },
                 {
                     'name': 'disable_netflix_download',

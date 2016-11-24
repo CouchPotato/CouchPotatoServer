@@ -195,7 +195,15 @@ class CouchPotatoApi(MovieProvider):
         #or not working
         #perhaps the fix shouldnt be done right here; however, I am just checking this code in because perhaps someone who knows
         #how couchpotato works better can use this code in a more appropriate way to make couchpotato eta more robust.
-        #temp = self.getJsonData("https://api.themoviedb.org/3/movie/%s/release_dates?api_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" % identifier)
+        #"""
+        apiKey='' #apiKey should be '' or 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        if (dates['dvd'] or dates['theater']):
+            log.debug('Found ETA using OMDBAPI for %s: %s', (identifier, dates))
+            return dates
+        if (apiKey == ''): 
+            log.debug('Wanted to check ETA for %s on THEMOVIEDB but no apiKey specified' % identifier)
+            return dates
+        temp = self.getJsonData("https://api.themoviedb.org/3/movie/%s/release_dates?api_key=%s" % (identifier,apiKey))
         results = temp['results']
         theater_rel=''
         dvd_rel=''
@@ -210,18 +218,17 @@ class CouchPotatoApi(MovieProvider):
                        theater_rel = rd['release_date']
                     elif rd_type == 4 or rd_type == 5:   #is digital or dvd release date
                        dvd_rel = rd['release_date']
-        if theater_rel != '':
+        if theater_rel != '' and year > 1972:
             tdate=int(time.mktime(time.strptime(theater_rel[:10],p)))
         	 
-        if dvd_rel !='':
+        if dvd_rel !='' and year > 1972:
             ddate=int(time.mktime(time.strptime(dvd_rel[:10],p)))
-        if tdate > ddate: #dont write the data unless its good and makes sense
+        if tdate < ddate: #dont write the data unless its good and makes sense
             dates['theater']=tdate
             dates['dvd']=ddate	
-        #"""
 
-
-        log.debug('Found ETA for %s: %s', (identifier, dates))
+        if (dates['theater'] or dates['dvd']):
+            log.debug('Found ETA using THEMOVIEDB for %s: %s', (identifier, dates))
         return dates
 
     def getSuggestions(self, movies = None, ignore = None):
