@@ -18,6 +18,7 @@ class Base(TorrentProvider):
         'login_check': 'https://www.bit-hdtv.com/messages.php',
         'detail': 'https://www.bit-hdtv.com/details.php?id=%s',
         'search': 'https://www.bit-hdtv.com/torrents.php?',
+        'download': 'https://www.bit-hdtv.com/download.php?id=%s',
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
@@ -50,12 +51,12 @@ class Base(TorrentProvider):
 
                     cells = result.find_all('td')
                     link = cells[2].find('a')
-                    torrent_id = link['href'].replace('/details.php?id=', '')
+                    torrent_id = link['href'].split('id=')[1]
 
                     results.append({
                         'id': torrent_id,
                         'name': link.contents[0].get_text(),
-                        'url': cells[0].find('a')['href'],
+                        'url': self.urls['download'] % torrent_id,
                         'detail_url': self.urls['detail'] % torrent_id,
                         'size': self.parseSize(cells[6].get_text()),
                         'seeders': tryInt(cells[8].string),

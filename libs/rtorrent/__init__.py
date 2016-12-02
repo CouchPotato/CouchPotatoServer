@@ -129,6 +129,42 @@ class RTorrent:
 
         return(func_name)
 
+    def load_magnet(self, magneturl, info_hash, start=False, verbose=False, verify_load=True, verify_retries=3):
+
+        p = self._get_conn()
+
+        info_hash = info_hash.upper()
+
+        func_name = self._get_load_function("url", start, verbose)
+
+        # load magnet
+        getattr(p, func_name)(magneturl)
+
+        if verify_load:
+            i = 0
+            while i < verify_retries:
+                for torrent in self.get_torrents():
+                    if torrent.info_hash != info_hash:
+                        continue
+                    time.sleep(1)
+                    i += 1
+
+            # Resolve magnet to torrent
+            torrent.start()
+
+            assert info_hash in [t.info_hash for t in self.torrents],\
+                "Adding magnet was unsuccessful."
+
+            i = 0
+            while i < verify_retries:
+                for torrent in self.get_torrents():
+                    if torrent.info_hash == info_hash:
+                        if str(info_hash) not in str(torrent.name):
+                            time.sleep(1)
+                            i += 1
+
+        return(torrent)
+
     def load_torrent(self, torrent, start=False, verbose=False, verify_load=True, verify_retries=3):
         """
         Loads torrent into rTorrent (with various enhancements)
