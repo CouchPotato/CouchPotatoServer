@@ -143,12 +143,23 @@ class Transmission(DownloaderBase):
                 log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s / incomplete-dir-enabled=%s / incomplete-dir=%s',
                           (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
 
+                """
+                https://trac.transmissionbt.com/browser/branches/2.8x/libtransmission/transmission.h#L1853
+                0 = Torrent is stopped
+                1 = Queued to check files 
+                2 = Checking files
+                3 = Queued to download
+                4 = Downloading
+                5 = Queued to seed
+                6 = Seeding
+                """
+
                 status = 'busy'
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
                     status = 'failed'
                 elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                     status = 'completed'
-                elif torrent['status'] == 16 and torrent['percentDone'] == 1:
+                elif torrent['status'] == 6 and torrent['percentDone'] == 1:
                     status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
