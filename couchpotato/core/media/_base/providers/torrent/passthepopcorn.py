@@ -18,12 +18,12 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'domain': 'https://tls.passthepopcorn.me',
-        'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
-        'torrent': 'https://tls.passthepopcorn.me/torrents.php',
-        'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-        'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-        'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
+        'domain': 'https://passthepopcorn.me',
+        'detail': 'https://passthepopcorn.me/torrents.php?torrentid=%s',
+        'torrent': 'https://passthepopcorn.me/torrents.php',
+        'login': 'https://passthepopcorn.me/ajax.php?action=login',
+        'login_check': 'https://passthepopcorn.me/ajax.php?action=login',
+        'search': 'https://passthepopcorn.me/search/%s/0/7/%d'
     }
 
     login_errors = 0
