@@ -23,6 +23,7 @@ from guessit import s, u
 import os.path
 import zipfile
 import io
+import re
 
 
 def split_path(path):
@@ -45,6 +46,13 @@ def split_path(path):
     while True:
         head, tail = os.path.split(path)
         headlen = len(head)
+        
+        # if a string has a : in position 1 it gets splitted in everycase, also if 
+        # there is not a valid drive letter and also if : is not followed by \
+        if headlen >= 2 and headlen <= 3 and head[1] == ':' and ( head + tail == path ) and ( head[1:] != ':\\' or not re.match("^[a-zA-Z]:\\\\", head) ):
+            tail = path
+            head = ''                   
+            headlen = 0
 
         # on Unix systems, the root folder is '/'
         if head and head == '/'*headlen and tail == '':
