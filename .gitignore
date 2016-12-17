@@ -10,3 +10,7 @@
 .coverage
 coverage.xml
 nosetests.xml
+
+# Visual Studio
+
+/.vs
