@@ -34,7 +34,7 @@ config = [{
                     'default': 0,
                 },
                 {
-		    'name': 'https',
+                    'name': 'https',
                     'description': 'Set to true if your callback host accepts https instead of http',
                     'type': 'bool',
                     'default': 0,
