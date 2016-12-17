@@ -258,9 +258,10 @@ Profile.Type = new Class({
 		self.create();
 
 		self.addEvent('change', function(){
-			self.el[self.qualities.get('value') == '-1' ? 'addClass' : 'removeClass']('is_empty');
-			self.el[Quality.getQuality(self.qualities.get('value')).allow_3d ? 'addClass': 'removeClass']('allow_3d');
-			self.deleted = self.qualities.get('value') == '-1';
+			var has_quality = !(self.qualities.get('value') == '-1' || self.qualities.get('value') == '');
+			self.el[!has_quality ? 'addClass' : 'removeClass']('is_empty');
+			self.el[has_quality && Quality.getQuality(self.qualities.get('value')).allow_3d ? 'addClass': 'removeClass']('allow_3d');
+			self.deleted = !has_quality;
 		});
 
 	},
@@ -337,7 +338,7 @@ Profile.Type = new Class({
 			}).inject(self.qualities);
 		});
 
-		self.qualities.set('value', self.data.quality);
+		self.qualities.set('value', self.data.quality || -1);
 
 		return self.qualities;
 

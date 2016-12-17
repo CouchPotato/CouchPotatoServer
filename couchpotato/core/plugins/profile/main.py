@@ -62,6 +62,18 @@ class ProfilePlugin(Plugin):
         except:
             log.error('Failed: %s', traceback.format_exc())
 
+        # Cleanup profiles that have empty qualites
+        profiles = self.all()
+        for profile in profiles:
+            try:
+                if '' in profile.get('qualities') or '-1' in profile.get('qualities'):
+                    log.warning('Found profile with empty qualities, cleaning it up')
+                    p = db.get('id', profile.get('_id'))
+                    p['qualities'] = [x for x in p['qualities'] if (x != '' and x != '-1')]
+                    db.update(p)
+            except:
+                log.error('Failed: %s', traceback.format_exc())
+
     def allView(self, **kwargs):
 
         return {
