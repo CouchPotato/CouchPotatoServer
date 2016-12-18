@@ -2,6 +2,7 @@
 /data/
 /_env/
 /_source/
+/nzbToMedia/
 .project
 .pydevproject
 /node_modules/
