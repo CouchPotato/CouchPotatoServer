@@ -18,7 +18,7 @@ class Emby(Notification):
         apikey = self.conf('apikey')
 
         host = cleanHost(host)
-        url = '%semby/Library/Series/Updated' % (host)
+        url = '%semby/Library/Movies/Updated' % (host)
         values = {}
         data = urllib.urlencode(values)
 

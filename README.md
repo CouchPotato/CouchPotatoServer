@@ -56,9 +56,6 @@ Linux:
 Docker:
 * You can use [linuxserver.io](https://github.com/linuxserver/docker-couchpotato) or [razorgirl's](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
 
-Ansible:
-* You can use [peerster's] (https://github.com/peerster/ansible-couchpotato) [ansible] (http://www.ansible.com) role to deploy couchpotato.
-
 FreeBSD:
 
 * Become root with `su`

@@ -50,7 +50,7 @@ class Base(TorrentProvider):
                     results.append({
                         'id': link['href'].replace('/torrent/', ''),
                         'name': six.text_type(link.string),
-                        'url': self.urls['download'] % url['href'],
+                        'url': url['href'],
                         'detail_url': self.urls['download'] % details['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td', attrs = {'class': 'seeders'}).string),

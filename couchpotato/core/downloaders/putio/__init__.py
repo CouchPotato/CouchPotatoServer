@@ -34,6 +34,12 @@ config = [{
                     'default': 0,
                 },
                 {
+                    'name': 'https',
+                    'description': 'Set to true if your callback host accepts https instead of http',
+                    'type': 'bool',
+                    'default': 0,
+                },
+                {
                     'name': 'callback_host',
                     'description': 'External reachable url to CP so put.io can do it\'s thing',
                 },
