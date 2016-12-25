@@ -704,7 +704,8 @@
 	z-index: 2;
 	position: absolute;
 	width: 450px;
-	margin: 28px 0 20px 0;
+	top: 0;
+	margin: 90px 0 0 100px;
 	@include theme(background, primary);
 	box-shadow: 0 0 15px 2px rgba(0,0,0,.15);
 	border-radius: $border_radius $border_radius 0 0;
