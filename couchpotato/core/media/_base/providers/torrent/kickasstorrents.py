@@ -33,6 +33,17 @@ class Base(TorrentMagnetProvider):
         'https://kat.cr',
         'https://kickass.unblocked.pw/',
         'https://katproxy.com',
+        'https://kat.al',
+        'https://katproxy.al',
+        'https://kattor.xyz',
+        'https://kickass.unblocked.video',
+        'https://kickass.unblocked.rocks',
+        'https://kickass.immunicity.live',
+        'https://kickass.immunicity.red',
+        'https://kickass.immunicity.video',
+        'https://kickass.bypassed.live',
+        'https://kickass.bypassed.video',
+        'https://kickass.bypassed.red'
     ]
 
     def _search(self, media, quality, results):
