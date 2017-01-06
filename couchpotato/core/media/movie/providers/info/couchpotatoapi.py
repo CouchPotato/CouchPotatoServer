@@ -140,7 +140,7 @@ class CouchPotatoApi(MovieProvider):
             #This grabs release date info for US from themoviedb - apiKey must be set in the code below for this to function
             #note - if more than one release date of a particular type is found, the last one found will be used
             #"""
-            apiKey='' #apiKey should be '' or 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+            apiKey='e8389665064bea0976c9bb75692ebc68' #apiKey should be '' or 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
             if (apiKey == ''): 
                 log.debug('Wanted to check ETA for %s on THEMOVIEDB but no apiKey specified' % identifier)
             else:
@@ -208,12 +208,14 @@ class CouchPotatoApi(MovieProvider):
                     response = session.get(url % (countryCode,str(start),str(length),titleForNetflix,str(now_year)),headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
                                                   "X-Requested-With": "XMLHttpRequest",
                                                   "Referer": "http://www.allflicks.net/canada/",
+                                                  "Cookie": "identifier=586e9d1655645",
                                                   "Host": "www.allflicks.net"})
                 else:
                     session.get("http://www.allflicks.net/") 
                     response = session.get(url % (countryCode,str(start),str(length),titleForNetflix,str(now_year)),headers={"Accept" : "application/json, text/javascript, */*; q=0.01", 
                                                  "X-Requested-With": "XMLHttpRequest", 
-                                                 "Referer": "http://www.allflicks.net/", 
+                                                 "Referer": "http://www.allflicks.net/",
+                                                 "Cookie": "identifier=586e9d1655645",
                                                  "Host": "www.allflicks.net"})
             
             j1= response.json()
