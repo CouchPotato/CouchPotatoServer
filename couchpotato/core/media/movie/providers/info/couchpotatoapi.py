@@ -186,13 +186,15 @@ class CouchPotatoApi(MovieProvider):
 
         #Summary:
         # if OMDBAPI returns both ddate and tdate use that and stop
-        # if OMDBAPI returns partial or no information then check THEMOVIEDB
+        # otherwise OMDBAPI returned partial or no information so check THEMOVIEDB
         # if THEMOVBIEDB returns both ddate and tdate use that and stop
-        # if THEMOVIEDB returns partial or no information but OMDBAPI returns partial info use OMDBAPI's partial info and stop
-        # if OMDBAPI returns no information and THEMOVIEDB returns partial information use that and stop
-        # if both OMDBAPI and THEMOVIEDB return no information, no information is propagated and we stop.
-        # could add some code in here to merge the two.. i.e. if one has dvd info and the other has theater info...
-        # but ignore that case for now.
+        # at this pointif we are still going, both OMDBAPI and THEMOVIEDB each returned no or partial information
+        # if both OMDBAPI and THEMOVIEDB returned partial information and the partial info doesnt overlap construct full information
+        # if the full information constructed makes sense, use that and stop
+        # at this point we know full information is not going to be available
+        # if OMDBAPI had partial information, use it and stop
+        # if THEMOVIEDB returns partial information use it and stop
+        # if we got here both OMDBAPI and THEMOVIEDB return no information, no information is propagated and we stop.
         if (ddate1 and tdate1):
             ddate=ddate1
             tdate=tdate1
@@ -200,7 +202,25 @@ class CouchPotatoApi(MovieProvider):
             ddate=ddate2
             tdate=tdate2
         else:
-            if (ddate1 or tdate1):
+            ddate3=0
+            tdate3=0
+            if ((ddate1 or tdate1) and (ddate2 or tdate2) and not (ddate1 and ddate2) and not (tdate1 and tdate2)):
+                if (ddate1):
+                    ddate3=ddate1
+                elif (tdate1):
+                    tdate3=tdate1
+                if (ddate2):
+                    ddate3=ddate2
+                elif (tdate2):
+                    tdate3=tdate2
+
+                if ddate3 < tdate3:
+                    ddate3=0
+                    ttdate3=0
+            if (ddate3 and tdate3):
+                ddate=ddate3
+                tdate=tdate3
+            elif (ddate1 or tdate1):
                 ddate=ddate1
                 tdate=tdate1
             elif (ddate2 or tdate2):
