@@ -45,7 +45,7 @@ class Automation(AutomationBase):
 
     def search(self, name, year = None, imdb_only = False):
 
-        cache_name = name.decode('utf-8').encode('ascii', 'ignore')
+        cache_name = name.decode('utf-8', 'ignore').encode('ascii', 'ignore')
         prop_name = 'automation.cached.%s.%s' % (cache_name, year)
         cached_imdb = Env.prop(prop_name, default = False)
         if cached_imdb and imdb_only:
