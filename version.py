@@ -1,2 +1,2 @@
 VERSION = None
-BRANCH = 'develop'
+BRANCH = 'master'
