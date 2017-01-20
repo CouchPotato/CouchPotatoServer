@@ -157,9 +157,7 @@ class Transmission(DownloaderBase):
                 status = 'busy'
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
                     status = 'failed'
-                elif torrent['status'] == 0 and torrent['percentDone'] == 1:
-                    status = 'completed'
-                elif torrent['status'] == 6 and torrent['percentDone'] == 1:
+                elif torrent['status'] == 0 and torrent['percentDone'] == 1 and torrent['isFinished']:
                     status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
