@@ -353,9 +353,14 @@ class Renamer(Plugin):
                 if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
                     replacements['mpaa_only'] = 'Not Rated'
 
-                replacements['3d_type_short'] = replacements['3d_type_short'].replace('Half ', 'H').replace('Full ', '')
-                if self.conf('use_tab_threed') and 'OU' in replacements['3d_type']:
-                    replacements['3d_type'] = replacements['3d_type'].replace('OU','TAB')
+                if replacements['3d_type_short']:
+                    replacements['3d_type_short'] = replacements['3d_type_short'].replace('Half ', 'H').replace('Full ', '')
+                if self.conf('use_tab_threed') and replacements['3d_type']:
+                    if 'OU' in replacements['3d_type']:
+                        replacements['3d_type'] = replacements['3d_type'].replace('OU','TAB')
+                if self.conf('use_tab_threed') and replacements['3d_type_short']:
+                    if 'OU' in replacements['3d_type_short']:
+                        replacements['3d_type_short'] = replacements['3d_type_short'].replace('OU','TAB')
                     
 
                 for file_type in group['files']:
