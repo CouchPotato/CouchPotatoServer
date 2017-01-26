@@ -41,14 +41,14 @@ class Synology(DownloaderBase):
         log.info('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
 
         # Load host from config and split out port.
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
-        if not isInt(host[1]):
+        host = cleanHost(self.conf('host')).split(':')
+        if not isInt(host[2]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
         try:
             # Send request to Synology
-            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'), self.conf('destination'))
+            srpc = SynologyRPC(host[0], host[1], host[2], self.conf('username'), self.conf('password'), self.conf('destination'))
             if data['protocol'] == 'torrent_magnet':
                 log.info('Adding torrent URL %s', data['url'])
                 response = srpc.create_task(url = data['url'])
@@ -69,9 +69,9 @@ class Synology(DownloaderBase):
         :return: bool
         """
 
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        host = cleanHost(self.conf('host')).split(':')
         try:
-            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
+            srpc = SynologyRPC(host[0], host[1], host[2], self.conf('username'), self.conf('password'))
             test_result = srpc.test()
         except:
             return False
@@ -103,12 +103,12 @@ class SynologyRPC(object):
 
     """SynologyRPC lite library"""
 
-    def __init__(self, host = 'localhost', port = 5000, username = None, password = None, destination = None):
+    def __init__(self, protocol = 'http', host = '//localhost', port = 5000, username = None, password = None, destination = None):
 
         super(SynologyRPC, self).__init__()
 
-        self.download_url = 'http://%s:%s/webapi/DownloadStation/task.cgi' % (host, port)
-        self.auth_url = 'http://%s:%s/webapi/auth.cgi' % (host, port)
+        self.download_url = '%s:%s:%s/webapi/DownloadStation/task.cgi' % (protocol, host, port)
+        self.auth_url = '%s:%s:%s/webapi/auth.cgi' % (protocol, host, port)
         self.sid = None
         self.username = username
         self.password = password
@@ -225,8 +225,8 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:5000',
-                    'description': 'Hostname with port. Usually <strong>localhost:5000</strong>',
+                    'default': 'http://localhost:5000',
+                    'description': 'Hostname with port. Usually <strong>http://localhost:5000</strong>',
                 },
                 {
                     'name': 'username',
