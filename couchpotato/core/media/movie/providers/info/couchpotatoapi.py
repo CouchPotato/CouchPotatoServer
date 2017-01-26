@@ -251,50 +251,52 @@ class CouchPotatoApi(MovieProvider):
 
 
         log.debug('-------------->querying Allflicks for title: %s' %title)
-
-        sock=urllib.urlopen("https://allflicks.net")
-        htmlSource=sock.read()
-        sock.close()
-        htmlSource=htmlSource.replace(" ","")
-        tag='document.cookie=\"identifier='
-        index=htmlSource.find(tag)+len(tag)
-        cookid = "identifier="+htmlSource[index:htmlSource.find('\"+expires+\";path=/;domain=.allflicks.net\"')]
-        #log.debug('cookid=%s', cookid)
-        #Please note if allflicks has the name listd with the wrong name, 
-        # or imdb has the movie with a different title. This check will fail and 
-        # the movie will not be reported as being on netflix when in fact it is.
-        length=100
-        start=0
-
-        #since netflix doesnt always have the same title as IMDB
-        #we could potentially use a user-specified title when querying allFlicks
-        #the option still needs to be implemented 
-        titleForNetflix = title
-        numFound = 1 #this just forces at least one execution of the following loop
-        while start < numFound and not year > now_year:
-            with requests.Session() as session:
-                session.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"}
-                #session.get("https://www.allflicks.net/canada/")
-                response = session.post(url % (countryCode), postdata %(str(start),str(length),titleForNetflix,str(now_year)),
-                                     headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
-                                              "X-Requested-With": "XMLHttpRequest",
-                                              "Referer": referer,
-                                              "Cookie": cookid,
-                                              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                              "Host": "www.allflicks.net"})
-            j1= response.json()
-            numFound = j1['recordsFiltered']
-            if not numFound >0: break
-            if start == 0: log.debug('----->Movie %s returned %s results from Allflicks' % (title,numFound))
-            results = j1['data']
-            for result in results:
-                if result['title'].upper() == titleForNetflix.upper():   #this needs to be case insensitive
-                    if int(result['year']) <= year+1 and int(result['year']) >= year-1:
-                        log.debug('---> Movie %s (%s) matched with %s (%s)from Allflicks' % (title,str(year),result['title'], result['year']))
-                        p='%d %b %Y'
-                        ndate=int(time.mktime(time.strptime(result['available'],p)))
-                        dates['netflix']=ndate
-            start=start+length
+        try:
+            sock=urllib.urlopen("https://allflicks.net")
+            htmlSource=sock.read()
+            sock.close()
+            htmlSource=htmlSource.replace(" ","")
+            tag='document.cookie=\"identifier='
+            index=htmlSource.find(tag)+len(tag)
+            cookid = "identifier="+htmlSource[index:htmlSource.find('\"+expires+\";path=/;domain=.allflicks.net\"')]
+            #log.debug('cookid=%s', cookid)
+            #Please note if allflicks has the name listd with the wrong name, 
+            # or imdb has the movie with a different title. This check will fail and 
+            # the movie will not be reported as being on netflix when in fact it is.
+            length=100
+            start=0
+            
+            #since netflix doesnt always have the same title as IMDB
+            #we could potentially use a user-specified title when querying allFlicks
+            #the option still needs to be implemented 
+            titleForNetflix = title
+            numFound = 1 #this just forces at least one execution of the following loop
+            while start < numFound and not year > now_year:
+                with requests.Session() as session:
+                    session.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"}
+                    #session.get("https://www.allflicks.net/canada/")
+                    response = session.post(url % (countryCode), postdata %(str(start),str(length),titleForNetflix,str(now_year)),
+                                         headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
+                                                  "X-Requested-With": "XMLHttpRequest",
+                                                  "Referer": referer,
+                                                  "Cookie": cookid,
+                                                  "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                                                  "Host": "www.allflicks.net"})
+                j1= response.json()
+                numFound = j1['recordsFiltered']
+                if not numFound >0: break
+                if start == 0: log.debug('----->Movie %s returned %s results from Allflicks' % (title,numFound))
+                results = j1['data']
+                for result in results:
+                    if result['title'].upper() == titleForNetflix.upper():   #this needs to be case insensitive
+                        if int(result['year']) <= year+1 and int(result['year']) >= year-1:
+                            log.debug('---> Movie %s (%s) matched with %s (%s)from Allflicks' % (title,str(year),result['title'], result['year']))
+                            p='%d %b %Y'
+                            ndate=int(time.mktime(time.strptime(result['available'],p)))
+                            dates['netflix']=ndate
+                start=start+length
+        except:
+            log.debug('---------------------->Problem querying allflicks for title: %s', title)
         
         return dates
 
