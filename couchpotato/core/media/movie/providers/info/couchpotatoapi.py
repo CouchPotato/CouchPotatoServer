@@ -237,6 +237,12 @@ class CouchPotatoApi(MovieProvider):
         #other countries are supported by allflicks.net, so other country codes could be added
         #but the session heads must be adjusted accordingly or proper JSON wont be returned
         #firefox extension tamper is useful for determining country code/appropriate headers for a country
+        if countryCode=='ca':
+            referer="https://www.allflicks.net/canada/"
+        elif countryCode=='us':
+            referer="https://www.allflicks.net/"
+        else: 
+            referer="https://www.allflicks.net/"
         now_year = date.today().year
 
         url = 'https://www.allflicks.net/wp-content/themes/responsive/processing/processing_%s.php'
@@ -268,25 +274,14 @@ class CouchPotatoApi(MovieProvider):
         while start < numFound and not year > now_year:
             with requests.Session() as session:
                 session.headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0"}
-                if countryCode=='ca':
-                    #session.get("https://www.allflicks.net/canada/")
-                    response = session.post(url % (countryCode), postdata %(str(start),str(length),titleForNetflix,str(now_year)),
-                                         headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
-                                                  "X-Requested-With": "XMLHttpRequest",
-                                                  "Referer": "https://www.allflicks.net/canada/",
-                                                  "Cookie": cookid,
-                                                  "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                                  "Host": "www.allflicks.net"})
-                else:
-                    #session.get("https://www.allflicks.net/") 
-                    response = session.post(url % (countryCode), postdata %(str(start),str(length),titleForNetflix,str(now_year)),
-                                        headers={"Accept" : "application/json, text/javascript, */*; q=0.01", 
-                                                 "X-Requested-With": "XMLHttpRequest", 
-                                                 "Referer": "https://www.allflicks.net/",
-                                                 "Cookie": cookid,
-                                                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                                 "Host": "www.allflicks.net"})
-            
+                #session.get("https://www.allflicks.net/canada/")
+                response = session.post(url % (countryCode), postdata %(str(start),str(length),titleForNetflix,str(now_year)),
+                                     headers={"Accept" : "application.json, text/javascript, */*; q=0.01",
+                                              "X-Requested-With": "XMLHttpRequest",
+                                              "Referer": referer,
+                                              "Cookie": cookid,
+                                              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                                              "Host": "www.allflicks.net"})
             j1= response.json()
             numFound = j1['recordsFiltered']
             if not numFound >0: break
