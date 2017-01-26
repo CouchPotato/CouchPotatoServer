@@ -249,9 +249,10 @@ class CouchPotatoApi(MovieProvider):
         sock=urllib.urlopen("https://allflicks.net")
         htmlSource=sock.read()
         sock.close()
-        tag='document.cookie = \"identifier='
+        htmlSource=htmlSource.replace(" ","")
+        tag='document.cookie=\"identifier='
         index=htmlSource.find(tag)+len(tag)
-        cookid = "identifier="+htmlSource[index:htmlSource.find('\" + expires + \"; path=/; domain=.allflicks.net\"')]
+        cookid = "identifier="+htmlSource[index:htmlSource.find('\"+expires+\";path=/;domain=.allflicks.net\"')]
         #log.debug('cookid=%s', cookid)
         #Please note if allflicks has the name listd with the wrong name, 
         # or imdb has the movie with a different title. This check will fail and 
