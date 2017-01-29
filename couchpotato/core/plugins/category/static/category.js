@@ -6,12 +6,13 @@ var CategoryListBase = new Class({
 		App.addEvent('loadSettings', self.addSettings.bind(self));
 	},
 
-	setup: function(categories){
+	setup: function(categories, firstAsDefault){
 		var self = this;
 
-		self.categories = [];
-		Array.each(categories, self.createCategory.bind(self));
 
+		self.categories = [];
+		self.firstAsDefault = firstAsDefault;
+		Array.each(categories, self.createCategory.bind(self));
 	},
 
 	addSettings: function(){
@@ -117,6 +118,34 @@ var CategoryListBase = new Class({
 				new Element('p.formHint', {
 					'html': 'Change the order the categories are in the dropdown list.'
 				})
+			),
+			new Element('.ctrlHolder#category_ordering').adopt(
+				new Element('label[text=First as default]'),
+				check = new Element('input[type=checkbox]', {
+					'checked': self.firstAsDefault,
+					'events': {
+						'change': function(e){
+							firstAsDefault = 0;
+							if (e.target.checked) {
+								firstAsDefault = 1;
+							}
+							Api.request('settings.save', {
+								'data': {
+									'section': 'categories',
+									'name': 'first_as_default',
+									'value': firstAsDefault
+								},
+								'useSpinner': true,
+								'spinnerOptions': {
+									'target': e.target
+								}
+							});
+						}
+					}
+				}),
+				new Element('p.formHint', {
+						'html': 'First category is selected by default'
+				})
 			)
 		).inject(self.content);
 
@@ -155,7 +184,7 @@ var CategoryListBase = new Class({
 			}
 		});
 
-	}
+	},
 
 });
 

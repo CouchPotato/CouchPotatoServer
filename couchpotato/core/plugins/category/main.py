@@ -32,6 +32,8 @@ class CategoryPlugin(Plugin):
         })
 
         addEvent('category.all', self.all)
+        addEvent('category.first', self.first)
+        addEvent('category.first_as_default', self.firstAsDefault)
 
     def allView(self, **kwargs):
 
@@ -46,6 +48,13 @@ class CategoryPlugin(Plugin):
         categories = db.all('category', with_doc = True)
 
         return [x['doc'] for x in categories]
+
+    def first(self):
+        db = get_db()
+        return list(db.all('category', limit = 1, with_doc = True))[0]['doc']
+
+    def firstAsDefault(self):
+        return self.conf('first_as_default', default = False, section = 'categories')
 
     def save(self, **kwargs):
 

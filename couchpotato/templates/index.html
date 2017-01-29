@@ -74,7 +74,7 @@
 					'qualities': {{ json_encode(fireEvent('quality.all', single = True)) }}
 				});
 
-				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
+				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }}, {{ json_encode(fireEvent('category.first_as_default', single = True)) }});
 
 				App.setup({
 					'dev': dev,
