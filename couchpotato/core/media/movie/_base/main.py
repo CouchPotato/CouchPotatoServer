@@ -87,11 +87,22 @@ class MovieBase(MovieTypeBase):
         # Set default title
         def_title = self.getDefaultTitle(info)
 
-        # Default profile and category
+        # Default profile
         default_profile = {}
         if (not params.get('profile_id') and status != 'done') or params.get('ignore_previous', False):
             default_profile = fireEvent('profile.default', single = True)
+
+        # Set category
         cat_id = params.get('category_id')
+        if cat_id == '-1':
+            cat_id = None
+        elif (cat_id is None or len(cat_id) == 0) and (status != 'done' or params.get('ignore_previous', False)):
+            firstAsDefault = self.conf('first_as_default', default = False, section = 'categories')
+            first_category = fireEvent('category.first', single = True)
+            if firstAsDefault and first_category is not None:
+                cat_id = first_category.get('_id')
+            else:
+                cat_id = None
 
         try:
             db = get_db()
@@ -105,7 +116,7 @@ class MovieBase(MovieTypeBase):
                 },
                 'status': status if status else 'active',
                 'profile_id': params.get('profile_id') or default_profile.get('_id'),
-                'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None,
+                'category_id': cat_id,
             }
 
             # Update movie info
