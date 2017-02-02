@@ -42,7 +42,7 @@ class Synology(DownloaderBase):
 
         # Load host from config and split out port.
         host = cleanHost(self.conf('host')).split(':')
-        if not isInt(host[2]):
+        if not isInt(host[2][:-1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
