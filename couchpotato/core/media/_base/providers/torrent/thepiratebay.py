@@ -116,7 +116,10 @@ class Base(TorrentMagnetProvider):
                                 moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) is not None]
 
                                 return confirmed + trusted + vip + moderated
-
+                                
+                            if self.conf('only_trusted') && extra_score(None) == 0:
+                                continue # Skip if not verified
+                            
                             results.append({
                                 'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
                                 'name': six.text_type(link.string),
@@ -199,6 +202,14 @@ config = [{
                     'type': 'int',
                     'default': 40,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
+                },
+                {
+                    'name': 'only_trusted',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Only trusted',
+                    'default': 1,
+                    'description': 'Only download trusted'
                 },
                 {
                     'name': 'extra_score',
