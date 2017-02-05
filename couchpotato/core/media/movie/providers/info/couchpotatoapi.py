@@ -154,7 +154,7 @@ class CouchPotatoApi(MovieProvider):
                 try:
                     temp = self.getJsonData("https://api.themoviedb.org/3/movie/%s/release_dates?api_key=%s" % (identifier,apiKey))
                     results = temp['results']
-                    tttt = self.getJsonData("https://api.themoviedb.org/3/movie/%s?api-key=%s" % (identifier, apiKey))
+                    tttt = self.getJsonData("https://api.themoviedb.org/3/movie/%s?api_key=%s" % (identifier, apiKey))
                     title = tttt['title']
                     yyyy = tttt['release_date']
                     year = yyyy.year
