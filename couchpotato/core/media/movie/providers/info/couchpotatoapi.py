@@ -111,23 +111,25 @@ class CouchPotatoApi(MovieProvider):
         if identifier is None: return {}
 
         dates = self.getJsonData(self.urls['eta'] % identifier, headers = self.getRequestHeaders())
-
-        #This grabs release date info from omdbapi/rottentomatoes
-        temp2 = self.getJsonData("http://www.omdbapi.com/?i=%s&tomatoes=true&plot=short&r=json" % identifier)
-        title = temp2['Title']
-        year = int(temp2['Year'])
-
-        ddate=0 #throw away what couchpotatoai is returning since it is garbage at this time
+        ddate=0 # throw away what couchpotatoapi is returning since it is garbage at this time
         tdate=0
-        dvd_date= temp2['DVD']
-        theater_date=temp2['Released']
-        if theater_date != 'N/A' and year >1972:
-            p='%d %b %Y'
-            tdate=int(time.mktime(time.strptime(theater_date,p)))
+        try:
+            #This grabs release date info from omdbapi/rottentomatoes
+            temp2 = self.getJsonData("http://www.omdbapi.com/?i=%s&tomatoes=true&plot=short&r=json" % identifier)
+            title = temp2['Title']
+            year = int(temp2['Year'])
 
-        if dvd_date != 'N/A' and year >1972:
-            p='%d %b %Y'
-            ddate=int(time.mktime(time.strptime(dvd_date,p)))
+            dvd_date= temp2['DVD']
+            theater_date=temp2['Released']
+            if theater_date != 'N/A' and year >1972:
+                p='%d %b %Y'
+                tdate=int(time.mktime(time.strptime(theater_date,p)))
+
+            if dvd_date != 'N/A' and year >1972:
+                p='%d %b %Y'
+                ddate=int(time.mktime(time.strptime(dvd_date,p)))
+        except:
+            log.debug('There was some issue checking OMDBAPI so it was skipped')
            
         if (ddate !=0):    
             if ddate < tdate:
@@ -152,6 +154,10 @@ class CouchPotatoApi(MovieProvider):
                 try:
                     temp = self.getJsonData("https://api.themoviedb.org/3/movie/%s/release_dates?api_key=%s" % (identifier,apiKey))
                     results = temp['results']
+                    tttt = self.getJsonData("https://api.themoviedb.org/3/movie/%s?api-key=%s" % (identifier, apiKey))
+                    title = tttt['title']
+                    yyyy = tttt['release_date']
+                    year = yyyy.year
                 except:
                     results=[]
                 ddate=0
