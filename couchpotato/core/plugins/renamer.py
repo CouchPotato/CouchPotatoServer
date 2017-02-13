@@ -216,6 +216,9 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
 
+                # post_filter files from configuration; this is a ":"-separated list of globs
+                files = self.filesAfterIgnoring(files)
+
         db = get_db()
 
         # Extend the download info with info stored in the downloaded release
@@ -1165,6 +1168,30 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def movieInFromFolder(self, media_folder):
         return media_folder and isSubFolder(media_folder, sp(self.conf('from'))) or not media_folder
 
+    @property
+    def ignored_in_path(self):
+        return self.conf('ignored_in_path').split(":") if self.conf('ignored_in_path') else []
+
+    def filesAfterIgnoring(self, original_file_list):
+        kept_files = []
+        for path in original_file_list:
+            if self.keepFile(path):
+                kept_files.append(path)
+            else:
+                log.debug('Ignored "%s" during renaming', path)
+        return kept_files
+
+    def keepFile(self, filename):
+
+        # ignoredpaths
+        for i in self.ignored_in_path:
+            if i in filename.lower():
+                log.debug('Ignored "%s" contains "%s".', (filename, i))
+                return False
+
+        # All is OK
+        return True
+
     def extractFiles(self, folder = None, media_folder = None, files = None, cleanup = False):
         if not files: files = []
 
@@ -1365,6 +1392,12 @@ config = [{
                     'label': 'Clean Name',
                     'description': ('Attempt to clean up double separaters due to missing data for fields.','Sometimes this eliminates wanted white space (see <a href="https://github.com/CouchPotato/CouchPotatoServer/issues/2782" target="_blank">#2782</a>).'),
                     'default': True
+                },
+                {
+                    'name': 'ignored_in_path',
+                    'label': 'Ignored file patterns',
+                    'description': ('A list of globs to path match when scanning, separated by ":"', 'anything on this list will be skipped during rename operations'),
+                    'default': '*/.sync/*',
                 },
                 {
                     'name': 'unrar',
