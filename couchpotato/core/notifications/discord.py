@@ -26,7 +26,7 @@ class Discord(Notification):
 
         headers = {b"Content-Type": b"application/json"}
         try:
-            r = requests.post(self.conf('webhook_url'), data=json.dumps(dict(content=message, username=self.conf('bot_name'), avatar_url=self.conf('avatar_url'))), headers=headers)
+            r = requests.post(self.conf('webhook_url'), data=json.dumps(dict(content=message, username=self.conf('bot_name'), avatar_url=self.conf('avatar_url'), tts=self.conf('discord_tts'))), headers=headers)
             r.status_code
         except Exception as e:
             log.warning('Error Sending Discord response error code: {0}'.format(r.status_code))
@@ -72,6 +72,13 @@ config = [{
                                    'notifications.',
                     'default': 'https://couchpota.to/media/images/couch.png',
                     'advanced': True,
+                },
+                {
+                    'name': 'discord_tts',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Send notification using text-to-speech.',
                 },
                 {
                     'name': 'on_snatch',
