@@ -27,7 +27,8 @@ OS X:
 
 * If you're on Leopard (10.5) install Python 2.6+: [Python 2.6.5](http://www.python.org/download/releases/2.6.5/)
 * Install [GIT](http://git-scm.com/)
-* Install [LXML](http://lxml.de/installation.html) for better/faster website scraping 
+* Install [LXML](http://lxml.de/installation.html) with `easy_install lxml`
+* Install [PyOpenSSL](https://pypi.python.org/pypi/pyOpenSSL) with `easy_install pyopenssl`
 * Open up `Terminal`
 * Go to your App folder `cd /Applications`
 * Run `git clone https://github.com/CouchPotato/CouchPotatoServer.git`
