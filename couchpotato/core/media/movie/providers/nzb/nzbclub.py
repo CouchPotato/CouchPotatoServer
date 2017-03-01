@@ -14,7 +14,7 @@ class NZBClub(MovieProvider, Base):
     def buildUrl(self, media):
 
         q = tryUrlencode({
-            'q': '"%s"' % fireEvent('library.query', media, single = True),
+            'q': '%s' % fireEvent('library.query', media, single = True),
         })
 
         query = tryUrlencode({
