@@ -114,7 +114,12 @@ class QualityPlugin(Plugin):
         db = get_db()
         quality_dict = {}
 
-        quality = db.get('quality', identifier, with_doc = True)['doc']
+        try:
+            quality = db.get('quality', identifier, with_doc = True)['doc']
+        except RecordNotFound:
+            log.error("Unable to find '%s' in the quality DB", indentifier)
+            quality = None
+
         if quality:
             quality_dict = mergeDicts(self.getQuality(quality['identifier']), quality)
 
