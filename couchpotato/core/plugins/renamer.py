@@ -347,10 +347,21 @@ class Renamer(Plugin):
                     'category': category_label,
                     '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
                     '3d_type': group['meta_data'].get('3d_type'),
+                    '3d_type_short': group['meta_data'].get('3d_type'),
                 }
 
                 if replacements['mpaa_only'] not in ('G', 'PG', 'PG-13', 'R', 'NC-17'):
                     replacements['mpaa_only'] = 'Not Rated'
+
+                if replacements['3d_type_short']:
+                    replacements['3d_type_short'] = replacements['3d_type_short'].replace('Half ', 'H').replace('Full ', '')
+                if self.conf('use_tab_threed') and replacements['3d_type']:
+                    if 'OU' in replacements['3d_type']:
+                        replacements['3d_type'] = replacements['3d_type'].replace('OU','TAB')
+                if self.conf('use_tab_threed') and replacements['3d_type_short']:
+                    if 'OU' in replacements['3d_type_short']:
+                        replacements['3d_type_short'] = replacements['3d_type_short'].replace('OU','TAB')
+                    
 
                 for file_type in group['files']:
 
@@ -1298,6 +1309,7 @@ rename_options = {
         'quality_type': '(HD) or (SD)',
         '3d': '3D',
         '3d_type': '3D Type (Full SBS)',
+        '3d_type_short' : 'Short 3D Type (FSBS)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
@@ -1357,6 +1369,14 @@ config = [{
                     'default': '<thename><cd>.<ext>',
                     'type': 'choice',
                     'options': rename_options
+                },
+                {
+                    'advanced': True,
+                    'name': 'use_tab_threed',
+                    'type': 'bool',
+                    'label': 'Use TAB 3D',
+                    'description': ('Use TAB (Top And Bottom) instead of OU (Over Under).','This will allow Kodi to recognize vertical formatted 3D movies properly.'),
+                    'default': True
                 },
                 {
                     'advanced': True,
