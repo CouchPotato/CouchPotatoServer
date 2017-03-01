@@ -51,7 +51,8 @@ class PlexServer(object):
                 req = urllib2.Request("https://plex.tv/users/sign_in.xml", data="")
                 authheader = "Basic %s" % base64.encodestring('%s:%s' % (username, password))[:-1]
                 req.add_header("Authorization", authheader)
-                req.add_header("X-Plex-Product", "Couchpotato Notifier")
+                req.add_header("X-Plex-Device-Name", "CouchPotato")
+                req.add_header("X-Plex-Product", "CouchPotato Notifier")
                 req.add_header("X-Plex-Client-Identifier", "b3a6b24dcab2224bdb101fc6aa08ea5e2f3147d6")
                 req.add_header("X-Plex-Version", "1.0")
 
