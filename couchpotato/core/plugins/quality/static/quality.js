@@ -31,9 +31,9 @@ var QualityBase = new Class({
 
 	getQuality: function(identifier){
 		try {
-			return this.qualities.filter(function(q){
+			return (this.qualities.filter(function(q){
 				return q.identifier == identifier;
-			}).pick();
+			}).pick() || {});
 		}
 		catch(e){}
 
