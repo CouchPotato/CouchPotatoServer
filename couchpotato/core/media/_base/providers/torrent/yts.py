@@ -33,7 +33,7 @@ class Base(TorrentMagnetProvider):
                     result = data['data']['movies'][i]
                     name = result['title']
 
-                    t = getTitle(movie).split(' ')
+                    t = movie['info']['original_title']
 
                     if all(word in name for word in t):
 
