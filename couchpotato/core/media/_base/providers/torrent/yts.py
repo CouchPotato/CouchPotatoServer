@@ -29,33 +29,35 @@ class Base(TorrentMagnetProvider):
             else:
                 result = data['data']['movies'][0]
                 name = result['title']
-                year = result['year']
-                detail_url = result['url']
 
+                if getTitle(movie) == name:
 
-                for torrent in result['torrents']:
-                    t_quality = torrent['quality']
+                    year = result['year']
+                    detail_url = result['url']
 
-                    if t_quality in quality['label']:
-                        hash = torrent['hash']
-                        size = tryInt(torrent['size_bytes'] / 1048576)
-                        seeders = tryInt(torrent['seeds'])
-                        leechers = tryInt(torrent['peers'])
-                        pubdate = torrent['date_uploaded']  # format: 2017-02-17 18:40:03
-                        pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S')
-                        age = (datetime.now() - pubdate).days
+                    for torrent in result['torrents']:
+                        t_quality = torrent['quality']
 
-                        results.append({
-                            'id': random.randint(100, 9999),
-                            'name': '%s (%s) %s %s %s' % (name, year, 'YTS', t_quality, 'BR-Rip'),
-                            'url': self.make_magnet(hash, name),
-                            'size': size,
-                            'seeders': seeders,
-                            'leechers': leechers,
-                            'age': age,
-                            'detail_url': detail_url,
-                            'score': 1
-                        })
+                        if t_quality in quality['label']:
+                            hash = torrent['hash']
+                            size = tryInt(torrent['size_bytes'] / 1048576)
+                            seeders = tryInt(torrent['seeds'])
+                            leechers = tryInt(torrent['peers'])
+                            pubdate = torrent['date_uploaded']  # format: 2017-02-17 18:40:03
+                            pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S')
+                            age = (datetime.now() - pubdate).days
+
+                            results.append({
+                                'id': random.randint(100, 9999),
+                                'name': '%s (%s) %s %s %s' % (name, year, 'YTS', t_quality, 'BR-Rip'),
+                                'url': self.make_magnet(hash, name),
+                                'size': size,
+                                'seeders': seeders,
+                                'leechers': leechers,
+                                'age': age,
+                                'detail_url': detail_url,
+                                'score': 1
+                            })
 
         return
 
