@@ -17,7 +17,7 @@ class Base(TorrentMagnetProvider):
     }
 
     def _search(self, movie, quality, results):
-        limit = 5
+        limit = 10
         page = 1
         data = self.getJsonData(self.urls['search'] % (getTitle(movie), limit, page))
 
