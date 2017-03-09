@@ -35,7 +35,7 @@ class Base(TorrentMagnetProvider):
 
                     t = movie['info']['original_title'].split(' ')
 
-                    if all(word in name for word in t):
+                    if all(word in name for word in t) and movie['info']['year'] == result['year']:
 
                         year = result['year']
                         detail_url = result['url']
