@@ -42,9 +42,9 @@ class Scanner(Plugin):
         'Half SBS': [('half', 'sbs'), ('h', 'sbs'), 'hsbs'],
         'Full SBS': [('full', 'sbs'), ('f', 'sbs'), 'fsbs'],
         'SBS': ['sbs'],
-        'Half OU': [('half', 'ou'), ('h', 'ou'), 'hou'],
-        'Full OU': [('full', 'ou'), ('h', 'ou'), 'fou'],
-        'OU': ['ou'],
+        'Half OU': [('half', 'ou'), ('h', 'ou'), ('half', 'tab'), ('h', 'tab'), 'htab', 'hou'],
+        'Full OU': [('full', 'ou'), ('f', 'ou'), ('full', 'tab'), ('f', 'tab'), 'ftab', 'fou'],
+        'OU': ['ou', 'tab'],
         'Frame Packed': ['mvc', ('complete', 'bluray')],
         '3D': ['3d']
     }
