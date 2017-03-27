@@ -28,6 +28,7 @@ class Scanner(Plugin):
                        '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo',
                        'thumbs.db', 'ehthumbs.db', 'desktop.ini']  # unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
+    ignored_extensions = ['ignore', 'lftp-pget-status']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v', 'flv'],
         'movie_extra': ['mds'],
@@ -42,9 +43,9 @@ class Scanner(Plugin):
         'Half SBS': [('half', 'sbs'), ('h', 'sbs'), 'hsbs'],
         'Full SBS': [('full', 'sbs'), ('f', 'sbs'), 'fsbs'],
         'SBS': ['sbs'],
-        'Half OU': [('half', 'ou'), ('h', 'ou'), 'hou'],
-        'Full OU': [('full', 'ou'), ('h', 'ou'), 'fou'],
-        'OU': ['ou'],
+        'Half OU': [('half', 'ou'), ('h', 'ou'), ('half', 'tab'), ('h', 'tab'), 'htab', 'hou'],
+        'Full OU': [('full', 'ou'), ('f', 'ou'), ('full', 'tab'), ('f', 'tab'), 'ftab', 'fou'],
+        'OU': ['ou', 'tab'],
         'Frame Packed': ['mvc', ('complete', 'bluray')],
         '3D': ['3d']
     }
@@ -225,12 +226,12 @@ class Scanner(Plugin):
                 group['unsorted_files'].extend(found_files)
                 leftovers = leftovers - found_files
 
-                has_ignored += 1 if ext == 'ignore' else 0
+                has_ignored += 1 if ext in self.ignored_extensions else 0
 
             if has_ignored == 0:
                 for file_path in list(group['unsorted_files']):
                     ext = getExt(file_path)
-                    has_ignored += 1 if ext == 'ignore' else 0
+                    has_ignored += 1 if ext in self.ignored_extensions else 0
 
             if has_ignored > 0:
                 ignored_identifiers.append(identifier)

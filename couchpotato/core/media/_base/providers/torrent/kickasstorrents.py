@@ -30,6 +30,11 @@ class Base(TorrentMagnetProvider):
     cat_backup_id = None
 
     proxy_list = [
+        'http://flowtorrent.com',
+        'http://katcr.to/span',
+        'http://dx-torrente.com',
+        'https://kickass.unblocked.vip',
+        'https://katcr.co',
         'https://kat.how',
         'https://kickass.cd',
         'https://kickass.unlockproject.online',
