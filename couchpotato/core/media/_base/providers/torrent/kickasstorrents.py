@@ -50,8 +50,7 @@ class Base(TorrentMagnetProvider):
         'https://kickass.bypassed.live',
         'https://kickass.bypassed.video',
         'https://kickass.bypassed.red',
-        'https://kat.cr',
-        'https://kickass.unblocked.pw/',
+        'https://kickass.unblocked.pw',
         'https://katproxy.com'
     ]
 
