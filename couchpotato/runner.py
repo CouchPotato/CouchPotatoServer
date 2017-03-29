@@ -13,6 +13,7 @@ import shutil
 
 from CodernityDB.database_super_thread_safe import SuperThreadSafeDatabase
 from argparse import ArgumentParser
+import argparse_config
 from cache import FileSystemCache
 from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
@@ -27,9 +28,9 @@ from couchpotato.core.softchroot import SoftChrootInitError
 try: from tornado.netutil import bind_unix_socket
 except: pass
 
-def getOptions(args):
-
+def getOptions(args, base_path):
     # Options
+    conf = os.path.join(base_path, "config.ini")
     parser = ArgumentParser(prog = 'CouchPotato.py')
     parser.add_argument('--data_dir',
                         dest = 'data_dir', help = 'Absolute or ~/ path of the data dir')
@@ -45,7 +46,11 @@ def getOptions(args):
                         dest = 'daemon', help = 'Daemonize the app')
     parser.add_argument('--pid_file',
                         dest = 'pid_file', help = 'Path to pidfile needed for daemon')
-
+    
+    # parse applicaions runtime configuration file and set options
+    if os.path.exists(conf):
+        argparse_config.read_config_file(parser, conf)
+    
     options = parser.parse_args(args)
 
     data_dir = os.path.expanduser(options.data_dir if options.data_dir else getDataDir())
