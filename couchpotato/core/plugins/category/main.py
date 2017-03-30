@@ -32,6 +32,7 @@ class CategoryPlugin(Plugin):
         })
 
         addEvent('category.all', self.all)
+        addEvent('category.default', self.default)
 
     def allView(self, **kwargs):
 
@@ -46,6 +47,10 @@ class CategoryPlugin(Plugin):
         categories = db.all('category', with_doc = True)
 
         return [x['doc'] for x in categories]
+
+    def default(self):
+        db = get_db()
+        return list(db.all('category', limit = 1, with_doc = True))[0]['doc']
 
     def save(self, **kwargs):
 
