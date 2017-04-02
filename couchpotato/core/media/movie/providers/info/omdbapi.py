@@ -88,7 +88,8 @@ class OMDBAPI(MovieProvider):
 
             tmp_movie = movie.copy()
             for key in tmp_movie:
-                if tmp_movie.get(key).lower() == 'n/a':
+                tmp_movie_elem = tmp_movie.get(key)
+                if not isinstance(tmp_movie_elem, str) or tmp_movie_elem.lower() == 'n/a':
                     del movie[key]
 
             year = tryInt(movie.get('Year', ''))
