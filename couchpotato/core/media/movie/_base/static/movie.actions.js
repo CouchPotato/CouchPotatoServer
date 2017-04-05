@@ -841,9 +841,10 @@ MA.Delete = new Class({
 		var self = this;
 		return new Element('a.delete', {
 			'text': 'Delete',
-			'title': 'Remove the movie from this CP list',
+			'title': 'Remove the movie from this CP list, and optionally delete files from disk',
 			'events': {
-				'click': self.showConfirm.bind(self)
+				'click': self.movie.list.options.identifier === 'manage' ?
+							self.showConfirmWithFiles.bind(self) : self.showConfirm.bind(self)
 			}
 		});
 	},
@@ -859,7 +860,7 @@ MA.Delete = new Class({
 				'click': function(e){
 					e.target.set('text', 'Deleting...');
 
-					self.del();
+					self.del(false);
 				}
 			}
 		}, {
@@ -869,7 +870,57 @@ MA.Delete = new Class({
 
 	},
 
-	del: function(){
+	showConfirmWithFiles: function(e){
+		var self = this;
+		(e).stopPropagation();
+
+		self.question = new Question('Are you sure you want to delete <strong>' + self.getTitle() + '</strong>?', '', [{
+			'text': 'Yes, delete',
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					e.target.set('text', 'Deleting...');
+
+					self.del(false);
+				}
+			}
+		}, {
+			'text': 'Yes, and also delete files from disk',
+			'class': 'delete',
+			'events': {
+				'click': self.showConfirmWithFilesReally.bind(self)
+			}
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
+
+	},
+
+	showConfirmWithFilesReally: function(e){
+		var self = this;
+		(e).stopPropagation();
+
+		if(self.question)
+			self.question.close();
+
+		self.question = new Question('Are you sure you want to delete <strong>all media files</strong> for <strong>' + self.getTitle() + '</strong>?', '', [{
+			'text': 'Yes, really delete all files for '+self.getTitle(),
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					e.target.set('text', 'Deleting from cp and disk...');
+
+					self.del(true);
+				}
+			}
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
+	},
+
+	del: function(withFiles){
 		var self = this;
 
 		var movie = $(self.movie);
@@ -877,7 +928,8 @@ MA.Delete = new Class({
 		Api.request('media.delete', {
 			'data': {
 				'id': self.movie.get('_id'),
-				'delete_from': self.movie.list.options.identifier
+				'delete_from': self.movie.list.options.identifier,
+				'with_files': !!withFiles
 			},
 			'onComplete': function(){
 				if(self.question)
