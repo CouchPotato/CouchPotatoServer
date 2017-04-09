@@ -13,7 +13,7 @@ Once a movie is found, it will send it to SABnzbd or download the torrent to a s
 
 CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed.
 
-Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for more details:
+Windows, see [the CP forum](http://couchpota.to/forum/viewtopic.php?t=14) for more details:
 
 * Install [Python 2.7](http://www.python.org/download/releases/2.7.3/)
 * Then install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
