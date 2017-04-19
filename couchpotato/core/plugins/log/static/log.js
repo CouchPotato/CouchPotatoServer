@@ -262,7 +262,7 @@ Page.Log = new Class({
 				new Element('a.button', {
 					'target': '_blank',
 					'text': 'Create a new issue on GitHub with the text above',
-					'href': '$',
+					'href': '#',
 					'events': {
 						'click': function(e){
 							(e).stop();
