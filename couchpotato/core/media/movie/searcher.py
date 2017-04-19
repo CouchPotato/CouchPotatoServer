@@ -246,7 +246,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
-            if outside_eta_results > 0:
+            if outside_eta_results > 0 and always_search:
                 message = 'Found %s releases for "%s" before ETA. Select and download via the dashboard.' % (outside_eta_results, default_title)
                 log.info(message)
 
