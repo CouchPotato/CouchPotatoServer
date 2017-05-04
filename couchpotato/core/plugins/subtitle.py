@@ -16,7 +16,7 @@ autoload = 'Subtitle'
 
 class Subtitle(Plugin):
 
-    services = ['opensubtitles', 'thesubdb', 'subswiki', 'subscenter']
+    services = ['opensubtitles', 'thesubdb', 'subswiki', 'subscenter', 'thewiz']
 
     def __init__(self):
         addEvent('renamer.before', self.searchSingle)
