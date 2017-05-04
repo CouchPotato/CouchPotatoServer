@@ -49,7 +49,7 @@ class Letterboxd(Automation):
             soup = BeautifulSoup(self.getHTMLData(self.url % username))
 
             for movie in soup.find_all('li', attrs = {'class': 'poster-container'}):
-                img = movie.find('img', movie)
+                img = movie.find('img')
                 title = img.get('alt')
 
                 movies.append({
