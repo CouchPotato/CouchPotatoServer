@@ -48,8 +48,9 @@ class Letterboxd(Automation):
 
             soup = BeautifulSoup(self.getHTMLData(self.url % (username, 1)))
 
-            pagination_items = soup.find_all('li', attrs={'class': 'paginate-page'})
-            pages = range(1, len(pagination_items) + 1) if pagination_items else [1]
+            pagination = soup.find_all('li', attrs={'class': 'paginate-page'})
+            number_of_pages = tryInt(pagination[-1].find('a').get_text()) if pagination else 1
+            pages = range(1, number_of_pages)
 
             for page in pages:
                 soup = BeautifulSoup(self.getHTMLData(self.url % (username, page)))
