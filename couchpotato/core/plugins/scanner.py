@@ -919,7 +919,7 @@ class Scanner(Plugin):
         guess = {}
         if file_name:
             try:
-                guessit = guess_movie_info(toUnicode(file_name))
+                guessit = guess_movie_info(toUnicode(file_name.replace('\\\\', 'C:\\')))
                 if guessit.get('title') and guessit.get('year'):
                     guess = {
                         'name': guessit.get('title'),
