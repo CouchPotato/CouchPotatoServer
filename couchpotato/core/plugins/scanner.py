@@ -100,7 +100,7 @@ class Scanner(Plugin):
     }
 
     source_media = {
-        'Blu-ray': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
+        'BluRay': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
         'HD DVD': ['hddvd', 'hd-dvd'],
         'DVD': ['dvd'],
         'HDTV': ['hdtv']
