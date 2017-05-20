@@ -11,7 +11,7 @@ class Notification(Provider):
 
     type = 'notification'
 
-    default_title = Env.get('appname')
+    default_title = "KnovaBot"
     test_message = 'ZOMG Lazors Pewpewpew!'
 
     listen_to = [
