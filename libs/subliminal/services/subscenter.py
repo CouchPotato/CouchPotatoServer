@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2012 Ofir Brukner <ofirbrukner@gmail.com>
+# Copyright 2012 Ofir123 <ofirbrukner@gmail.com>
 #
 # This file is part of subliminal.
 #
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
-from ..exceptions import ServiceError
+from ..exceptions import DownloadFailedError, ServiceError
 from ..language import language_set
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..videos import Episode, Movie
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class Subscenter(ServiceBase):
-    server = 'http://www.subscenter.co/he/'
+    server = 'http://www.subscenter.org/he/'
     api_based = False
     languages = language_set(['he'])
     videos = [Episode, Movie]
@@ -110,10 +110,11 @@ class Subscenter(ServiceBase):
                             # Read the item.
                             subtitle_id = subtitle_item['id']
                             subtitle_key = subtitle_item['key']
+                            subtitle_version = subtitle_item['h_version']
                             release = subtitle_item['subtitle_version']
                             subtitle_path = get_subtitle_path(filepath, language_object, self.config.multi)
                             download_link = self.server_url + 'subtitle/download/{0}/{1}/?v={2}&key={3}'.format(
-                                language_code, subtitle_id, release, subtitle_key)
+                                language_code, subtitle_id, subtitle_version, subtitle_key)
                             # Add the release and increment downloaded count if we already have the subtitle.
                             if subtitle_id in subtitles:
                                 logger.debug('Found additional release {0} for subtitle {1}'.format(
@@ -128,7 +129,11 @@ class Subscenter(ServiceBase):
         return subtitles.values()
 
     def download(self, subtitle):
-        self.download_zip_file(subtitle.link, subtitle.path)
+        try:
+            self.download_zip_file(subtitle.link, subtitle.path)
+        except DownloadFailedError:
+            # If no zip file was retrieved, daily downloads limit has exceeded.
+            raise ServiceError('Daily limit exceeded')
         return subtitle
 
 

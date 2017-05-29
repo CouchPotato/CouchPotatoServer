@@ -25,35 +25,18 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://thepiratebay.mn',
-        'https://thepiratebay.gd',
-        'https://thepiratebay.la',
-        'https://pirateproxy.sx',
-        'https://piratebay.host',
-        'https://thepiratebay.expert',
+        'https://pirateproxy.cat',
         'https://pirateproxy.wf',
         'https://pirateproxy.tf',
         'https://urbanproxy.eu',
-        'https://pirate.guru',
         'https://piratebays.co',
         'https://pirateproxy.yt',
         'https://thepiratebay.uk.net',
-        'https://tpb.ninja',
-        'https://thehiddenbay.me',
-        'https://ukunlocked.com',
         'https://thebay.tv',
-        'https://tpb.freed0m4all.net',
-        'https://piratebays.eu',
         'https://thepirateproxy.co',
-        'https://thepiratebayz.com',
-        'https://zaatoka.eu',
-        'https://piratemirror.net',
         'https://theproxypirate.pw',
-        'https://torrentdr.com',
-        'https://tpbproxy.co',
         'https://arrr.xyz',
-        'https://www.cleantpbproxy.com',
-        'http://tpb.dashitz.com',
+        'https://tpb.dashitz.com'
     ]
 
     def __init__(self):

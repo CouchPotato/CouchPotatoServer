@@ -128,6 +128,7 @@ class Base(NZBProvider, RSS):
         api_keys = splitString(self.conf('api_key'), clean = False)
         extra_score = splitString(self.conf('extra_score'), clean = False)
         custom_tags = splitString(self.conf('custom_tag'), clean = False)
+        custom_categories = splitString(self.conf('custom_categories'), clean = False)
 
         list = []
         for nr in range(len(hosts)):
@@ -144,12 +145,16 @@ class Base(NZBProvider, RSS):
             try: custom_tag = custom_tags[nr]
             except: custom_tag = ''
 
+            try: custom_category = custom_categories[nr].replace(" ", ",")
+            except: custom_category = ''
+
             list.append({
                 'use': uses[nr],
                 'host': host,
                 'api_key': key,
                 'extra_score': score,
-                'custom_tag': custom_tag
+                'custom_tag': custom_tag,
+                'custom_category' : custom_category
             })
 
         return list
@@ -264,6 +269,13 @@ config = [{
                     'label': 'Custom tag',
                     'default': ',,,,,',
                     'description': 'Add custom tags, for example add rls=1 to get only scene releases from nzbs.org',
+                },
+                {
+                    'name': 'custom_categories',
+                    'advanced': True,
+                    'label': 'Custom Categories',
+                    'default': '2000,2000,2000,2000,2000,2000',
+                    'description': 'Specify categories to search in seperated by a single space, defaults to all movies. EG: "2030 2040 2060" would only search in HD, SD, and 3D movie categories',
                 },
                 {
                     'name': 'api_key',
