@@ -1,5 +1,6 @@
 import base64
 import time
+import json
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
@@ -106,8 +107,62 @@ class CouchPotatoApi(MovieProvider):
         if identifier is None: return {}
 
         dates = self.getJsonData(self.urls['eta'] % identifier, headers = self.getRequestHeaders())
-        log.debug('Found ETA for %s: %s', (identifier, dates))
 
+        #This grabs release date info from omdbapi/rottentomatoes
+        temp2 = self.getJsonData("http://www.omdbapi.com/?i=%s&tomatoes=true&plot=short&r=json" % identifier)
+        #log.debug(temp2)
+        ddate=0 #throw away what couchpotatoai is returning since it is garbage at this time
+        tdate=0
+        dvd_date= temp2['DVD']
+        theater_date=temp2['Released']
+        if theater_date != 'N/A':
+            p='%d %b %Y'
+            tdate=int(time.mktime(time.strptime(theater_date,p)))
+
+        if dvd_date != 'N/A':
+            p='%d %b %Y'
+            ddate=int(time.mktime(time.strptime(dvd_date,p)))
+           
+        if (ddate !=0):    
+            if ddate < tdate:
+                ddate = 0 #if the dvd release date occurs before the theater release date, assume the data is wrong
+                tdate = 0
+        dates['dvd']=ddate    
+        dates['theater']=tdate
+        """
+        #This grabs release date info for US from themoviedb - one must replace xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx with their themoviedb api key
+        #note - if more than one release date of a particular type is found, the last one found will be used
+        #im just throwing this code in here because obviously the couchpotato api method of grabbing release date info and eta's is broken
+        #or not working
+        #perhaps the fix shouldnt be done right here; however, I am just checking this code in because perhaps someone who knows
+        #how couchpotato works better can use this code in a more appropriate way to make couchpotato eta more robust.
+        #temp = self.getJsonData("https://api.themoviedb.org/3/movie/%s/release_dates?api_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" % identifier)
+        results = temp['results']
+        theater_rel=''
+        dvd_rel=''
+        p='%Y-%m-%d'
+        for result in results:
+            country = result['iso_3166_1']
+            if country == 'US':
+                rds = result['release_dates']
+                for rd in rds:
+                    rd_type=rd['type']
+                    if rd_type ==2 or rd_type==3:   #is theatrical release date
+                       theater_rel = rd['release_date']
+                    elif rd_type == 4 or rd_type == 5:   #is digital or dvd release date
+                       dvd_rel = rd['release_date']
+        if theater_rel != '':
+            tdate=int(time.mktime(time.strptime(theater_rel[:10],p)))
+        	 
+        if dvd_rel !='':
+            ddate=int(time.mktime(time.strptime(dvd_rel[:10],p)))
+        if tdate > ddate: #dont write the data unless its good and makes sense
+            dates['theater']=tdate
+            dates['dvd']=ddate	
+        #"""
+
+
+        log.debug('Found ETA for %s: %s', (identifier, dates))
         return dates
 
     def getSuggestions(self, movies = None, ignore = None):
