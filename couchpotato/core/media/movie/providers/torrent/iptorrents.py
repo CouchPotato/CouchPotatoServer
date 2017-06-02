@@ -16,7 +16,7 @@ class IPTorrents(MovieProvider, Base):
         ([48, 20], ['brrip']),
         ([7, 77], ['dvdrip']),
         ([6], ['dvdr']),
-        ([96], ['cam', 'ts', 'tc', 'r5', 'scr']),
+        ([96], ['cam', 'ts', 'tc', 'r5', 'scr'])
     ]
 
     def buildUrl(self, title, media, quality):
