@@ -14,7 +14,7 @@ log = CPLog(__name__)
 class Base(TorrentMagnetProvider):
 
     urls = {
-        'search': 'http://www.magnetdl.com/%s/%s/se/desc/%s/',
+        'search': 'http://www.magnetdl.com/%s/%s/%s/',
         'detail': 'http://www.magnetdl.com/%s'
     }
 
