@@ -143,7 +143,31 @@ class IMDBWatchlist(IMDBBase):
 class IMDBAutomation(IMDBBase):
 
     enabled_option = 'automation_providers_enabled'
-
+    
+    charts = {
+        'theater': {
+            'order': 1,
+            'name': 'IMDB - Movies in Theaters',
+            'url': 'http://www.imdb.com/movies-in-theaters/',
+        },
+        'boxoffice': {
+            'order': 2,
+            'name': 'IMDB - Box Office',
+            'url': 'http://www.imdb.com/boxoffice/',
+        },
+        'rentals': {
+            'order': 3,
+            'name': 'IMDB - Top DVD rentals',
+            'url': 'http://www.imdb.com/boxoffice/rentals',
+            'type': 'json',
+        },
+        'top250': {
+            'order': 4,
+            'name': 'IMDB - Top 250 Movies',
+            'url': 'http://www.imdb.com/chart/top',
+        },
+    }
+    
     def getIMDBids(self):
 
         movies = []
