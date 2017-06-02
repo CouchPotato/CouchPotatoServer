@@ -106,6 +106,18 @@ class TCPServer(object):
             if 'certfile' not in self.ssl_options:
                 raise KeyError('missing key "certfile" in ssl_options')
 
+            # Run os.stat against cert and keyfile to test permissions,
+            # if not, just raise the exception
+            try:
+                os.stat(self.ssl_options['certfile'])
+            except:
+                raise
+
+            try:
+                os.stat(self.ssl_options['keyfile'])
+            except:
+                raise
+
             if not os.path.exists(self.ssl_options['certfile']):
                 raise ValueError('certfile "%s" does not exist' %
                                  self.ssl_options['certfile'])
