@@ -18,8 +18,8 @@ autoload = 'OMDBAPI'
 class OMDBAPI(MovieProvider):
 
     urls = {
-        'search': 'http://www.omdbapi.com/?type=movie&%s',
-        'info': 'http://www.omdbapi.com/?type=movie&i=%s',
+        'search': 'https://www.omdbapi.com/?apikey=%s&type=movie&%s',
+        'info': 'https://www.omdbapi.com/?apikiey=%s&type=movie&i=%s',
     }
 
     http_time_between_calls = 0
@@ -31,6 +31,9 @@ class OMDBAPI(MovieProvider):
 
     def search(self, q, limit = 12):
 
+        if self.isDisabled():
+            return False
+
         name_year = fireEvent('scanner.name_year', q, single = True)
 
         if not name_year or (name_year and not name_year.get('name')):
@@ -39,7 +42,7 @@ class OMDBAPI(MovieProvider):
             }
 
         cache_key = 'omdbapi.cache.%s' % q
-        url = self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')})
+        url = self.urls['search'] % (self.getApiKey(), tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}))
         cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
@@ -53,6 +56,9 @@ class OMDBAPI(MovieProvider):
         return []
 
     def getInfo(self, identifier = None, **kwargs):
+
+        if self.isDisabled():
+            return False
 
         if not identifier:
             return {}
@@ -122,6 +128,16 @@ class OMDBAPI(MovieProvider):
             log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
 
         return movie_data
+
+    def isDisabled(self):
+        if self.getApiKey() == '':
+            log.error('No API key provided.')
+            return True
+        return False
+
+    def getApiKey(self):
+        apikey = self.conf('api_key')
+        return apikey
 
     def runtimeToMinutes(self, runtime_str):
         runtime = 0
