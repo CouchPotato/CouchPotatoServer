@@ -19,7 +19,7 @@ class OMDBAPI(MovieProvider):
 
     urls = {
         'search': 'https://www.omdbapi.com/?apikey=%s&type=movie&%s',
-        'info': 'https://www.omdbapi.com/?apikiey=%s&type=movie&i=%s',
+        'info': 'https://www.omdbapi.com/?apikey=%s&type=movie&i=%s',
     }
 
     http_time_between_calls = 0
@@ -59,7 +59,8 @@ class OMDBAPI(MovieProvider):
             return {}
 
         cache_key = 'omdbapi.cache.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
+        url = self.urls['info'] % (self.getApiKey(), identifier)
+        cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
             result = self.parseMovie(cached)
