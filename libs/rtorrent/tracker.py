@@ -70,17 +70,17 @@ class Tracker:
 methods = [
     # RETRIEVERS
     Method(Tracker, 'is_enabled', 't.is_enabled', boolean=True),
-    Method(Tracker, 'get_id', 't.get_id'),
-    Method(Tracker, 'get_scrape_incomplete', 't.get_scrape_incomplete'),
+    Method(Tracker, 'get_id', 't.id'),
+    Method(Tracker, 'get_scrape_incomplete', 't.scrape_incomplete'),
     Method(Tracker, 'is_open', 't.is_open', boolean=True),
-    Method(Tracker, 'get_min_interval', 't.get_min_interval'),
-    Method(Tracker, 'get_scrape_downloaded', 't.get_scrape_downloaded'),
-    Method(Tracker, 'get_group', 't.get_group'),
-    Method(Tracker, 'get_scrape_time_last', 't.get_scrape_time_last'),
-    Method(Tracker, 'get_type', 't.get_type'),
-    Method(Tracker, 'get_normal_interval', 't.get_normal_interval'),
-    Method(Tracker, 'get_url', 't.get_url'),
-    Method(Tracker, 'get_scrape_complete', 't.get_scrape_complete',
+    Method(Tracker, 'get_min_interval', 't.min_interval'),
+    Method(Tracker, 'get_scrape_downloaded', 't.scrape_downloaded'),
+    Method(Tracker, 'get_group', 't.group'),
+    Method(Tracker, 'get_scrape_time_last', 't.scrape_time_last'),
+    Method(Tracker, 'get_type', 't.type'),
+    Method(Tracker, 'get_normal_interval', 't.normal_interval'),
+    Method(Tracker, 'get_url', 't.url'),
+    Method(Tracker, 'get_scrape_complete', 't.scrape_complete',
            min_version=(0, 8, 9),
            ),
     Method(Tracker, 'get_activity_time_last', 't.activity_time_last',
@@ -134,5 +134,5 @@ methods = [
            ),
 
     # MODIFIERS
-    Method(Tracker, 'set_enabled', 't.set_enabled'),
+    Method(Tracker, 'set_enabled', 't.is_enabled.set'),
 ]
