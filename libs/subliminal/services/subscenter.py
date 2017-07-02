@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class Subscenter(ServiceBase):
-    server = 'http://www.subscenter.org/he/'
+    server = 'http://www.subscenter.info/he/'
     api_based = False
     languages = language_set(['he'])
     videos = [Episode, Movie]
