@@ -23,13 +23,12 @@ from ..videos import Episode, Movie
 from ..utils import to_unicode
 import bisect
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
 
-class TheWiz(ServiceBase):
-    server = 'http://subs.thewiz.info/'
+class Wizdom(ServiceBase):
+    server = 'http://wizdom.xyz'
     api_based = True
     languages = language_set(['he'])
     videos = [Episode, Movie]
@@ -42,33 +41,28 @@ class TheWiz(ServiceBase):
 
         :param str title: title to search for.
         :param int year: year to search for (or 0 if not relevant).
-        :param bool is_movie: If True, IMDB ID will be searched for in TMDB instead of TheWiz.
+        :param bool is_movie: If True, IMDB ID will be searched for in TMDB instead of Wizdom.
         :return: the IMDB ID for the given title and year (or None if not found).
         :rtype: str
         """
         # make the search
         logger.info('Searching IMDB ID for %r%r', title, '' if not year else ' ({})'.format(year))
+        category = 'movie' if is_movie else 'tv'
         title = title.replace('\'', '')
-        if is_movie:
-            # get TMDB ID first
-            r = self.session.get('http://api.tmdb.org/3/search/movie?api_key={}&query={}{}&language=en'.format(
-                self._tmdb_api_key, title, '' if not year else '&year={}'.format(year)))
-            r.raise_for_status()
-            tmdb_results = r.json().get('results')
-            if tmdb_results:
-                tmdb_id = tmdb_results[0].get('id')
-                if tmdb_id:
-                    # get actual IMDB ID from TMDB
-                    r = self.session.get('http://api.tmdb.org/3/movie/{}?api_key={}&language=en'.format(
-                        tmdb_id, self._tmdb_api_key))
-                    r.raise_for_status()
-                    return str(r.json().get('imdb_id', '')) or None
-            return None
-
-        # handle TV series
-        r = self.session.get(self.server_url + 'search.tv.php', params={'name': title}, timeout=10)
+        # get TMDB ID first
+        r = self.session.get('http://api.tmdb.org/3/search/{}?api_key={}&query={}{}&language=en'.format(
+            category, self._tmdb_api_key, title, '' if not year else '&year={}'.format(year)))
         r.raise_for_status()
-        return r.text or None
+        tmdb_results = r.json().get('results')
+        if tmdb_results:
+            tmdb_id = tmdb_results[0].get('id')
+            if tmdb_id:
+                # get actual IMDB ID from TMDB
+                r = self.session.get('http://api.tmdb.org/3/{}/{}{}?api_key={}&language=en'.format(
+                    category, tmdb_id, '' if is_movie else '/external_ids', self._tmdb_api_key))
+                r.raise_for_status()
+                return str(r.json().get('imdb_id', '')) or None
+        return None
 
     def list_checked(self, video, languages):
         series = None
@@ -84,40 +78,44 @@ class TheWiz(ServiceBase):
         return self.query(video.path or video.release, languages, series, season,
                           episode, title, imdb_id, year)
 
-    def query(self, filepath, languages=None, series=None, season=None, episode=None, title=None, imdbid=None, year=None):
+    def query(self, filepath, languages=None, series=None, season=None, episode=None, title=None, imdbid=None,
+              year=None):
         logger.debug(u'Getting subtitles for {0} season {1} episode {2} with languages {3}'.format(
             series, season, episode, languages))
         # search for the IMDB ID if needed
         is_movie = not (series and season and episode)
         if is_movie and not title:
             raise ServiceError('One or more parameters are missing')
-        # for tv series, we need the series IMDB ID, and not the specific episode ID
-        imdb_id = (is_movie and imdbid) or self._search_imdb_id(title, year, is_movie)
-        # get search parameters
-        season = season or 0
-        episode = episode or 0
-        version = os.path.splitext(os.path.basename(filepath))[0] if filepath else 0
+        # for TV series, we need the series IMDB ID, and not the specific episode ID
+        imdb_id = imdbid or self._search_imdb_id(title, year, is_movie)
 
         # search
         logger.debug(u'Using IMDB ID {0}'.format(imdb_id))
-        url = 'http://subs.thewiz.info/search.id.php?imdb={}&season={}&episode={}&version={}'.format(
-            imdb_id, season, episode, version)
+        url = 'http://json.{}/{}.json'.format(self.server_url, imdb_id)
 
         # get the list of subtitles
-        logger.debug(u'Getting the list of subtitles')
+        logger.debug('Getting the list of subtitles')
         r = self.session.get(url)
         r.raise_for_status()
-        results = r.json()
+        try:
+            results = r.json()
+        except ValueError:
+            return {}
+
+        # filter irrelevant results
+        if not is_movie:
+            results = results.get('subs', {}).get(str(season), {}).get(str(episode), [])
+        else:
+            results = results.get('subs', [])
 
         # loop over results
-
         subtitles = dict()
         for result in results:
             language_object = self.get_language('heb')
             subtitle_id = result['id']
-            release = result['versioname']
+            release = result['version']
             subtitle_path = get_subtitle_path(filepath, language_object, self.config.multi)
-            download_link = self.server_url + 'zip/{0}.zip'.format(subtitle_id)
+            download_link = 'http://zip.{}/{}.zip'.format(self.server_url, subtitle_id)
             # add the release and increment downloaded count if we already have the subtitle
             if subtitle_id in subtitles:
                 logger.debug(u'Found additional release {0} for subtitle {1}'.format(release, subtitle_id))
@@ -137,4 +135,4 @@ class TheWiz(ServiceBase):
         return subtitle
 
 
-Service = TheWiz
+Service = Wizdom
