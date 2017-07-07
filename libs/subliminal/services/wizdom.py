@@ -34,7 +34,7 @@ class Wizdom(ServiceBase):
     videos = [Episode, Movie]
     require_video = False
 
-    _tmdb_api_key = 'f7f51775877e0bb6703520952b3c7840'
+    _tmdb_api_key = 'a51ee051bcd762543373903de296e0a3'
 
     def _search_imdb_id(self, title, year, is_movie):
         """Search the IMDB ID for the given `title` and `year`.
