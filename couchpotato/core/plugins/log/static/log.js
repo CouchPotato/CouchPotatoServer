@@ -250,7 +250,7 @@ Page.Log = new Class({
 					new Element('a.button', {
 						'target': '_blank',
 						'text': 'the contributing guide',
-						'href': 'https://github.com/CouchPotato/CouchPotatoServer/blob/develop/contributing.md'
+						'href': 'https://github.com/CouchPotato/CouchPotatoServer/wiki/Developer-branch'
 					}),
 					new Element('span', {
 						'html': ' before posting, then copy the text below and <strong>FILL IN</strong> the dots.'
