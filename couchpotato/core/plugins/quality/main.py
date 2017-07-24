@@ -30,13 +30,16 @@ class QualityPlugin(Plugin):
         {'identifier': 'brrip', 'hd': True, 'allow_3d': True, 'size': (700, 7000), 'median_size': 2000, 'label': 'BR-Rip', 'alternative': ['bdrip', ('br', 'rip'), 'hdtv', 'hdrip'], 'allow': ['720p', '1080p', '2160p'], 'ext':['mp4', 'avi'], 'tags': ['webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'median_size': 4500, 'label': 'DVD-R', 'alternative': ['br2dvd', ('dvd', 'r')], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r'), 'dvd9']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'median_size': 1500, 'label': 'DVD-Rip', 'width': 720, 'alternative': [('dvd', 'rip')], 'allow': [], 'ext':['avi'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'median_size': 700, 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr', 'webrip', ('web', 'rip')], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': []},
+        {'identifier': 'hdscr', 'size': (1000, 6000), 'median_size': 1200, 'label': 'HD-Screener', 'alternative': ['hd-screener','hd-scr'], 'allow': ['scr'], 'ext':[], 'tags': []},
+        {'identifier': 'scr', 'size': (600, 1600), 'median_size': 700, 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'webrip', ('web', 'rip')], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': []},
         {'identifier': 'r5', 'size': (600, 1000), 'median_size': 700, 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr', '720p', '1080p'], 'ext':[]},
         {'identifier': 'tc', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': ['720p', '1080p'], 'ext':[]},
+		{'identifier': 'hdts', 'size': (1000, 5000), 'median_size': 1200, 'label': 'HD-TeleSync', 'alternative': ['hdts'], 'allow': ['720p', '1080p','ts'], 'ext':[]},
         {'identifier': 'ts', 'size': (600, 1000), 'median_size': 700, 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': ['720p', '1080p'], 'ext':[]},
-        {'identifier': 'cam', 'size': (600, 1000), 'median_size': 700, 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': ['720p', '1080p'], 'ext':[]}
+		{'identifier': 'hdcam', 'size': (1000, 3000), 'median_size': 1200, 'label': 'HDCam', 'alternative': ['hd-cam'], 'allow': ['720p', '1080p','cam'], 'ext':[]},
+        {'identifier': 'cam', 'size': (600, 1000), 'median_size': 700, 'label': 'Cam', 'alternative': ['camrip'], 'allow': ['720p', '1080p'], 'ext':[]}
     ]
-    pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
+    pre_releases = ['cam', 'hdcam', 'ts', 'hdts', 'tc', 'r5', 'scr', 'hdscr']
     threed_tags = {
         'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
         'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
@@ -495,12 +498,13 @@ class QualityPlugin(Plugin):
             '/movies/BluRay HDDVD H.264 MKV 720p EngSub/QuiQui le fou (criterion collection #123, 1915)/QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p'},
             'C:\\movies\QuiQui le fou (collection #123, 1915)\QuiQui le fou (1915) half-sbs 720p x264 BluRay.mkv': {'size': 5500, 'quality': '720p', 'is_3d': True},
-            'Moviename 2014 720p HDCAM XviD DualAudio': {'size': 4000, 'quality': 'cam'},
+            'Moviename 2014 720p HDCAM XviD DualAudio': {'size': 4000, 'quality': 'cam'}, # Not sure where these are run, but this will fail as a "cam".
             'Moviename (2014) - 720p CAM x264': {'size': 2250, 'quality': 'cam'},
             'Movie Name (2014).mp4': {'size': 750, 'quality': 'brrip'},
             'Moviename.2014.720p.R6.WEB-DL.x264.AC3-xyz': {'size': 750, 'quality': 'r5'},
-            'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 750, 'quality': 'cam'},
-            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 750, 'quality': 'ts'},
+            'Movie name 2014 New Source 720p HDCAM x264 AC3 xyz': {'size': 1200, 'quality': 'hdcam'},
+            'Movie.Name.2014.720p.HD.TS.AC3.x264': {'size': 1750, 'quality': 'hdts'},
+            'Movie.Name.2014.TS.MP3.x264': {'size': 750, 'quality': 'ts'},
             'Movie.Name.2014.1080p.HDrip.x264.aac-ReleaseGroup': {'size': 7000, 'quality': 'brrip'},
             'Movie.Name.2014.HDCam.Chinese.Subs-ReleaseGroup': {'size': 15000, 'quality': 'cam'},
             'Movie Name 2014 HQ DVDRip X264 AC3 (bla)': {'size': 0, 'quality': 'dvdrip'},
@@ -512,7 +516,7 @@ class QualityPlugin(Plugin):
             'Movie Name.2014.720p Web-Dl Aac2.0 h264-ReleaseGroup': {'size': 3800, 'quality': 'brrip'},
             'Movie Name.2014.720p.WEBRip.x264.AC3-ReleaseGroup': {'size': 3000, 'quality': 'scr'},
             'Movie.Name.2014.1080p.HDCAM.-.ReleaseGroup': {'size': 5300, 'quality': 'cam'},
-            'Movie.Name.2014.720p.HDSCR.4PARTS.MP4.AAC.ReleaseGroup': {'size': 2401, 'quality': 'scr'},
+            'Movie.Name.2014.720p.HDSCR.4PARTS.MP4.AAC.ReleaseGroup': {'size': 2401, 'quality': 'hdscr'}, # This would have failed previously
             'Movie.Name.2014.720p.BluRay.x264-ReleaseGroup': {'size': 10300, 'quality': '720p'},
             'Movie.Name.2014.720.Bluray.x264.DTS-ReleaseGroup': {'size': 9700, 'quality': '720p'},
             'Movie Name 2015 2160p SourceSite WEBRip DD5 1 x264-ReleaseGroup': {'size': 21800, 'quality': '2160p'},
