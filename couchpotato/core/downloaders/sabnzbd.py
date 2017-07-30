@@ -100,7 +100,7 @@ class Sabnzbd(DownloaderBase):
 
             # the version check will work even with wrong api key, so we need the next check as well
             sab_data = self.call({
-                'mode': 'qstatus',
+                'mode': 'queue',
             })
             if not sab_data:
                 return False
