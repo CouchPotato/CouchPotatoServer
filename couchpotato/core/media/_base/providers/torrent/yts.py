@@ -1,7 +1,6 @@
 from datetime import datetime
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
-from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 import random
 
@@ -19,7 +18,7 @@ class Base(TorrentMagnetProvider):
     def _search(self, movie, quality, results):
         limit = 10
         page = 1
-        data = self.getJsonData(self.urls['search'] % (getTitle(movie), limit, page))
+        data = self.getJsonData(self.urls['search'] % (getIdentifier(movie), limit, page))
 
         if data:
             movie_count = tryInt(data['data']['movie_count'])
@@ -32,37 +31,32 @@ class Base(TorrentMagnetProvider):
                 for i in range(0,len(movie_results)):
                     result = data['data']['movies'][i]
                     name = result['title']
+                    year = result['year']
+                    detail_url = result['url']
 
-                    t = movie['info']['original_title'].split(' ')
+                    for torrent in result['torrents']:
+                        t_quality = torrent['quality']
 
-                    if all(word in name for word in t) and movie['info']['year'] == result['year']:
+                        if t_quality in quality['label']:
+                            hash = torrent['hash']
+                            size = tryInt(torrent['size_bytes'] / 1048576)
+                            seeders = tryInt(torrent['seeds'])
+                            leechers = tryInt(torrent['peers'])
+                            pubdate = torrent['date_uploaded']  # format: 2017-02-17 18:40:03
+                            pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S')
+                            age = (datetime.now() - pubdate).days
 
-                        year = result['year']
-                        detail_url = result['url']
-
-                        for torrent in result['torrents']:
-                            t_quality = torrent['quality']
-
-                            if t_quality in quality['label']:
-                                hash = torrent['hash']
-                                size = tryInt(torrent['size_bytes'] / 1048576)
-                                seeders = tryInt(torrent['seeds'])
-                                leechers = tryInt(torrent['peers'])
-                                pubdate = torrent['date_uploaded']  # format: 2017-02-17 18:40:03
-                                pubdate = datetime.strptime(pubdate, '%Y-%m-%d %H:%M:%S')
-                                age = (datetime.now() - pubdate).days
-
-                                results.append({
-                                    'id': random.randint(100, 9999),
-                                    'name': '%s (%s) %s %s %s' % (name, year, 'YTS', t_quality, 'BR-Rip'),
-                                    'url': self.make_magnet(hash, name),
-                                    'size': size,
-                                    'seeders': seeders,
-                                    'leechers': leechers,
-                                    'age': age,
-                                    'detail_url': detail_url,
-                                    'score': 1
-                                })
+                            results.append({
+                                'id': random.randint(100, 9999),
+                                'name': '%s (%s) %s %s %s' % (name, year, 'YTS', t_quality, 'BR-Rip'),
+                                'url': self.make_magnet(hash, name),
+                                'size': size,
+                                'seeders': seeders,
+                                'leechers': leechers,
+                                'age': age,
+                                'detail_url': detail_url,
+                                'score': 1
+                            })
 
         return
 

@@ -74,7 +74,9 @@ class RTorrent:
                              if m.is_retriever() and m.is_available(self)]
 
         m = rtorrent.rpc.Multicall(self)
-        m.add("d.multicall", view, "d.get_hash=",
+        # multicall2 wants .. something .. as its first argument. It accepts a blank string, so let's go with that.
+        MCFirstArg = ""
+        m.add("d.multicall2", MCFirstArg, view, "d.hash=",
               *[method.rpc_call + "=" for method in retriever_methods])
 
         results = m.call()[0]  # only sent one call, only need first result
@@ -116,7 +118,7 @@ class RTorrent:
             elif verbose:
                 func_name = "load.verbose"
             else:
-                func_name = "load"
+                func_name = "load.normal"
         elif file_type in ["file", "raw"]:
             if start and verbose:
                 func_name = "load.raw_start_verbose"
@@ -137,31 +139,49 @@ class RTorrent:
 
         func_name = self._get_load_function("url", start, verbose)
 
+        # rtorrent > 0.9.6 requires first parameter @target
+        target = ""
         # load magnet
-        getattr(p, func_name)(magneturl)
+        getattr(p, func_name)(target, magneturl)
 
         if verify_load:
+            magnet = False
             i = 0
             while i < verify_retries:
-                for torrent in self.get_torrents():
-                    if torrent.info_hash != info_hash:
-                        continue
+                for m in self.get_torrents():
+                    # This block finds the magnet that was just added, starts it, breaks
+                    # out of the for loop, and then out of the while loop.
+                    # If it can't find the magnet, magnet won't get defined.
+                    if m.info_hash == info_hash:
+                        magnet = m
+                        magnet.start()
+                        i += 999
+                        break
+
+                # If torrent hasn't been defined, sleep for a second and check again.
+                if not magnet:
                     time.sleep(1)
                     i += 1
 
-            # Resolve magnet to torrent
-            torrent.start()
+            # This bit waits for the magnet to be resolved into an actual
+            # torrent, and then starts it.
+            torrent = False
+            i = 0
+            while i < verify_retries:
+                for t in self.get_torrents():
+                    if t.info_hash == info_hash:
+                        if str(info_hash) not in str(t.name):
+                            torrent = t
+                            torrent.start()
+                            i += 999
+                            break
+                if not torrent:
+                    time.sleep(1)
+                    i += 1
 
             assert info_hash in [t.info_hash for t in self.torrents],\
                 "Adding magnet was unsuccessful."
 
-            i = 0
-            while i < verify_retries:
-                for torrent in self.get_torrents():
-                    if torrent.info_hash == info_hash:
-                        if str(info_hash) not in str(torrent.name):
-                            time.sleep(1)
-                            i += 1
 
         return(torrent)
 
