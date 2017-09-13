@@ -18,8 +18,8 @@ autoload = 'OMDBAPI'
 class OMDBAPI(MovieProvider):
 
     urls = {
-        'search': 'http://www.omdbapi.com/?type=movie&%s',
-        'info': 'http://www.omdbapi.com/?type=movie&i=%s',
+        'search': 'https://www.omdbapi.com/?apikey=%s&type=movie&%s',
+        'info': 'https://www.omdbapi.com/?apikey=%s&type=movie&i=%s',
     }
 
     http_time_between_calls = 0
@@ -30,6 +30,8 @@ class OMDBAPI(MovieProvider):
         addEvent('movie.info', self.getInfo)
 
     def search(self, q, limit = 12):
+        if self.isDisabled():
+            return []
 
         name_year = fireEvent('scanner.name_year', q, single = True)
 
@@ -39,7 +41,7 @@ class OMDBAPI(MovieProvider):
             }
 
         cache_key = 'omdbapi.cache.%s' % q
-        url = self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')})
+        url = self.urls['search'] % (self.getApiKey(), tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}))
         cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
@@ -53,12 +55,12 @@ class OMDBAPI(MovieProvider):
         return []
 
     def getInfo(self, identifier = None, **kwargs):
-
-        if not identifier:
+        if self.isDisabled() or not identifier:
             return {}
 
         cache_key = 'omdbapi.cache.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
+        url = self.urls['info'] % (self.getApiKey(), identifier)
+        cached = self.getCache(cache_key, url, timeout = 3, headers = {'User-Agent': Env.getIdentifier()})
 
         if cached:
             result = self.parseMovie(cached)
@@ -88,7 +90,8 @@ class OMDBAPI(MovieProvider):
 
             tmp_movie = movie.copy()
             for key in tmp_movie:
-                if tmp_movie.get(key).lower() == 'n/a':
+                tmp_movie_elem = tmp_movie.get(key)
+                if not isinstance(tmp_movie_elem, (str, unicode)) or tmp_movie_elem.lower() == 'n/a':
                     del movie[key]
 
             year = tryInt(movie.get('Year', ''))
@@ -122,6 +125,16 @@ class OMDBAPI(MovieProvider):
 
         return movie_data
 
+    def isDisabled(self):
+        if self.getApiKey() == '':
+            log.error('No API key provided.')
+            return True
+        return False
+
+    def getApiKey(self):
+        apikey = self.conf('api_key')
+        return apikey
+
     def runtimeToMinutes(self, runtime_str):
         runtime = 0
 
@@ -132,3 +145,24 @@ class OMDBAPI(MovieProvider):
             runtime += tryInt(nr) * (60 if 'h' is str(size)[0] else 1)
 
         return runtime
+
+
+config = [{
+    'name': 'omdbapi',
+    'groups': [
+        {
+            'tab': 'providers',
+            'name': 'tmdb',
+            'label': 'OMDB API',
+            'hidden': True,
+            'description': 'Used for all calls to TheMovieDB.',
+            'options': [
+                {
+                    'name': 'api_key',
+                    'default': 'bbc0e412',  # Don't be a dick and use this somewhere else
+                    'label': 'Api Key',
+                },
+            ],
+        },
+    ],
+}]

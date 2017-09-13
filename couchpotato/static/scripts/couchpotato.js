@@ -182,7 +182,7 @@
 					'click': self.checkForUpdate.bind(self, null)
 				}
 			}));
-		};
+		}
 
 		setting_links.each(function(a){
 			self.block.more.addLink(a);

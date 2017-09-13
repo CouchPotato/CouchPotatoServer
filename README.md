@@ -13,7 +13,7 @@ Once a movie is found, it will send it to SABnzbd or download the torrent to a s
 
 CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed.
 
-Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for more details:
+Windows, see [the CP forum](http://couchpota.to/forum/viewtopic.php?t=14) for more details:
 
 * Install [Python 2.7](http://www.python.org/download/releases/2.7.3/)
 * Then install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
@@ -55,9 +55,6 @@ Linux:
 
 Docker:
 * You can use [linuxserver.io](https://github.com/linuxserver/docker-couchpotato) or [razorgirl's](https://github.com/razorgirl/docker-couchpotato) to quickly build your own isolated app container. It's based on the Linux instructions above. For more info about Docker check out the [official website](https://www.docker.com).
-
-Ansible:
-* You can use [peerster's] (https://github.com/peerster/ansible-couchpotato) [ansible] (http://www.ansible.com) role to deploy couchpotato.
 
 FreeBSD:
 

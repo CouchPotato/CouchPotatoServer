@@ -14,11 +14,11 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://iptorrents.eu/',
-        'base_url': 'https://iptorrents.eu',
-        'login': 'https://iptorrents.eu/take_login.php',
-        'login_check': 'https://iptorrents.eu/oldinbox.php',
-        'search': 'https://iptorrents.eu/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
+        'test': 'https://iptorrents.com/',
+        'base_url': 'https://iptorrents.com',
+        'login': 'https://iptorrents.com/take_login.php',
+        'login_check': 'https://iptorrents.com/oldinbox.php',
+        'search': 'https://iptorrents.com/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -36,6 +36,8 @@ class Base(TorrentProvider):
             log.warning('Unable to find category ids for identifier "%s"', quality.get('identifier'))
             return None
 
+        query = query.replace('"', '')
+        
         return self.urls['search'] % ("&".join(("%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
@@ -61,7 +63,7 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find('table', attrs = {'id': 'torrents'})
+                    result_table = html.find('table', attrs={'id': 'torrents'})
 
                     if not result_table or 'nothing found!' in data.lower():
                         return
@@ -121,7 +123,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'IPTorrents',
-            'description': '<a href="https://iptorrents.eu" target="_blank">IPTorrents</a>',
+            'description': '<a href="https://iptorrents.com" target="_blank">IPTorrents</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABRklEQVR42qWQO0vDUBiG8zeKY3EqQUtNO7g0J6ZJ1+ifKIIFQXAqDYKCyaaYxM3udrZLHdRFhXrZ6liCW6mubfk874EESgqaeOCF7/Y8hEh41aq6yZi2nyZgBGya9XKtZs4No05pAkZV2YbEmyMMsoSxLQeC46wCTdPPY4HruPQyGIhF97qLWsS78Miydn4XdK46NJ9OsQAYBzMIMf8MQ9wtCnTdWCaIDx/u7uljOIQEe0hiIWPamSTLay3+RxOCSPI9+RJAo7Er9r2bnqjBFAqyK+VyK4f5/Cr5ni8OFKVCz49PFI5GdNvvU7ttE1M1zMU+8AMqFksEhrMnQsBDzqmDAwzx2ehRLwT7yyCI+vSC99c3mozH1NxrJgWWtR1BOECfEJSVCm6WCzJGCA7+IWhBsM4zywDPwEp4vCjx2DzBH2ODAfsDb33Ps6dQwJgAAAAASUVORK5CYII=',
             'options': [

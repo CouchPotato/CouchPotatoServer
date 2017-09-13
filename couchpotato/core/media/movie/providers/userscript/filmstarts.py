@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
+import re
 
 autoload = 'Filmstarts'
 
@@ -15,16 +16,16 @@ class Filmstarts(UserscriptBase):
 			return
 			
 		html = BeautifulSoup(data)
-		table = html.find("table", attrs={"class": "table table-standard thead-standard table-striped_2 fs11"})
+		table = html.find("section", attrs={"class": "section ovw ovw-synopsis", "id": "synopsis-details"})
 		
-		if table.find(text='Originaltitel'):
+		if table.find(text=re.compile('Originaltitel')): #some trailing whitespaces on some pages
 			# Get original film title from the table specified above
-			name = table.find("div", text="Originaltitel").parent.parent.parent.td.text
+			name = name = table.find("span", text=re.compile("Originaltitel")).findNext('h2').text
 		else:
 			# If none is available get the title from the meta data
 			name = html.find("meta", {"property":"og:title"})['content']
 			
 		# Year of production is not available in the meta data, so get it from the table
-		year = table.find(text="Produktionsjahr").parent.parent.next_sibling.text
+		year = table.find("span", text=re.compile("Produktionsjahr")).findNext('span').text
 		
 		return self.search(name, year)

@@ -39,10 +39,15 @@ class Base(TorrentProvider):
             if '## SELECT COUNT(' in split_data[0]:
                 data = split_data[2]
 
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, 'html.parser')
 
             try:
-                result_table = html.find('table', attrs = {'width': '750', 'class': ''})
+                result_tables = html.find_all('table', attrs = {'width': '750', 'class': ''})
+                if result_tables is None:
+                    return
+
+                result_table = result_tables[1]
+
                 if result_table is None:
                     return
 

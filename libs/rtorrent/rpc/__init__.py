@@ -38,13 +38,13 @@ def get_varname(rpc_call):
     r = re.search(
         "([ptdf]\.|system\.|get\_|is\_|set\_)+([^=]*)", rpc_call, re.I)
     if r:
-        return(r.groups()[-1])
+        return(r.groups()[-1].replace(".","_"))
     else:
         return(None)
 
 
 def _handle_unavailable_rpc_method(method, rt_obj):
-    msg = "Method isn't available."
+    msg = "Method " + str(method) + " isn't available."
     if rt_obj.connection._get_client_version_tuple() < method.min_version:
         msg = "This method is only available in " \
             "RTorrent version v{0} or later".format(
@@ -91,7 +91,7 @@ class Method:
 
     def _get_method_type(self):
         """Determine whether method is a modifier or a retriever"""
-        if self.method_name[:4] == "set_": return('m')  # modifier
+        if self.method_name[:4] == "set_" or self.method_name[-4:] == ".set": return('m')  # modifier
         else:
             return('r')  # retriever
 

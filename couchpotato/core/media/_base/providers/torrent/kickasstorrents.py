@@ -30,9 +30,28 @@ class Base(TorrentMagnetProvider):
     cat_backup_id = None
 
     proxy_list = [
-        'https://kat.cr',
-        'https://kickass.unblocked.pw/',
-        'https://katproxy.com',
+        'http://flowtorrent.com',
+        'http://katcr.to/span',
+        'http://dx-torrente.com',
+        'https://kickass.unblocked.vip',
+        'https://katcr.co',
+        'https://kat.how',
+        'https://kickass.cd',
+        'https://kickass.unlockproject.online',
+        'https://kickasstorrents.video',
+        'https://kat.al',
+        'https://katproxy.al',
+        'https://kattor.xyz',
+        'https://kickass.unblocked.video',
+        'https://kickass.unblocked.rocks',
+        'https://kickass.immunicity.live',
+        'https://kickass.immunicity.red',
+        'https://kickass.immunicity.video',
+        'https://kickass.bypassed.live',
+        'https://kickass.bypassed.video',
+        'https://kickass.bypassed.red',
+        'https://kickass.unblocked.pw',
+        'https://katproxy.com'
     ]
 
     def _search(self, media, quality, results):

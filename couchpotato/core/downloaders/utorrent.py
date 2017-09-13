@@ -1,4 +1,4 @@
-from base64 import b16encode, b32decode
+﻿from base64 import b16encode, b32decode
 from datetime import timedelta
 from hashlib import sha1
 import cookielib
@@ -73,24 +73,6 @@ class uTorrent(DownloaderBase):
 
         if not self.connect():
             return False
-
-        settings = self.utorrent_api.get_settings()
-        if not settings:
-            return False
-
-        #Fix settings in case they are not set for CPS compatibility
-        new_settings = {}
-        if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
-            new_settings['seed_prio_limitul'] = 0
-            new_settings['seed_prio_limitul_flag'] = True
-            log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
-
-        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
-            new_settings['bt.read_only_on_complete'] = False
-            log.info('Updated uTorrent settings to not set the files to read only after completing.')
-
-        if new_settings:
-            self.utorrent_api.set_settings(new_settings)
 
         torrent_params = {}
         if self.conf('label'):
@@ -194,7 +176,7 @@ class uTorrent(DownloaderBase):
                 status = 'busy'
                 if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
                     status = 'seeding'
-                elif torrent[1] & self.status_flags['ERROR']:
+                elif torrent[1] & self.status_flags['ERROR'] and 'There is not enough space on the disk' not in torrent[21]:
                     status = 'failed'
                 elif torrent[4] == 1000:
                     status = 'completed'

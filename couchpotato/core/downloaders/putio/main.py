@@ -61,9 +61,13 @@ class PutIO(DownloaderBase):
         # Note callback_host is NOT our address, it's the internet host that putio can call too
         callbackurl = None
         if self.conf('download'):
-            callbackurl = 'http://' + self.conf('callback_host') + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
+            pre = 'http://'
+            if self.conf('https'):
+              pre = 'https://'
+            callbackurl = pre + self.conf('callback_host') + '%sdownloader.putio.getfrom/' %Env.get('api_base'.strip('/'))
+        log.debug('callbackurl is %s', callbackurl)
         resp = client.Transfer.add_url(url, callback_url = callbackurl, parent_id = putioFolder)
-        log.debug('resp is %s', resp.id);
+        log.debug('resp is %s', resp.id)
         return self.downloadReturnId(resp.id)
 
     def test(self):
