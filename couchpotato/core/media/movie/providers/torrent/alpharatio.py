@@ -19,7 +19,7 @@ class AlphaRatio(MovieProvider, Base):
 
     cat_ids = [
         ([7, 9], ['bd50']),
-        ([7, 9], ['720p', '1080p']),
+        ([7, 9], ['720p', '1080p', '2160p']),
         ([6, 8], ['dvdr']),
         ([6, 8], ['brrip', 'dvdrip']),
     ]
