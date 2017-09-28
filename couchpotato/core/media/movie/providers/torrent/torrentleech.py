@@ -11,7 +11,7 @@ autoload = 'TorrentLeech'
 class TorrentLeech(MovieProvider, Base):
 
     cat_ids = [
-        ([41], ['2160p']),
+        ([41, 47], ['2160p']),
         ([13, 14, 37, 43], ['720p', '1080p']),
         ([13], ['bd50']),
         ([8], ['cam']),
