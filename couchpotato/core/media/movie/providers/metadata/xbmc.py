@@ -92,7 +92,7 @@ class XBMC(MovieMetaData):
             pass
 
         # Other values
-        types = ['year', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
+        types = ['year', 'originaltitle:original_title', 'outline', 'plot', 'tagline']
         for type in types:
 
             if ':' in type:
@@ -106,6 +106,14 @@ class XBMC(MovieMetaData):
                     el.text = toUnicode(movie_info.get(type, ''))
             except:
                 pass
+
+        # Release date 
+        try:
+            if movie_info.get('released'):
+                el = SubElement(nfoxml, 'premiered')
+                el.text = time.strftime('%Y:%m:%d', time.strptime(movie_info.get('released'), '%d %b %Y')
+        except:
+            log.debug('Failed to parse release date %s: %s', movie_info.get('released'), traceback.format_exc())
 
         # Rating
         for rating_type in ['imdb', 'rotten', 'tmdb']:
