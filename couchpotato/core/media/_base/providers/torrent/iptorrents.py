@@ -7,6 +7,8 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 import six
 
+from couchpotato.environment import Env
+import requests
 
 log = CPLog(__name__)
 
@@ -103,6 +105,10 @@ class Base(TorrentProvider):
             current_page += 1
 
     def getLoginParams(self):
+        r = Env.get("http_opener")
+
+        r.cookies = requests.utils.cookiejar_from_dict({"uid": self.conf('cookie_uid'), "pass": self.conf('cookie_pass')})
+
         return {
             'username': self.conf('username'),
             'password': self.conf('password'),
@@ -140,6 +146,16 @@ config = [{
                     'name': 'password',
                     'default': '',
                     'type': 'password',
+                },
+                {
+                    'name': 'cookie_uid',
+                    'default': '',
+                    'description': 'UID field from cookie',
+                },
+                {
+                    'name': 'cookie_pass',
+                    'default': '',
+                    'description': 'UID field from cookie',
                 },
                 {
                     'name': 'freeleech',
