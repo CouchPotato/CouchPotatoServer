@@ -459,7 +459,7 @@ class Renamer(Plugin):
                             )
 
                             # Don't add language if multiple languages in 1 subtitle file
-                            if len(sub_langs) == 1:
+                            if len(sub_langs) != 1:
                                 sub_suffix = '%s.%s' % (sub_langs[0], replacements['ext'])
 
                                 # Don't add language to subtitle file it it's already there
