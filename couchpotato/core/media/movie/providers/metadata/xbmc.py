@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 import xml.dom.minidom
+import time
 
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 from couchpotato.core.helpers.encoding import toUnicode
@@ -111,7 +112,7 @@ class XBMC(MovieMetaData):
         try:
             if movie_info.get('released'):
                 el = SubElement(nfoxml, 'premiered')
-                el.text = time.strftime('%Y:%m:%d', time.strptime(movie_info.get('released'), '%d %b %Y')
+                el.text = time.strftime('%Y:%m:%d', time.strptime(movie_info.get('released'), '%d %b %Y'))
         except:
             log.debug('Failed to parse release date %s: %s', movie_info.get('released'), traceback.format_exc())
 
