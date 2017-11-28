@@ -3,7 +3,6 @@ import traceback
 
 import datetime
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
@@ -34,7 +33,6 @@ class Base(TorrentProvider):
         ([20], ['dvdr']),
     ]
 
-
     http_time_between_calls = 1  # Seconds
     login_fail_msg = 'Username or password incorrect'
     cat_backup_id = None
@@ -59,7 +57,7 @@ class Base(TorrentProvider):
 
             try:
                 parent_table = html.find('table', attrs={'class': 'mainouter'})
-                result_table = parent_table.find('table', attrs = {'border': '1'})
+                result_table = parent_table.find('table', attrs={'border': '1'})
                 if not result_table:
                     return
 
@@ -89,10 +87,9 @@ class Base(TorrentProvider):
                         'age': age,
                     }
 
-
                     results.append(r)
 
-            except:
+            except AttributeError:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
@@ -102,15 +99,8 @@ class Base(TorrentProvider):
             'login': 'submit',
         }
 
-    def urlopen(self, *args, **kwargs):
-        r = super(Base, self).urlopen(*args, **kwargs)
-        try:
-            return r.decode('cp1251')
-        except UnicodeDecodeError:
-            return r
-
     def loginSuccess(self, output):
-        return 'Welcome' in output
+        return 'Welcome' in output.decode("cp1251")
 
     loginCheckSuccess = loginSuccess
 
