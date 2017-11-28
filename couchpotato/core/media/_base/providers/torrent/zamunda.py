@@ -16,7 +16,7 @@ class Base(TorrentProvider):
     URL = 'http://zamunda.net'
 
     urls = {
-        'test': 'http://zamunda.net',
+        'test': URL,
         'login': '{}/takelogin.php'.format(URL),
         'login_check': '{}/listing'.format(URL),
         'detail': '{}/details.php?id=%s'.format(URL),
