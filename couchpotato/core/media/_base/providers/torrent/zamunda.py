@@ -103,7 +103,11 @@ class Base(TorrentProvider):
         }
 
     def urlopen(self, *args, **kwargs):
-        return super(Base, self).urlopen(*args, **kwargs).decode('cp1251')
+        r = super(Base, self).urlopen(*args, **kwargs)
+        try:
+            return r.decode('cp1251')
+        except UnicodeDecodeError:
+            return r
 
     def loginSuccess(self, output):
         return 'Welcome' in output
