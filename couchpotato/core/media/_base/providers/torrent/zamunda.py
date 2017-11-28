@@ -50,47 +50,54 @@ class Base(TorrentProvider):
             year = 0
 
         url = self.urls['search'] % (title.replace(':', ''), self.getCatId(quality)[0])
-        data = self.getHTMLData(url)
 
-        if data:
-            html = BeautifulSoup(data)
+        def _fetch(_url):
+            data = self.getHTMLData(_url)
+            if data:
+                html = BeautifulSoup(data)
 
-            try:
-                parent_table = html.find('table', attrs={'class': 'mainouter'})
-                result_table = parent_table.find('table', attrs={'border': '1'})
-                if not result_table:
-                    return
+                try:
+                    parent_table = html.find('table', attrs={'class': 'mainouter'})
+                    result_table = parent_table.find('table', attrs={'border': '1'})
+                    if not result_table:
+                        return
 
-                entries = result_table.find_all('tr')
+                    entries = result_table.find_all('tr')
 
-                for result in entries[1:]:
-                    cells = result.find_all('td')
+                    for result in entries[1:]:
+                        cells = result.find_all('td')
 
-                    link = cells[1].find('a')
+                        link = cells[1].find('a')
 
-                    full_id_pattern = re.compile("id=([0-9]+)")
-                    torrent_id = full_id_pattern.findall(link['href'])[0]
-                    try:
-                        name = cells[1].select('.fa-download')[0].find_parent('a').attrs['onmouseover'].replace(
-                            "Tip('Download: ", '').replace("')", '')
-                    except (AttributeError, KeyError):
-                        name = '%s - %s' %(title, year)
+                        full_id_pattern = re.compile("id=([0-9]+)")
+                        torrent_id = full_id_pattern.findall(link['href'])[0]
+                        try:
+                            name = cells[1].select('.fa-download')[0].find_parent('a').attrs['onmouseover'].replace(
+                                "Tip('Download: ", '').replace("')", '')
+                        except (AttributeError, KeyError):
+                            name = '%s - %s' %(title, year)
 
-                    r = {
-                        'id': torrent_id,
-                        'name': name,
-                        'url': self.urls['download'] % torrent_id,
-                        'detail_url': self.urls['detail'] % torrent_id,
-                        'size': self.parseSize(''.join(cells[5].text)),
-                        'seeders': tryInt(cells[7].text),
-                        'leechers': tryInt(cells[8].text),
-                        'age': age,
-                    }
+                        r = {
+                            'id': torrent_id,
+                            'name': name,
+                            'url': self.urls['download'] % torrent_id,
+                            'detail_url': self.urls['detail'] % torrent_id,
+                            'size': self.parseSize(''.join(cells[5].text)),
+                            'seeders': tryInt(cells[7].text),
+                            'leechers': tryInt(cells[8].text),
+                            'age': age,
+                        }
 
-                    results.append(r)
+                        results.append(r)
+                except AttributeError:
+                    log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
-            except AttributeError:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+                next_el = html.select('.gotonext')
+                if next_el and next_el[0].attrs.get('href'):
+                    _url = self.URL + next_el[0].attrs.get('href')
+                    _fetch(_url)
+
+        _fetch(url)
 
     def getLoginParams(self):
         return {
