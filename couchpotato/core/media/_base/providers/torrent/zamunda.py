@@ -25,12 +25,9 @@ class Base(TorrentProvider):
 
     cat_ids = [
         ([5], ['720p', '1080p']),
-        ([19], ['cam']),
-        ([19], ['ts', 'tc']),
-        ([19], ['r5', 'scr']),
-        ([20], ['dvdrip']),
-        ([42], ['brrip', 'bd50']),
+        ([19, 20], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
         ([20], ['dvdr']),
+        ([42], ['bd50']),
     ]
 
     http_time_between_calls = 1  # Seconds
