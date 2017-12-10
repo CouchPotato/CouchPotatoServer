@@ -77,7 +77,6 @@ var MovieDetails = new Class({
 				'class': parent.get('title') == t ? 'icon-ok' : ''
 			}));
 		});
-
 	},
 
 	addSection: function(name, section_el){
@@ -101,7 +100,7 @@ var MovieDetails = new Class({
 		var self = this;
 
 		self.el.addClass('show');
-
+		document.onkeyup = self.keyup.bind(self);
 		//if(!App.mobile_screen){
 		//	$(self.content).getElements('> .head, > .section').each(function(section, nr){
 		//		dynamics.css(section, {
@@ -130,12 +129,19 @@ var MovieDetails = new Class({
 
 	},
 
+	keyup: function(e) {
+		if (e.keyCode == 27 /* Esc */) {
+			this.close();
+		}
+	},
+
 	close: function(){
 		var self = this;
 
 		var ended = function() {
 			self.el.dispose();
 			self.overlay.removeEventListener('transitionend', ended);
+			document.onkeyup = null;
 		};
 		self.overlay.addEventListener('transitionend', ended, false);
 
@@ -165,5 +171,4 @@ var MovieDetails = new Class({
 
 		App.removeEvent('history.push', self.outer_click);
 	}
-
 });

@@ -21,7 +21,7 @@ class BinSearch(MovieProvider, Base):
             'adv_sort': 'date',
             'adv_col': 'on',
             'adv_nfo': 'on',
-            'minsize': quality.get('size_min'),
-            'maxsize': quality.get('size_max'),
+            'xminsize': quality.get('size_min'),
+            'xmaxsize': quality.get('size_max'),
         })
         return query

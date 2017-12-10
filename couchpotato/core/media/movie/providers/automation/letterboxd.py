@@ -13,7 +13,7 @@ autoload = 'Letterboxd'
 
 class Letterboxd(Automation):
 
-    url = 'http://letterboxd.com/%s/watchlist/'
+    url = 'http://letterboxd.com/%s/watchlist/page/%d/'
     pattern = re.compile(r'(.*)\((\d*)\)')
 
     interval = 1800
@@ -46,18 +46,30 @@ class Letterboxd(Automation):
             if not enablers[index]:
                 continue
 
-            soup = BeautifulSoup(self.getHTMLData(self.url % username))
+            soup = BeautifulSoup(self.getHTMLData(self.url % (username, 1)))
 
-            for movie in soup.find_all('li', attrs = {'class': 'poster-container'}):
-                img = movie.find('img', movie)
-                title = img.get('alt')
+            pagination = soup.find_all('li', attrs={'class': 'paginate-page'})
+            number_of_pages = tryInt(pagination[-1].find('a').get_text()) if pagination else 1
+            pages = range(1, number_of_pages)
 
-                movies.append({
-                    'title': title
-                })
+            for page in pages:
+                soup = BeautifulSoup(self.getHTMLData(self.url % (username, page)))
+                movies += self.getMoviesFromHTML(soup)
 
         return movies
 
+    def getMoviesFromHTML(self, html):
+        movies = []
+
+        for movie in html.find_all('li', attrs={'class': 'poster-container'}):
+            img = movie.find('img')
+            title = img.get('alt')
+
+            movies.append({
+                'title': title
+            })
+
+        return movies
 
 config = [{
     'name': 'letterboxd',

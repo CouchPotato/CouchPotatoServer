@@ -15,24 +15,18 @@ log = CPLog(__name__)
 class Base(TorrentMagnetProvider, RSS):
 
     urls = {
-         'detail': 'https://torrentz.eu/%s',
-         'search': 'https://torrentz.eu/feed?q=%s',
-         'verified_search': 'https://torrentz.eu/feed_verified?q=%s'
+         'detail': 'https://torrentz2.eu/%s',
+         'search': 'https://torrentz2.eu/feed?f=%s'
     }
 
     http_time_between_calls = 0
 
     def _searchOnTitle(self, title, media, quality, results):
 
-        search_url = self.urls['verified_search'] if self.conf('verified_only') else self.urls['search']
+        search_url = self.urls['search']
 
         # Create search parameters
         search_params = self.buildUrl(title, media, quality)
-
-        smin = quality.get('size_min')
-        smax = quality.get('size_max')
-        if smin and smax:
-            search_params += ' size %sm - %sm' % (smin, smax)
 
         min_seeds = tryInt(self.conf('minimal_seeds'))
         if min_seeds:
@@ -52,17 +46,24 @@ class Base(TorrentMagnetProvider, RSS):
                     magnet = splitString(detail_url, '/')[-1]
                     magnet_url = 'magnet:?xt=urn:btih:%s&dn=%s&tr=%s' % (magnet.upper(), tryUrlencode(name), tryUrlencode('udp://tracker.openbittorrent.com/announce'))
 
-                    reg = re.search('Size: (?P<size>\d+) MB Seeds: (?P<seeds>[\d,]+) Peers: (?P<peers>[\d,]+)', six.text_type(description))
+                    reg = re.search('Size: (?P<size>\d+) (?P<unit>[KMG]B) Seeds: (?P<seeds>[\d,]+) Peers: (?P<peers>[\d,]+)', six.text_type(description))
                     size = reg.group('size')
+                    unit = reg.group('unit')
                     seeds = reg.group('seeds').replace(',', '')
                     peers = reg.group('peers').replace(',', '')
+
+                    multiplier = 1
+                    if unit == 'GB':
+                        multiplier = 1000
+                    elif unit == 'KB':
+                        multiplier = 0
 
                     results.append({
                         'id': magnet,
                         'name': six.text_type(name),
                         'url': magnet_url,
                         'detail_url': detail_url,
-                        'size': tryInt(size),
+                        'size': tryInt(size)*multiplier,
                         'seeders': tryInt(seeds),
                         'leechers': tryInt(peers),
                     })
@@ -78,7 +79,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'Torrentz',
-            'description': 'Torrentz is a free, fast and powerful meta-search engine. <a href="https://torrentz.eu/" target="_blank">Torrentz</a>',
+            'description': 'Torrentz.eu was a free, fast and powerful meta-search engine combining results from dozens of search engines, Torrentz2.eu is trying to replace it. <a href="https://torrentz2.eu/" target="_blank">Torrentz2</a>',
             'wizard': True,
             'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQklEQVQ4y2NgAALjtJn/ycEMlGiGG0IVAxiwAKzOxaKGARcgxgC8YNSAwWoAzuRMjgsIugqfAUR5CZcBRIcHsWEAADSA96Ig020yAAAAAElFTkSuQmCC',
             'options': [
@@ -86,13 +87,6 @@ config = [{
                     'name': 'enabled',
                     'type': 'enabler',
                     'default': True
-                },
-                {
-                    'name': 'verified_only',
-                    'type': 'bool',
-                    'default': True,
-                    'advanced': True,
-                    'description': 'Only search verified releases',
                 },
                 {
                     'name': 'minimal_seeds',
