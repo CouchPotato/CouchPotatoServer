@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 import xml.dom.minidom
+import time
 
 from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
 from couchpotato.core.helpers.encoding import toUnicode
