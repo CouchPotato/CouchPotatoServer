@@ -30,7 +30,7 @@ class Scanner(Plugin):
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     ignored_extensions = ['ignore', 'lftp-pget-status']
     extensions = {
-        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v', 'flv'],
+        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v', 'flv', 'mov'],
         'movie_extra': ['mds'],
         'dvd': ['vts_*', 'vob'],
         'nfo': ['nfo', 'txt', 'tag'],
