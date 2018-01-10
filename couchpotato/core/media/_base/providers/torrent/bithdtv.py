@@ -13,9 +13,6 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-        'test': 'https://www.bit-hdtv.com/',
-        'login': 'https://www.bit-hdtv.com/takelogin.php',
-        'login_check': 'https://www.bit-hdtv.com/messages.php',
         'detail': 'https://www.bit-hdtv.com/details.php?id=%s',
         'search': 'https://www.bit-hdtv.com/torrents.php?',
         'download': 'https://www.bit-hdtv.com/download.php?id=%s',
@@ -31,7 +28,7 @@ class Base(TorrentProvider):
 
         url = "%s&%s" % (self.urls['search'], query)
 
-        data = self.getHTMLData(url)
+        data = self.getHTMLData(url, headers = self.getRequestHeaders())
 
         if data:
             # Remove BiT-HDTV's output garbage so outdated BS4 versions successfully parse the HTML
@@ -42,11 +39,12 @@ class Base(TorrentProvider):
             html = BeautifulSoup(data, 'html.parser')
 
             try:
-                result_tables = html.find_all('table', attrs = {'width': '750', 'class': ''})
+                result_tables = html.find_all('table', attrs = {'width': '800', 'class': ''})
                 if result_tables is None:
                     return
 
-                result_table = result_tables[1]
+                # Take first result
+                result_table = result_tables[0]
 
                 if result_table is None:
                     return
@@ -72,10 +70,10 @@ class Base(TorrentProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-    def getLoginParams(self):
+    def getRequestHeaders(self):
+        cookies = 'h_sl={};h_sp={};h_su={}'.format(self.conf('cookiesettingsl') or '', self.conf('cookiesettingsp') or '', self.conf('cookiesettingsu') or '')
         return {
-            'username': self.conf('username'),
-            'password': self.conf('password'),
+            'Cookie': cookies
         }
 
     def getMoreInfo(self, item):
@@ -87,11 +85,13 @@ class Base(TorrentProvider):
         item['description'] = description
         return item
 
-    def loginSuccess(self, output):
-        return 'logout.php' in output.lower()
+    def download(self, url = '', nzb_id = ''):
+        try:
+            return self.urlopen(url, headers=self.getRequestHeaders())
+        except:
+            log.error('Failed getting release from %s: %s', (self.getName(), traceback.format_exc()))
 
-    loginCheckSuccess = loginSuccess
-
+        return 'try_next'
 
 config = [{
     'name': 'bithdtv',
@@ -110,13 +110,22 @@ config = [{
                     'default': False,
                 },
                 {
-                    'name': 'username',
+                    'name': 'cookiesettingsl',
+                    'label': 'Cookies (h_sl)',
                     'default': '',
+                    'description': 'Cookie h_sl from session',
                 },
                 {
-                    'name': 'password',
+                    'name': 'cookiesettingsp',
+                    'label': 'Cookies (h_sp)',
                     'default': '',
-                    'type': 'password',
+                    'description': 'Cookie h_sp from session',
+                },
+                {
+                    'name': 'cookiesettingsu',
+                    'label': 'Cookies (h_su)',
+                    'default': '',
+                    'description': 'Cookie h_su from session',
                 },
                 {
                     'name': 'seed_ratio',

@@ -11,8 +11,8 @@ class Base(TorrentMagnetProvider):
     # Only qualities allowed: 720p/1080p/3D - the rest will fail.
     # All YTS.ag torrents are verified
     urls = {
-        'detail': 'https://yts.ag/api#list_movies',
-        'search': 'https://yts.ag/api/v2/list_movies.json?query_term=%s&limit=%s&page=%s'
+        'detail': 'https://yts.am/api#list_movies',
+        'search': 'https://yts.am/api/v2/list_movies.json?query_term=%s&limit=%s&page=%s'
     }
 
     def _search(self, movie, quality, results):
