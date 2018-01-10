@@ -112,9 +112,9 @@ class XBMC(MovieMetaData):
         try:
             if movie_info.get('released'):
                 el = SubElement(nfoxml, 'premiered')
-                el.text = time.strftime('%Y:%m:%d', time.strptime(movie_info.get('released'), '%d %b %Y'))
+                el.text = time.strftime('%Y-%m-%d', time.strptime(movie_info.get('released'), '%d %b %Y'))
         except:
-            log.debug('Failed to parse release date %s: %s', movie_info.get('released'), traceback.format_exc())
+            log.debug('Failed to parse release date %s: %s', (movie_info.get('released'), traceback.format_exc()))
 
         # Rating
         for rating_type in ['imdb', 'rotten', 'tmdb']:
