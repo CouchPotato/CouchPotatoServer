@@ -1,20 +1,19 @@
 #########################################
 ####nCore CouchPotato TorrentProvider####
 ############# @by gala ##################
-######### @updated by wroadd ############
-################# 2017 ##################
+############# @updated by wroadd ########
+############### 2017 ####################
 #########################################
 from couchpotato.core.logger import CPLog
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
-from couchpotato.core.media.movie.providers.base import MovieProvider
 import traceback
 import json
 
 log = CPLog(__name__)
 
-class nCore(TorrentProvider, MovieProvider):
+class Base(TorrentProvider):
     urls = {
         'login': 'https://ncore.cc/login.php',
         'search': 'https://ncore.cc/torrents.php?kivalasztott_tipus=%s&mire=%s&miben=name&tipus=kivalasztottak_kozott&submit.x=0&submit.y=0&submit=Ok&tags=&searchedfrompotato=true&jsons=true'
@@ -39,7 +38,7 @@ class nCore(TorrentProvider, MovieProvider):
                     'id': d['torrent_id'],
                     'leechers': d['leechers'],
                     'seeders': d['seeders'],
-                    'name': d['release_name'],
+                    'name': toUnicode(d['release_name'].encode('ISO-8859-1')).strip(),
                     'url': d['download_url'],
                     'detail_url': d['details_url'],
                     'size': tryInt(d['size']) / (1024 * 1024),
