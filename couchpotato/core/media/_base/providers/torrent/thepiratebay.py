@@ -25,7 +25,6 @@ class Base(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://pirateproxy.cat',
         'https://pirateproxy.wf',
         'https://pirateproxy.tf',
         'https://urbanproxy.eu',
@@ -34,8 +33,6 @@ class Base(TorrentMagnetProvider):
         'https://thepiratebay.uk.net',
         'https://thebay.tv',
         'https://thepirateproxy.co',
-        'https://theproxypirate.pw',
-        'https://arrr.xyz',
         'https://tpb.dashitz.com'
     ]
 
