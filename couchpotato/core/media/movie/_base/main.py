@@ -1,5 +1,6 @@
 import traceback
 import time
+from datetime import datetime
 
 from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
@@ -339,6 +340,26 @@ class MovieBase(MovieTypeBase):
                 dates = fireEvent('movie.info.release_date', identifier = getIdentifier(media), merge = True)
                 media['info'].update({'release_date': dates})
                 db.update(media)
+
+            # Workaround for a bug in https://api.couchpota.to/eta/<imdbid>
+            # CP uses this API to retrieve movie release dates. The API always returns
+            # "{dvd":0,"theater":0,"bluray":false,"expires":<some-bogus-time-about-11-days-in-the future>}
+            # Because of this, CP will never auto-snatch movies because it can't establish a valid ETA
+            # This workaround tries to extract a valid release-date from the 'released' field of the media info
+            # which seems to be valid but seems to vary in format.
+            # If it fails to convert the date, it uses the expires value.
+            if dates.get('theater') == 0:
+                released = media.get('info').get('released')
+                formats = ['%d %b %Y', '%Y-%m-%d']
+                for format in formats:
+                    try:
+                        dates['theater'] = int(time.mktime(datetime.strptime(released, format).timetuple()))
+                        log.info('Extracted release date for "%s" from "%s"', (media['title'], released))
+                    except ValueError:
+                        continue
+                if dates['theater'] == 0:
+                    dates['theater'] = dates['expires']
+                    log.info('Using expired date as release date for "%s": %d', (media['title'], dates['expires']))
 
             return dates
         except:
