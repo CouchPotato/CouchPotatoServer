@@ -106,46 +106,53 @@ class Bluray(Automation, RSS):
         return movies
 
     def getChartList(self):
-        cache_key = 'bluray.charts'
+        cache_key = 'bluray.charts.rss'
         movie_list = {
             'name': 'Blu-ray.com - New Releases',
             'url': self.display_url,
             'order': self.chart_order,
-            'list': self.getCache(cache_key) or []
+            'list': []
         }
 
-        if not movie_list['list']:
-            movie_ids = []
-            max_items = 10
+        rss_movies = self.getCache(cache_key)
+        if not rss_movies:
             rss_movies = self.getRSSData(self.rss_url)
 
-            for movie in rss_movies:
-                name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
-                year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
+        # Put back in cache with a fresh 'reload' value in case it changed
+        self.setCache(cache_key, rss_movies, timeout = self.conf('reload') * 24 * 60 * 60)
 
-                if not name.find('/') == -1: # make sure it is not a double movie release
+        movie_ids = []
+        max_items = self.conf('items')
+
+        for movie in rss_movies:
+            name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
+            year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
+
+            if not name.find('/') == -1: # make sure it is not a double movie release
+                continue
+
+            movie = self.search(name, year)
+
+            if movie:
+
+                imdb = movie.get('imdb')
+                if imdb in movie_ids:
                     continue
 
-                movie = self.search(name, year)
+                is_movie = fireEvent('movie.is_movie', identifier =imdb, single = True)
+                if not is_movie:
+                    continue
 
-                if movie:
+                if movie.get('year') < self.conf('year'):
+                    continue
 
-                    if movie.get('imdb') in movie_ids:
-                        continue
+                movie_ids.append(imdb)
+                movie_list['list'].append( movie )
+                if len(movie_list['list']) >= max_items:
+                    break
 
-                    is_movie = fireEvent('movie.is_movie', identifier = movie.get('imdb'), single = True)
-                    if not is_movie:
-                        continue
-
-                    movie_ids.append(movie.get('imdb'))
-                    movie_list['list'].append( movie )
-                    if len(movie_list['list']) >= max_items:
-                        break
-
-            if not movie_list['list']:
-                return
-
-            self.setCache(cache_key, movie_list['list'], timeout = 259200)
+        if not movie_list['list']:
+            return
 
         return [movie_list]
 
@@ -185,6 +192,29 @@ config = [{
                     'name': 'chart_display_enabled',
                     'default': True,
                     'type': 'enabler',
+                },
+                {
+                    'advanced': True,
+                    'name': 'year',
+                    'label': 'Minimal Year',
+                    'default': 2017,
+                    'type': 'int',
+                },
+                {
+                    'advanced': True,
+                    'name': 'items',
+                    'label': 'Max Items',
+                    'default': 10,
+                    'type': 'int',
+                },
+                {
+                    'name': 'reload',
+                    'advanced': True,
+                    'default': 3,
+                    'label': 'Reload list every',
+                    'type': 'int',
+                    'unit': 'days',
+                    'description': 'days',
                 },
             ],
         },
