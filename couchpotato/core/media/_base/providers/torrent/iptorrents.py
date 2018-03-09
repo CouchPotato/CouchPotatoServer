@@ -25,6 +25,14 @@ class Base(TorrentProvider):
     login_fail_msg = 'Invalid username and password combination'
     cat_backup_id = None
 
+    def loginDownload(self, url = '', nzb_id = ''):
+        try:
+            if not self.login():
+                log.error('Failed downloading from %s', self.getName())
+            return self.urlopen(url, headers=self.getRequestHeaders())
+        except:
+            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+
     def buildUrl(self, title, media, quality):
         return self._buildUrl(title.replace(':', ''), quality)
 
@@ -37,7 +45,7 @@ class Base(TorrentProvider):
             return None
 
         query = query.replace('"', '')
-        
+
         return self.urls['search'] % ("&".join(("%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
@@ -50,7 +58,7 @@ class Base(TorrentProvider):
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
-            data = self.getHTMLData(base_url % (freeleech, current_page))
+            data = self.getHTMLData(base_url % (freeleech, current_page), headers = self.getRequestHeaders())
 
             if data:
                 html = BeautifulSoup(data)
@@ -101,6 +109,11 @@ class Base(TorrentProvider):
                     break
 
             current_page += 1
+
+    def getRequestHeaders(self):
+        return {
+            'Cookie': self.conf('cookiesetting') or ''
+        }
 
     def getLoginParams(self):
         return {
@@ -161,6 +174,12 @@ config = [{
                     'default': 40,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
+				{
+                    'name': 'cookiesetting',
+                    'label': 'Cookies',
+                    'default': 'uid=1234;pass=567845439634987',
+                    'description': 'Use DevTools or Firebug to get these values after logging in on your browser',
+                },
                 {
                     'name': 'extra_score',
                     'advanced': True,
@@ -173,3 +192,4 @@ config = [{
         },
     ],
 }]
+
