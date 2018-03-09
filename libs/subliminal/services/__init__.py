@@ -183,16 +183,21 @@ class ServiceBase(object):
             return False
         return True
 
-    def download_file(self, url, filepath):
+    def download_file(self, url, filepath, data=None):
         """Attempt to download a file and remove it in case of failure
 
         :param string url: URL to download
         :param string filepath: destination path
+        :param string data: data to add to the post request
 
         """
         logger.info(u'Downloading %s in %s' % (url, filepath))
         try:
-            r = self.session.get(url, timeout = 10, headers = {'Referer': url, 'User-Agent': self.user_agent})
+            headers = {'Referer': url, 'User-Agent': self.user_agent}
+            if data:
+                r = self.session.post(url, data=data, timeout=10, headers=headers)
+            else:
+                r = self.session.get(url, timeout=10, headers=headers)
             with open(filepath, 'wb') as f:
                 f.write(r.content)
         except Exception as e:
@@ -202,18 +207,23 @@ class ServiceBase(object):
             raise DownloadFailedError(str(e))
         logger.debug(u'Download finished')
 
-    def download_zip_file(self, url, filepath):
+    def download_zip_file(self, url, filepath, data=None):
         """Attempt to download a zip file and extract any subtitle file from it, if any.
         This cleans up after itself if anything fails.
 
         :param string url: URL of the zip file to download
         :param string filepath: destination path for the subtitle
+        :param string data: data to add to the post request
 
         """
         logger.info(u'Downloading %s in %s' % (url, filepath))
         try:
             zippath = filepath + '.zip'
-            r = self.session.get(url, timeout = 10, headers = {'Referer': url, 'User-Agent': self.user_agent})
+            headers = {'Referer': url, 'User-Agent': self.user_agent}
+            if data:
+                r = self.session.post(url, data=data, timeout=10, headers=headers)
+            else:
+                r = self.session.get(url, timeout=10, headers=headers)
             with open(zippath, 'wb') as f:
                 f.write(r.content)
             if not zipfile.is_zipfile(zippath):

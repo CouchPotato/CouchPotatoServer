@@ -11,4 +11,4 @@ autoload = 'Torrentz'
 class Torrentz(MovieProvider, Base):
 
     def buildUrl(self, title, media, quality):
-        return tryUrlencode('"%s %s"' % (title, media['info']['year']))
+        return tryUrlencode('%s %s' % (title, media['info']['year']))

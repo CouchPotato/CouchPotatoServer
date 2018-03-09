@@ -73,6 +73,8 @@ class Base(TorrentProvider):
                         torrentdesc += ' Scene'
                         if self.conf('prefer_scene'):
                             torrentscore += 2000
+                        if self.conf('no_scene'):
+                            torrentscore -= 2000
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
@@ -256,6 +258,14 @@ config = [{
                     'label': 'Prefer scene',
                     'default': 0,
                     'description': 'Favors scene-releases over non-scene releases.'
+                },
+                {
+                    'name': 'no_scene',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Reject scene',
+                    'default': 0,
+                    'description': 'Reject scene-releases over non-scene releases.'
                 },
                 {
                     'name': 'require_approval',
