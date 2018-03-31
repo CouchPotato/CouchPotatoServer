@@ -10,7 +10,7 @@ autoload = 'PassThePopcorn'
 class PassThePopcorn(MovieProvider, Base):
 
     quality_search_params = {
-        '2160p': {'resolution': '4K'},
+        '2160p': {'resolution': '2160p'},
         'bd50': {'media': 'Blu-ray', 'format': 'BD50'},
         '1080p': {'resolution': '1080p'},
         '720p': {'resolution': '720p'},
@@ -25,7 +25,7 @@ class PassThePopcorn(MovieProvider, Base):
     }
 
     post_search_filters = {
-        '2160p': {'Resolution': ['4K']},
+        '2160p': {'Resolution': ['2160p']},
         'bd50': {'Codec': ['BD50']},
         '1080p': {'Resolution': ['1080p']},
         '720p': {'Resolution': ['720p']},
