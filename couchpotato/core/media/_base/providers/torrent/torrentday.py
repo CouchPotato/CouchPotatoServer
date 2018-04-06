@@ -10,10 +10,10 @@ class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.torrentday.com/',
-        'login': 'https://www.torrentday.com/torrents/',
+        'login': 'https://www.torrentday.com/t',
         'login_check': 'https://www.torrentday.com/userdetails.php',
         'detail': 'https://www.torrentday.com/details.php?id=%s',
-        'search': 'https://www.torrentday.com/V3/API/API.php',
+        'search': 'https://www.torrentday.com/t.json',
         'download': 'https://www.torrentday.com/download.php/%s/%s',
     }
 
@@ -32,11 +32,9 @@ class Base(TorrentProvider):
         query = '"%s" %s' % (title, media['info']['year'])
 
         data = {
-            '/browse.php?': None,
-            'cata': 'yes',
-            'jxt': 8,
-            'jxw': 'b',
-            'search': query,
+            '11': 'on',
+            '48': 'on',
+            'q': query,
         }
 
         data = self.getJsonData(self.urls['search'], data = data, headers = self.getRequestHeaders())
@@ -45,13 +43,13 @@ class Base(TorrentProvider):
 
         for torrent in torrents:
             results.append({
-                'id': torrent['id'],
+                'id': torrent['t'],
                 'name': torrent['name'],
-                'url': self.urls['download'] % (torrent['id'], torrent['fname']),
-                'detail_url': self.urls['detail'] % torrent['id'],
+                'url': self.urls['download'] % (torrent['t'], torrent['name']),
+                'detail_url': self.urls['detail'] % torrent['t'],
                 'size': self.parseSize(torrent.get('size')),
-                'seeders': tryInt(torrent.get('seed')),
-                'leechers': tryInt(torrent.get('leech')),
+                'seeders': tryInt(torrent.get('seeders')),
+                'leechers': tryInt(torrent.get('leechers')),
             })
 
     def getRequestHeaders(self):
