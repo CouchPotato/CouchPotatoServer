@@ -14,7 +14,7 @@ class Base(TorrentProvider):
         'login_check': 'https://www.torrentday.com/userdetails.php',
         'detail': 'https://www.torrentday.com/details.php?id=%s',
         'search': 'https://www.torrentday.com/t.json',
-        'download': 'https://www.torrentday.com/download.php/%s/%s',
+        'download': 'https://www.torrentday.com/download.php/%s/%s.torrent',
     }
 
     http_time_between_calls = 1  # Seconds
