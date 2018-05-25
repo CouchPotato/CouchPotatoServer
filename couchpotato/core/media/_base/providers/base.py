@@ -70,6 +70,7 @@ class Provider(Plugin):
 
         return self.is_available.get(host, False)
 
+
     def getJsonData(self, url, decode_from = None, **kwargs):
 
         cache_key = md5(url)

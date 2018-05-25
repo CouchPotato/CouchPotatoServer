@@ -82,7 +82,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             'total': total,
             'to_go': total,
         }
-
+        #always_refresh = self.conf('always_refresh')
+        #if always_refresh:
+        #    for media_id in medias:
+        #        fireEvent('movie.update', media_id)
         try:
             search_protocols = fireEvent('searcher.protocols', single = True)
 
@@ -130,6 +133,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.delete', movie['_id'], single = True)
             return
 
+        always_refresh=self.conf('always_refresh')
+        if always_refresh:
+            log.debug("-------------------irefreshg--------------------------------")
+            fireEvent('movie.update',movie['_id'])
         # Update media status and check if it is still not done (due to the stop searching after feature
         if fireEvent('media.restatus', movie['_id'], single = True) == 'done':
             log.debug('No better quality found, marking movie %s as done.', default_title)
@@ -141,7 +148,22 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         previous_releases = movie.get('releases', [])
         too_early_to_search = []
         outside_eta_results = 0
+        netflix_results = 0
         always_search = self.conf('always_search')
+        #always_refresh = self.conf('always_refresh')
+        #if always_refresh:
+        #    fireEvent('movie.update',movie['_id'])
+        #How should the fact that a movie is available on netflix effect searching for and downloading releases?
+        netflixSearchEnabled = not self.conf('disable_netflix_search')
+        netflixDownloadEnabled = netflixSearchEnabled and not self.conf('disable_netflix_download') #no dl if no search
+        if release_dates and release_dates.get('netflix'):
+            movieOnNetflix = 1
+            if not netflixSearchEnabled:
+                return
+        else: 
+            movieOnNetflix = 0
+        
+
         ignore_eta = manual
         total_result_count = 0
 
@@ -173,11 +195,24 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             could_not_be_released = not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year'])
             if not always_search and could_not_be_released:
                 too_early_to_search.append(q_identifier)
-
                 # Skip release, if ETA isn't ignored
                 if not ignore_eta:
                     continue
 
+            """if release_dates: movieOnNetflix = release_dates.get('netflix')
+            if release_dates and release_dates.get('netflix'):
+                movieOnNetflix = 1
+            else:
+                movieOnNetflix = 0
+
+            if (movieOnNetflix and not netflixSearchEnabled):
+                continue
+
+            if release_dates and release_dates.get('netflix'):
+                movieOnNetflix = 1
+            else:
+                movieOnNetflix = 0
+            """
             has_better_quality = 0
 
             # See if better quality is available
@@ -217,13 +252,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             # Keep track of releases found outside ETA window
             outside_eta_results += results_count if could_not_be_released else 0
+            # keep track of release found for movies available on netflix
+            netflix_results += results_count if movieOnNetflix else 0
 
             # Don't trigger download, but notify user of available releases
             if could_not_be_released and results_count > 0:
                 log.debug('Found %s releases for "%s", but ETA isn\'t correct yet.', (results_count, default_title))
 
+            if movieOnNetflix and results_count > 0:
+                log.debug('Found %s release for "%s", movie is on netflix.', (results_count, default_title))
+
             # Try find a valid result and download it
-            if (force_download or not could_not_be_released or always_search) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
+            if (force_download or not could_not_be_released or always_search) and (not movieOnNetflix or (movieOnNetflix and netflixDownloadEnabled)) and fireEvent('release.try_download_result', results, movie, quality_custom, single = True):
                 ret = True
 
             # Remove releases that aren't found anymore
@@ -242,6 +282,11 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if total_result_count > 0:
             fireEvent('media.tag', movie['_id'], 'recent', update_edited = True, single = True)
+
+        if not netflixDownloadEnabled and netflix_results > 0:
+            message = 'Found %s releases for "%s" for movie on Netflix. Select and download via the dashboard.' % (netflix_results, default_title)
+            log.info(message)
+
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
@@ -336,6 +381,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         now_year = date.today().year
         now_month = date.today().month
 
+        #for movies currently available on netflix
+        if (dates and not dates.get('netflix', 0) ==0):
+            return True
+        
         if (year is None or year < now_year - 1 or (year <= now_year - 1 and now_month > 4)) and (not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0)):
             return True
         else:
@@ -427,6 +476,30 @@ config = [{
                     'type': 'bool',
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
+                },
+                {   'name': 'always_refresh',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'type': 'bool',
+                    'label': 'refresh before search',
+                    'description': 'Refresh all media info (ETA, netflix status etc.) prior to starting a Search. This is useful if you want to make use of netflix information. Having this option enabled ensures a search will have up to date and accurate netflix information',
+                },
+                {
+                    'name': 'disable_netflix_search',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'label': 'Skip if on Netflix',
+                    'description': 'Skip searching movies believed to currently be available on netflix. Downloading of these movies will not be possible - the always refresh option above guarantees accurate netflix info - if the option above is not enabled movies may be skipped during a search if CPs netflix info for that movie is out of date.',
+                },
+                {
+                    'name': 'disable_netflix_download',
+                    'default': False,
+                    'migrate_from': 'searcher',
+                    'type': 'bool',
+                    'label': 'No Auto Download if On Netflix',
+                    'description': 'Movies believed to currently be available on Netflix will not be automatically downloaded. Searching will still happen but releases will have to manually be downloaded from the dashboard',
                 },
                 {
                     'name': 'run_on_launch',

@@ -36,14 +36,18 @@ var MovieDetails = new Class({
 			)
 		);
 
-		var eta_date = parent.getETA('%b %Y') ;
+		var eta_date = parent.getETA('%b %d, %Y') ;
+		var dvd_date = parent.getDVDRelease('%b %d, %Y') ;
+		var theater_date = parent.getTheaterRelease('%b %d, %Y') ;
 		self.addSection('description', new Element('div').adopt(
 			new Element('div', {
 				'text': parent.get('plot')
 			}),
 			new Element('div.meta', {
 				'html':
-					(eta_date ? ('<span>ETA:' + eta_date + '</span>') : '') +
+					(theater_date ? ('<span>Theatrical Release: ' + theater_date + '<span>') : '') +
+					(dvd_date ? ('<span>DVD Release: ' + dvd_date + '<span>') : '') +
+					//(eta_date ? ('<span>ETA: ' + eta_date + '</span>') : '') +
 					'<span>' + (parent.get('genres') || []).join(', ') + '</span>'
 			})
 		));
