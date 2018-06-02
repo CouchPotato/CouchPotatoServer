@@ -38,7 +38,7 @@ class PlexServer(object):
         #Maintain support for older Plex installations without myPlex
         if not self.plex.conf('auth_token') and not self.plex.conf('username') and not self.plex.conf('password'):
             data = self.plex.urlopen('%s/%s' % (
-                self.createHost(self.plex.conf('media_server'), port = 32400),
+                self.createHost(self.plex.conf('media_server'), port = self.plex.conf('media_server_port'), use_https = self.plex.conf('use_https')),
                 path
             ))
         else:
@@ -71,7 +71,7 @@ class PlexServer(object):
 
             #Add X-Plex-Token header for myPlex support workaround
             data = self.plex.urlopen('%s/%s?X-Plex-Token=%s' % (
-                self.createHost(self.plex.conf('media_server'), port = 32400),
+                self.createHost(self.plex.conf('media_server'), port = self.plex.conf('media_server_port'), use_https = self.plex.conf('use_https')),
                 path,
                 self.plex.conf('auth_token')
             ))
@@ -139,9 +139,9 @@ class PlexServer(object):
 
         return True
 
-    def createHost(self, host, port = None):
+    def createHost(self, host, port = None, use_https = False):
 
-        h = cleanHost(host)
+        h = cleanHost(host, True, use_https)
         p = urlparse(h)
         h = h.rstrip('/')
 
