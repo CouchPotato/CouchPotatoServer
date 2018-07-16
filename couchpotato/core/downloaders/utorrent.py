@@ -181,8 +181,8 @@ class uTorrent(DownloaderBase):
                 elif torrent[4] == 1000:
                     status = 'completed'
 
-                if not status == 'busy':
-                    self.removeReadOnly(torrent_files)
+                # if not status == 'busy':
+                    # self.removeReadOnly(torrent_files)
 
                 release_downloads.append({
                     'id': torrent[0],
