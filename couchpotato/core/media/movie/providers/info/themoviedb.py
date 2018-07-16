@@ -25,8 +25,7 @@ class TheMovieDb(MovieProvider):
         },
     }
 
-    ak = ['ZjdmNTE3NzU4NzdlMGJiNjcwMzUyMDk1MmIzYzc4NDA=', 'ZTIyNGZlNGYzZmVjNWY3YjU1NzA2NDFmN2NkM2RmM2E=',
-          'YTNkYzExMWU2NjEwNWY2Mzg3ZTk5MzkzODEzYWU0ZDU=', 'ZjZiZDY4N2ZmYTYzY2QyODJiNmZmMmM2ODc3ZjI2Njk=']
+    ak = ['ZTIyNGZlNGYzZmVjNWY3YjU1NzA2NDFmN2NkM2RmM2E=', 'ZjZiZDY4N2ZmYTYzY2QyODJiNmZmMmM2ODc3ZjI2Njk=']
 
     languages = [ 'en' ]
     default_language = 'en'
