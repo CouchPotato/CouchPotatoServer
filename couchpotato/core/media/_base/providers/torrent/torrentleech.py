@@ -1,5 +1,6 @@
 import traceback
 import json
+from datetime import datetime
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -39,6 +40,7 @@ class Base(TorrentProvider):
                 for torrent in jsonResults['torrentList']:
                     link = self.urls['detail'] % torrent['fid']
                     url = self.urls['download'] % (torrent['fid'], torrent['filename'])
+                    pubdate = datetime.strptime(torrent['addedTimestamp'], '%Y-%m-%d %H:%M:%S')
                     currentResult = {
                         'id': torrent['fid'],
                         'name': six.text_type(torrent['name']),
@@ -47,6 +49,7 @@ class Base(TorrentProvider):
                         'size': torrent['size']/1024/1024,
                         'seeders': torrent['seeders'],
                         'leechers': torrent['leechers'],
+                        'age': (datetime.now() - pubdate).days
                     }
                     results.append(currentResult)
             except:
