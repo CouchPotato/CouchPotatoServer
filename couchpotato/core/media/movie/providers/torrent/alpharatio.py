@@ -12,18 +12,21 @@ autoload = 'AlphaRatio'
 class AlphaRatio(MovieProvider, Base):
 
     # AlphaRatio movie search categories
-    # 7: MoviesHD
-    # 9: MoviePackHD
-    # 6: MoviesSD
-    # 8: MovePackSD
+    # 10: MovieUHD
+    # 13: MoviePackUHD
+    # 9: MovieHD
+    # 12: MoviePackHD
+    # 8: MovieSD
+    # 11: MoviePackSD
 
     cat_ids = [
-        ([7, 9], ['bd50']),
-        ([7, 9], ['720p', '1080p', '2160p']),
-        ([6, 8], ['dvdr']),
-        ([6, 8], ['brrip', 'dvdrip']),
+        ([10, 13], ['2160p']),
+        ([9, 12], ['bd50']),
+        ([9, 12], ['720p', '1080p']),
+        ([8, 11], ['dvdr']),
+        ([8, 11], ['brrip', 'dvdrip']),
     ]
-    cat_backup_id = 6
+    cat_backup_id = 8
 
     def buildUrl(self, media, quality):
         query = (tryUrlencode(fireEvent('library.query', media, single = True)),
