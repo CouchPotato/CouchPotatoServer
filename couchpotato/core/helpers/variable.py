@@ -235,25 +235,37 @@ def getIdentifier(media):
     return media.get('identifier') or media.get('identifiers', {}).get('imdb')
 
 
+def getTitle_(media_dict):
+    # Prefer titles to  match prior behavior
+    for key, value in sorted(media_dict.items()):
+        if key == 'titles':
+            try:
+                return value[0]
+            except IndexError:
+                pass
+        elif key == 'title':
+            return value
+        else:
+            try:
+                title = getTitle_(value)
+                if title is not None:
+                    return title
+            except:
+                pass
+    return None
+
+
 def getTitle(media_dict):
     try:
-        try:
-            return media_dict['title']
-        except:
-            try:
-                return media_dict['titles'][0]
-            except:
-                try:
-                    return media_dict['info']['titles'][0]
-                except:
-                    try:
-                        return media_dict['media']['info']['titles'][0]
-                    except:
-                        log.error('Could not get title for %s', getIdentifier(media_dict))
-                        return None
+        return media_dict['title']
     except:
-        log.error('Could not get title for library item: %s', media_dict)
-        return None
+        try:
+            return media_dict['titles'][0]
+        except:
+            title = getTitle_(media_dict)
+    if title is None:
+        log.error('Could not get title for %s library item: %s', getIdentifier(media_dict), media_dict)
+    return title
 
 
 def possibleTitles(raw_title):
