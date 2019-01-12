@@ -1,5 +1,5 @@
 import traceback
-
+import json
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -17,8 +17,8 @@ class Base(TorrentProvider):
         'login': 'https://www.torrentleech.org/user/account/login/',
         'login_check': 'https://torrentleech.org/user/messages',
         'detail': 'https://www.torrentleech.org/torrent/%s',
-        'search': 'https://www.torrentleech.org/torrents/browse/index/query/%s/categories/%s',
-        'download': 'https://www.torrentleech.org%s',
+        'search': 'https://www.torrentleech.org/torrents/browse/list/categories/%s/query/%s',
+        'download': 'https://www.torrentleech.org/download/%s/%s',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -26,37 +26,29 @@ class Base(TorrentProvider):
     cat_backup_id = None
 
     def _searchOnTitle(self, title, media, quality, results):
-
-        url = self.urls['search'] % self.buildUrl(title, media, quality)
+	urlParms = self.buildUrl(title, media, quality)
+        url = self.urls['search'] % (urlParms[1], urlParms[0])
 
         data = self.getHTMLData(url)
+	jsonResults = json.loads(data)
 
-        if data:
-            html = BeautifulSoup(data)
+        if jsonResults:
 
             try:
-                result_table = html.find('table', attrs = {'id': 'torrenttable'})
-                if not result_table:
-                    return
 
-                entries = result_table.find_all('tr')
-
-                for result in entries[1:]:
-
-                    link = result.find('td', attrs = {'class': 'name'}).find('a')
-                    url = result.find('td', attrs = {'class': 'quickdownload'}).find('a')
-                    details = result.find('td', attrs = {'class': 'name'}).find('a')
-
-                    results.append({
-                        'id': link['href'].replace('/torrent/', ''),
-                        'name': six.text_type(link.string),
-                        'url': self.urls['download'] % url['href'],
-                        'detail_url': self.urls['download'] % details['href'],
-                        'size': self.parseSize(result.find_all('td')[4].string),
-                        'seeders': tryInt(result.find('td', attrs = {'class': 'seeders'}).string),
-                        'leechers': tryInt(result.find('td', attrs = {'class': 'leechers'}).string),
-                    })
-
+                for torrent in jsonResults['torrentList']:
+                    link = self.urls['detail'] % torrent['fid']
+                    url = self.urls['download'] % (torrent['fid'], torrent['filename'])
+                    currentResult = {
+                        'id': torrent['fid'],
+                        'name': six.text_type(torrent['name']),
+                        'url': url,
+                        'detail_url': link,
+                        'size': torrent['size']/1024/1024,
+                        'seeders': torrent['seeders'],
+                        'leechers': torrent['leechers'],
+                    }
+                    results.append(currentResult)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
