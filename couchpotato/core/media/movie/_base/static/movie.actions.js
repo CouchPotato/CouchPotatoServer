@@ -424,7 +424,8 @@ MA.Trailer = new Class({
 		var self = this;
 
 		new Element('iframe', {
-			'src': 'https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720'
+			'src': 'https://www.youtube-nocookie.com/embed/'+self.video_id+'?rel=0&showinfo=0&autoplay=1&showsearch=0&iv_load_policy=3&vq=hd720',
+			'allowfullscreen': 'true'
 		}).inject(self.container);
 	}
 
