@@ -10,11 +10,11 @@ class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.torrentday.com/',
-        'login': 'https://www.torrentday.com/torrents/',
+        'login': 'https://www.torrentday.com/t',
         'login_check': 'https://www.torrentday.com/userdetails.php',
         'detail': 'https://www.torrentday.com/details.php?id=%s',
-        'search': 'https://www.torrentday.com/V3/API/API.php',
-        'download': 'https://www.torrentday.com/download.php/%s/%s',
+        'search': 'https://www.torrentday.com/t.json?q=%s',
+        'download': 'https://www.torrentday.com/download.php/%s/%s.torrent',
     }
 
     http_time_between_calls = 1  # Seconds
@@ -32,26 +32,20 @@ class Base(TorrentProvider):
         query = '"%s" %s' % (title, media['info']['year'])
 
         data = {
-            '/browse.php?': None,
-            'cata': 'yes',
-            'jxt': 8,
-            'jxw': 'b',
-            'search': query,
+            'q': query,
         }
 
-        data = self.getJsonData(self.urls['search'], data = data, headers = self.getRequestHeaders())
-        try: torrents = data.get('Fs', [])[0].get('Cn', {}).get('torrents', [])
-        except: return
+        data = self.getJsonData(self.urls['search'] % query, headers = self.getRequestHeaders())
 
-        for torrent in torrents:
+        for torrent in data:
             results.append({
-                'id': torrent['id'],
+                'id': torrent['t'],
                 'name': torrent['name'],
-                'url': self.urls['download'] % (torrent['id'], torrent['fname']),
-                'detail_url': self.urls['detail'] % torrent['id'],
-                'size': self.parseSize(torrent.get('size')),
-                'seeders': tryInt(torrent.get('seed')),
-                'leechers': tryInt(torrent.get('leech')),
+                'url': self.urls['download'] % (torrent['t'], torrent['t']),
+                'detail_url': self.urls['detail'] % torrent['t'],
+                'size': tryInt(torrent['size']) / (1024 * 1024),
+                'seeders': torrent['seeders'],
+                'leechers': torrent['leechers'],
             })
 
     def getRequestHeaders(self):
