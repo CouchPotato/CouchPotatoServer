@@ -1,4 +1,5 @@
 import traceback
+import json
 
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getIdentifier
@@ -25,11 +26,11 @@ class Webhook(Notification):
             })
 
         headers = {
-            'Content-type': 'application/x-www-form-urlencoded'
+            'Content-type': 'application/json'
         }
 
         try:
-            self.urlopen(self.conf('url'), headers = headers, data = post_data, show_error = False)
+            self.urlopen(self.conf('url'), headers = headers, data = json.dumps(post_data), show_error = False)
             return True
         except:
             log.error('Webhook notification failed: %s', traceback.format_exc())
