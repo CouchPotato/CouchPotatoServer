@@ -16,22 +16,13 @@ class Base(TorrentProvider):
     urls = {
         'test': 'https://iptorrents.com/',
         'base_url': 'https://iptorrents.com',
-        'login': 'https://iptorrents.com/take_login.php',
-        'login_check': 'https://iptorrents.com/oldinbox.php',
         'search': 'https://iptorrents.com/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
-    login_fail_msg = 'Invalid username and password combination'
+    login_fail_msg = 'Invalid username and cookie combination'
     cat_backup_id = None
 
-    def loginDownload(self, url = '', nzb_id = ''):
-        try:
-            if not self.login():
-                log.error('Failed downloading from %s', self.getName())
-            return self.urlopen(url, headers=self.getRequestHeaders())
-        except:
-            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
 
     def buildUrl(self, title, media, quality):
         return self._buildUrl(title.replace(':', ''), quality)
@@ -114,19 +105,14 @@ class Base(TorrentProvider):
         return {
             'Cookie': self.conf('cookiesetting') or ''
         }
+    
+   def download(self, url = '', nzb_id = ''):
+        try:
+            return self.urlopen(url, headers=self.getRequestHeaders())
+        except:
+            log.error('Failed getting release from %s: %s', (self.getName(), traceback.format_exc()))
 
-    def getLoginParams(self):
-        return {
-            'username': self.conf('username'),
-            'password': self.conf('password'),
-            'login': 'submit',
-        }
-
-    def loginSuccess(self, output):
-        return 'don\'t have an account' not in output.lower()
-
-    def loginCheckSuccess(self, output):
-        return '/logout.php' in output.lower()
+        return 'try_next'
 
 
 config = [{
@@ -148,11 +134,6 @@ config = [{
                 {
                     'name': 'username',
                     'default': '',
-                },
-                {
-                    'name': 'password',
-                    'default': '',
-                    'type': 'password',
                 },
                 {
                     'name': 'freeleech',
