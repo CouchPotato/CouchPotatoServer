@@ -62,7 +62,7 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find('table', attrs={'id': 'torrents'})
+                    result_table = html.find('table', attrs={'id': 'torrents','class' : 't1'})
 
                     if not result_table or 'nothing found!' in data.lower():
                         return
