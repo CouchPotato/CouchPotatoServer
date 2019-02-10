@@ -106,7 +106,7 @@ class Base(TorrentProvider):
             'Cookie': self.conf('cookiesetting') or ''
         }
     
-   def download(self, url = '', nzb_id = ''):
+    def download(self, url = '', nzb_id = ''):
         try:
             return self.urlopen(url, headers=self.getRequestHeaders())
         except:
