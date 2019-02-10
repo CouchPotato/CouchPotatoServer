@@ -16,7 +16,7 @@ class Base(TorrentProvider):
     urls = {
         'test': 'https://iptorrents.com/',
         'base_url': 'https://iptorrents.com',
-        'search': 'https://iptorrents.com/t?q=%s&qf=ti#torrents&p=%%d',
+        'search': 'https://iptorrents.com/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
