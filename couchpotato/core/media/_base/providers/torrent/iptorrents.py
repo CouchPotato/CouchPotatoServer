@@ -63,7 +63,7 @@ class Base(TorrentProvider):
                             pages = int(final_page_link.string)
 
                     result_table = html.find('table', id="torrents")
-                    log.debug('result_table: %s', result_table)
+                    
                     if not result_table or 'nothing found!' in data.lower():
                         return
 
