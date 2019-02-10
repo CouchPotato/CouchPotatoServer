@@ -62,9 +62,10 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find(id="torrents")
+                    result_table = html.select('table#torrents')
                     log.debug('result_table: %s', result_table)
-                    if not result_table or 'nothing found!' in data.lower():
+                    result_table = result_table[0]
+                     if not result_table or 'nothing found!' in data.lower():
                         return
 
                     entries = result_table.find_all('tr')
