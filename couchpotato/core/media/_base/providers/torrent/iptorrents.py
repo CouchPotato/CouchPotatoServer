@@ -50,10 +50,10 @@ class Base(TorrentProvider):
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
             data = self.getHTMLData(base_url % (freeleech, current_page), headers = self.getRequestHeaders())
-
+            log.Debug('data: %s', data)
             if data:
                 html = BeautifulSoup(data)
-
+                
                 try:
                     page_nav = html.find('span', attrs = {'class': 'page_nav'})
                     if page_nav:
