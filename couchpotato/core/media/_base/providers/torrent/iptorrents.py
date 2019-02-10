@@ -52,7 +52,7 @@ class Base(TorrentProvider):
             data = self.getHTMLData(base_url % (freeleech, current_page), headers = self.getRequestHeaders())
             
             if data:
-                html = BeautifulSoup(data, parser="html.parser")
+                html = BeautifulSoup(data)
 
                 try:
                     page_nav = html.find('span', attrs = {'class': 'page_nav'})
