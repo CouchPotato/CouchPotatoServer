@@ -52,7 +52,7 @@ class Base(TorrentProvider):
             data = self.getHTMLData(base_url % (freeleech, current_page), headers = self.getRequestHeaders())
             
             if data:
-                html = BeautifulSoup(data)
+                html = BeautifulSoup(data, parser="html.parser")
 
                 try:
                     page_nav = html.find('span', attrs = {'class': 'page_nav'})
@@ -62,7 +62,7 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find_all('table', id="torrents")
+                    result_table = html.find('table', id="torrents")
                     log.debug('result_table: %s', result_table)
                     result_table = result_table[0]
                     if not result_table or 'nothing found!' in data.lower():
