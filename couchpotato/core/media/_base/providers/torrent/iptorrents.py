@@ -53,7 +53,7 @@ class Base(TorrentProvider):
             
             if data:
                 html = BeautifulSoup(data)
-                
+                log.debug('html: %s', html)
                 try:
                     page_nav = html.find('span', attrs = {'class': 'page_nav'})
                     if page_nav:
