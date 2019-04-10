@@ -119,7 +119,7 @@ class IMDBWatchlist(IMDBBase):
                 continue
 
             start = 0
-            moviecount = 0
+            moviecount = len(movies)
             while True:
                 try:
 
