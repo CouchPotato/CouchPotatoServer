@@ -45,26 +45,28 @@ class IMDBBase(Automation, RSS):
     }
 
     def getInfo(self, imdb_id):
-        return fireEvent('movie.info', identifier = imdb_id, extended = False, adding = False, merge = True)
+        return fireEvent('movie.info', identifier=imdb_id, extended=False, adding=False, merge=True)
 
     def getFromURL(self, url):
         log.debug('Getting IMDBs from: %s', url)
         html = self.getHTMLData(url)
 
         try:
-            split = splitString(html, split_on = "<div class=\"list compact\">")[1]
-            html = splitString(split, split_on = "<div class=\"pages\">")[0]
+            split = splitString(
+                html, split_on="<div class=\"list compact\">")[1]
+            html = splitString(split, split_on="<div class=\"pages\">")[0]
         except:
             try:
-                split = splitString(html, split_on = "<div id=\"main\">")
+                split = splitString(html, split_on="<div id=\"main\">")
 
                 if len(split) < 2:
-                    log.error('Failed parsing IMDB page "%s", unexpected html.', url)
+                    log.error(
+                        'Failed parsing IMDB page "%s", unexpected html.', url)
                     return []
 
                 html = BeautifulSoup(split[1])
                 for x in ['list compact', 'lister', 'list detail sub-list']:
-                    html2 = html.find('div', attrs = {
+                    html2 = html.find('div', attrs={
                         'class': x
                     })
 
@@ -73,10 +75,11 @@ class IMDBBase(Automation, RSS):
                         html = ''.join([str(x) for x in html])
                         break
             except:
-                log.error('Failed parsing IMDB page "%s": %s', (url, traceback.format_exc()))
+                log.error('Failed parsing IMDB page "%s": %s',
+                          (url, traceback.format_exc()))
 
         html = ss(html)
-        imdbs = getImdb(html, multiple = True) if html else []
+        imdbs = getImdb(html, multiple=True) if html else []
 
         return imdbs
 
@@ -89,7 +92,8 @@ class IMDBWatchlist(IMDBBase):
 
         movies = []
 
-        watchlist_enablers = [tryInt(x) for x in splitString(self.conf('automation_urls_use'))]
+        watchlist_enablers = [tryInt(x) for x in splitString(
+            self.conf('automation_urls_use'))]
         watchlist_urls = splitString(self.conf('automation_urls'))
 
         index = -1
@@ -97,7 +101,8 @@ class IMDBWatchlist(IMDBBase):
 
             try:
                 # Get list ID
-                ids = re.findall('(?:list/|list_id=)([a-zA-Z0-9\-_]{11})', watchlist_url)
+                ids = re.findall(
+                    '(?:list/|list_id=)([a-zA-Z0-9\-_]{11})', watchlist_url)
                 if len(ids) == 1:
                     watchlist_url = 'http://www.imdb.com/list/%s/?view=compact&sort=created:asc' % ids[0]
                 # Try find user id with watchlist
@@ -106,13 +111,15 @@ class IMDBWatchlist(IMDBBase):
                     if len(userids) == 1:
                         watchlist_url = 'http://www.imdb.com/user/%s/watchlist?view=compact&sort=created:asc' % userids[0]
             except:
-                log.error('Failed getting id from watchlist: %s', traceback.format_exc())
+                log.error('Failed getting id from watchlist: %s',
+                          traceback.format_exc())
 
             index += 1
             if not watchlist_enablers[index]:
                 continue
 
             start = 0
+            moviecount = len(movies)
             while True:
                 try:
 
@@ -126,15 +133,22 @@ class IMDBWatchlist(IMDBBase):
                         if self.shuttingDown():
                             break
 
-                    log.debug('Found %s movies on %s', (len(imdbs), w_url))
+                    if len(movies) == moviecount:
+                        break
+
+                    log.debug('Found %s (%s new) movies on %s',
+                              (len(imdbs), (len(movies) - moviecount), w_url))
+
+                    moviecount = len(movies)
 
                     if len(imdbs) < 225:
                         break
 
-                    start = len(movies)
+                    start += len(imdbs)
 
                 except:
-                    log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
+                    log.error('Failed loading IMDB watchlist: %s %s',
+                              (watchlist_url, traceback.format_exc()))
                     break
 
         return movies
@@ -165,7 +179,8 @@ class IMDBAutomation(IMDBBase):
                             break
 
                 except:
-                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+                    log.error(
+                        'Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
         return movies
 
@@ -197,7 +212,8 @@ class IMDBCharts(IMDBBase):
                 try:
                     for imdb_id in imdb_ids[0:max_items]:
 
-                        is_movie = fireEvent('movie.is_movie', identifier = imdb_id, adding = False, single = True)
+                        is_movie = fireEvent(
+                            'movie.is_movie', identifier=imdb_id, adding=False, single=True)
                         if not is_movie:
                             continue
 
@@ -207,9 +223,10 @@ class IMDBCharts(IMDBBase):
                         if self.shuttingDown():
                             break
                 except:
-                    log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+                    log.error(
+                        'Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
-                self.setCache(cache_key, chart['list'], timeout = 259200)
+                self.setCache(cache_key, chart['list'], timeout=259200)
 
                 if chart['list']:
                     movie_lists.append(chart)
