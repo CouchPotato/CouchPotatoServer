@@ -113,6 +113,7 @@ class IMDBWatchlist(IMDBBase):
                 continue
 
             start = 0
+            moviecount = 0
             while True:
                 try:
 
@@ -126,12 +127,17 @@ class IMDBWatchlist(IMDBBase):
                         if self.shuttingDown():
                             break
 
-                    log.debug('Found %s movies on %s', (len(imdbs), w_url))
+                    if len(movies) == moviecount:
+                        break
+
+                    moviecount = len(movies)
+
+                    log.debug('Loaded %s movies on %s', (moviecount, w_url))
 
                     if len(imdbs) < 225:
                         break
 
-                    start = len(movies)
+                    start += len(imdbs)
 
                 except:
                     log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
