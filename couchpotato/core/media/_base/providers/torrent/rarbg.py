@@ -17,6 +17,10 @@ class Base(TorrentMagnetProvider):
         'token': 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=couchpotato',
         'search': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
                   '=%s&ranked=%s&category=movies&format=json_extended&app_id=couchpotato',
+        'search4k': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
+                  '=%s&ranked=%s&category=51&format=json_extended&app_id=couchpotato',
+        'search4khdr': 'https://torrentapi.org/pubapi_v2.php?token=%s&mode=search&search_imdb=%s&min_seeders=%s&min_leechers'
+                  '=%s&ranked=%s&category=52&format=json_extended&app_id=couchpotato',
     }
 
     http_time_between_calls = 2  # Seconds
@@ -38,7 +42,14 @@ class Base(TorrentMagnetProvider):
         if (self._token != 0) and (movieyear == 0 or movieyear <= curryear):
             data = self.getJsonData(self.urls['search'] % (self._token, movieid, self.conf('min_seeders'),
                                                            self.conf('min_leechers'), self.conf('ranked_only')), headers = self.getRequestHeaders())
-
+            data4k = self.getJsonData(self.urls['search4k'] % (self._token, movieid, self.conf('min_seeders'),
+                                                           self.conf('min_leechers'), self.conf('ranked_only')), headers = self.getRequestHeaders())                                                           
+            data4khdr = self.getJsonData(self.urls['search4khdr'] % (self._token, movieid, self.conf('min_seeders'),
+                                                           self.conf('min_leechers'), self.conf('ranked_only')), headers = self.getRequestHeaders())                                                                                                        
+            if "torrent_results" in data4k:
+                data["torrent_results"] += (data4k["torrent_results"]) 
+            if "torrent_results" in data4khdr:
+                data["torrent_results"] += (data4khdr["torrent_results"]) 
             if data:
                 if 'error_code' in data:
                     if data['error'] == 'No results found':
