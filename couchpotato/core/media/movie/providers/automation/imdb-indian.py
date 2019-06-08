@@ -42,7 +42,6 @@ class IMDBIndian(Automation):
                 info = fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
                 if self.isMinimalMovie(info):
                     movies.append(imdb_id)
-            
         
         return movies
 
