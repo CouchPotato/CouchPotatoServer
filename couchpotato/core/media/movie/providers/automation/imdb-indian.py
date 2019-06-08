@@ -18,11 +18,6 @@ class IMDBIndian(Automation):
 
     def getIMDBids(self):
 
-        log.info('IMDBIndian.getIMDBids called')
-        
-        # page = requests.get(url)
-        # print(page)
-        # soup = BeautifulSoup(page.text, 'html.parser')
         soup = BeautifulSoup(self.getHTMLData(self.url))
 
         items = soup.find_all('div', attrs={'class': 'trending-list-rank-item'})
@@ -30,8 +25,6 @@ class IMDBIndian(Automation):
         movies = []
 
         for item in items:
-            # print(item)
-            # print("---")
             containers = item.find_all('div', attrs={'class': 'trending-list-rank-item-data-container'})
             for container in containers:
                 span = container.find('span', attrs={'class': 'trending-list-rank-item-name'})
