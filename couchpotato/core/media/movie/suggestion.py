@@ -61,16 +61,17 @@ class Suggestion(Plugin):
             cached_poster = fireEvent('file.download', url = posters[0], single = True) if len(posters) > 0 else False
             files = {'image_poster': [cached_poster] } if cached_poster else {}
 
-            medias.append({
-                'status': 'suggested',
-                'title': getTitle(suggestion),
-                'type': 'movie',
-                'info': suggestion,
-                'files': files,
-                'identifiers': {
-                    'imdb': suggestion.get('imdb')
-                }
-            })
+            if getTitle(suggestion) is not None:
+                medias.append({
+                    'status': 'suggested',
+                    'title': getTitle(suggestion),
+                    'type': 'movie',
+                    'info': suggestion,
+                    'files': files,
+                    'identifiers': {
+                        'imdb': suggestion.get('imdb')
+                    }
+                })
 
         return {
             'success': True,

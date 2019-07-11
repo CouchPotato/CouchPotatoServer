@@ -121,7 +121,9 @@ class IMDBWatchlist(IMDBBase):
 
                     for imdb in imdbs:
                         if imdb not in movies:
-                            movies.append(imdb)
+                            info = self.getInfo(imdb_id)
+                            if info and self.isMinimalMovie(info):
+                                movies.append(imdb)
 
                         if self.shuttingDown():
                             break
