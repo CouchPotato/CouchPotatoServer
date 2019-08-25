@@ -77,11 +77,37 @@ FreeBSD:
 
 Be sure you're running the latest version of [Python 2.7](http://python.org/).
 
-If you're going to add styling or doing some javascript work you'll need a few tools that build and compress scss -> css and combine the javascript files. [Node/NPM](https://nodejs.org/), [Grunt](http://gruntjs.com/installing-grunt), [Compass](http://compass-style.org/install/)
+If you're going to add styling or doing some javascript work you'll need a few tools that build and compress scss -> css and combine the javascript files:
 
-After you've got these tools you can install the packages using `npm install`. Once this process has finished you can start CP using the command `grunt`. This will start all the needed tools and watches any files for changes.
+* [Node/NPM](https://nodejs.org/)
+* [Grunt](http://gruntjs.com/installing-grunt)
+
+After you've got these tools you can install the packages using `npm install`.
+
+Once this process has finished you can start CP using the command `grunt`. This will start all the needed tools and watches any files for changes.
 You can now change css and javascript and it wil reload the page when needed.
 
 By default it will combine files used in the core folder. If you're adding a new .scss or .js file, you might need to add it and then restart the grunt process for it to combine it properly.
 
 Don't forget to enable development inside the CP settings. This disables some functions and also makes sure javascript errors are pushed to console instead of the log.
+
+
+### Testing
+
+To run tests via Grunt, you're going to need to install a few extra Python packages:
+
+```
+pip install -r requirements-dev.txt -t ./libs
+```
+
+To run the tests:
+
+```
+grunt test
+```
+
+To run coverage analysis:
+
+```
+grunt coverage
+```

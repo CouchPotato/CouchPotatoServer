@@ -1,5 +1,7 @@
 'use strict';
 
+const sass = require('node-sass');
+
 module.exports = function(grunt){
 	require('jit-grunt')(grunt);
 	require('time-grunt')(grunt);
@@ -70,6 +72,7 @@ module.exports = function(grunt){
 		// Compiles Sass to CSS and generates necessary files if requested
 		sass: {
 			options: {
+				implementation: sass,
 				compass: true,
 				update: true,
 				sourcemap: 'none'

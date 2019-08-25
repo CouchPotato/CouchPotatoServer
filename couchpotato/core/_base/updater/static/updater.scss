@@ -1,4 +1,4 @@
-@import "_mixins";
+@import "couchpotato/static/style/_mixins";
 
 .update.message {
 	@include theme(background, background);
