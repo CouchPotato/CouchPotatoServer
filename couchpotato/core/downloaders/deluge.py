@@ -80,17 +80,17 @@ class Deluge(DownloaderBase):
         }
 
         if self.conf('directory'):
-            if os.path.isdir(self.conf('directory')):
+            #if os.path.isdir(self.conf('directory')):
                 options['download_location'] = self.conf('directory')
-            else:
-                log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
+            #else:
+            #    log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
 
         if self.conf('completed_directory'):
-            if os.path.isdir(self.conf('completed_directory')):
+            #if os.path.isdir(self.conf('completed_directory')):
                 options['move_completed'] = 1
                 options['move_completed_path'] = self.conf('completed_directory')
-            else:
-                log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
+            #else:
+            #    log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
 
         if data.get('seed_ratio'):
             options['stop_at_ratio'] = 1
