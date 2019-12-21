@@ -67,7 +67,7 @@ class QBittorrentClient(object):
         """
         final_url = self.url + endpoint
 
-        if not self._is_authenticated:
+        if not self._is_authenticated and 'logout' not in endpoint:
             raise LoginRequired
 
         rq = self.session
