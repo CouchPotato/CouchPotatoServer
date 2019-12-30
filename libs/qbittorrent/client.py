@@ -6,7 +6,6 @@ class LoginRequired(Exception):
     def __str__(self):
         return 'Please login first.'
 
-
 class QBittorrentClient(object):
     """class to interact with qBittorrent WEB API"""
     def __init__(self, url):
@@ -331,7 +330,7 @@ class QBittorrentClient(object):
         :return: Empty JSON data.
         """
         # old:new format
-        old_arg_map = {'save_path': 'savepath'}  # , 'label': 'category'}
+        old_arg_map = {'save_path': 'savepath', 'label': 'category'}
 
         # convert old option names to new option names
         options = kwargs.copy()
@@ -368,6 +367,9 @@ class QBittorrentClient(object):
 
         if data.get('save_path'):
             data.update({'savepath': data['save_path']})
+        if data.get('label'):
+            data.update({'category': data['label']})
+
         return self._post('torrents/add', data=data, files=torrent_files)
 
     def add_trackers(self, infohash, trackers):
