@@ -254,12 +254,12 @@ class DelugeRPC(object):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options).get()
+            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options)
             if not torrent_id:
                 torrent_id = self._check_torrent(False, torrent)
 
             if torrent_id and options['label']:
-                self.client.label.set_torrent(torrent_id, options['label']).get()
+                self.client.label.set_torrent(torrent_id, options['label'])
         except Exception as err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
         finally:
