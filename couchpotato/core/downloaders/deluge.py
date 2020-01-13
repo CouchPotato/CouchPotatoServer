@@ -10,8 +10,7 @@ from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownlo
 from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
-from synchronousdeluge import DelugeClient
-
+from deluge_client.client import DelugeRPCClient
 
 log = CPLog(__name__)
 
@@ -221,8 +220,10 @@ class DelugeRPC(object):
         self.password = password
 
     def connect(self):
-        self.client = DelugeClient()
-        self.client.connect(self.host, int(self.port), self.username, self.password)
+        #self.client = DelugeClient()
+        #self.client.connect(self.host, int(self.port), self.username, self.password)
+        self.client = DelugeRPCClient(self.host, int(self.port), self.username, self.password)
+        self.client.connect()
 
     def test(self):
         try:
