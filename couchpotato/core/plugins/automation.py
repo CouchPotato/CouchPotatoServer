@@ -1,3 +1,4 @@
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -17,10 +18,20 @@ class Automation(Plugin):
         if not Env.get('dev'):
             addEvent('app.load', self.addMovies)
 
+        addApiView('automation.add_movies', self.addMoviesFromApi, docs = {
+            'desc': 'Manually trigger the automation scan. Hangs until scan is complete. Useful for webhooks.',
+            'return': {'type': 'object: {"success": true}'},
+        })
         addEvent('setting.save.automation.hour.after', self.setCrons)
 
     def setCrons(self):
         fireEvent('schedule.interval', 'automation.add_movies', self.addMovies, hours = self.conf('hour', default = 12))
+
+    def addMoviesFromApi(self, **kwargs):
+        self.addMovies()
+        return {
+            'success': True
+        }
 
     def addMovies(self):
 
