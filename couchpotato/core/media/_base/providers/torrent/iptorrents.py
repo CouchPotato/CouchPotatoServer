@@ -16,14 +16,13 @@ class Base(TorrentProvider):
     urls = {
         'test': 'https://iptorrents.com/',
         'base_url': 'https://iptorrents.com',
-        'login': 'https://iptorrents.com/take_login.php',
-        'login_check': 'https://iptorrents.com/oldinbox.php',
         'search': 'https://iptorrents.com/t?%s%%s&q=%s&qf=ti#torrents&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
-    login_fail_msg = 'Invalid username and password combination'
+    login_fail_msg = 'Invalid username and cookie combination'
     cat_backup_id = None
+
 
     def buildUrl(self, title, media, quality):
         return self._buildUrl(title.replace(':', ''), quality)
@@ -37,7 +36,7 @@ class Base(TorrentProvider):
             return None
 
         query = query.replace('"', '')
-        
+
         return self.urls['search'] % ("&".join(("%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
@@ -50,8 +49,8 @@ class Base(TorrentProvider):
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
-            data = self.getHTMLData(base_url % (freeleech, current_page))
-
+            data = self.getHTMLData(base_url % (freeleech, current_page), headers = self.getRequestHeaders())
+            
             if data:
                 html = BeautifulSoup(data)
 
@@ -63,8 +62,8 @@ class Base(TorrentProvider):
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find('table', attrs={'id': 'torrents'})
-
+                    result_table = html.find('table', id="torrents")
+                    
                     if not result_table or 'nothing found!' in data.lower():
                         return
 
@@ -102,18 +101,18 @@ class Base(TorrentProvider):
 
             current_page += 1
 
-    def getLoginParams(self):
+    def getRequestHeaders(self):
         return {
-            'username': self.conf('username'),
-            'password': self.conf('password'),
-            'login': 'submit',
+            'Cookie': self.conf('cookiesetting') or ''
         }
+    
+    def download(self, url = '', nzb_id = ''):
+        try:
+            return self.urlopen(url, headers=self.getRequestHeaders())
+        except:
+            log.error('Failed getting release from %s: %s', (self.getName(), traceback.format_exc()))
 
-    def loginSuccess(self, output):
-        return 'don\'t have an account' not in output.lower()
-
-    def loginCheckSuccess(self, output):
-        return '/logout.php' in output.lower()
+        return 'try_next'
 
 
 config = [{
@@ -137,11 +136,6 @@ config = [{
                     'default': '',
                 },
                 {
-                    'name': 'password',
-                    'default': '',
-                    'type': 'password',
-                },
-                {
                     'name': 'freeleech',
                     'default': 0,
                     'type': 'bool',
@@ -161,6 +155,12 @@ config = [{
                     'default': 40,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
+				{
+                    'name': 'cookiesetting',
+                    'label': 'Cookies',
+                    'default': 'uid=1234;pass=567845439634987',
+                    'description': 'Use DevTools or Firebug to get these values after logging in on your browser',
+                },
                 {
                     'name': 'extra_score',
                     'advanced': True,
@@ -173,3 +173,4 @@ config = [{
         },
     ],
 }]
+

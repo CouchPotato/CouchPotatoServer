@@ -194,12 +194,12 @@ def getImdb(txt, check_inside = False, multiple = False):
         output.close()
 
     try:
-        ids = re.findall('(tt\d{4,7})', txt)
+        ids = re.findall('(tt\d{4,8})', txt)
 
         if multiple:
-            return removeDuplicate(['tt%07d' % tryInt(x[2:]) for x in ids]) if len(ids) > 0 else []
+            return removeDuplicate(['tt%08d' % tryInt(x[2:]) for x in ids]) if len(ids) > 0 else []
 
-        return 'tt%07d' % tryInt(ids[0][2:])
+        return 'tt%08d' % tryInt(ids[0][2:])
     except IndexError:
         pass
 

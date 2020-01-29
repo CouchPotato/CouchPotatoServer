@@ -71,7 +71,7 @@ class Automation(AutomationBase):
             log.info('ignoring %s as no rating is available for.', (movie['original_title']))
             return False
 
-        if movie['rating'] and movie['rating'].get('imdb'):
+        if movie['rating'] and type(movie['rating']) is not float and movie['rating'].get('imdb'):
             movie['votes'] = movie['rating']['imdb'][1]
             movie['rating'] = movie['rating']['imdb'][0]
 
