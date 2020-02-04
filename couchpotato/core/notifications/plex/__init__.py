@@ -27,7 +27,7 @@ config = [{
                     'name': 'media_server_port',
                     'label': 'Port',
                     'default': '32400',
-                    'description': 'Connection tot he Media Server should use this port'
+                    'description': 'Connection to the Media Server should use this port'
                 },
                 {
                     'name': 'use_https',
