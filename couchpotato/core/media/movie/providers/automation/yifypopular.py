@@ -68,7 +68,7 @@ config = [{
             'list': 'automation_providers',
             'name': 'ytspopular_automation',
             'label': 'YTS Popular',
-            'description': 'Imports popular downloas as currently listed on YTS.',
+            'description': 'Imports popular downloads as currently listed on YTS.',
             'options': [
                 {
                     'name': 'automation_enabled',
