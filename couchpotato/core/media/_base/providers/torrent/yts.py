@@ -18,7 +18,7 @@ class Base(TorrentMagnetProvider):
     def _search(self, movie, quality, results):
         limit = 10
         page = 1
-        data = self.getJsonData(self.urls['search'] % (getIdentifier(movie), limit, page))
+        data = self.getJsonData(self.urls['search'] % (getIdentifier(movie).replace("tt0", "tt"), limit, page))
 
         if data:
             movie_count = tryInt(data['data']['movie_count'])
