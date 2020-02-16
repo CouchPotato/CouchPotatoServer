@@ -10,8 +10,7 @@ from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownlo
 from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
-from synchronousdeluge import DelugeClient
-
+from deluge_client.client import DelugeRPCClient
 
 log = CPLog(__name__)
 
@@ -80,17 +79,17 @@ class Deluge(DownloaderBase):
         }
 
         if self.conf('directory'):
-            if os.path.isdir(self.conf('directory')):
+            #if os.path.isdir(self.conf('directory')):
                 options['download_location'] = self.conf('directory')
-            else:
-                log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
+            #else:
+            #    log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
 
         if self.conf('completed_directory'):
-            if os.path.isdir(self.conf('completed_directory')):
+            #if os.path.isdir(self.conf('completed_directory')):
                 options['move_completed'] = 1
                 options['move_completed_path'] = self.conf('completed_directory')
-            else:
-                log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
+            #else:
+            #    log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
 
         if data.get('seed_ratio'):
             options['stop_at_ratio'] = 1
@@ -221,8 +220,10 @@ class DelugeRPC(object):
         self.password = password
 
     def connect(self):
-        self.client = DelugeClient()
-        self.client.connect(self.host, int(self.port), self.username, self.password)
+        #self.client = DelugeClient()
+        #self.client.connect(self.host, int(self.port), self.username, self.password)
+        self.client = DelugeRPCClient(self.host, int(self.port), self.username, self.password)
+        self.client.connect()
 
     def test(self):
         try:
@@ -235,12 +236,12 @@ class DelugeRPC(object):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_magnet(torrent, options).get()
+            torrent_id = self.client.core.add_torrent_magnet(torrent, options)
             if not torrent_id:
                 torrent_id = self._check_torrent(True, torrent)
 
             if torrent_id and options['label']:
-                self.client.label.set_torrent(torrent_id, options['label']).get()
+                self.client.label.set_torrent(torrent_id, options['label'])
         except Exception as err:
             log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
         finally:
@@ -253,12 +254,12 @@ class DelugeRPC(object):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options).get()
+            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options)
             if not torrent_id:
                 torrent_id = self._check_torrent(False, torrent)
 
             if torrent_id and options['label']:
-                self.client.label.set_torrent(torrent_id, options['label']).get()
+                self.client.label.set_torrent(torrent_id, options['label'])
         except Exception as err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
         finally:
@@ -271,7 +272,7 @@ class DelugeRPC(object):
         ret = False
         try:
             self.connect()
-            ret = self.client.core.get_torrents_status({'id': ids}, ('name', 'hash', 'save_path', 'move_completed_path', 'progress', 'state', 'eta', 'ratio', 'stop_ratio', 'is_seed', 'is_finished', 'paused', 'move_on_completed', 'files')).get()
+            ret = self.client.core.get_torrents_status({'id': ids}, ('name', 'hash', 'save_path', 'move_completed_path', 'progress', 'state', 'eta', 'ratio', 'stop_ratio', 'is_seed', 'is_finished', 'paused', 'move_on_completed', 'files'))
         except Exception as err:
             log.error('Failed to get all torrents: %s %s', (err, traceback.format_exc()))
         finally:
@@ -282,7 +283,7 @@ class DelugeRPC(object):
     def pause_torrent(self, torrent_ids):
         try:
             self.connect()
-            self.client.core.pause_torrent(torrent_ids).get()
+            self.client.core.pause_torrent(torrent_ids)
         except Exception as err:
             log.error('Failed to pause torrent: %s %s', (err, traceback.format_exc()))
         finally:
@@ -292,7 +293,7 @@ class DelugeRPC(object):
     def resume_torrent(self, torrent_ids):
         try:
             self.connect()
-            self.client.core.resume_torrent(torrent_ids).get()
+            self.client.core.resume_torrent(torrent_ids)
         except Exception as err:
             log.error('Failed to resume torrent: %s %s', (err, traceback.format_exc()))
         finally:
@@ -303,7 +304,7 @@ class DelugeRPC(object):
         ret = False
         try:
             self.connect()
-            ret = self.client.core.remove_torrent(torrent_id, remove_local_data).get()
+            ret = self.client.core.remove_torrent(torrent_id, remove_local_data)
         except Exception as err:
             log.error('Failed to remove torrent: %s %s', (err, traceback.format_exc()))
         finally:
@@ -327,7 +328,7 @@ class DelugeRPC(object):
             torrent_hash = b16encode(b32decode(torrent_hash))
 
         torrent_hash = torrent_hash.lower()
-        torrent_check = self.client.core.get_torrent_status(torrent_hash, {}).get()
+        torrent_check = self.client.core.get_torrent_status(torrent_hash, {})
         if torrent_check['hash']:
             return torrent_hash
 
