@@ -24,6 +24,19 @@ config = [{
                     'description': 'Hostname/IP, default localhost'
                 },
                 {
+                    'name': 'media_server_port',
+                    'label': 'Port',
+                    'default': '32400',
+                    'description': 'Connection to the Media Server should use this port'
+                },
+                {
+                    'name': 'use_https',
+                    'label': 'Use HTTPS',
+                    'default': '0',
+                    'type': 'bool',
+                    'description': 'Connection to the Media Server should use HTTPS instead of HTTP'
+                },
+                {
                     'name': 'username',
                     'label': 'Username',
                     'default': '',

@@ -37,7 +37,7 @@ class TraktBase(Provider):
 class Trakt(Automation, TraktBase):
 
     urls = {
-        'watchlist': 'sync/watchlist/movies/',
+        'watchlist': 'sync/watchlist/movies?extended=full',
         'oauth': 'https://api.couchpota.to/authorize/trakt/',
         'refresh_token': 'https://api.couchpota.to/authorize/trakt_refresh/',
     }
@@ -79,7 +79,13 @@ class Trakt(Automation, TraktBase):
     def getIMDBids(self):
         movies = []
         for movie in self.getWatchlist():
-            movies.append(movie.get('movie').get('ids').get('imdb'))
+            m = movie.get('movie')
+            m['original_title'] = m['title']
+            log.debug("Movie: %s", m)
+            if self.isMinimalMovie(m):
+                log.info("Trakt automation: %s satisfies requirements, added", m.get('title'))
+                movies.append(m.get('ids').get('imdb'))
+                continue
 
         return movies
 
