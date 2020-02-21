@@ -1,6 +1,11 @@
+import traceback
+
 import HTMLParser
+from bs4 import BeautifulSoup
 from couchpotato import fireEvent
 from couchpotato.core.logger import CPLog
+from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.media.movie.providers.automation.base import Automation
 
 log = CPLog(__name__)
@@ -8,10 +13,13 @@ log = CPLog(__name__)
 autoload = 'YTSPopular'
 
 
-class YTSPopular(Automation):
+class YTSPopular(Automation, RSS):
 
     interval = 1800
-    url = 'https://yts.lt/'
+    url = 'https://yts.mx/'
+    rss_url = 'https://yts.mx/rss'
+    display_url = 'https://yts.mx/'
+    chart_order = 2
 
     def getIMDBids(self):
 
@@ -58,7 +66,49 @@ class YTSPopular(Automation):
                 movies.append(imdb['imdb'])
         
         return movies
-            
+    def getChartList(self):
+        cache_key = 'yts.charts'
+        movie_list = {
+            'name': 'YTS - Popular Downloads',
+            'url': self.display_url,
+            'order': self.chart_order,
+            'list': self.getCache(cache_key) or []
+        }
+
+        if not movie_list['list']:
+            movie_ids = []
+            max_items = 10
+            rss_movies = self.getRSSData(self.rss_url)
+
+            for movie in rss_movies:
+                name = self.getTextElement(movie, 'title').lower()[9:].split("(",1)[0].rstrip()
+                year = self.getTextElement(movie, 'title').split("(")[1].split(")")[0].rstrip()
+
+                if not name.find('/') == -1: # make sure it is not a double movie release
+                    continue
+
+                movie = self.search(name, year)
+
+                if movie:
+
+                    if movie.get('imdb') in movie_ids:
+                        continue
+
+                    is_movie = fireEvent('movie.is_movie', identifier = movie.get('imdb'), single = True)
+                    if not is_movie:
+                        continue
+
+                    movie_ids.append(movie.get('imdb'))
+                    movie_list['list'].append( movie )
+                    if len(movie_list['list']) >= max_items:
+                        break
+
+            if not movie_list['list']:
+                return
+
+            self.setCache(cache_key, movie_list['list'], timeout = 259200)
+
+        return [movie_list]
 
 config = [{
     'name': 'ytspopular',
@@ -72,6 +122,20 @@ config = [{
             'options': [
                 {
                     'name': 'automation_enabled',
+                    'default': False,
+                    'type': 'enabler',
+                },
+            ],
+        },
+        {
+            'tab': 'display',
+            'list': 'charts_providers',
+            'name': 'yts_popular_display',
+            'label': 'YTS',
+            'description': 'Display <a href="https://yts.mx" target="_blank">Popular Downloads</a> from YTS.MX',
+            'options': [
+                {
+                    'name': 'chart_display_enabled',
                     'default': False,
                     'type': 'enabler',
                 },
