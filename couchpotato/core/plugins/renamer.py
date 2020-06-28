@@ -4,6 +4,7 @@ import re
 import shutil
 import time
 import traceback
+import sys
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -31,6 +32,8 @@ class Renamer(Plugin):
     checking_snatched = False
 
     def __init__(self):
+        reload(sys)
+        sys.setdefaultencoding('utf8')
         addApiView('renamer.scan', self.scanView, docs = {
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
@@ -364,7 +367,7 @@ class Renamer(Plugin):
                 if self.conf('use_tab_threed') and replacements['3d_type_short']:
                     if 'OU' in replacements['3d_type_short']:
                         replacements['3d_type_short'] = replacements['3d_type_short'].replace('OU','TAB')
-                    
+
 
                 for file_type in group['files']:
 

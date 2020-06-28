@@ -1,24 +1,32 @@
 import requests
 import json
 
+
 class LoginRequired(Exception):
     def __str__(self):
         return 'Please login first.'
-
 
 class QBittorrentClient(object):
     """class to interact with qBittorrent WEB API"""
     def __init__(self, url):
         if not url.endswith('/'):
             url += '/'
-        self.url = url
+        self.url = url + 'api/v2/'
 
         session = requests.Session()
-        check_prefs = session.get(url+'query/preferences')
-
+        check_prefs = session.get(self.url+'app/preferences')
         if check_prefs.status_code == 200:
             self._is_authenticated = True
             self.session = session
+
+        elif check_prefs.status_code == 404:
+            self._is_authenticated = False
+            raise RuntimeError("""
+                This wrapper only supports qBittorrent applications
+                 with version higher than 4.1.x.
+                 Please use the latest qBittorrent release.
+                """)
+
         else:
             self._is_authenticated = False
 
@@ -58,7 +66,7 @@ class QBittorrentClient(object):
         """
         final_url = self.url + endpoint
 
-        if not self._is_authenticated:
+        if not self._is_authenticated and 'logout' not in endpoint:
             raise LoginRequired
 
         rq = self.session
@@ -68,6 +76,7 @@ class QBittorrentClient(object):
             request = rq.post(final_url, data, **kwargs)
 
         request.raise_for_status()
+        request.encoding = 'utf_8'
 
         if len(request.text) == 0:
             data = json.loads('{}')
@@ -93,7 +102,7 @@ class QBittorrentClient(object):
         :return: Response to login request to the API.
         """
         self.session = requests.Session()
-        login = self.session.post(self.url+'login',
+        login = self.session.post(self.url+'auth/login',
                                   data={'username': username,
                                         'password': password})
         if login.text == 'Ok.':
@@ -105,7 +114,7 @@ class QBittorrentClient(object):
         """
         Logout the current session.
         """
-        response = self._get('logout')
+        response = self._get('auth/logout')
         self._is_authenticated = False
         return response
 
@@ -114,70 +123,63 @@ class QBittorrentClient(object):
         """
         Get qBittorrent version.
         """
-        return self._get('version/qbittorrent')
+        return self._get('app/version')
 
     @property
     def api_version(self):
         """
         Get WEB API version.
         """
-        return self._get('version/api')
-
-    @property
-    def api_min_version(self):
-        """
-        Get minimum WEB API version.
-        """
-        return self._get('version/api_min')
+        return self._get('app/webapiVersion')
 
     def shutdown(self):
         """
         Shutdown qBittorrent.
         """
-        return self._get('command/shutdown')
+        return self._get('app/shutdown')
 
-    def torrents(self, status='active', label='', sort='priority',
-                 reverse=False, limit=10, offset=0):
+    def get_default_save_path(self):
+        """
+        Get default save path.
+        """
+        return self._get('app/defaultSavePath')
+
+    def get_log(self, **params):
+        """
+        Returns a list of log entries matching the supplied params.
+
+        :param normal: Include normal messages (default: true).
+        :param info: Include info messages (default: true).
+        :param warning: Include warning messages (default: true).
+        :param critical: Include critical messages (default: true).
+        :param last_known_id: Exclude messages with "message id" <= last_known_id (default: -1).
+
+        :return: list().
+        For example: qb.get_log(normal='true', info='true')
+        """
+        return self._get('log/main', params=params)
+
+    def torrents(self, **filters):
         """
         Returns a list of torrents matching the supplied filters.
 
-        :param status: Current status of the torrents.
-        :param label: Fetch all torrents with the supplied label. qbittorrent < 3.3.5
-        :param category: Fetch all torrents with the supplied label. qbittorrent >= 3.3.5
+        :param filter: Current status of the torrents.
+        :param category: Fetch all torrents with the supplied label.
         :param sort: Sort torrents by.
         :param reverse: Enable reverse sorting.
         :param limit: Limit the number of torrents returned.
         :param offset: Set offset (if less than 0, offset from end).
 
         :return: list() of torrent with matching filter.
+        For example: qb.torrents(filter='downloading', sort='ratio').
         """
+        params = {}
+        for name, value in filters.items():
+            # make sure that old 'status' argument still works
+            name = 'filter' if name == 'status' else name
+            params[name] = value
 
-        STATUS_LIST = ['all', 'downloading', 'completed',
-                       'paused', 'active', 'inactive']
-        if status not in STATUS_LIST:
-            raise ValueError("Invalid status.")
-        
-        if self.api_version < 10:
-            params = {
-                'filter': status,
-                'label': label,
-                'sort': sort,
-                'reverse': reverse,
-                'limit': limit,
-                'offset': offset
-            }
-            
-        elif self.api_version >= 10:
-            params = {
-                'filter': status,
-                'category': label,
-                'sort': sort,
-                'reverse': reverse,
-                'limit': limit,
-                'offset': offset
-            }
-        
-        return self._get('query/torrents', params=params)
+        return self._get('torrents/info', params=params)
 
     def get_torrent(self, infohash):
         """
@@ -185,7 +187,7 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of the torrent.
         """
-        return self._get('query/propertiesGeneral/' + infohash.lower())
+        return self._get('torrents/properties?hash=' + infohash.lower())
 
     def get_torrent_trackers(self, infohash):
         """
@@ -193,7 +195,7 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of the torrent.
         """
-        return self._get('query/propertiesTrackers/' + infohash.lower())
+        return self._get('torrents/trackers?hash=' + infohash.lower())
 
     def get_torrent_webseeds(self, infohash):
         """
@@ -201,7 +203,7 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of the torrent.
         """
-        return self._get('query/propertiesWebSeeds/' + infohash.lower())
+        return self._get('torrents/webseeds?hash=' + infohash.lower())
 
     def get_torrent_files(self, infohash):
         """
@@ -209,14 +211,34 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of the torrent.
         """
-        return self._get('query/propertiesFiles/' + infohash.lower())
+        return self._get('torrents/files?hash=' + infohash.lower())
+
+    def get_torrent_piece_states(self, infohash):
+        """
+        Get list of all pieces (in order) of a specific torrent.
+
+        :param infohash: INFO HASH of the torrent.
+        :return: array of states (integers).
+        """
+        return self._get('torrents/pieceStates?hash=' + infohash.lower())
+
+    def get_torrent_piece_hashes(self, infohash):
+        """
+        Get list of all hashes (in order) of a specific torrent.
+
+        :param infohash: INFO HASH of the torrent.
+        :return: array of hashes (strings).
+        """
+        return self._get('torrents/pieceHashes?hash=' + infohash.lower())
+
 
     @property
     def global_transfer_info(self):
         """
-        Get JSON data of the global transfer info of qBittorrent.
+        :return: dict{} of the global transfer info of qBittorrent.
+
         """
-        return self._get('query/transferInfo')
+        return self._get('transfer/info')
 
     @property
     def preferences(self):
@@ -239,7 +261,7 @@ class QBittorrentClient(object):
             qb.preferences()
 
         """
-        prefs = self._get('query/preferences')
+        prefs = self._get('app/preferences')
 
         class Proxy(Client):
             """
@@ -278,51 +300,59 @@ class QBittorrentClient(object):
 
         return Proxy(self.url, prefs, self._is_authenticated, self.session)
 
-    def sync(self, rid=0):
+    def sync_main_data(self, rid=0):
         """
-        Sync the torrents by supplied LAST RESPONSE ID.
-        Read more @ http://git.io/vEgXr
+        Sync the torrents main data by supplied LAST RESPONSE ID.
+        Read more @ https://git.io/fxgB8
 
         :param rid: Response ID of last request.
         """
         return self._get('sync/maindata', params={'rid': rid})
 
-    def download_from_link(self, link,
-                           save_path=None, label=''):
+    def sync_peers_data(self, infohash, rid=0):
+        """
+        Sync the torrent peers data by supplied LAST RESPONSE ID.
+        Read more @ https://git.io/fxgBg
+
+        :param infohash: INFO HASH of torrent.
+        :param rid: Response ID of last request.
+        """
+        return self._get('sync/torrentPeers', params={'hash': infohash.lower(), 'rid': rid})
+
+    def download_from_link(self, link, **kwargs):
         """
         Download torrent using a link.
 
         :param link: URL Link or list of.
-        :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s). qbittorrent < 3.3.5
-        :param category: Label of the torrent(s). qbittorrent >= 3.3.5
+        :param savepath: Path to download the torrent.
+        :param category: Label or Category of the torrent(s).
 
         :return: Empty JSON data.
         """
-        if not isinstance(link, list):
-            link = [link]
-        data = {'urls': link}
+        # old:new format
+        old_arg_map = {'save_path': 'savepath', 'label': 'category'}
 
-        if save_path:
-            data.update({'savepath': save_path})
-        if self.api_version < 10 and label:
-            data.update({'label': label})
-            
-        elif self.api_version >= 10 and label:
-            data.update({'category': label})
-        
+        # convert old option names to new option names
+        options = kwargs.copy()
+        for old_arg, new_arg in old_arg_map.items():
+            if options.get(old_arg) and not options.get(new_arg):
+                options[new_arg] = options[old_arg]
 
-        return self._post('command/download', data=data)
+        options['urls'] = link
 
-    def download_from_file(self, file_buffer,
-                           save_path=None, label=''):
+        # workaround to send multipart/formdata request
+        # http://stackoverflow.com/a/23131823/4726598
+        dummy_file = {'_dummy': (None, '_dummy')}
+
+        return self._post('torrents/add', data=options, files=dummy_file)
+
+    def download_from_file(self, file_buffer, **kwargs):
         """
         Download torrent using a file.
 
         :param file_buffer: Single file() buffer or list of.
         :param save_path: Path to download the torrent.
-        :param label: Label of the torrent(s). qbittorrent < 3.3.5
-        :param category: Label of the torrent(s). qbittorrent >= 3.3.5
+        :param label: Label of the torrent(s).
 
         :return: Empty JSON data.
         """
@@ -330,21 +360,17 @@ class QBittorrentClient(object):
             torrent_files = {}
             for i, f in enumerate(file_buffer):
                 torrent_files.update({'torrents%s' % i: f})
-            print torrent_files
         else:
             torrent_files = {'torrents': file_buffer}
 
-        data = {}
+        data = kwargs.copy()
 
-        if save_path:
-            data.update({'savepath': save_path})
-        if self.api_version < 10 and label:
-            data.update({'label': label})
-            
-        elif self.api_version >= 10 and label:
-            data.update({'category': label})
-            
-        return self._post('command/upload', data=data, files=torrent_files)
+        if data.get('save_path'):
+            data.update({'savepath': data['save_path']})
+        if data.get('label'):
+            data.update({'category': data['label']})
+
+        return self._post('torrents/add', data=data, files=torrent_files)
 
     def add_trackers(self, infohash, trackers):
         """
@@ -352,13 +378,36 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of torrent.
         :param trackers: Trackers.
+        :note %0A (aka LF newline) between trackers. Ampersand in tracker urls MUST be escaped.
         """
         data = {'hash': infohash.lower(),
                 'urls': trackers}
-        return self._post('command/addTrackers', data=data)
+        return self._post('torrents/addTrackers', data=data)
+
+    def set_torrent_location(self, infohash_list, location):
+        """
+        Set the location for the torrent
+
+        :param infohash: INFO HASH of torrent.
+        :param location: /mnt/nfs/media.
+        """
+        data = self._process_infohash_list(infohash_list)
+        data['location'] = location
+        return self._post('torrents/setLocation', data=data)
+
+    def set_torrent_name(self, infohash, name):
+        """
+        Set the name for the torrent
+
+        :param infohash: INFO HASH of torrent.
+        :param name: Whatever_name_you_want.
+        """
+        data = {'hash': infohash.lower(),
+                'name': name}
+        return self._post('torrents/rename', data=data)
 
     @staticmethod
-    def process_infohash_list(infohash_list):
+    def _process_infohash_list(infohash_list):
         """
         Method to convert the infohash_list to qBittorrent API friendly values.
 
@@ -376,13 +425,13 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of torrent.
         """
-        return self._post('command/pause', data={'hash': infohash.lower()})
+        return self._post('torrents/pause', data={'hashes': infohash.lower()})
 
     def pause_all(self):
         """
         Pause all torrents.
         """
-        return self._get('command/pauseAll')
+        return self._post('torrents/pause', data={'hashes': 'all'})
 
     def pause_multiple(self, infohash_list):
         """
@@ -390,8 +439,40 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/pauseAll', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/pause', data=data)
+
+    def set_category(self, infohash_list, category):
+        """
+        Set the category on multiple torrents.
+
+        The category must exist before using set_category. As of v2.1.0,the API
+        returns a 409 Client Error for any valid category name that doesn't
+        already exist.
+
+        :param infohash_list: Single or list() of infohashes.
+        :param category: If category is set to empty string '',
+        the torrent(s) specified is/are removed from all categories.
+        """
+        data = self._process_infohash_list(infohash_list)
+        data['category'] = category
+        return self._post('torrents/setCategory', data=data)
+
+    def create_category(self, category):
+        """
+        Create a new category
+        :param category: category to create
+        """
+        return self._post('torrents/createCategory', data={'category': category.lower()})
+
+    def remove_category(self, categories):
+        """
+        Remove categories
+
+        :param categories: can contain multiple cateogies separated by \n (%0A urlencoded).
+        """
+
+        return self._post('torrents/removeCategories', data={'categories': categories})
 
     def resume(self, infohash):
         """
@@ -399,13 +480,13 @@ class QBittorrentClient(object):
 
         :param infohash: INFO HASH of torrent.
         """
-        return self._post('command/resume', data={'hash': infohash.lower()})
+        return self._post('torrents/resume', data={'hashes': infohash.lower()})
 
     def resume_all(self):
         """
         Resume all torrents.
         """
-        return self._get('command/resumeAll')
+        return self._post('torrents/resume', data={'hashes': 'all'})
 
     def resume_multiple(self, infohash_list):
         """
@@ -413,8 +494,8 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/resumeAll', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/resume', data=data)
 
     def delete(self, infohash_list):
         """
@@ -422,8 +503,16 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/delete', data=data)
+        data = self._process_infohash_list(infohash_list)
+        data['deleteFiles'] = 'false'
+        return self._post('torrents/delete', data=data)
+
+    def delete_all(self):
+        """
+        Delete all torrents.
+
+        """
+        return self._post('torrents/delete', data={'hashes': 'all'})
 
     def delete_permanently(self, infohash_list):
         """
@@ -431,8 +520,9 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/deletePerm', data=data)
+        data = self._process_infohash_list(infohash_list)
+        data['deleteFiles'] = 'true'
+        return self._post('torrents/delete', data=data)
 
     def recheck(self, infohash_list):
         """
@@ -440,44 +530,60 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/recheck', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/recheck', data=data)
+
+    def recheck_all(self):
+        """
+        Recheck all torrents.
+        """
+        return self._post('torrents/recheck', data={'hashes': 'all'})
+
+    def reannounce(self, infohash_list):
+        """
+        Recheck all torrents.
+
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
+        """
+
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/reannounce', data=data)
 
     def increase_priority(self, infohash_list):
         """
         Increase priority of torrents.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/increasePrio', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/increasePrio', data=data)
 
     def decrease_priority(self, infohash_list):
         """
         Decrease priority of torrents.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/decreasePrio', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/decreasePrio', data=data)
 
     def set_max_priority(self, infohash_list):
         """
         Set torrents to maximum priority level.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/topPrio', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/topPrio', data=data)
 
     def set_min_priority(self, infohash_list):
         """
         Set torrents to minimum priority level.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/bottomPrio', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/bottomPrio', data=data)
 
     def set_file_priority(self, infohash, file_id, priority):
         """
@@ -486,8 +592,9 @@ class QBittorrentClient(object):
         :param infohash: INFO HASH of torrent.
         :param file_id: ID of the file to set priority.
         :param priority: Priority level of the file.
+        :note priority 4 is no priority set
         """
-        if priority not in [0, 1, 2, 7]:
+        if priority not in [0, 1, 2, 4, 7]:
             raise ValueError("Invalid priority, refer WEB-UI docs for info.")
         elif not isinstance(file_id, int):
             raise TypeError("File ID must be an int")
@@ -496,7 +603,18 @@ class QBittorrentClient(object):
                 'id': file_id,
                 'priority': priority}
 
-        return self._post('command/setFilePrio', data=data)
+        return self._post('torrents/filePrio', data=data)
+
+    def set_automatic_torrent_management(self, infohash_list, enable='false'):
+        """
+        Set the category on multiple torrents.
+
+        :param infohash_list: Single or list() of infohashes.
+        :param enable: is a boolean, affects the torrents listed in infohash_list, default is 'false'
+        """
+        data = self._process_infohash_list(infohash_list)
+        data['enable'] = enable
+        return self._post('torrents/setAutoManagement', data=data)
 
     # Get-set global download and upload speed limits.
 
@@ -504,7 +622,7 @@ class QBittorrentClient(object):
         """
         Get global download speed limit.
         """
-        return self._get('command/getGlobalDlLimit')
+        return self._get('transfer/downloadLimit')
 
     def set_global_download_limit(self, limit):
         """
@@ -512,7 +630,7 @@ class QBittorrentClient(object):
 
         :param limit: Speed limit in bytes.
         """
-        return self._post('command/setGlobalDlLimit', data={'limit': limit})
+        return self._post('transfer/setDownloadLimit', data={'limit': limit})
 
     global_download_limit = property(get_global_download_limit,
                                      set_global_download_limit)
@@ -521,7 +639,7 @@ class QBittorrentClient(object):
         """
         Get global upload speed limit.
         """
-        return self._get('command/getGlobalUpLimit')
+        return self._get('transfer/uploadLimit')
 
     def set_global_upload_limit(self, limit):
         """
@@ -529,7 +647,7 @@ class QBittorrentClient(object):
 
         :param limit: Speed limit in bytes.
         """
-        return self._post('command/setGlobalUpLimit', data={'limit': limit})
+        return self._post('transfer/setUploadLimit', data={'limit': limit})
 
     global_upload_limit = property(get_global_upload_limit,
                                    set_global_upload_limit)
@@ -541,8 +659,8 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/getTorrentsDlLimit', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/downloadLimit', data=data)
 
     def set_torrent_download_limit(self, infohash_list, limit):
         """
@@ -551,9 +669,9 @@ class QBittorrentClient(object):
         :param infohash_list: Single or list() of infohashes.
         :param limit: Speed limit in bytes.
         """
-        data = self.process_infohash_list(infohash_list)
+        data = self._process_infohash_list(infohash_list)
         data.update({'limit': limit})
-        return self._post('command/setTorrentsDlLimit', data=data)
+        return self._post('torrents/setDownloadLimit', data=data)
 
     def get_torrent_upload_limit(self, infohash_list):
         """
@@ -561,8 +679,8 @@ class QBittorrentClient(object):
 
         :param infohash_list: Single or list() of infohashes.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/getTorrentsUpLimit', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/uploadLimit', data=data)
 
     def set_torrent_upload_limit(self, infohash_list, limit):
         """
@@ -571,28 +689,30 @@ class QBittorrentClient(object):
         :param infohash_list: Single or list() of infohashes.
         :param limit: Speed limit in bytes.
         """
-        data = self.process_infohash_list(infohash_list)
+        data = self._process_infohash_list(infohash_list)
         data.update({'limit': limit})
-        return self._post('command/setTorrentsUpLimit', data=data)
+        return self._post('torrents/setUploadLimit', data=data)
 
     # setting preferences
     def set_preferences(self, **kwargs):
         """
         Set preferences of qBittorrent.
-        Read all possible preferences @ http://git.io/vEgDQ
+        Read all possible preferences @ https://git.io/fx2Y9
 
         :param kwargs: set preferences in kwargs form.
         """
         json_data = "json={}".format(json.dumps(kwargs))
         headers = {'content-type': 'application/x-www-form-urlencoded'}
-        return self._post('command/setPreferences', data=json_data,
+        return self._post('app/setPreferences', data=json_data,
                           headers=headers)
 
     def get_alternative_speed_status(self):
         """
         Get Alternative speed limits. (1/0)
         """
-        return self._get('command/alternativeSpeedLimitsEnabled')
+        # headers = {'content-type': 'application/x-www-form-urlencoded'}
+
+        return self._get('transfer/speedLimitsMode')
 
     alternative_speed_status = property(get_alternative_speed_status)
 
@@ -600,33 +720,44 @@ class QBittorrentClient(object):
         """
         Toggle alternative speed limits.
         """
-        return self._get('command/toggleAlternativeSpeedLimits')
+        return self._get('transfer/toggleSpeedLimitsMode')
 
     def toggle_sequential_download(self, infohash_list):
         """
         Toggle sequential download in supplied torrents.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/toggleSequentialDownload', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/toggleSequentialDownload', data=data)
 
     def toggle_first_last_piece_priority(self, infohash_list):
         """
         Toggle first/last piece priority of supplied torrents.
 
-        :param infohash_list: Single or list() of infohashes.
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
         """
-        data = self.process_infohash_list(infohash_list)
-        return self._post('command/toggleFirstLastPiecePrio', data=data)
+        data = self._process_infohash_list(infohash_list)
+        return self._post('torrents/toggleFirstLastPiecePrio', data=data)
 
-    def force_start(self, infohash_list, value=True):
+    def force_start(self, infohash_list, value=False):
         """
         Force start selected torrents.
 
-        :param infohash_list: Single or list() of infohashes.
-        :param value: Force start value (bool)
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
+        :param value: Force start value (bool), default is false
         """
-        data = self.process_infohash_list(infohash_list)
+        data = self._process_infohash_list(infohash_list)
         data.update({'value': json.dumps(value)})
-        return self._post('command/setForceStart', data=data)
+        return self._post('torrents/setForceStart', data=data)
+
+    def set_super_seeding(self, infohash_list, value=False):
+        """
+        Set super seeding for selected torrents.
+
+        :param infohash_list: Single or list() of infohashes; pass 'all' for all torrents.
+        :param value: Force start value (bool), default is false
+        """
+        data = self._process_infohash_list(infohash_list)
+        data.update({'value': json.dumps(value)})
+        return self._post('torrents/setSuperSeeding', data=data)
