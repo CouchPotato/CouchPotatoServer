@@ -1,6 +1,7 @@
 from urlparse import urlparse
 import re
 import traceback
+import requests
 
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
@@ -42,9 +43,19 @@ class Base(TorrentProvider):
                     log.error('%s: %s', (torrents.get('error'), host['host']))
                 elif torrents.get('results'):
                     for torrent in torrents.get('results', []):
+                        if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')):
+                             req = requests.get(torrent.get('download_url'), allow_redirects = False)
+                             if req.status_code == 302 and re.match('^magnet:.*$', req.headers["Location"]):
+                                 torrent['download_url'] =  req.headers["Location"]
+                                 proto = "torrent_magnet"
+                             else:
+                                 proto = "transmission"
+                         else:
+                             proto = "torrent_magnet"
+                                
                         results.append({
                             'id': torrent.get('torrent_id'),
-                            'protocol': 'torrent' if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')) else 'torrent_magnet',
+                            'protocol' : proto,
                             'provider_extra': urlparse(host['host']).hostname or host['host'],
                             'name': toUnicode(torrent.get('release_name')),
                             'url': torrent.get('download_url'),
