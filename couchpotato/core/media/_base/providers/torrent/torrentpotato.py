@@ -44,14 +44,14 @@ class Base(TorrentProvider):
                 elif torrents.get('results'):
                     for torrent in torrents.get('results', []):
                         if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')):
-                             req = requests.get(torrent.get('download_url'), allow_redirects = False)
-                             if req.status_code == 302 and re.match('^magnet:.*$', req.headers["Location"]):
-                                 torrent['download_url'] =  req.headers["Location"]
-                                 proto = "torrent_magnet"
-                             else:
-                                 proto = "transmission"
-                         else:
-                             proto = "torrent_magnet"
+                            req = requests.get(torrent.get('download_url'), allow_redirects = False)
+                            if req.status_code == 302 and re.match('^magnet:.*$', req.headers["Location"]):
+                                torrent['download_url'] =  req.headers["Location"]
+                                proto = "torrent_magnet"
+                            else:
+                                proto = "transmission"
+                        else:
+                            proto = "torrent_magnet"
                                 
                         results.append({
                             'id': torrent.get('torrent_id'),
