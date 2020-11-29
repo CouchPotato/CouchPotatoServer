@@ -82,8 +82,8 @@ class Base(TorrentProvider):
                         torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
                         torrent_details_url = self.urls['base_url'] + torrent['href']
                         torrent_size = self.parseSize(result.find_all('td')[5].string)
-                        torrent_seeders = tryInt(result.find('td', attrs = {'class': 'ac t_seeders'}).string)
-                        torrent_leechers = tryInt(result.find('td', attrs = {'class': 'ac t_leechers'}).string)
+                        torrent_seeders = tryInt(result.find_all('td')[7].string)
+                        torrent_leechers = tryInt(result.find_all('td')[8].string)
 
                         results.append({
                             'id': torrent_id,
