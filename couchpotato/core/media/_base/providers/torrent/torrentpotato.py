@@ -47,15 +47,9 @@ class Base(TorrentProvider):
                             req = requests.get(torrent.get('download_url'), allow_redirects = False)
                             if req.status_code == 302 and re.match('^magnet:.*$', req.headers["Location"]):
                                 torrent['download_url'] =  req.headers["Location"]
-                                proto = "torrent_magnet"
-                            else:
-                                proto = "transmission"
-                        else:
-                            proto = "torrent_magnet"
-                                
                         results.append({
                             'id': torrent.get('torrent_id'),
-                            'protocol' : proto,
+                            'protocol': 'torrent' if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')) else 'torrent_magnet',
                             'provider_extra': urlparse(host['host']).hostname or host['host'],
                             'name': toUnicode(torrent.get('release_name')),
                             'url': torrent.get('download_url'),
